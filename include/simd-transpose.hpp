@@ -90,10 +90,10 @@ transpose(arr_m128i<8>& x)
 
     const __m128i A01_B01_C01_D01 = _mm_unpacklo_epi32(A03_B03, C03_D03);
     const __m128i A23_B23_C23_D23 = _mm_unpackhi_epi32(A03_B03, C03_D03);
-    const __m128i E01_F01_G01_H01 = _mm_unpacklo_epi32(E03_F03, G03_H03);
-    const __m128i E23_F23_G23_H23 = _mm_unpackhi_epi32(E03_F03, G03_H03);
     const __m128i A45_B45_C45_D45 = _mm_unpacklo_epi32(A47_B47, C47_D47);
     const __m128i A67_B67_C67_D67 = _mm_unpackhi_epi32(A47_B47, C47_D47);
+    const __m128i E01_F01_G01_H01 = _mm_unpacklo_epi32(E03_F03, G03_H03);
+    const __m128i E23_F23_G23_H23 = _mm_unpackhi_epi32(E03_F03, G03_H03);
     const __m128i E45_F45_G45_H45 = _mm_unpacklo_epi32(E47_F47, G47_H47);
     const __m128i E67_F67_G67_H67 = _mm_unpackhi_epi32(E47_F47, G47_H47);
 
@@ -150,18 +150,18 @@ transpose(arr_m128i<16>& x)
 
     const __m128i A01_B01_C01_D01_E01_F01_G01_H01 = _mm_unpacklo_epi32(A03_B03_C03_D03, E03_F03_G03_H03);
     const __m128i A23_B23_C23_D23_E23_F23_G23_H23 = _mm_unpackhi_epi32(A03_B03_C03_D03, E03_F03_G03_H03);
-    const __m128i I01_J01_K01_L01_M01_N01_O01_P01 = _mm_unpacklo_epi32(I03_J03_K03_L03, M03_N03_O03_P03);
-    const __m128i I23_J23_K23_L23_M23_N23_O23_P23 = _mm_unpackhi_epi32(I03_J03_K03_L03, M03_N03_O03_P03);
     const __m128i A45_B45_C45_D45_E45_F45_G45_H45 = _mm_unpacklo_epi32(A47_B47_C47_D47, E47_F47_G47_H47);
     const __m128i A67_B67_C67_D67_E67_F67_G67_H67 = _mm_unpackhi_epi32(A47_B47_C47_D47, E47_F47_G47_H47);
-    const __m128i I45_J45_K45_L45_M45_N45_O45_P45 = _mm_unpacklo_epi32(I47_J47_K47_L47, M47_N47_O47_P47);
-    const __m128i I67_J67_K67_L67_M67_N67_O67_P67 = _mm_unpackhi_epi32(I47_J47_K47_L47, M47_N47_O47_P47);
     const __m128i A89_B89_C89_D89_E89_F89_G89_H89 = _mm_unpacklo_epi32(A8b_B8b_C8b_D8b, E8b_F8b_G8b_H8b);
     const __m128i Aab_Bab_Cab_Dab_Eab_Fab_Gab_Hab = _mm_unpackhi_epi32(A8b_B8b_C8b_D8b, E8b_F8b_G8b_H8b);
-    const __m128i I89_J89_K89_L89_M89_N89_O89_P89 = _mm_unpacklo_epi32(I8b_J8b_K8b_L8b, M8b_N8b_O8b_P8b);
-    const __m128i Iab_Jab_Kab_Lab_Mab_Nab_Oab_Pab = _mm_unpackhi_epi32(I8b_J8b_K8b_L8b, M8b_N8b_O8b_P8b);
     const __m128i Acd_Bcd_Ccd_Dcd_Ecd_Fcd_Gcd_Hcd = _mm_unpacklo_epi32(Acf_Bcf_Ccf_Dcf, Ecf_Fcf_Gcf_Hcf);
     const __m128i Aef_Bef_Cef_Def_Eef_Fef_Gef_Hef = _mm_unpackhi_epi32(Acf_Bcf_Ccf_Dcf, Ecf_Fcf_Gcf_Hcf);
+    const __m128i I01_J01_K01_L01_M01_N01_O01_P01 = _mm_unpacklo_epi32(I03_J03_K03_L03, M03_N03_O03_P03);
+    const __m128i I23_J23_K23_L23_M23_N23_O23_P23 = _mm_unpackhi_epi32(I03_J03_K03_L03, M03_N03_O03_P03);
+    const __m128i I45_J45_K45_L45_M45_N45_O45_P45 = _mm_unpacklo_epi32(I47_J47_K47_L47, M47_N47_O47_P47);
+    const __m128i I67_J67_K67_L67_M67_N67_O67_P67 = _mm_unpackhi_epi32(I47_J47_K47_L47, M47_N47_O47_P47);
+    const __m128i I89_J89_K89_L89_M89_N89_O89_P89 = _mm_unpacklo_epi32(I8b_J8b_K8b_L8b, M8b_N8b_O8b_P8b);
+    const __m128i Iab_Jab_Kab_Lab_Mab_Nab_Oab_Pab = _mm_unpackhi_epi32(I8b_J8b_K8b_L8b, M8b_N8b_O8b_P8b);
     const __m128i Icd_Jcd_Kcd_Lcd_Mcd_Ncd_Ocd_Pcd = _mm_unpacklo_epi32(Icf_Jcf_Kcf_Lcf, Mcf_Ncf_Ocf_Pcf);
     const __m128i Ief_Jef_Kef_Lef_Mef_Nef_Oef_Pef = _mm_unpackhi_epi32(Icf_Jcf_Kcf_Lcf, Mcf_Ncf_Ocf_Pcf);
 

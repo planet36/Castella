@@ -16,17 +16,15 @@
 
 #include <arm_neon.h>
 
-using aes_block_t = uint8x16_t;
-
 /// Perform AES ShiftRows, SubBytes, and MixColumns on \a data
 /**
 * \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vaeseq_u8
 * \sa https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
 */
-static aes_block_t
-aes_sr_sb_mc(aes_block_t data)
+static uint8x16_t
+aes_sr_sb_mc(uint8x16_t data)
 {
-    data = vaeseq_u8(data, aes_block_t{});
+    data = vaeseq_u8(data, uint8x16_t{});
     data = vaesmcq_u8(data);
     return data;
 }
@@ -44,12 +42,12 @@ aes_sr_sb_mc(aes_block_t data)
 * </blockquote>
 * \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
 */
-static aes_block_t
-aes_enc_twice(aes_block_t data, const aes_block_t aes_round_key)
+static uint8x16_t
+aes_enc_twice(uint8x16_t data, const uint8x16_t aes_round_key)
 {
     // https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
 
-    data = vaeseq_u8(data, aes_block_t{});
+    data = vaeseq_u8(data, uint8x16_t{});
     data = vaesmcq_u8(data);
 
     data = vaeseq_u8(data, aes_round_key);
@@ -61,13 +59,13 @@ aes_enc_twice(aes_block_t data, const aes_block_t aes_round_key)
 
 /// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
 template <unsigned int Nr>
-static aes_block_t
-aes_enc_x(aes_block_t data, const aes_block_t aes_round_key)
+static uint8x16_t
+aes_enc_x(uint8x16_t data, const uint8x16_t aes_round_key)
 {
     // https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
 
     // 1 time
-    data = vaeseq_u8(data, aes_block_t{});
+    data = vaeseq_u8(data, uint8x16_t{});
     data = vaesmcq_u8(data);
 
     // Nr-1 times
@@ -82,13 +80,13 @@ aes_enc_x(aes_block_t data, const aes_block_t aes_round_key)
 }
 
 /// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
-static aes_block_t
-aes_enc_nr(aes_block_t data, const aes_block_t aes_round_key, const unsigned int Nr)
+static uint8x16_t
+aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int Nr)
 {
     // https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
 
     // 1 time
-    data = vaeseq_u8(data, aes_block_t{});
+    data = vaeseq_u8(data, uint8x16_t{});
     data = vaesmcq_u8(data);
 
     // Nr-1 times
@@ -102,24 +100,24 @@ aes_enc_nr(aes_block_t data, const aes_block_t aes_round_key, const unsigned int
     return data;
 }
 
-/// Get an \c aes_block_t with sequentially increasing values, starting with \a x
+/// Get an \c uint8x16_t with sequentially increasing values, starting with \a x
 /**
 * The least significant 8-bit integer is \a x.  Each successive value is \c (x+i)%256.
 */
-static aes_block_t
+static uint8x16_t
 iota_u8(const uint8_t x)
 {
-    const aes_block_t iota = {
+    const uint8x16_t iota = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-    aes_block_t result = vdupq_n_u8(x);
+    uint8x16_t result = vdupq_n_u8(x);
 
     result = vaddq_u8(result, iota);
 
     return result;
 }
 
-static inline aes_block_t
+static inline uint8x16_t
 set_uint8x16(
     uint8_t b0,
     uint8_t b1,

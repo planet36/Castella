@@ -30,14 +30,18 @@ aes_sr_sb_mc(aes_block_t data)
 }
 
 /// Perform two rounds of AES encryption on \a data with \a aes_round_key
-/** {{{
-* "The Design of Rijndael: The Advanced Encryption Standard (AES), Second Edition"
-* https://doi.org/10.1007/978-3-662-60769-5
-* > Two rounds of Rijndael provide 'full diffusion' in the following sense:
-* > every state bit depends on all state bits two rounds ago, or a change in
-* > one state bit is likely to affect half of the state bits after two rounds.
+/**
+* ## _JDA_VRI_Rijndael_2002.pdf_
+* ### 3.5 The Number of Rounds
+* #### Page 41 (56)
+*
+* <blockquote>
+* Two rounds of Rijndael provide 'full diffusion' in the following sense: every
+* state bit depends on all state bits two rounds ago, or a change in one state
+* bit is likely to affect half of the state bits after two rounds.
+* </blockquote>
 * \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
-* }}} */
+*/
 static aes_block_t
 aes_enc_twice(aes_block_t data, const aes_block_t aes_round_key)
 {
@@ -72,9 +76,9 @@ aes_enc_nr(aes_block_t data, const aes_block_t aes_round_key, const unsigned int
 }
 
 /// Get an \c aes_block_t with sequentially increasing values, starting with \a x
-/** {{{
+/**
 * The least significant 8-bit integer is \a x.  Each successive value is \c (x+i)%256.
-* }}} */
+*/
 static aes_block_t
 iota_u8(const uint8_t x)
 {

@@ -75,7 +75,7 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
-/// Get an \c uint8x16_t with sequentially increasing values, starting with \a x
+/// Get a \c uint8x16_t with sequentially increasing values, starting with \a x
 /**
 * The least significant 8-bit integer is \a x.  Each successive value is \c (x+i)%256.
 */

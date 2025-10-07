@@ -1,2 +1,1 @@
-# Castella
-A customizable duplex/sponge construction
+# Castella: A heavyweight customizable duplex/sponge construction class

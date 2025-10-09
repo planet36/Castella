@@ -30,24 +30,6 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
-/// Get a \c uint8x16_t with sequentially increasing values, starting with \a x
-/**
-* The least significant 8-bit integer is \a x.  Each successive value is \c (x+i)%256.
-*/
-static uint8x16_t
-iota_u8(const uint8_t x)
-{
-    // least significant elem first
-    const uint8x16_t iota = _mm_setr_epi8(
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-
-    uint8x16_t result = _mm_set1_epi8(x);
-
-    result = _mm_add_epi8(result, iota);
-
-    return result;
-}
-
 static inline uint8x16_t
 set_uint8x16(
     uint8_t b0,

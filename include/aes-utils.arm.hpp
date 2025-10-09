@@ -37,26 +37,4 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
-static inline uint8x16_t
-set_uint8x16(
-    uint8_t b0,
-    uint8_t b1,
-    uint8_t b2,
-    uint8_t b3,
-    uint8_t b4,
-    uint8_t b5,
-    uint8_t b6,
-    uint8_t b7,
-    uint8_t b8,
-    uint8_t b9,
-    uint8_t b10,
-    uint8_t b11,
-    uint8_t b12,
-    uint8_t b13,
-    uint8_t b14,
-    uint8_t b15)
-{
-    return {b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15};
-}
-
 #endif

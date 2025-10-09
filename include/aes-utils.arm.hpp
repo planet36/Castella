@@ -16,19 +16,6 @@
 
 #include <arm_neon.h>
 
-/// Perform AES ShiftRows, SubBytes, and MixColumns on \a data
-/**
-* \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vaeseq_u8
-* \sa https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
-*/
-static uint8x16_t
-aes_sr_sb_mc(uint8x16_t data)
-{
-    data = vaeseq_u8(data, uint8x16_t{});
-    data = vaesmcq_u8(data);
-    return data;
-}
-
 /// Perform two rounds of AES encryption on \a data with \a aes_round_key
 /**
 * ## _JDA_VRI_Rijndael_2002.pdf_

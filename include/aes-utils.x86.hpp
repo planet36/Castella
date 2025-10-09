@@ -18,17 +18,6 @@
 
 using uint8x16_t = __m128i;
 
-/// Perform AES ShiftRows, SubBytes, and MixColumns on \a data
-/**
-* \sa https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_aesenc_si128&ig_expand=234,234
-*/
-static uint8x16_t
-aes_sr_sb_mc(uint8x16_t data)
-{
-    data = _mm_aesenc_si128(data, uint8x16_t{});
-    return data;
-}
-
 /// Perform two rounds of AES encryption on \a data with \a aes_round_key
 /**
 * ## _JDA_VRI_Rijndael_2002.pdf_

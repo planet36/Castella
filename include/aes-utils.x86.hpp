@@ -18,27 +18,6 @@
 
 using uint8x16_t = __m128i;
 
-/// Perform two rounds of AES encryption on \a data with \a aes_round_key
-/**
-* ## _JDA_VRI_Rijndael_2002.pdf_
-* ### 3.5 The Number of Rounds
-* #### Page 41 (56)
-*
-* <blockquote>
-* Two rounds of Rijndael provide 'full diffusion' in the following sense: every
-* state bit depends on all state bits two rounds ago, or a change in one state
-* bit is likely to affect half of the state bits after two rounds.
-* </blockquote>
-* \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
-*/
-static uint8x16_t
-aes_enc_twice(uint8x16_t data, const uint8x16_t aes_round_key)
-{
-    data = _mm_aesenc_si128(data, aes_round_key);
-    data = _mm_aesenc_si128(data, aes_round_key);
-    return data;
-}
-
 /// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
 template <unsigned int Nr>
 static uint8x16_t

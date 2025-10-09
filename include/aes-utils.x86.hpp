@@ -19,19 +19,6 @@
 using uint8x16_t = __m128i;
 
 /// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
-template <unsigned int Nr>
-static uint8x16_t
-aes_enc_x(uint8x16_t data, const uint8x16_t aes_round_key)
-{
-    // Nr times
-    for (decltype(Nr) r = 0; r < Nr; ++r)
-    {
-        data = _mm_aesenc_si128(data, aes_round_key);
-    }
-    return data;
-}
-
-/// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
 static uint8x16_t
 aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int Nr)
 {

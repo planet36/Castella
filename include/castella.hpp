@@ -914,12 +914,12 @@ public:
     /// `std::vector<std::byte>`
     // {{{
     /**
-    * \pre \a num_blocks_to_squeeze ≥ 0
-    * \pre \a num_blocks_to_squeeze ≤ \c R
+    * \pre \a n ≥ 0
+    * \pre \a n ≤ \c R
     *
     * The input suffix and padding bytes are added before squeezing.
     *
-    * Typical values of \a num_blocks_to_squeeze are 1, 2, 3, or 4.
+    * Typical values of \a n are 1, 2, 3, or 4.
     * A recommended value is \c C/2.
     *
     * At most \c R blocks are squeezed.
@@ -973,16 +973,16 @@ public:
     */
     // }}}
     [[nodiscard]]
-    std::vector<std::byte> squeeze_blocks(uint8_t num_blocks_to_squeeze)
+    std::vector<std::byte> squeeze_blocks(uint8_t n)
     {
         std::lock_guard lock{mtx_};
 
         // clamp
-        if (num_blocks_to_squeeze > R)
-            num_blocks_to_squeeze = R;
+        if (n > R)
+            n = R;
 
         // Add the input suffix and apply the padding rule before every
-        // squeeze, even if num_blocks_to_squeeze is 0.
+        // squeeze, even if n is 0.
         constexpr bool should_apply_padding_rule = true;
         update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX), should_apply_padding_rule);
 
@@ -990,7 +990,7 @@ public:
         assert(cur_input_byte_idx_ == 0);
 #endif
 
-        const auto block_sp = std::span(state_).subspan(0, num_blocks_to_squeeze);
+        const auto block_sp = std::span(state_).subspan(0, n);
 
         const auto byte_sp = std::as_bytes(block_sp);
 

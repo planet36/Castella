@@ -990,9 +990,7 @@ public:
         assert(cur_input_byte_idx_ == 0);
 #endif
 
-        const auto block_sp = std::span(state_).subspan(0, n);
-
-        const auto byte_sp = std::as_bytes(block_sp);
+        const auto byte_sp = std::as_bytes(std::span(state_).subspan(0, n));
 
 #if defined(__cpp_lib_ranges_to_container)
         return byte_sp | std::ranges::to<std::vector>(); // range adaptor

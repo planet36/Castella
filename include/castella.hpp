@@ -1003,8 +1003,13 @@ public:
 #endif
     }
 
-    /// Squeeze \c C/2 blocks from the outer state, and return them as a
+    /// Squeeze blocks from the outer state, and return them as a
     /// `std::vector<std::byte>`
+    // {{{
+    /**
+    * The amount of blocks returned is equal to half the capacity.
+    */
+    // }}}
     [[nodiscard]]
     std::vector<std::byte> squeeze_blocks()
     {

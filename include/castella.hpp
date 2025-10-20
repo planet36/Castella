@@ -226,11 +226,11 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 *     { hash_obj.update(std::as_bytes(std::span{s})); }
 *
 *     //hash_obj.update(nullptr, 0, true); // blank call
-*     //(void)hash_obj.squeeze(0); // mute call
+*     //(void)hash_obj.squeeze_blocks(0); // mute call
 *
 *     //uint8_t num_blocks_to_squeeze = capacity / 2;
-*     //auto digest_bytes = hash_obj.squeeze(num_blocks_to_squeeze);
-*     auto digest_bytes = hash_obj.squeeze();
+*     //auto digest_bytes = hash_obj.squeeze_blocks(num_blocks_to_squeeze);
+*     auto digest_bytes = hash_obj.squeeze_blocks();
 *     fmt::println("{:02x}", fmt::join(digest_bytes, ""));
 *     return 0;
 * }
@@ -973,7 +973,7 @@ public:
     */
     // }}}
     [[nodiscard]]
-    std::vector<std::byte> squeeze(uint8_t num_blocks_to_squeeze)
+    std::vector<std::byte> squeeze_blocks(uint8_t num_blocks_to_squeeze)
     {
         std::lock_guard lock{mtx_};
 
@@ -1008,9 +1008,9 @@ public:
     /// Squeeze \c C/2 blocks from the outer state, and return them as a
     /// `std::vector<std::byte>`
     [[nodiscard]]
-    std::vector<std::byte> squeeze()
+    std::vector<std::byte> squeeze_blocks()
     {
-        return squeeze(C / 2);
+        return squeeze_blocks(C / 2);
     }
 
     unsigned int get_state_size_bytes() const { return sizeof(block_t) * B; }

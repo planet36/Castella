@@ -977,6 +977,10 @@ public:
     {
         std::lock_guard lock{mtx_};
 
+        // clamp
+        if (num_blocks_to_squeeze > R)
+            num_blocks_to_squeeze = R;
+
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if num_blocks_to_squeeze is 0.
         constexpr bool should_apply_padding_rule = true;
@@ -985,10 +989,6 @@ public:
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ == 0);
 #endif
-
-        // clamp num_blocks_to_squeeze
-        if (num_blocks_to_squeeze > R)
-            num_blocks_to_squeeze = R;
 
         const auto block_sp = std::span(state_).subspan(0, num_blocks_to_squeeze);
 

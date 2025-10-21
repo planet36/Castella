@@ -145,7 +145,6 @@ inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
 inline constexpr uint8_t NUM_ROUNDS_MAX = std::size(round_keys);
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 
-
 /// The Castella permutation function
 // {{{
 /**
@@ -339,8 +338,7 @@ struct alignas(block_t) Duplex
     static_assert(R_MIN <= R_MAX);
 
 private:
-
-    arr_blocks<B> state_ {};
+    arr_blocks<B> state_{};
 
     std::mutex mtx_;
 
@@ -350,7 +348,6 @@ private:
     unsigned int cur_input_byte_idx_ = 0;
 
 public:
-
     /// The size (in blocks) of the capacity
     // {{{
     /**
@@ -462,7 +459,6 @@ public:
     const uint8_t INPUT_SUFFIX;
 
 private:
-
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
     // {{{
     /**
@@ -473,34 +469,28 @@ private:
     void check_constraints_()
     {
         if (C < C_MIN)
-            throw std::invalid_argument(fmt::format("C ({}) < C_MIN ({})",
-                                                    C, C_MIN));
+            throw std::invalid_argument(fmt::format("C ({}) < C_MIN ({})", C, C_MIN));
 
         if (C > C_MAX)
-            throw std::invalid_argument(fmt::format("C ({}) > C_MAX ({})",
-                                                    C, C_MAX));
+            throw std::invalid_argument(fmt::format("C ({}) > C_MAX ({})", C, C_MAX));
 
 #if defined(DEBUG)
         // {{{ These checks aren't necessary if other tests passed.
         if (R < R_MIN)
-            throw std::invalid_argument(fmt::format("R ({}) < R_MIN ({})",
-                                                    R, R_MIN));
+            throw std::invalid_argument(fmt::format("R ({}) < R_MIN ({})", R, R_MIN));
 
         if (R > R_MAX)
-            throw std::invalid_argument(fmt::format("R ({}) > R_MAX ({})",
-                                                    R, R_MAX));
+            throw std::invalid_argument(fmt::format("R ({}) > R_MAX ({})", R, R_MAX));
         //}}}
 #endif
 
         if (NUM_ROUNDS < NUM_ROUNDS_MIN)
-            throw std::invalid_argument(fmt::format(
-                        "NUM_ROUNDS ({}) < NUM_ROUNDS_MIN ({})",
-                        NUM_ROUNDS, NUM_ROUNDS_MIN));
+            throw std::invalid_argument(fmt::format("NUM_ROUNDS ({}) < NUM_ROUNDS_MIN ({})",
+                                                    NUM_ROUNDS, NUM_ROUNDS_MIN));
 
         if (NUM_ROUNDS > NUM_ROUNDS_MAX)
-            throw std::invalid_argument(fmt::format(
-                        "NUM_ROUNDS ({}) > NUM_ROUNDS_MAX ({})",
-                        NUM_ROUNDS, NUM_ROUNDS_MAX));
+            throw std::invalid_argument(fmt::format("NUM_ROUNDS ({}) > NUM_ROUNDS_MAX ({})",
+                                                    NUM_ROUNDS, NUM_ROUNDS_MAX));
     }
 
     /// Zeroize the state and input buffer
@@ -608,14 +598,12 @@ private:
         // The set bits must not overlap.
         constexpr uint8_t first_padding_byte_pattern = 0b0000'0001;
         constexpr uint8_t last_padding_byte_pattern = 0b1000'0000;
-        static_assert(
-                (first_padding_byte_pattern & last_padding_byte_pattern) == 0,
-                "set bits must not overlap");
+        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) == 0,
+                      "set bits must not overlap");
 
         input_bytes_[cur_input_byte_idx_] = first_padding_byte_pattern;
 
-        const decltype(cur_input_byte_idx_) last_input_byte_idx =
-            get_rate_size_bytes() - 1;
+        const decltype(cur_input_byte_idx_) last_input_byte_idx = get_rate_size_bytes() - 1;
 
         // {{{
         /*
@@ -631,8 +619,7 @@ private:
         absorb_();
     }
 
-    void update_(const void* data, size_t len,
-                 const bool should_apply_padding_rule)
+    void update_(const void* data, size_t len, const bool should_apply_padding_rule)
     {
         auto src = static_cast<const uint8_t*>(data);
 
@@ -646,7 +633,7 @@ private:
                 get_rate_size_bytes() - cur_input_byte_idx_;
             const decltype(cur_input_byte_idx_) num_bytes_to_add =
                 static_cast<decltype(cur_input_byte_idx_)>(
-                        std::min(static_cast<size_t>(available_space), len));
+                    std::min(static_cast<size_t>(available_space), len));
 
 #if defined(DEBUG)
             assert(available_space > 0);
@@ -729,8 +716,7 @@ private:
     // }}}
     void encode_string_(const std::string_view s)
     {
-        static_assert(sizeof(decltype(s)::value_type) == 1,
-                "must be a byte string");
+        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
         const size_t len = std::size(s);
         left_encode_(len);
         update_(std::data(s), len, false);
@@ -775,9 +761,8 @@ private:
     * </blockquote>
     */
     // }}}
-    void init_(
-            const std::string_view function_name,
-            const std::string_view customization_str)
+    void init_(const std::string_view function_name,
+               const std::string_view customization_str)
     {
         // {{{
         /*
@@ -820,7 +805,6 @@ private:
     }
 
 public:
-
     /// ctor
     // {{{
     /**
@@ -839,19 +823,21 @@ public:
     * </blockquote>
     */
     // }}}
-    explicit Duplex(
-            const uint8_t c, // capacity
-            const uint8_t num_rounds,
-            const uint8_t input_suffix,
-            const std::string_view function_name = "",
-            const std::string_view customization_str = "") :
-        C(c), R(B - C), NUM_ROUNDS(num_rounds), INPUT_SUFFIX(input_suffix)
+    explicit Duplex(const uint8_t c, // capacity
+                    const uint8_t num_rounds,
+                    const uint8_t input_suffix,
+                    const std::string_view function_name = "",
+                    const std::string_view customization_str = "") :
+        C(c),
+        R(B - C),
+        NUM_ROUNDS(num_rounds),
+        INPUT_SUFFIX(input_suffix)
     {
         // Must check constraints before allocating the input buffer.
         check_constraints_();
 
         // Must allocate the input buffer before calling zeroize_().
-        input_blocks_ = new(std::align_val_t{alignof(block_t)}) block_t[R];
+        input_blocks_ = new (std::align_val_t{alignof(block_t)}) block_t[R];
 
         // Must zeroize the state and input buffer before calling init_().
         zeroize_();
@@ -906,8 +892,7 @@ public:
     {
         std::lock_guard lock{mtx_};
 
-        update_(std::data(byte_sp), std::size(byte_sp),
-                should_apply_padding_rule);
+        update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
     }
 
     /// Squeeze blocks from the outer state, and return them as a

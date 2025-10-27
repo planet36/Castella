@@ -1068,32 +1068,7 @@ public:
     [[nodiscard]]
     std::vector<std::byte> squeeze_blocks(uint8_t n)
     {
-        std::lock_guard lock{mtx_};
-
-        // clamp
-        if (n > R)
-            n = R;
-
-        // Add the input suffix and apply the padding rule before every
-        // squeeze, even if n is 0.
-        constexpr bool should_apply_padding_rule = true;
-        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX), should_apply_padding_rule);
-
-#if defined(DEBUG)
-        assert(cur_input_byte_idx_ == 0);
-#endif
-
-        const auto byte_sp = std::as_bytes(std::span(state_).subspan(0, n));
-
-#if defined(__cpp_lib_ranges_to_container)
-        return byte_sp | std::ranges::to<std::vector>(); // range adaptor
-#elif defined(__cpp_lib_containers_ranges)
-        return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
-#else
-        std::vector<std::byte> byte_vec;
-        std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
-        return byte_vec;
-#endif
+        return squeeze_bytes(n * sizeof(block_t));
     }
 
     /// Squeeze blocks from the outer state, and return them as a

@@ -1002,38 +1002,6 @@ public:
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
-    /// Squeeze blocks from the outer state, and return them as a
-    /// `std::vector<std::byte>`
-    // {{{
-    /**
-    * \pre \a n ≥ 0
-    * \pre \a n ≤ \c R
-    *
-    * Typical values of \a n are 1, 2, 3, or 4.
-    * A recommended value is \c C/2.
-    *
-    * At most \c R blocks are squeezed.
-    */
-    // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_blocks(uint8_t n)
-    {
-        return squeeze_bytes(n * sizeof(block_t));
-    }
-
-    /// Squeeze blocks from the outer state, and return them as a
-    /// `std::vector<std::byte>`
-    // {{{
-    /**
-    * The amount of blocks returned is equal to half the capacity.
-    */
-    // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_blocks()
-    {
-        return squeeze_blocks(C / 2);
-    }
-
     unsigned int get_state_size_bytes() const { return sizeof(block_t) * B; }
 
     unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }

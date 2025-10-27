@@ -907,7 +907,8 @@ public:
     *
     * At most \c get_rate_size_bytes() bytes are squeezed.
     *
-    * The input suffix and padding bytes are added before squeezing.
+    * The input suffix and padding bytes are added before squeezing, even if \a n
+    * is 0.
     *
     * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
     * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
@@ -1013,7 +1014,8 @@ public:
     *
     * At most \c R blocks are squeezed.
     *
-    * The input suffix and padding bytes are added before squeezing.
+    * The input suffix and padding bytes are added before squeezing, even if \a n
+    * is 0.
     *
     * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
     * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the

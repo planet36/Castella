@@ -1013,56 +1013,6 @@ public:
     * A recommended value is \c C/2.
     *
     * At most \c R blocks are squeezed.
-    *
-    * The input suffix and padding bytes are added before squeezing, even if \a n
-    * is 0.
-    *
-    * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
-    * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
-    * latter approach.
-    *
-    *
-    * ## _CSF-0.1.pdf_
-    *
-    * ### 2.2 The sponge construction
-    * #### Page 13 / 93
-    *
-    * <blockquote>
-    * Squeezing phase
-    *
-    * The outer part of the state is iteratively returned as output blocks,
-    * interleaved with applications of the function 𝑓.  The number of iterations
-    * is determined by the requested number of bits ℓ.
-    * </blockquote>
-    *
-    *
-    * ### 2.3 The duplex construction
-    * #### Page 14 / 93
-    *
-    * <blockquote>
-    * The maximum number of bits ℓ one can request is 𝑟 and the input string σ
-    * shall be short enough such that after padding it results in a single 𝑟-bit
-    * block.  We call the maximum length of σ the _maximum duplex rate_ …
-    * </blockquote>
-    *
-    * **_NOTE:_** Castella does not enforce any such _maximum duplex rate_.
-    *
-    * <blockquote>
-    * We denote a call with σ the empty string by the term _blank call_, and a
-    * call with ℓ = 0, i.e., without output a _mute call_.
-    * </blockquote>
-    *
-    *
-    * ### 2.4.2 The squeezing function
-    * #### Page 16 / 93
-    *
-    * <blockquote>
-    * An auxiliary function that is in some way the dual of the absorbing
-    * function is the squeezing function SQUEEZE[𝑓,𝑟].  For a given state 𝑠,
-    * squeeze(𝑠,ℓ) denotes the output truncated to ℓ bits of the sponge function
-    * with 𝑠 the state at the beginning of the squeezing phase.  The squeezing
-    * function is defined in Algorithm 4.
-    * </blockquote>
     */
     // }}}
     [[nodiscard]]

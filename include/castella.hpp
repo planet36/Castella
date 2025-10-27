@@ -1011,7 +1011,7 @@ public:
     * The input suffix and padding bytes are added before squeezing.
     *
     * Typical values of \a n are 32, 48, or 64.
-    * A recommended value is `get_rate_size_bytes() * C/2`.
+    * A recommended value is `get_capacity_size_bytes() / 2`.
     *
     * At most \c get_rate_size_bytes() bytes are squeezed.
     *

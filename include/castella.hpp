@@ -205,7 +205,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 *
 * int main() {
 *     uint8_t capacity = 4;
-*     uint8_t num_rounds = 4;
+*     uint8_t num_rounds = 6;
 *     uint8_t input_suffix = 0b1;
 *     std::string_view function_name = "Castella";
 *     std::string_view customization_str = "Kwyjibo";

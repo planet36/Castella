@@ -225,11 +225,11 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 *     { hash_obj.update(std::as_bytes(std::span{s})); }
 *
 *     //hash_obj.update(nullptr, 0, true); // blank call
-*     //(void)hash_obj.squeeze_blocks(0); // mute call
+*     //(void)hash_obj.squeeze_bytes(0); // mute call
 *
-*     //uint8_t num_blocks_to_squeeze = capacity / 2;
-*     //auto digest_bytes = hash_obj.squeeze_blocks(num_blocks_to_squeeze);
-*     auto digest_bytes = hash_obj.squeeze_blocks();
+*     //unsigned int num_bytes_to_squeeze = hash_obj.get_capacity_size_bytes() / 2;
+*     //auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
+*     auto digest_bytes = hash_obj.squeeze_bytes();
 *     fmt::println("{:02x}", fmt::join(digest_bytes, ""));
 *     return 0;
 * }

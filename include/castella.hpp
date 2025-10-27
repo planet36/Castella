@@ -902,12 +902,12 @@ public:
     * \pre \a n ≥ 0
     * \pre \a n ≤ \c get_rate_size_bytes()
     *
-    * The input suffix and padding bytes are added before squeezing.
-    *
     * Typical values of \a n are 32, 48, or 64.
     * A recommended value is `get_capacity_size_bytes() / 2`.
     *
     * At most \c get_rate_size_bytes() bytes are squeezed.
+    *
+    * The input suffix and padding bytes are added before squeezing.
     *
     * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
     * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
@@ -1008,12 +1008,12 @@ public:
     * \pre \a n ≥ 0
     * \pre \a n ≤ \c R
     *
-    * The input suffix and padding bytes are added before squeezing.
-    *
     * Typical values of \a n are 1, 2, 3, or 4.
     * A recommended value is \c C/2.
     *
     * At most \c R blocks are squeezed.
+    *
+    * The input suffix and padding bytes are added before squeezing.
     *
     * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
     * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the

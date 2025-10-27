@@ -895,112 +895,6 @@ public:
         update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
     }
 
-    /// Squeeze blocks from the outer state, and return them as a
-    /// `std::vector<std::byte>`
-    // {{{
-    /**
-    * \pre \a n ≥ 0
-    * \pre \a n ≤ \c R
-    *
-    * The input suffix and padding bytes are added before squeezing.
-    *
-    * Typical values of \a n are 1, 2, 3, or 4.
-    * A recommended value is \c C/2.
-    *
-    * At most \c R blocks are squeezed.
-    *
-    * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
-    * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
-    * latter approach.
-    *
-    *
-    * ## _CSF-0.1.pdf_
-    *
-    * ### 2.2 The sponge construction
-    * #### Page 13 / 93
-    *
-    * <blockquote>
-    * Squeezing phase
-    *
-    * The outer part of the state is iteratively returned as output blocks,
-    * interleaved with applications of the function 𝑓.  The number of iterations
-    * is determined by the requested number of bits ℓ.
-    * </blockquote>
-    *
-    *
-    * ### 2.3 The duplex construction
-    * #### Page 14 / 93
-    *
-    * <blockquote>
-    * The maximum number of bits ℓ one can request is 𝑟 and the input string σ
-    * shall be short enough such that after padding it results in a single 𝑟-bit
-    * block.  We call the maximum length of σ the _maximum duplex rate_ …
-    * </blockquote>
-    *
-    * **_NOTE:_** Castella does not enforce any such _maximum duplex rate_.
-    *
-    * <blockquote>
-    * We denote a call with σ the empty string by the term _blank call_, and a
-    * call with ℓ = 0, i.e., without output a _mute call_.
-    * </blockquote>
-    *
-    *
-    * ### 2.4.2 The squeezing function
-    * #### Page 16 / 93
-    *
-    * <blockquote>
-    * An auxiliary function that is in some way the dual of the absorbing
-    * function is the squeezing function SQUEEZE[𝑓,𝑟].  For a given state 𝑠,
-    * squeeze(𝑠,ℓ) denotes the output truncated to ℓ bits of the sponge function
-    * with 𝑠 the state at the beginning of the squeezing phase.  The squeezing
-    * function is defined in Algorithm 4.
-    * </blockquote>
-    */
-    // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_blocks(uint8_t n)
-    {
-        std::lock_guard lock{mtx_};
-
-        // clamp
-        if (n > R)
-            n = R;
-
-        // Add the input suffix and apply the padding rule before every
-        // squeeze, even if n is 0.
-        constexpr bool should_apply_padding_rule = true;
-        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX), should_apply_padding_rule);
-
-#if defined(DEBUG)
-        assert(cur_input_byte_idx_ == 0);
-#endif
-
-        const auto byte_sp = std::as_bytes(std::span(state_).subspan(0, n));
-
-#if defined(__cpp_lib_ranges_to_container)
-        return byte_sp | std::ranges::to<std::vector>(); // range adaptor
-#elif defined(__cpp_lib_containers_ranges)
-        return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
-#else
-        std::vector<std::byte> byte_vec;
-        std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
-        return byte_vec;
-#endif
-    }
-
-    /// Squeeze blocks from the outer state, and return them as a
-    /// `std::vector<std::byte>`
-    // {{{
-    /**
-    * The amount of blocks returned is equal to half the capacity.
-    */
-    // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_blocks()
-    {
-        return squeeze_blocks(C / 2);
-    }
-
     /// Squeeze bytes from the outer state, and return them as a
     /// `std::vector<std::byte>`
     // {{{
@@ -1105,6 +999,112 @@ public:
     std::vector<std::byte> squeeze_bytes()
     {
         return squeeze_bytes(get_capacity_size_bytes() / 2);
+    }
+
+    /// Squeeze blocks from the outer state, and return them as a
+    /// `std::vector<std::byte>`
+    // {{{
+    /**
+    * \pre \a n ≥ 0
+    * \pre \a n ≤ \c R
+    *
+    * The input suffix and padding bytes are added before squeezing.
+    *
+    * Typical values of \a n are 1, 2, 3, or 4.
+    * A recommended value is \c C/2.
+    *
+    * At most \c R blocks are squeezed.
+    *
+    * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
+    * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
+    * latter approach.
+    *
+    *
+    * ## _CSF-0.1.pdf_
+    *
+    * ### 2.2 The sponge construction
+    * #### Page 13 / 93
+    *
+    * <blockquote>
+    * Squeezing phase
+    *
+    * The outer part of the state is iteratively returned as output blocks,
+    * interleaved with applications of the function 𝑓.  The number of iterations
+    * is determined by the requested number of bits ℓ.
+    * </blockquote>
+    *
+    *
+    * ### 2.3 The duplex construction
+    * #### Page 14 / 93
+    *
+    * <blockquote>
+    * The maximum number of bits ℓ one can request is 𝑟 and the input string σ
+    * shall be short enough such that after padding it results in a single 𝑟-bit
+    * block.  We call the maximum length of σ the _maximum duplex rate_ …
+    * </blockquote>
+    *
+    * **_NOTE:_** Castella does not enforce any such _maximum duplex rate_.
+    *
+    * <blockquote>
+    * We denote a call with σ the empty string by the term _blank call_, and a
+    * call with ℓ = 0, i.e., without output a _mute call_.
+    * </blockquote>
+    *
+    *
+    * ### 2.4.2 The squeezing function
+    * #### Page 16 / 93
+    *
+    * <blockquote>
+    * An auxiliary function that is in some way the dual of the absorbing
+    * function is the squeezing function SQUEEZE[𝑓,𝑟].  For a given state 𝑠,
+    * squeeze(𝑠,ℓ) denotes the output truncated to ℓ bits of the sponge function
+    * with 𝑠 the state at the beginning of the squeezing phase.  The squeezing
+    * function is defined in Algorithm 4.
+    * </blockquote>
+    */
+    // }}}
+    [[nodiscard]]
+    std::vector<std::byte> squeeze_blocks(uint8_t n)
+    {
+        std::lock_guard lock{mtx_};
+
+        // clamp
+        if (n > R)
+            n = R;
+
+        // Add the input suffix and apply the padding rule before every
+        // squeeze, even if n is 0.
+        constexpr bool should_apply_padding_rule = true;
+        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX), should_apply_padding_rule);
+
+#if defined(DEBUG)
+        assert(cur_input_byte_idx_ == 0);
+#endif
+
+        const auto byte_sp = std::as_bytes(std::span(state_).subspan(0, n));
+
+#if defined(__cpp_lib_ranges_to_container)
+        return byte_sp | std::ranges::to<std::vector>(); // range adaptor
+#elif defined(__cpp_lib_containers_ranges)
+        return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
+#else
+        std::vector<std::byte> byte_vec;
+        std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
+        return byte_vec;
+#endif
+    }
+
+    /// Squeeze blocks from the outer state, and return them as a
+    /// `std::vector<std::byte>`
+    // {{{
+    /**
+    * The amount of blocks returned is equal to half the capacity.
+    */
+    // }}}
+    [[nodiscard]]
+    std::vector<std::byte> squeeze_blocks()
+    {
+        return squeeze_blocks(C / 2);
     }
 
     unsigned int get_state_size_bytes() const { return sizeof(block_t) * B; }

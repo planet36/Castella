@@ -685,16 +685,16 @@ private:
     * </blockquote>
     */
     // }}}
-    void left_encode_(const size_t len)
+    void left_encode_(const size_t x)
     {
-        const auto w = static_cast<uint8_t>(byte_width(len));
+        const auto w = static_cast<uint8_t>(byte_width(x));
 
 #if defined(DEBUG)
         assert(w >= 1);
 #endif
 
         update_(&w, sizeof(w), false);
-        update_(&len, w, false);
+        update_(&x, w, false);
     }
 
     /// Unambiguously encode the string into the input buffer

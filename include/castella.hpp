@@ -697,6 +697,33 @@ private:
         update_(&x, w, false);
     }
 
+    /// Unambiguously encode the integer into the input buffer
+    // {{{
+    /**
+    * ## _NIST.SP.800-185.pdf_
+    *
+    * ### 2.3.1 Integer to Byte String Encoding
+    * #### Page 5 (11)
+    *
+    * <blockquote>
+    * right_encode(𝑥) encodes the integer 𝑥 as a byte string in a way that can be
+    * unambiguously parsed from the end of the string by inserting the length of
+    * the byte string after the byte string representation of 𝑥.
+    * </blockquote>
+    */
+    // }}}
+    void right_encode_(const size_t x)
+    {
+        const auto w = static_cast<uint8_t>(byte_width(x));
+
+#if defined(DEBUG)
+        assert(w >= 1);
+#endif
+
+        update_(&x, w, false);
+        update_(&w, sizeof(w), false);
+    }
+
     /// Unambiguously encode the string into the input buffer
     // {{{
     /**

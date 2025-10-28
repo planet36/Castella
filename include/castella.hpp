@@ -868,14 +868,17 @@ public:
     * \param len the size (in bytes) of the input data
     * \param should_apply_padding_rule if the padding rule should be applied
     * after the input data is consumed
+    * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    void update(const void* data, size_t len,
-                const bool should_apply_padding_rule = false)
+    Duplex& update(const void* data, size_t len,
+                   const bool should_apply_padding_rule = false)
     {
         std::lock_guard lock{mtx_};
 
         update_(data, len, should_apply_padding_rule);
+
+        return *this;
     }
 
     /// Consume the input data into the input buffer, and optionally apply the
@@ -885,14 +888,17 @@ public:
     * \param byte_sp the input data
     * \param should_apply_padding_rule if the padding rule should be applied
     * after the input data is consumed
+    * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    void update(const std::span<const std::byte> byte_sp,
-                const bool should_apply_padding_rule = false)
+    Duplex& update(const std::span<const std::byte> byte_sp,
+                   const bool should_apply_padding_rule = false)
     {
         std::lock_guard lock{mtx_};
 
         update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
+
+        return *this;
     }
 
     /// Squeeze bytes from the outer state, and return them as a

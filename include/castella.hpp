@@ -823,9 +823,9 @@ public:
     * </blockquote>
     */
     // }}}
-    explicit Duplex(const uint8_t c, // capacity
+    explicit Duplex(const uint8_t c, // capacity (in blocks)
                     const uint8_t num_rounds,
-                    const uint8_t input_suffix,
+                    const uint8_t input_suffix, // The cSHAKE input suffix is 0b00.
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
         C(c),
@@ -901,6 +901,7 @@ public:
     /**
     * \pre \a n ≥ 0
     * \pre \a n ≤ \c get_rate_size_bytes()
+    * \param n the number of bytes to squeeze from the outer state
     *
     * Typical values of \a n are 32, 48, or 64.
     * A recommended value is `get_capacity_size_bytes() / 2`.
@@ -993,7 +994,7 @@ public:
     /// `std::vector<std::byte>`
     // {{{
     /**
-    * The amount of bytes returned is equal to half the capacity.
+    * The number of bytes returned is equal to half the capacity.
     */
     // }}}
     [[nodiscard]]

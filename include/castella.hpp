@@ -751,7 +751,7 @@ private:
     void encode_bytes_(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return encode_bytes_(std::as_bytes(std::span(s)));
+        return encode_bytes_(std::as_bytes(std::span{s}));
     }
 
     /// Initialize the state
@@ -1015,7 +1015,7 @@ public:
         assert(cur_input_byte_idx_ == 0);
 #endif
 
-        const auto byte_sp = std::as_bytes(std::span(state_)).subspan(0, n);
+        const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
 
 #if defined(__cpp_lib_ranges_to_container)
         return byte_sp | std::ranges::to<std::vector>(); // range adaptor

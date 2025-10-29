@@ -836,6 +836,11 @@ private:
         }
     }
 
+    void update_(const std::span<const std::byte> byte_sp, const bool should_apply_padding_rule)
+    {
+        update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
+    }
+
     /// Unambiguously encode the integer into the input buffer
     // {{{
     /**
@@ -911,7 +916,7 @@ private:
     {
         const size_t len = std::size(byte_sp);
         left_encode_(len);
-        update_(std::data(byte_sp), len, false);
+        update_(byte_sp, false);
     }
 
     void encode_bytes_(const std::string_view s)
@@ -1094,7 +1099,7 @@ public:
     {
         std::lock_guard lock{mtx_};
 
-        update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
+        update_(byte_sp, should_apply_padding_rule);
 
         return *this;
     }

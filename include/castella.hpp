@@ -685,7 +685,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void left_encode_(const size_t x)
+    void left_encode_(const std::unsigned_integral auto x)
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -712,7 +712,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void right_encode_(const size_t x)
+    void right_encode_(const std::unsigned_integral auto x)
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 

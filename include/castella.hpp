@@ -233,7 +233,6 @@ encode_bytes(const std::string_view s)
     return encode_bytes(std::as_bytes(std::span{s}));
 }
 
-
 /// The namespace for the Castella round keys, permutation function, and duplex
 /// class
 namespace Castella
@@ -758,16 +757,16 @@ private:
         assert(available_space > 0);
 #endif
 
-        uint8_t* input_bytes_ = reinterpret_cast<uint8_t*>(input_blocks_);
-        uint8_t* dst = &input_bytes_[cur_input_byte_idx_];
+        std::byte* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
+        std::byte* dst = &input_bytes_[cur_input_byte_idx_];
 
         // Zeroize the available space in the input buffer.
         (void)std::memset(dst, 0, num_bytes_to_add);
 
         // The set bits must not overlap.
-        constexpr uint8_t first_padding_byte_pattern = 0b0000'0001;
-        constexpr uint8_t last_padding_byte_pattern = 0b1000'0000;
-        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) == 0,
+        constexpr std::byte first_padding_byte_pattern{0b0000'0001};
+        constexpr std::byte last_padding_byte_pattern{0b1000'0000};
+        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) == std::byte{0},
                       "set bits must not overlap");
 
         input_bytes_[cur_input_byte_idx_] = first_padding_byte_pattern;
@@ -790,7 +789,7 @@ private:
 
     void update_(const void* data, size_t len, const bool should_apply_padding_rule)
     {
-        auto src = static_cast<const uint8_t*>(data);
+        auto src = static_cast<const std::byte*>(data);
 
         while (len > 0)
         {
@@ -807,8 +806,8 @@ private:
             assert(num_bytes_to_add > 0);
 #endif
 
-            uint8_t* input_bytes_ = reinterpret_cast<uint8_t*>(input_blocks_);
-            uint8_t* dst = &input_bytes_[cur_input_byte_idx_];
+            std::byte* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
+            std::byte* dst = &input_bytes_[cur_input_byte_idx_];
 
             (void)std::memcpy(dst, src, num_bytes_to_add);
 

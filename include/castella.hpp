@@ -31,7 +31,6 @@
 
 #pragma once
 
-#include "aes-utils.hpp"
 #include "simd-transpose.hpp"
 
 #include <algorithm>
@@ -54,6 +53,55 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+
+#if defined(__x86_64__) && defined(__AES__)
+
+#include <immintrin.h>
+
+using uint8x16_t = __m128i;
+
+/// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
+static uint8x16_t
+aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int Nr)
+{
+    // Nr times
+    for (std::remove_const_t<decltype(Nr)> r = 0; r < Nr; ++r)
+    {
+        data = _mm_aesenc_si128(data, aes_round_key);
+    }
+    return data;
+}
+
+#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
+
+#include <arm_neon.h>
+
+/// Perform \a Nr rounds of AES encryption on \a data with \a aes_round_key
+static uint8x16_t
+aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int Nr)
+{
+    // https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a/
+
+    // 1 time
+    data = vaeseq_u8(data, uint8x16_t{});
+    data = vaesmcq_u8(data);
+
+    // Nr-1 times
+    for (std::remove_const_t<decltype(Nr)> r = 1; r < Nr; ++r)
+    {
+        data = vaeseq_u8(data, aes_round_key);
+        data = vaesmcq_u8(data);
+    }
+
+    data ^= aes_round_key;
+    return data;
+}
+
+#else
+
+#error "Architecture not supported"
+
+#endif
 
 /// Load 16 bytes from \a src into an \c uint8x16_t
 // {{{

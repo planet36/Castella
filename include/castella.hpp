@@ -724,7 +724,7 @@ private:
         update_(&w, sizeof(w), false);
     }
 
-    /// Unambiguously encode the string into the input buffer
+    /// Unambiguously encode the byte string into the input buffer
     // {{{
     /**
     * ## _NIST.SP.800-185.pdf_

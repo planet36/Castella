@@ -741,12 +741,17 @@ private:
     * </blockquote>
     */
     // }}}
+    void encode_bytes_(const std::span<const std::byte> byte_sp)
+    {
+        const size_t len = std::size(byte_sp);
+        left_encode_(len);
+        update_(std::data(byte_sp), len, false);
+    }
+
     void encode_bytes_(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        const size_t len = std::size(s);
-        left_encode_(len);
-        update_(std::data(s), len, false);
+        return encode_bytes_(std::as_bytes(std::span(s)));
     }
 
     /// Initialize the state

@@ -582,9 +582,9 @@ private:
         assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
 
-        const decltype(cur_input_byte_idx_) available_space =
+        const size_t available_space =
             get_rate_size_bytes() - cur_input_byte_idx_;
-        const decltype(cur_input_byte_idx_) num_bytes_to_add = available_space;
+        const size_t num_bytes_to_add = available_space;
 
 #if defined(DEBUG)
         assert(available_space > 0);
@@ -604,7 +604,7 @@ private:
 
         input_bytes_[cur_input_byte_idx_] = first_padding_byte_pattern;
 
-        const decltype(cur_input_byte_idx_) last_input_byte_idx = get_rate_size_bytes() - 1;
+        const size_t last_input_byte_idx = get_rate_size_bytes() - 1;
 
         // {{{
         /*
@@ -630,11 +630,9 @@ private:
             assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
 
-            const decltype(cur_input_byte_idx_) available_space =
+            const size_t available_space =
                 get_rate_size_bytes() - cur_input_byte_idx_;
-            const decltype(cur_input_byte_idx_) num_bytes_to_add =
-                static_cast<decltype(cur_input_byte_idx_)>(
-                    std::min(static_cast<size_t>(available_space), len));
+            const size_t num_bytes_to_add = std::min(available_space, len);
 
 #if defined(DEBUG)
             assert(available_space > 0);

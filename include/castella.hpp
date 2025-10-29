@@ -32,11 +32,11 @@
 #pragma once
 
 #include "aes-utils.hpp"
-#include "byte_width.hpp"
 #include "simd-transpose.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #if defined(DEBUG)
 #include <cassert>
 #endif
@@ -67,6 +67,17 @@ load16(const void* src)
     uint8x16_t dst{};
     (void)std::memcpy(&dst, src, sizeof(dst));
     return dst;
+}
+
+/// Get the byte width of an unsigned integer
+constexpr unsigned int
+byte_width(const std::unsigned_integral auto x)
+{
+    // std::bit_width(0) returns 0, but we want it to be 1
+    if (x == 0)
+        return 1;
+    const unsigned int w = static_cast<unsigned int>(std::bit_width(x));
+    return (w / 8) + (w % 8 != 0);
 }
 
 /// Encode \a x into a byte string

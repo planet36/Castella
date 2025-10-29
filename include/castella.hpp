@@ -857,7 +857,7 @@ public:
     // }}}
     explicit Duplex(const uint8_t c, // capacity (in blocks)
                     const uint8_t num_rounds,
-                    const uint8_t input_suffix, // The cSHAKE input suffix is 0b00.
+                    const uint8_t input_suffix = 0x00, // The cSHAKE input suffix is 0b00.
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
         C(c),

@@ -661,7 +661,7 @@ private:
 
 #if defined(DEBUG)
         assert(len == 0);
-        assert(cur_input_byte_idx_ != get_rate_size_bytes());
+        assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
 
         if (should_apply_padding_rule)

@@ -741,7 +741,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void encode_string_(const std::string_view s)
+    void encode_bytes_(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
         const size_t len = std::size(s);
@@ -824,8 +824,8 @@ private:
 
         left_encode_(get_state_size_bytes());
         left_encode_(get_rate_size_bytes()); // cSHAKE does this.
-        encode_string_(function_name);
-        encode_string_(customization_str);
+        encode_bytes_(function_name);
+        encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)
         // after the initial values.  Instead we apply the padding rule.
         apply_padding_rule_();

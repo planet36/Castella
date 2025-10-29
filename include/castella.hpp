@@ -374,7 +374,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 * int main() {
 *     uint8_t capacity = 4; // blocks
 *     uint8_t num_rounds = 6;
-*     uint8_t input_suffix = 0b1;
+*     std::byte input_suffix{0b1};
 *     std::string_view function_name = "Castella";
 *     std::string_view customization_str = "Kwyjibo";
 *
@@ -624,7 +624,7 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
     */
     // }}}
-    const uint8_t INPUT_SUFFIX;
+    const std::byte INPUT_SUFFIX;
 
 private:
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
@@ -1023,7 +1023,7 @@ public:
     // }}}
     explicit Duplex(const uint8_t c, // capacity (in blocks)
                     const uint8_t num_rounds,
-                    const uint8_t input_suffix = 0x00, // The cSHAKE input suffix is 0b00.
+                    const std::byte input_suffix = std::byte{0}, // The cSHAKE input suffix is 0b00.
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
         C(c),

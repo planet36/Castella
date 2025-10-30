@@ -1026,12 +1026,12 @@ public:
     * </blockquote>
     */
     // }}}
-    explicit Duplex(const uint8_t c, // capacity (in blocks)
+    explicit Duplex(const uint8_t capacity, // (in blocks)
                     const uint8_t num_rounds,
                     const std::byte input_suffix = std::byte{0}, // The cSHAKE input suffix is 0b00.
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
-        C(c),
+        C(capacity),
         R(B - C),
         NUM_ROUNDS(num_rounds),
         INPUT_SUFFIX(input_suffix)

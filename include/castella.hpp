@@ -118,7 +118,7 @@ load16(const void* src)
 }
 
 /// Get the byte width of an unsigned integer
-constexpr unsigned int
+static constexpr unsigned int
 byte_width(const std::unsigned_integral auto x)
 {
     // std::bit_width(0) returns 0, but we want it to be 1
@@ -145,7 +145,7 @@ byte_width(const std::unsigned_integral auto x)
 * \note This makes a copy of the input data.
 */
 // }}}
-std::vector<std::byte>
+static std::vector<std::byte>
 left_encode(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -179,7 +179,7 @@ left_encode(const std::unsigned_integral auto x)
 * \note This makes a copy of the input data.
 */
 // }}}
-std::vector<std::byte>
+static std::vector<std::byte>
 right_encode(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -215,7 +215,7 @@ right_encode(const std::unsigned_integral auto x)
 * \note This makes a copy of the input data.
 */
 // }}}
-std::vector<std::byte>
+static std::vector<std::byte>
 encode_bytes(const std::span<const std::byte> byte_sp)
 {
     std::vector<std::byte> result;
@@ -226,7 +226,7 @@ encode_bytes(const std::span<const std::byte> byte_sp)
     return result;
 }
 
-std::vector<std::byte>
+static std::vector<std::byte>
 encode_bytes(const std::string_view s)
 {
     static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");

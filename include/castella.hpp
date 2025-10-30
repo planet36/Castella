@@ -567,7 +567,7 @@ public:
     // }}}
     const uint8_t NUM_ROUNDS;
 
-    /// The byte to appended to the input message during squeezing
+    /// The byte to append to the input buffer before squeezing
     // {{{
     /**
     * ## _NIST.FIPS.202.pdf_

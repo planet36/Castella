@@ -584,7 +584,10 @@ public:
     * </blockquote>
     *
     *
+    * ### 6.1 SHA-3 Hash Functions
     * #### Page 20 (28)
+    *
+    * The SHA-3 input suffix is `01`.
     *
     * <blockquote>
     * The suffix supports domain separation; i.e., it distinguishes the inputs to
@@ -592,6 +595,12 @@ public:
     * from the SHA-3 XOFs defined in Sec. 6.2, as well as other domains that may
     * be defined in the future.
     * </blockquote>
+    *
+    *
+    * ### 6.2 SHA-3 Extendable-Output Functions
+    * #### Page 21 (29)
+    *
+    * The SHA-3 XOF input suffix is `1111`.
     *
     *
     * #### Page 27 (35)
@@ -614,6 +623,22 @@ public:
     * For a function, a partitioning of the inputs to different application
     * domains so that no input is assigned to more than one domain.
     * </blockquote>
+    *
+    * ### 3.2 Parameters
+    * #### Page 7 (13)
+    *
+    * <blockquote>
+    * When 𝑁 and 𝑆 are both empty strings, cSHAKE(𝑋, 𝐿, 𝑁, 𝑆) is equivalent to
+    * SHAKE as defined in FIPS 202.
+    * </blockquote>
+    *
+    *
+    * ### 3.3 Definition
+    * #### Page 8 (14)
+    *
+    * The cSHAKE input suffix is:
+    *     * `1111` when 𝑁 and 𝑆 are both empty strings
+    *     * `00` when 𝑁 and 𝑆 are both not empty strings
     *
     *
     * Keccak calls this "delimitedSuffix".

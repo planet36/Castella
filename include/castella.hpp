@@ -1049,6 +1049,14 @@ public:
     *   a variant of the function.  When no customization is desired, 𝑆 is set to
     *   the empty string.
     * </blockquote>
+    *
+    *
+    * ### 8.2.1 Equivalent Security to SHAKE for Any Legal N and S
+    * #### Page 19 (25)
+    *
+    * <blockquote>
+    * There are no "weak" values for 𝑁 or 𝑆.
+    * </blockquote>
     */
     // }}}
     explicit Duplex(const uint8_t capacity, // (in blocks)

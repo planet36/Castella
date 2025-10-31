@@ -362,6 +362,29 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
     }
 }
 
+/// Options for the \c Duplex::update member function.
+// {{{
+/**
+* \note This may not be a nested class because of these bugs:
+* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
+* https://github.com/llvm/llvm-project/issues/36032
+*/
+// }}}
+struct UpdateOpts
+{
+    /// If the padding rule should be applied after the input data is
+    /// consumed
+    bool apply_padding_rule = false;
+
+    /// If the length of the input data should be encoded before the input
+    /// data is consumed
+    bool left_encode_length = false;
+
+    /// If the length of the input data should be encoded after the input
+    /// data is consumed
+    bool right_encode_length = false;
+};
+
 /// Castella: A heavyweight customizable duplex/sponge construction class
 // {{{
 /**
@@ -392,7 +415,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 *             })
 *     { hash_obj.update(std::as_bytes(std::span{s})); }
 *
-*     //hash_obj.update(nullptr, 0, true); // blank call
+*     //hash_obj.update(nullptr, 0, {.apply_padding_rule = true}); // blank call
 *     //(void)hash_obj.squeeze_bytes(0); // mute call
 *
 *     //unsigned int num_bytes_to_squeeze = hash_obj.get_capacity_size_bytes() / 2;
@@ -1096,43 +1119,51 @@ public:
         delete[] input_blocks_;
     }
 
-    /// Consume the input data into the input buffer, and optionally apply the
-    /// padding rule
+    /// Consume the input data into the input buffer
     // {{{
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \param should_apply_padding_rule if the padding rule should be applied
-    * after the input data is consumed
+    * \param opts options
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
     Duplex& update(const void* data, size_t len,
-                   const bool should_apply_padding_rule = false)
+                   UpdateOpts opts = {})
     {
         std::lock_guard lock{mtx_};
 
-        update_(data, len, should_apply_padding_rule);
+        if (opts.left_encode_length)
+            left_encode_(len);
+
+        update_(data, len, opts.apply_padding_rule);
+
+        if (opts.right_encode_length)
+            right_encode_(len);
 
         return *this;
     }
 
-    /// Consume the input data into the input buffer, and optionally apply the
-    /// padding rule
+    /// Consume the input data into the input buffer
     // {{{
     /**
     * \param byte_sp the input data
-    * \param should_apply_padding_rule if the padding rule should be applied
-    * after the input data is consumed
+    * \param opts options
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
     Duplex& update(const std::span<const std::byte> byte_sp,
-                   const bool should_apply_padding_rule = false)
+                   UpdateOpts opts = {})
     {
         std::lock_guard lock{mtx_};
 
-        update_(byte_sp, should_apply_padding_rule);
+        if (opts.left_encode_length)
+            left_encode_(std::size(byte_sp));
+
+        update_(byte_sp, opts.apply_padding_rule);
+
+        if (opts.right_encode_length)
+            right_encode_(std::size(byte_sp));
 
         return *this;
     }

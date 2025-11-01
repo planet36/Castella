@@ -365,7 +365,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 /// Options for the \c Duplex::update member function.
 // {{{
 /**
-* \note This may not be a nested class because of these bugs:
+* \note This may not be a nested class in \c Duplex because of these bugs:
 * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
 * https://github.com/llvm/llvm-project/issues/36032
 */

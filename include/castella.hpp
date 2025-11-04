@@ -21,9 +21,9 @@
 * \sa https://keccak.team/glossary.html
 * \sa https://keccak.team/keccak_strengths.html
 * \sa https://keccak.team/files/SpongePRNG.pdf
-* \sa https://cryptologie.net/article/386/sha-3-keccak-and-disturbing-implementation-stories/
-* \sa https://cryptologie.net/article/387/byte-ordering-and-bit-numbering-in-keccak-and-sha-3/
-* \sa https://cryptologie.net/article/388/shake-cshake-and-some-more-bit-ordering/
+* \sa https://cryptologie.net/posts/sha-3-keccak-and-disturbing-implementation-stories/
+* \sa https://cryptologie.net/posts/byte-ordering-and-bit-numbering-in-keccak-and-sha-3/
+* \sa https://cryptologie.net/posts/shake-cshake-and-some-more-bit-ordering/
 * \sa https://cryptologie.net/posts/shake-and-sp-800-185/
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_2002.pdf
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_Errata_2014.pdf

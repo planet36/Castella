@@ -55,7 +55,11 @@
 #include <type_traits>
 #include <vector>
 
+// {{{ aes_enc_nr
+
 #if defined(__x86_64__) && defined(__AES__)
+
+// {{{ x86_64
 
 #include <immintrin.h>
 
@@ -73,7 +77,11 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
+// }}}
+
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
+
+// {{{ ARM64
 
 #include <arm_neon.h>
 
@@ -98,11 +106,15 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
+// }}}
+
 #else
 
 #error "Architecture not supported"
 
 #endif
+
+// }}}
 
 /// Load 16 bytes from \a src into an \c uint8x16_t
 // {{{

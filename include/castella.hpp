@@ -1282,7 +1282,7 @@ public:
     * </blockquote>
     *
     *
-    * ### 8.2.1 Equivalent Security to SHAKE for Any Legal N and S
+    * ### 8.2.1 Equivalent Security to SHAKE for Any Legal 𝑁 and 𝑆
     * #### Page 19 (25)
     *
     * <blockquote>

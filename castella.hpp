@@ -318,7 +318,7 @@ transpose(std::array<uint8x16_t, 16>& x)
 */
 // }}}
 static uint8x16_t
-load16(const void* src)
+load16(const void* src) noexcept
 {
     uint8x16_t dst{};
     (void)std::memcpy(&dst, src, sizeof(dst));

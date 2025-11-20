@@ -332,7 +332,7 @@ byte_width(const std::unsigned_integral auto x)
     // std::bit_width(0) returns 0, but we want it to be 1
     if (x == 0)
         return 1;
-    const unsigned int w = static_cast<unsigned int>(std::bit_width(x));
+    const auto w = static_cast<unsigned int>(std::bit_width(x));
     return (w / 8) + (w % 8 != 0);
 }
 
@@ -1013,7 +1013,7 @@ private:
         assert(available_space > 0);
 #endif
 
-        std::byte* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
+        auto* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
         std::byte* dst = &input_bytes_[cur_input_byte_idx_];
 
         // Zeroize the available space in the input buffer.
@@ -1062,7 +1062,7 @@ private:
             assert(num_bytes_to_add > 0);
 #endif
 
-            std::byte* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
+            auto* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
             std::byte* dst = &input_bytes_[cur_input_byte_idx_];
 
             (void)std::memcpy(dst, src, num_bytes_to_add);

@@ -1178,7 +1178,7 @@ private:
     void encode_bytes_(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return encode_bytes_(std::as_bytes(std::span{s}));
+        encode_bytes_(std::as_bytes(std::span{s}));
     }
 
     /// Initialize the state

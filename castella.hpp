@@ -120,7 +120,7 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
 
 // {{{ x86_64
 
-#include <immintrin.h>
+#include <immintrin.h> // NOLINT(readability-duplicate-include)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
@@ -209,7 +209,7 @@ transpose(std::array<__m128i, 16>& x)
 
 // {{{ ARM64
 
-#include <arm_neon.h>
+#include <arm_neon.h> // NOLINT(readability-duplicate-include)
 
 /// Transpose \a x (treating it as a 16x16 matrix of \c uint8_t) using ARM Neon intrinsics
 static void
@@ -1446,7 +1446,7 @@ public:
         std::scoped_lock lock{mtx_};
 
         // clamp
-        if (n > get_rate_size_bytes())
+        if (n > get_rate_size_bytes()) // NOLINT(readability-use-std-min-max)
             n = get_rate_size_bytes();
 
         // Add the input suffix and apply the padding rule before every

@@ -1484,10 +1484,13 @@ public:
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
+    [[nodiscard]]
     unsigned int get_state_size_bytes() const { return sizeof(block_t) * B; }
 
+    [[nodiscard]]
     unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }
 
+    [[nodiscard]]
     unsigned int get_rate_size_bytes() const { return sizeof(block_t) * R; }
 };
 

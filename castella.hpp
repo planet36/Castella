@@ -1485,7 +1485,7 @@ public:
     }
 
     [[nodiscard]]
-    unsigned int get_state_size_bytes() const { return sizeof(block_t) * B; }
+    static unsigned int get_state_size_bytes() { return sizeof(block_t) * B; }
 
     [[nodiscard]]
     unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }

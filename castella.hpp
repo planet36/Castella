@@ -1045,7 +1045,7 @@ private:
 
     void update_(const void* data, size_t len, const bool should_apply_padding_rule)
     {
-        auto src = static_cast<const std::byte*>(data);
+        const auto* src = static_cast<const std::byte*>(data);
 
         while (len > 0)
         {

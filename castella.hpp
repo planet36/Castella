@@ -1317,6 +1317,8 @@ public:
     Duplex() = delete;
     Duplex(const Duplex&) = delete;
     Duplex& operator=(const Duplex&) = delete;
+    Duplex(Duplex&&) = delete;
+    Duplex& operator=(Duplex&&) = delete;
 
     /// dtor
     ~Duplex()

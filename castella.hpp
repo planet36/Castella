@@ -558,8 +558,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    for (std::remove_const_t<decltype(num_rounds)> round = 0;
-         round < num_rounds; round++)
+    for (std::remove_const_t<decltype(num_rounds)> round = 0; round < num_rounds; round++)
     {
         const auto round_key = round_keys[round];
         for (decltype(N) i = 0; i < N; ++i)
@@ -1005,8 +1004,7 @@ private:
         assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
 
-        const size_t available_space =
-            get_rate_size_bytes() - cur_input_byte_idx_;
+        const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
         const size_t num_bytes_to_add = available_space;
 
 #if defined(DEBUG)
@@ -1022,7 +1020,8 @@ private:
         // The set bits must not overlap.
         constexpr std::byte first_padding_byte_pattern{0b0000'0001};
         constexpr std::byte last_padding_byte_pattern{0b1000'0000};
-        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) == std::byte{0},
+        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) ==
+                          std::byte{0},
                       "set bits must not overlap");
 
         input_bytes_[cur_input_byte_idx_] = first_padding_byte_pattern;
@@ -1053,8 +1052,7 @@ private:
             assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
 
-            const size_t available_space =
-                get_rate_size_bytes() - cur_input_byte_idx_;
+            const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
             const size_t num_bytes_to_add = std::min(available_space, len);
 
 #if defined(DEBUG)
@@ -1092,7 +1090,8 @@ private:
         }
     }
 
-    void update_(const std::span<const std::byte> byte_sp, const bool should_apply_padding_rule)
+    void update_(const std::span<const std::byte> byte_sp,
+                 const bool should_apply_padding_rule)
     {
         update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
     }
@@ -1220,8 +1219,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void init_(const std::string_view function_name,
-               const std::string_view customization_str)
+    void init_(const std::string_view function_name, const std::string_view customization_str)
     {
         // {{{
         /*
@@ -1338,8 +1336,7 @@ public:
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& update(const void* data, size_t len,
-                   UpdateOpts opts = {})
+    Duplex& update(const void* data, size_t len, UpdateOpts opts = {})
     {
         std::scoped_lock lock{mtx_};
 
@@ -1362,8 +1359,7 @@ public:
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& update(const std::span<const std::byte> byte_sp,
-                   UpdateOpts opts = {})
+    Duplex& update(const std::span<const std::byte> byte_sp, UpdateOpts opts = {})
     {
         std::scoped_lock lock{mtx_};
 
@@ -1442,8 +1438,7 @@ public:
     * </blockquote>
     */
     // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_bytes(unsigned int n)
+    [[nodiscard]] std::vector<std::byte> squeeze_bytes(unsigned int n)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1480,20 +1475,16 @@ public:
     * The number of bytes returned is equal to half the capacity.
     */
     // }}}
-    [[nodiscard]]
-    std::vector<std::byte> squeeze_bytes()
+    [[nodiscard]] std::vector<std::byte> squeeze_bytes()
     {
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
-    [[nodiscard]]
-    static unsigned int get_state_size_bytes() { return sizeof(block_t) * B; }
+    [[nodiscard]] static unsigned int get_state_size_bytes() { return sizeof(block_t) * B; }
 
-    [[nodiscard]]
-    unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }
+    [[nodiscard]] unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }
 
-    [[nodiscard]]
-    unsigned int get_rate_size_bytes() const { return sizeof(block_t) * R; }
+    [[nodiscard]] unsigned int get_rate_size_bytes() const { return sizeof(block_t) * R; }
 };
 
 } // namespace Castella

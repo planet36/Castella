@@ -1339,7 +1339,7 @@ public:
     Duplex& update(const void* data, size_t len,
                    UpdateOpts opts = {})
     {
-        std::lock_guard lock{mtx_};
+        std::scoped_lock lock{mtx_};
 
         if (opts.left_encode_length)
             left_encode_(len);
@@ -1363,7 +1363,7 @@ public:
     Duplex& update(const std::span<const std::byte> byte_sp,
                    UpdateOpts opts = {})
     {
-        std::lock_guard lock{mtx_};
+        std::scoped_lock lock{mtx_};
 
         if (opts.left_encode_length)
             left_encode_(std::size(byte_sp));
@@ -1443,7 +1443,7 @@ public:
     [[nodiscard]]
     std::vector<std::byte> squeeze_bytes(unsigned int n)
     {
-        std::lock_guard lock{mtx_};
+        std::scoped_lock lock{mtx_};
 
         // clamp
         if (n > get_rate_size_bytes())

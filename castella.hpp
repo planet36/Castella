@@ -696,7 +696,7 @@ struct UpdateOpts
 * </blockquote>
 */
 // }}}
-struct alignas(block_t) Duplex
+struct alignas(block_t) Duplex final
 {
     /// The size (in blocks) of the state
     // {{{

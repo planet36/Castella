@@ -602,13 +602,13 @@ struct UpdateOpts
 * #include <string_view>
 *
 * int main() {
-*     uint8_t capacity = 4; // blocks
+*     uint8_t capacity_blocks = 4;
 *     uint8_t num_rounds = 6;
 *     std::byte input_suffix{0b1};
 *     std::string_view function_name = "Castella";
 *     std::string_view customization_str = "Kwyjibo";
 *
-*     Castella::Duplex hash_obj(capacity,
+*     Castella::Duplex hash_obj(capacity_blocks,
 *                               num_rounds,
 *                               input_suffix,
 *                               function_name,

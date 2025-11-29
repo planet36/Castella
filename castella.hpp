@@ -460,14 +460,6 @@ inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
 inline constexpr uint8_t NUM_ROUNDS_MAX = 16; // Embiggen the value as needed.
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 
-/// The initial value of a Castella round constant
-// {{{
-/**
-* It's a perfectly cromulent initial value.
-*/
-// }}}
-const block_t rc_0 = load16("expand 16-byte c");
-
 /// Create the first \a N Castella round constants
 /**
 * The first Castella round constant is "expand 16-byte c".

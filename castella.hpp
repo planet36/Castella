@@ -53,7 +53,7 @@
 #include <type_traits>
 #include <vector>
 
-// {{{ aes_enc_nr
+// {{{ aes_enc_0
 
 #if defined(__x86_64__) && defined(__AES__)
 
@@ -537,7 +537,7 @@ create_round_constants()
 
     for (decltype(N) i = 1; i < N; ++i)
     {
-        result[i] = aes_enc_nr(result[i-1], block_t{}, 1);
+        result[i] = aes_enc_0(result[i-1]);
     }
 
     return result;
@@ -614,7 +614,8 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
         state[0] ^= rc;
         for (decltype(N) i = 0; i < N; ++i)
         {
-            state[i] = aes_enc_nr(state[i], block_t{}, 2);
+            state[i] = aes_enc_0(state[i]);
+            state[i] = aes_enc_0(state[i]);
         }
         transpose(state);
     }

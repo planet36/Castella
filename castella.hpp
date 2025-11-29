@@ -498,12 +498,6 @@ create_round_constants()
 /// The Castella round constants
 // {{{
 /**
-* \c Nr rounds (where \c Nr is the round number) of AES encryption (with
-* \c rc_0 AES round key) are performed on each Castella round constant.
-*
-* Round numbers start at 1, not 0.
-*
-*
 * ## _MakingOfKeccak.pdf_
 *
 * ### 7.4 The hermetic sponge strategy

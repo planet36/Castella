@@ -462,13 +462,13 @@ using arr_blocks = std::array<block_t, N>;
 * It's a perfectly cromulent initial value.
 */
 // }}}
-const block_t round_key_0 = load16("CastellaRoundKey");
+const block_t round_const_0 = load16("CastellaRoundKey");
 
 /// The Castella round keys
 // {{{
 /**
 * \c Nr rounds (where \c Nr is the round number) of AES encryption (with
-* \c round_key_0 AES round key) are performed on each Castella round key.
+* \c round_const_0 AES round key) are performed on each Castella round key.
 *
 * Round numbers start at 1, not 0.
 *
@@ -497,22 +497,22 @@ const block_t round_key_0 = load16("CastellaRoundKey");
 */
 // }}}
 const arr_blocks round_keys = std::to_array({
-    aes_enc_nr(round_key_0, round_key_0, 1),
-    aes_enc_nr(round_key_0, round_key_0, 2),
-    aes_enc_nr(round_key_0, round_key_0, 3),
-    aes_enc_nr(round_key_0, round_key_0, 4),
-    aes_enc_nr(round_key_0, round_key_0, 5),
-    aes_enc_nr(round_key_0, round_key_0, 6),
-    aes_enc_nr(round_key_0, round_key_0, 7),
-    aes_enc_nr(round_key_0, round_key_0, 8),
-    aes_enc_nr(round_key_0, round_key_0, 9),
-    aes_enc_nr(round_key_0, round_key_0, 10),
-    aes_enc_nr(round_key_0, round_key_0, 11),
-    aes_enc_nr(round_key_0, round_key_0, 12),
-    aes_enc_nr(round_key_0, round_key_0, 13),
-    aes_enc_nr(round_key_0, round_key_0, 14),
-    aes_enc_nr(round_key_0, round_key_0, 15),
-    aes_enc_nr(round_key_0, round_key_0, 16),
+    aes_enc_nr(round_const_0, round_const_0, 1),
+    aes_enc_nr(round_const_0, round_const_0, 2),
+    aes_enc_nr(round_const_0, round_const_0, 3),
+    aes_enc_nr(round_const_0, round_const_0, 4),
+    aes_enc_nr(round_const_0, round_const_0, 5),
+    aes_enc_nr(round_const_0, round_const_0, 6),
+    aes_enc_nr(round_const_0, round_const_0, 7),
+    aes_enc_nr(round_const_0, round_const_0, 8),
+    aes_enc_nr(round_const_0, round_const_0, 9),
+    aes_enc_nr(round_const_0, round_const_0, 10),
+    aes_enc_nr(round_const_0, round_const_0, 11),
+    aes_enc_nr(round_const_0, round_const_0, 12),
+    aes_enc_nr(round_const_0, round_const_0, 13),
+    aes_enc_nr(round_const_0, round_const_0, 14),
+    aes_enc_nr(round_const_0, round_const_0, 15),
+    aes_enc_nr(round_const_0, round_const_0, 16),
     // Embiggen the array as needed.
 });
 

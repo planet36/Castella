@@ -456,6 +456,10 @@ using arr_blocks = std::array<block_t, N>;
 
 #pragma GCC diagnostic pop
 
+inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
+inline constexpr uint8_t NUM_ROUNDS_MAX = 16; // Embiggen the value as needed.
+static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
+
 /// The initial value of a Castella round constant
 // {{{
 /**
@@ -515,10 +519,6 @@ const arr_blocks round_const = std::to_array({
     aes_enc_nr(rc_0, rc_0, 16),
     // Embiggen the array as needed.
 });
-
-inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
-inline constexpr uint8_t NUM_ROUNDS_MAX = std::size(round_const);
-static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 
 /// The Castella permutation function
 // {{{

@@ -462,13 +462,13 @@ using arr_blocks = std::array<block_t, N>;
 * It's a perfectly cromulent initial value.
 */
 // }}}
-const block_t round_const_0 = load16("expand 16-byte c");
+const block_t rc_0 = load16("expand 16-byte c");
 
 /// The Castella round constants
 // {{{
 /**
 * \c Nr rounds (where \c Nr is the round number) of AES encryption (with
-* \c round_const_0 AES round key) are performed on each Castella round constant.
+* \c rc_0 AES round key) are performed on each Castella round constant.
 *
 * Round numbers start at 1, not 0.
 *
@@ -497,22 +497,22 @@ const block_t round_const_0 = load16("expand 16-byte c");
 */
 // }}}
 const arr_blocks round_const = std::to_array({
-    aes_enc_nr(round_const_0, round_const_0, 1),
-    aes_enc_nr(round_const_0, round_const_0, 2),
-    aes_enc_nr(round_const_0, round_const_0, 3),
-    aes_enc_nr(round_const_0, round_const_0, 4),
-    aes_enc_nr(round_const_0, round_const_0, 5),
-    aes_enc_nr(round_const_0, round_const_0, 6),
-    aes_enc_nr(round_const_0, round_const_0, 7),
-    aes_enc_nr(round_const_0, round_const_0, 8),
-    aes_enc_nr(round_const_0, round_const_0, 9),
-    aes_enc_nr(round_const_0, round_const_0, 10),
-    aes_enc_nr(round_const_0, round_const_0, 11),
-    aes_enc_nr(round_const_0, round_const_0, 12),
-    aes_enc_nr(round_const_0, round_const_0, 13),
-    aes_enc_nr(round_const_0, round_const_0, 14),
-    aes_enc_nr(round_const_0, round_const_0, 15),
-    aes_enc_nr(round_const_0, round_const_0, 16),
+    aes_enc_nr(rc_0, rc_0, 1),
+    aes_enc_nr(rc_0, rc_0, 2),
+    aes_enc_nr(rc_0, rc_0, 3),
+    aes_enc_nr(rc_0, rc_0, 4),
+    aes_enc_nr(rc_0, rc_0, 5),
+    aes_enc_nr(rc_0, rc_0, 6),
+    aes_enc_nr(rc_0, rc_0, 7),
+    aes_enc_nr(rc_0, rc_0, 8),
+    aes_enc_nr(rc_0, rc_0, 9),
+    aes_enc_nr(rc_0, rc_0, 10),
+    aes_enc_nr(rc_0, rc_0, 11),
+    aes_enc_nr(rc_0, rc_0, 12),
+    aes_enc_nr(rc_0, rc_0, 13),
+    aes_enc_nr(rc_0, rc_0, 14),
+    aes_enc_nr(rc_0, rc_0, 15),
+    aes_enc_nr(rc_0, rc_0, 16),
     // Embiggen the array as needed.
 });
 

@@ -75,6 +75,34 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
     return data;
 }
 
+/// Perform 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16_t
+aes_enc(uint8x16_t data, const uint8x16_t round_key)
+{
+    return _mm_aesenc_si128(data, round_key);
+}
+
+/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16_t
+aes_enc_inv(uint8x16_t data, const uint8x16_t round_key)
+{
+    return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
+}
+
+/// Perform 1 round of AES encryption with a zero round key on \a data
+static inline uint8x16_t
+aes_enc_0(uint8x16_t data)
+{
+    return _mm_aesenc_si128(data, uint8x16_t{});
+}
+
+/// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
+static inline uint8x16_t
+aes_enc_0_inv(uint8x16_t data)
+{
+    return _mm_aesdeclast_si128(_mm_aesimc_si128(data), uint8x16_t{});
+}
+
 // }}}
 
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
@@ -102,6 +130,34 @@ aes_enc_nr(uint8x16_t data, const uint8x16_t aes_round_key, const unsigned int N
 
     data ^= aes_round_key;
     return data;
+}
+
+/// Perform 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16_t
+aes_enc(uint8x16_t data, const uint8x16_t round_key)
+{
+    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
+}
+
+/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16_t
+aes_enc_inv(uint8x16_t data, const uint8x16_t round_key)
+{
+    return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
+}
+
+/// Perform 1 round of AES encryption with a zero round key on \a data
+static inline uint8x16_t
+aes_enc_0(uint8x16_t data)
+{
+    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{}));
+}
+
+/// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
+static inline uint8x16_t
+aes_enc_0_inv(uint8x16_t data)
+{
+    return vaesdq_u8(vaesimcq_u8(data), uint8x16_t{});
 }
 
 // }}}

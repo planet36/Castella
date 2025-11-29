@@ -1182,8 +1182,6 @@ private:
     /// Initialize the state
     // {{{
     /**
-    * This does not change the round keys.
-    *
     * \pre \c zeroize_() has been called immediately prior to this invocation.
     *
     *

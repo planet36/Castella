@@ -462,7 +462,7 @@ using arr_blocks = std::array<block_t, N>;
 * It's a perfectly cromulent initial value.
 */
 // }}}
-const block_t round_const_0 = load16("CastellaRoundKey");
+const block_t round_const_0 = load16("expand 16-byte c");
 
 /// The Castella round constants
 // {{{

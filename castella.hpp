@@ -496,7 +496,7 @@ const block_t round_const_0 = load16("CastellaRoundKey");
 * </blockquote>
 */
 // }}}
-const arr_blocks round_keys = std::to_array({
+const arr_blocks round_const = std::to_array({
     aes_enc_nr(round_const_0, round_const_0, 1),
     aes_enc_nr(round_const_0, round_const_0, 2),
     aes_enc_nr(round_const_0, round_const_0, 3),
@@ -517,7 +517,7 @@ const arr_blocks round_keys = std::to_array({
 });
 
 inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
-inline constexpr uint8_t NUM_ROUNDS_MAX = std::size(round_keys);
+inline constexpr uint8_t NUM_ROUNDS_MAX = std::size(round_const);
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 
 /// The Castella permutation function
@@ -560,7 +560,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 
     for (std::remove_const_t<decltype(num_rounds)> round = 0; round < num_rounds; round++)
     {
-        const auto rc = round_keys[round];
+        const auto rc = round_const[round];
         for (decltype(N) i = 0; i < N; ++i)
         {
             state[i] = aes_enc_nr(state[i], rc, 2);

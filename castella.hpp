@@ -500,7 +500,7 @@ const block_t rc_0 = load16("expand 16-byte c");
 * </blockquote>
 */
 // }}}
-const arr_blocks round_const = std::to_array({
+const arr_blocks round_constants = std::to_array({
     aes_enc_nr(rc_0, rc_0, 1),
     aes_enc_nr(rc_0, rc_0, 2),
     aes_enc_nr(rc_0, rc_0, 3),
@@ -558,7 +558,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    for (const auto& rc : std::span{round_const}.first(num_rounds))
+    for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
         for (decltype(N) i = 0; i < N; ++i)
         {

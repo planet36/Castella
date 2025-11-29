@@ -563,9 +563,10 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
+        state[0] ^= rc;
         for (decltype(N) i = 0; i < N; ++i)
         {
-            state[i] = aes_enc_nr(state[i], rc, 2);
+            state[i] = aes_enc_nr(state[i], block_t{}, 2);
         }
         transpose(state);
     }

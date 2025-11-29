@@ -441,7 +441,7 @@ encode_bytes(const std::string_view s)
     return encode_bytes(std::as_bytes(std::span{s}));
 }
 
-/// The namespace for the Castella round keys, permutation function, and duplex
+/// The namespace for the Castella round constants, permutation function, and duplex
 /// class
 namespace Castella
 {
@@ -456,7 +456,7 @@ using arr_blocks = std::array<block_t, N>;
 
 #pragma GCC diagnostic pop
 
-/// The initial value of a Castella round key
+/// The initial value of a Castella round constant
 // {{{
 /**
 * It's a perfectly cromulent initial value.
@@ -464,11 +464,11 @@ using arr_blocks = std::array<block_t, N>;
 // }}}
 const block_t round_const_0 = load16("CastellaRoundKey");
 
-/// The Castella round keys
+/// The Castella round constants
 // {{{
 /**
 * \c Nr rounds (where \c Nr is the round number) of AES encryption (with
-* \c round_const_0 AES round key) are performed on each Castella round key.
+* \c round_const_0 AES round key) are performed on each Castella round constant.
 *
 * Round numbers start at 1, not 0.
 *
@@ -529,7 +529,7 @@ static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 * \pre \a num_rounds ≥ \c NUM_ROUNDS_MIN
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
-*   1. Perform 2 rounds of AES encryption (with the Castella round key) on each
+*   1. Perform 2 rounds of AES encryption (with the Castella round constant) on each
 *      element of the state array.
 *   2. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.

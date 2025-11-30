@@ -723,6 +723,30 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
     }
 }
 
+/// The inverse Castella permutation function
+template <size_t N>
+static void
+permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
+{
+    static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
+
+#if defined(DEBUG)
+    assert(num_rounds >= NUM_ROUNDS_MIN);
+    assert(num_rounds <= NUM_ROUNDS_MAX);
+#endif
+
+    for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
+    {
+        transpose(state);
+        for (decltype(N) i = 0; i < N; ++i)
+        {
+            state[i] = aes_enc_0_inv(state[i]);
+            state[i] = aes_enc_0_inv(state[i]);
+        }
+        state[0] ^= rc;
+    }
+}
+
 /// Options for the \c Duplex::update member function.
 // {{{
 /**

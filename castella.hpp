@@ -148,6 +148,69 @@ aes_enc_0_inv(uint8x16_t data)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 
+/// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using SSE2 intrinsics
+static void
+transpose(std::array<__m128i, 2>& x)
+{
+    const __m128i AB_0 = _mm_unpacklo_epi64(x[0], x[1]);
+    const __m128i AB_1 = _mm_unpackhi_epi64(x[0], x[1]);
+
+    x[0] = AB_0;
+    x[1] = AB_1;
+}
+
+/// Transpose \a x (treating it as a 4x4 matrix of \c uint32_t) using SSE2 intrinsics
+/**
+* \sa https://randombit.net/bitbashing/posts/integer_matrix_transpose_in_sse2.html
+*/
+static void
+transpose(std::array<__m128i, 4>& x)
+{
+    const __m128i AB_01 = _mm_unpacklo_epi32(x[0], x[1]);
+    const __m128i AB_23 = _mm_unpackhi_epi32(x[0], x[1]);
+    const __m128i CD_01 = _mm_unpacklo_epi32(x[2], x[3]);
+    const __m128i CD_23 = _mm_unpackhi_epi32(x[2], x[3]);
+
+    x[0] = _mm_unpacklo_epi64(AB_01, CD_01); // ABCD_0
+    x[1] = _mm_unpackhi_epi64(AB_01, CD_01); // ABCD_1
+    x[2] = _mm_unpacklo_epi64(AB_23, CD_23); // ABCD_2
+    x[3] = _mm_unpackhi_epi64(AB_23, CD_23); // ABCD_3
+}
+
+/// Transpose \a x (treating it as an 8x8 matrix of \c uint16_t) using SSE2 intrinsics
+/**
+* \sa https://stackoverflow.com/a/4951060/1892784
+*/
+static void
+transpose(std::array<__m128i, 8>& x)
+{
+    const __m128i AB_03 = _mm_unpacklo_epi16(x[0], x[1]);
+    const __m128i AB_47 = _mm_unpackhi_epi16(x[0], x[1]);
+    const __m128i CD_03 = _mm_unpacklo_epi16(x[2], x[3]);
+    const __m128i CD_47 = _mm_unpackhi_epi16(x[2], x[3]);
+    const __m128i EF_03 = _mm_unpacklo_epi16(x[4], x[5]);
+    const __m128i EF_47 = _mm_unpackhi_epi16(x[4], x[5]);
+    const __m128i GH_03 = _mm_unpacklo_epi16(x[6], x[7]);
+    const __m128i GH_47 = _mm_unpackhi_epi16(x[6], x[7]);
+
+    const __m128i ABCD_01 = _mm_unpacklo_epi32(AB_03, CD_03);
+    const __m128i ABCD_23 = _mm_unpackhi_epi32(AB_03, CD_03);
+    const __m128i ABCD_45 = _mm_unpacklo_epi32(AB_47, CD_47);
+    const __m128i ABCD_67 = _mm_unpackhi_epi32(AB_47, CD_47);
+    const __m128i EFGH_01 = _mm_unpacklo_epi32(EF_03, GH_03);
+    const __m128i EFGH_23 = _mm_unpackhi_epi32(EF_03, GH_03);
+    const __m128i EFGH_45 = _mm_unpacklo_epi32(EF_47, GH_47);
+    const __m128i EFGH_67 = _mm_unpackhi_epi32(EF_47, GH_47);
+
+    x[0] = _mm_unpacklo_epi64(ABCD_01, EFGH_01); // ABCDEFGH_0
+    x[1] = _mm_unpackhi_epi64(ABCD_01, EFGH_01); // ABCDEFGH_1
+    x[2] = _mm_unpacklo_epi64(ABCD_23, EFGH_23); // ABCDEFGH_2
+    x[3] = _mm_unpackhi_epi64(ABCD_23, EFGH_23); // ABCDEFGH_3
+    x[4] = _mm_unpacklo_epi64(ABCD_45, EFGH_45); // ABCDEFGH_4
+    x[5] = _mm_unpackhi_epi64(ABCD_45, EFGH_45); // ABCDEFGH_5
+    x[6] = _mm_unpacklo_epi64(ABCD_67, EFGH_67); // ABCDEFGH_6
+    x[7] = _mm_unpackhi_epi64(ABCD_67, EFGH_67); // ABCDEFGH_7
+}
 /// Transpose \a x (treating it as a 16x16 matrix of \c uint8_t) using SSE2 intrinsics
 /**
 * \sa https://codereview.stackexchange.com/questions/295941/16x16-integer-matrix-transpose-using-sse2-intrinsics-in-c
@@ -233,6 +296,78 @@ transpose(std::array<__m128i, 16>& x)
 // {{{ ARM64
 
 #include <arm_neon.h> // NOLINT(readability-duplicate-include)
+
+/// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using ARM Neon intrinsics
+static void
+transpose(std::array<uint64x2_t, 2>& x)
+{
+    const uint64x2_t AB_0 = vzip1q_u64(x[0], x[1]);
+    const uint64x2_t AB_1 = vzip2q_u64(x[0], x[1]);
+
+    x[0] = AB_0;
+    x[1] = AB_1;
+}
+
+/// Transpose \a x (treating it as a 4x4 matrix of \c uint32_t) using ARM Neon intrinsics
+static void
+transpose(std::array<uint32x4_t, 4>& x)
+{
+    const uint32x4_t AB_01 = vzip1q_u32(x[0], x[1]);
+    const uint32x4_t AB_23 = vzip2q_u32(x[0], x[1]);
+    const uint32x4_t CD_01 = vzip1q_u32(x[2], x[3]);
+    const uint32x4_t CD_23 = vzip2q_u32(x[2], x[3]);
+
+    const uint64x2_t ABCD_0 = vzip1q_u64(vreinterpretq_u64_u32(AB_01), vreinterpretq_u64_u32(CD_01));
+    const uint64x2_t ABCD_1 = vzip2q_u64(vreinterpretq_u64_u32(AB_01), vreinterpretq_u64_u32(CD_01));
+    const uint64x2_t ABCD_2 = vzip1q_u64(vreinterpretq_u64_u32(AB_23), vreinterpretq_u64_u32(CD_23));
+    const uint64x2_t ABCD_3 = vzip2q_u64(vreinterpretq_u64_u32(AB_23), vreinterpretq_u64_u32(CD_23));
+
+    x[0] = vreinterpretq_u32_u64(ABCD_0);
+    x[1] = vreinterpretq_u32_u64(ABCD_1);
+    x[2] = vreinterpretq_u32_u64(ABCD_2);
+    x[3] = vreinterpretq_u32_u64(ABCD_3);
+}
+
+/// Transpose \a x (treating it as a 8x8 matrix of \c uint16_t) using ARM Neon intrinsics
+static void
+transpose(std::array<uint16x8_t, 8>& x)
+{
+    const uint16x8_t AB_03 = vzip1q_u16(x[0], x[1]);
+    const uint16x8_t AB_47 = vzip2q_u16(x[0], x[1]);
+    const uint16x8_t CD_03 = vzip1q_u16(x[2], x[3]);
+    const uint16x8_t CD_47 = vzip2q_u16(x[2], x[3]);
+    const uint16x8_t EF_03 = vzip1q_u16(x[4], x[5]);
+    const uint16x8_t EF_47 = vzip2q_u16(x[4], x[5]);
+    const uint16x8_t GH_03 = vzip1q_u16(x[6], x[7]);
+    const uint16x8_t GH_47 = vzip2q_u16(x[6], x[7]);
+
+    const uint32x4_t ABCD_01 = vzip1q_u32(vreinterpretq_u32_u16(AB_03), vreinterpretq_u32_u16(CD_03));
+    const uint32x4_t ABCD_23 = vzip2q_u32(vreinterpretq_u32_u16(AB_03), vreinterpretq_u32_u16(CD_03));
+    const uint32x4_t ABCD_45 = vzip1q_u32(vreinterpretq_u32_u16(AB_47), vreinterpretq_u32_u16(CD_47));
+    const uint32x4_t ABCD_67 = vzip2q_u32(vreinterpretq_u32_u16(AB_47), vreinterpretq_u32_u16(CD_47));
+    const uint32x4_t EFGH_01 = vzip1q_u32(vreinterpretq_u32_u16(EF_03), vreinterpretq_u32_u16(GH_03));
+    const uint32x4_t EFGH_23 = vzip2q_u32(vreinterpretq_u32_u16(EF_03), vreinterpretq_u32_u16(GH_03));
+    const uint32x4_t EFGH_45 = vzip1q_u32(vreinterpretq_u32_u16(EF_47), vreinterpretq_u32_u16(GH_47));
+    const uint32x4_t EFGH_67 = vzip2q_u32(vreinterpretq_u32_u16(EF_47), vreinterpretq_u32_u16(GH_47));
+
+    const uint64x2_t ABCDEFGH_0 = vzip1q_u64(vreinterpretq_u64_u32(ABCD_01), vreinterpretq_u64_u32(EFGH_01));
+    const uint64x2_t ABCDEFGH_1 = vzip2q_u64(vreinterpretq_u64_u32(ABCD_01), vreinterpretq_u64_u32(EFGH_01));
+    const uint64x2_t ABCDEFGH_2 = vzip1q_u64(vreinterpretq_u64_u32(ABCD_23), vreinterpretq_u64_u32(EFGH_23));
+    const uint64x2_t ABCDEFGH_3 = vzip2q_u64(vreinterpretq_u64_u32(ABCD_23), vreinterpretq_u64_u32(EFGH_23));
+    const uint64x2_t ABCDEFGH_4 = vzip1q_u64(vreinterpretq_u64_u32(ABCD_45), vreinterpretq_u64_u32(EFGH_45));
+    const uint64x2_t ABCDEFGH_5 = vzip2q_u64(vreinterpretq_u64_u32(ABCD_45), vreinterpretq_u64_u32(EFGH_45));
+    const uint64x2_t ABCDEFGH_6 = vzip1q_u64(vreinterpretq_u64_u32(ABCD_67), vreinterpretq_u64_u32(EFGH_67));
+    const uint64x2_t ABCDEFGH_7 = vzip2q_u64(vreinterpretq_u64_u32(ABCD_67), vreinterpretq_u64_u32(EFGH_67));
+
+    x[0] = vreinterpretq_u16_u64(ABCDEFGH_0);
+    x[1] = vreinterpretq_u16_u64(ABCDEFGH_1);
+    x[2] = vreinterpretq_u16_u64(ABCDEFGH_2);
+    x[3] = vreinterpretq_u16_u64(ABCDEFGH_3);
+    x[4] = vreinterpretq_u16_u64(ABCDEFGH_4);
+    x[5] = vreinterpretq_u16_u64(ABCDEFGH_5);
+    x[6] = vreinterpretq_u16_u64(ABCDEFGH_6);
+    x[7] = vreinterpretq_u16_u64(ABCDEFGH_7);
+}
 
 /// Transpose \a x (treating it as a 16x16 matrix of \c uint8_t) using ARM Neon intrinsics
 static void

@@ -682,9 +682,10 @@ const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 * \pre \a num_rounds ≥ \c NUM_ROUNDS_MIN
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
-*   1. Perform 3 rounds of AES encryption (with a zero round key) on each
+*   1. Apply the round constant via XOR.
+*   2. Perform 3 rounds of AES encryption (with a zero round key) on each
 *      element of the state array.
-*   2. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
+*   3. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
 *
 *

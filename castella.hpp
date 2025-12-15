@@ -626,7 +626,7 @@ static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 */
 template <uint8_t N>
 static auto
-create_round_constants()
+create_round_constants() noexcept
 {
     static_assert(N > 0);
 

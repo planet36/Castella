@@ -682,7 +682,7 @@ const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 * \pre \a num_rounds ≥ \c NUM_ROUNDS_MIN
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
-*   1. Perform 2 rounds of AES encryption (with the Castella round constant) on each
+*   1. Perform 3 rounds of AES encryption (with the Castella round constant) on each
 *      element of the state array.
 *   2. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
@@ -718,6 +718,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
         {
             state[i] = aes_enc_0(state[i]);
             state[i] = aes_enc_0(state[i]);
+            state[i] = aes_enc_0(state[i]);
         }
         transpose(state);
     }
@@ -740,6 +741,7 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
         transpose(state);
         for (decltype(N) i = 0; i < N; ++i)
         {
+            state[i] = aes_enc_0_inv(state[i]);
             state[i] = aes_enc_0_inv(state[i]);
             state[i] = aes_enc_0_inv(state[i]);
         }

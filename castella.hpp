@@ -475,7 +475,7 @@ transpose(std::array<uint8x16_t, 16>& x)
 * \pre \a src points to at least 16 bytes of data
 */
 // }}}
-static uint8x16_t
+static inline uint8x16_t
 load16(const void* src) noexcept
 {
     uint8x16_t dst{};

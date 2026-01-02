@@ -969,6 +969,12 @@ public:
     /**
     * ## _Yes, this is Keccak!_
     * https://keccak.team/2013/yes_this_is_keccak.html
+    *
+    * <blockquote>
+    * The capacity is a parameter of the sponge construction (and of Keccak) that
+    * determines a particular security strength level…
+    * </blockquote>
+    *
     * <blockquote>
     * In the Keccak design philosophy, safety margin comes from the number of
     * rounds in Keccak-𝑓, whereas the security level comes from the selected

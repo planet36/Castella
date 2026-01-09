@@ -16,7 +16,7 @@
 * \sa https://keccak.team/sponge_duplex.html
 * \sa https://keccak.team/keccak_specs_summary.html
 * \sa https://keccak.team/files/MakingOfKeccak.pdf
-* \sa https://codahale.com/the-joy-of-duplexes/
+* \sa https://web.archive.org/web/20250408174705/https://codahale.com/the-joy-of-duplexes/
 * \sa https://keccak.team/files/NoteSoftwareInterface.pdf
 * \sa https://keccak.team/glossary.html
 * \sa https://keccak.team/keccak_strengths.html

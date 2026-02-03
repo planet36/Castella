@@ -53,13 +53,19 @@
 #include <type_traits>
 #include <vector>
 
+#if defined(__x86_64__) && defined(__SSE2__) && defined(__AES__)
+#include <immintrin.h>
+#elif defined(__aarch64__) && defined(__ARM_NEON) && defined(__ARM_FEATURE_AES)
+#include <arm_neon.h>
+#else
+#error "Architecture not supported"
+#endif
+
 // {{{ aes_enc_0
 
 #if defined(__x86_64__) && defined(__AES__)
 
 // {{{ x86_64
-
-#include <immintrin.h>
 
 using uint8x16_t = __m128i;
 
@@ -96,8 +102,6 @@ aes_enc_0_inv(uint8x16_t data)
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
 
 // {{{ ARM64
-
-#include <arm_neon.h>
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
@@ -142,8 +146,6 @@ aes_enc_0_inv(uint8x16_t data)
 #if defined(__x86_64__) && defined(__SSE2__)
 
 // {{{ x86_64
-
-#include <immintrin.h> // NOLINT(readability-duplicate-include)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
@@ -294,8 +296,6 @@ transpose(std::array<__m128i, 16>& x)
 #elif defined(__aarch64__) && defined(__ARM_NEON)
 
 // {{{ ARM64
-
-#include <arm_neon.h> // NOLINT(readability-duplicate-include)
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using ARM Neon intrinsics
 static void

@@ -61,6 +61,11 @@
 #error "Architecture not supported"
 #endif
 
+/// The namespace for type aliases and functions used by Castella
+namespace Castella {
+
+inline namespace utils {
+
 // {{{ aes_enc_0
 
 #if defined(__x86_64__) && defined(__AES__)
@@ -597,6 +602,10 @@ encode_bytes(const std::string_view s)
 {
     static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
     return encode_bytes(std::as_bytes(std::span{s}));
+}
+
+}
+
 }
 
 /// The namespace for the Castella round constants, permutation function, and duplex

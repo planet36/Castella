@@ -42,7 +42,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <fmt/format.h>
 #include <memory>
 #include <mutex>
 #include <new>
@@ -1084,28 +1083,26 @@ private:
     void check_constraints_()
     {
         if (C < C_MIN)
-            throw std::invalid_argument(fmt::format("C ({}) < C_MIN ({})", C, C_MIN));
+            throw std::invalid_argument("Castella::Duplex: C < C_MIN");
 
         if (C > C_MAX)
-            throw std::invalid_argument(fmt::format("C ({}) > C_MAX ({})", C, C_MAX));
+            throw std::invalid_argument("Castella::Duplex: C > C_MAX");
 
 #if defined(DEBUG)
         // {{{ These checks aren't necessary if other tests passed.
         if (R < R_MIN)
-            throw std::invalid_argument(fmt::format("R ({}) < R_MIN ({})", R, R_MIN));
+            throw std::invalid_argument("Castella::Duplex: R < R_MIN");
 
         if (R > R_MAX)
-            throw std::invalid_argument(fmt::format("R ({}) > R_MAX ({})", R, R_MAX));
+            throw std::invalid_argument("Castella::Duplex: R > R_MAX");
         //}}}
 #endif
 
         if (NUM_ROUNDS < NUM_ROUNDS_MIN)
-            throw std::invalid_argument(fmt::format("NUM_ROUNDS ({}) < NUM_ROUNDS_MIN ({})",
-                                                    NUM_ROUNDS, NUM_ROUNDS_MIN));
+            throw std::invalid_argument("Castella::Duplex: NUM_ROUNDS < NUM_ROUNDS_MIN");
 
         if (NUM_ROUNDS > NUM_ROUNDS_MAX)
-            throw std::invalid_argument(fmt::format("NUM_ROUNDS ({}) > NUM_ROUNDS_MAX ({})",
-                                                    NUM_ROUNDS, NUM_ROUNDS_MAX));
+            throw std::invalid_argument("Castella::Duplex: NUM_ROUNDS > NUM_ROUNDS_MAX");
     }
 
     /// Zeroize the state and input buffer

@@ -40,13 +40,10 @@ httplib.h:
 clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
-distclean: clean
-	@$(RM) --verbose -- httplib.h
-
 lint:
 	-clang-tidy --quiet $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS) $(LDLIBS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
-.PHONY: all clean distclean lint
+.PHONY: all clean lint
 
 -include $(DEPS)

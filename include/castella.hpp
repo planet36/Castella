@@ -1080,7 +1080,7 @@ private:
     * invalid
     */
     // }}}
-    void check_constraints_()
+    void check_constraints_() const
     {
         if (C < C_MIN)
             throw std::invalid_argument("Castella::Duplex: C < C_MIN");

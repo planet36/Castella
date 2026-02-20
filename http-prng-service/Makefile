@@ -4,7 +4,7 @@
 export LC_ALL = C
 
 CPPFLAGS = -MMD -MP
-CPPFLAGS += -I../include
+CPPFLAGS += -I ../include
 # for SSL (not supported yet)
 #CPPFLAGS += -DCPPHTTPLIB_OPENSSL_SUPPORT
 

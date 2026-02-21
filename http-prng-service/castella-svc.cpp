@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: Steven Ward
-// SPDX-License-Identifier: OSL-3.0
+// SPDX-License-Identifier: MPL-2.0
 
 /// Castella HTTP PRNG service
 /**
@@ -34,7 +34,7 @@
 #include <unistd.h>
 
 inline constexpr std::string_view program_author = "Steven Ward";
-inline constexpr std::string_view program_license = "OSL-3.0";
+inline constexpr std::string_view program_license = "MPL-2.0";
 inline constexpr std::string_view program_version = "2026-01-30";
 
 inline constexpr std::string_view default_host = "localhost";

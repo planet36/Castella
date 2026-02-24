@@ -625,7 +625,14 @@ using arr_blocks = std::array<block_t, N>;
 #endif
 
 inline constexpr uint8_t NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
-inline constexpr uint8_t NUM_ROUNDS_MAX = 16; // Embiggen the value as needed.
+
+#if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MAX)
+// Embiggen the value as needed.
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MAX 16
+#endif
+
+inline constexpr uint8_t NUM_ROUNDS_MAX = DEFAULT_CASTELLA_NUM_ROUNDS_MAX;
+
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 
 #undef DEFAULT_CASTELLA_NUM_ROUNDS_MIN

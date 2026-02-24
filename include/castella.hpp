@@ -618,9 +618,17 @@ using arr_blocks = std::array<block_t, N>;
 
 #pragma GCC diagnostic pop
 
-inline constexpr uint8_t NUM_ROUNDS_MIN = 3;
+// This macro is only defined in certain test programs to find the optimum
+// minimum round count.
+#if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MIN)
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 3
+#endif
+
+inline constexpr uint8_t NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
 inline constexpr uint8_t NUM_ROUNDS_MAX = 16; // Embiggen the value as needed.
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
+
+#undef DEFAULT_CASTELLA_NUM_ROUNDS_MIN
 
 /// Create the first \a N Castella round constants
 /**

@@ -18,6 +18,7 @@
 #include <condition_variable>
 #include <csignal>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
@@ -38,7 +39,7 @@ inline constexpr std::string_view program_license = "MPL-2.0";
 inline constexpr std::string_view program_version = "2026-01-30";
 
 inline constexpr std::string_view default_host = "localhost";
-inline constexpr int default_port = 8080;
+inline constexpr uint16_t default_port = 8080;
 const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(cert-err58-cpp)
 
 Castella::Duplex* hash_obj = nullptr;

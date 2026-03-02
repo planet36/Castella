@@ -681,10 +681,6 @@ struct UpdateOpts
     /// If the length of the input data should be encoded before the input
     /// data is consumed
     bool left_encode_length = false;
-
-    /// If the length of the input data should be encoded after the input
-    /// data is consumed
-    bool right_encode_length = false;
 };
 
 /// Castella: A heavyweight customizable duplex/sponge construction class
@@ -1442,9 +1438,6 @@ public:
 
         update_(data, len, opts.apply_padding_rule);
 
-        if (opts.right_encode_length)
-            right_encode_(len);
-
         return *this;
     }
 
@@ -1464,9 +1457,6 @@ public:
             left_encode_(std::size(byte_sp));
 
         update_(byte_sp, opts.apply_padding_rule);
-
-        if (opts.right_encode_length)
-            right_encode_(std::size(byte_sp));
 
         return *this;
     }

@@ -1118,7 +1118,7 @@ private:
         absorb_();
     }
 
-    void update_(const void* data, size_t len)
+    void add_(const void* data, size_t len)
     {
         const auto* src = static_cast<const std::byte*>(data);
 
@@ -1184,8 +1184,8 @@ private:
         assert(w >= 1);
 #endif
 
-        update_(&w, sizeof(w));
-        update_(&x, w);
+        add_(&w, sizeof(w));
+        add_(&x, w);
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -1211,8 +1211,8 @@ private:
         assert(w >= 1);
 #endif
 
-        update_(&x, w);
-        update_(&w, sizeof(w));
+        add_(&x, w);
+        add_(&w, sizeof(w));
     }
 
     /// Unambiguously encode the byte string into the input buffer
@@ -1235,7 +1235,7 @@ private:
     void encode_bytes_(const void* data, size_t len)
     {
         left_encode_(len);
-        update_(data, len);
+        add_(data, len);
     }
 
     void encode_bytes_(const std::string_view s)
@@ -1401,7 +1401,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        update_(data, len);
+        add_(data, len);
 
         return *this;
     }
@@ -1522,7 +1522,7 @@ public:
 
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if n is 0.
-        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
+        add_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
         apply_padding_rule_();
 
 #if defined(DEBUG)

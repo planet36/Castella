@@ -664,21 +664,6 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
     }
 }
 
-/// Options for the \c Duplex::update member function.
-// {{{
-/**
-* \note This may not be a nested class in \c Duplex because of these bugs:
-* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
-* https://github.com/llvm/llvm-project/issues/36032
-*/
-// }}}
-struct UpdateOpts
-{
-    /// If the length of the input data should be encoded before the input
-    /// data is consumed
-    bool left_encode_length = false;
-};
-
 /// Castella: A heavyweight customizable duplex/sponge construction class
 // {{{
 /**
@@ -1409,16 +1394,12 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \param opts options
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& update(const void* data, size_t len, UpdateOpts opts = {})
+    Duplex& update(const void* data, size_t len)
     {
         std::scoped_lock lock{mtx_};
-
-        if (opts.left_encode_length)
-            left_encode_(len);
 
         update_(data, len);
 
@@ -1429,13 +1410,12 @@ public:
     // {{{
     /**
     * \param byte_sp the input data
-    * \param opts options
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& update(const std::span<const std::byte> byte_sp, UpdateOpts opts = {})
+    Duplex& update(const std::span<const std::byte> byte_sp)
     {
-        return update(std::data(byte_sp), std::size(byte_sp), opts);
+        return update(std::data(byte_sp), std::size(byte_sp));
     }
 
     /// Consume left-encoded \a len then \a data into the input buffer

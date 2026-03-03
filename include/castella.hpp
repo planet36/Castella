@@ -1176,11 +1176,6 @@ private:
 #endif
     }
 
-    void update_(const std::span<const std::byte> byte_sp)
-    {
-        update_(std::data(byte_sp), std::size(byte_sp));
-    }
-
     /// Unambiguously encode the integer into the input buffer
     // {{{
     /**

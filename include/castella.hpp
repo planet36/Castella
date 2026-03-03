@@ -1404,7 +1404,7 @@ public:
         delete[] input_blocks_;
     }
 
-    /// Consume the input data into the input buffer
+    /// Consume \a data into the input buffer
     // {{{
     /**
     * \param data the input data
@@ -1425,7 +1425,7 @@ public:
         return *this;
     }
 
-    /// Consume the input data into the input buffer
+    /// Consume \a data into the input buffer
     // {{{
     /**
     * \param byte_sp the input data

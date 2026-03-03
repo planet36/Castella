@@ -1436,6 +1436,11 @@ public:
         return *this;
     }
 
+    Duplex& encode_update(const std::span<const std::byte> byte_sp)
+    {
+        return encode_update(std::data(byte_sp), std::size(byte_sp));
+    }
+
     /// Apply the "pad10*1" padding rule to the input buffer
     // {{{
     /**

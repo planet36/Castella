@@ -1137,7 +1137,7 @@ private:
         absorb_();
     }
 
-    void update_(const void* data, size_t len, const bool should_apply_padding_rule)
+    void update_(const void* data, size_t len)
     {
         const auto* src = static_cast<const std::byte*>(data);
 
@@ -1178,17 +1178,11 @@ private:
         assert(len == 0);
         assert(cur_input_byte_idx_ < get_rate_size_bytes());
 #endif
-
-        if (should_apply_padding_rule)
-        {
-            apply_padding_rule_();
-        }
     }
 
-    void update_(const std::span<const std::byte> byte_sp,
-                 const bool should_apply_padding_rule)
+    void update_(const std::span<const std::byte> byte_sp)
     {
-        update_(std::data(byte_sp), std::size(byte_sp), should_apply_padding_rule);
+        update_(std::data(byte_sp), std::size(byte_sp));
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -1214,8 +1208,8 @@ private:
         assert(w >= 1);
 #endif
 
-        update_(&w, sizeof(w), false);
-        update_(&x, w, false);
+        update_(&w, sizeof(w));
+        update_(&x, w);
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -1241,8 +1235,8 @@ private:
         assert(w >= 1);
 #endif
 
-        update_(&x, w, false);
-        update_(&w, sizeof(w), false);
+        update_(&x, w);
+        update_(&w, sizeof(w));
     }
 
     /// Unambiguously encode the byte string into the input buffer
@@ -1266,7 +1260,7 @@ private:
     {
         const size_t len = std::size(byte_sp);
         left_encode_(len);
-        update_(byte_sp, false);
+        update_(byte_sp);
     }
 
     void encode_bytes_(const std::string_view s)
@@ -1436,7 +1430,10 @@ public:
         if (opts.left_encode_length)
             left_encode_(len);
 
-        update_(data, len, opts.apply_padding_rule);
+        update_(data, len);
+
+        if (opts.apply_padding_rule)
+            apply_padding_rule_();
 
         return *this;
     }
@@ -1456,7 +1453,10 @@ public:
         if (opts.left_encode_length)
             left_encode_(std::size(byte_sp));
 
-        update_(byte_sp, opts.apply_padding_rule);
+        update_(byte_sp);
+
+        if (opts.apply_padding_rule)
+            apply_padding_rule_();
 
         return *this;
     }
@@ -1535,8 +1535,8 @@ public:
 
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if n is 0.
-        constexpr bool should_apply_padding_rule = true;
-        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX), should_apply_padding_rule);
+        update_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
+        apply_padding_rule_();
 
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ == 0);

@@ -713,7 +713,7 @@ struct UpdateOpts
 *             })
 *     { hash_obj.update(std::as_bytes(std::span{s})); }
 *
-*     //hash_obj.update(nullptr, 0, {.apply_padding_rule = true}); // blank call
+*     //hash_obj.apply_padding_rule(); // blank call
 *     //(void)hash_obj.squeeze_bytes(0); // mute call
 *
 *     //unsigned int num_bytes_to_squeeze = hash_obj.get_capacity_size_bytes() / 2;
@@ -1457,6 +1457,21 @@ public:
 
         if (opts.apply_padding_rule)
             apply_padding_rule_();
+
+        return *this;
+    }
+
+    /// Apply the "pad10*1" padding rule to the input buffer
+    // {{{
+    /**
+    * \return a reference to this object (to enable method chaining)
+    */
+    // }}}
+    Duplex& apply_padding_rule()
+    {
+        std::scoped_lock lock{mtx_};
+
+        apply_padding_rule_();
 
         return *this;
     }

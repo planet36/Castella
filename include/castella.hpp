@@ -1438,6 +1438,24 @@ public:
         return update(std::data(byte_sp), std::size(byte_sp), opts);
     }
 
+    /// Consume left-encoded \a len then \a data into the input buffer
+    // {{{
+    /**
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \return a reference to this object (to enable method chaining)
+    */
+    // }}}
+    Duplex& encode_update(const void* data, size_t len)
+    {
+        std::scoped_lock lock{mtx_};
+
+        left_encode_(len);
+        update_(data, len);
+
+        return *this;
+    }
+
     /// Apply the "pad10*1" padding rule to the input buffer
     // {{{
     /**

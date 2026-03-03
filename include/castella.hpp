@@ -1423,8 +1423,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        left_encode_(len);
-        update_(data, len);
+        encode_bytes_(data, len);
 
         return *this;
     }

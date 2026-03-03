@@ -1406,13 +1406,6 @@ public:
         return *this;
     }
 
-    /// Consume \a data into the input buffer
-    // {{{
-    /**
-    * \param byte_sp the input data
-    * \return a reference to this object (to enable method chaining)
-    */
-    // }}}
     Duplex& update(const std::span<const std::byte> byte_sp)
     {
         return update(std::data(byte_sp), std::size(byte_sp));

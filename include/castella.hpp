@@ -674,10 +674,6 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
 // }}}
 struct UpdateOpts
 {
-    /// If the padding rule should be applied after the input data is
-    /// consumed
-    bool apply_padding_rule = false;
-
     /// If the length of the input data should be encoded before the input
     /// data is consumed
     bool left_encode_length = false;
@@ -1432,9 +1428,6 @@ public:
 
         update_(data, len);
 
-        if (opts.apply_padding_rule)
-            apply_padding_rule_();
-
         return *this;
     }
 
@@ -1454,9 +1447,6 @@ public:
             left_encode_(std::size(byte_sp));
 
         update_(byte_sp);
-
-        if (opts.apply_padding_rule)
-            apply_padding_rule_();
 
         return *this;
     }

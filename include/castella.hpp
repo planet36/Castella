@@ -1440,14 +1440,7 @@ public:
     // }}}
     Duplex& update(const std::span<const std::byte> byte_sp, UpdateOpts opts = {})
     {
-        std::scoped_lock lock{mtx_};
-
-        if (opts.left_encode_length)
-            left_encode_(std::size(byte_sp));
-
-        update_(byte_sp);
-
-        return *this;
+        return update(std::data(byte_sp), std::size(byte_sp), opts);
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer

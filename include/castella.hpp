@@ -1027,7 +1027,7 @@ private:
     void absorb_()
     {
 #if defined(DEBUG)
-        assert(cur_input_byte_idx_ == get_rate_size_bytes());
+        assert(cur_input_byte_idx_ == get_rate_size_bytes()); // input buf is full
 #endif
 
         for (std::remove_const_t<decltype(R)> i = 0; i < R; ++i)
@@ -1077,7 +1077,7 @@ private:
     void apply_padding_rule_()
     {
 #if defined(DEBUG)
-        assert(cur_input_byte_idx_ < get_rate_size_bytes());
+        assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
         const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
@@ -1125,7 +1125,7 @@ private:
         while (len > 0)
         {
 #if defined(DEBUG)
-            assert(cur_input_byte_idx_ < get_rate_size_bytes());
+            assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
             const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
@@ -1149,7 +1149,7 @@ private:
             assert(cur_input_byte_idx_ <= get_rate_size_bytes());
 #endif
 
-            if (cur_input_byte_idx_ == get_rate_size_bytes())
+            if (cur_input_byte_idx_ == get_rate_size_bytes()) // input buf is full
             {
                 absorb_();
             }
@@ -1157,7 +1157,7 @@ private:
 
 #if defined(DEBUG)
         assert(len == 0);
-        assert(cur_input_byte_idx_ < get_rate_size_bytes());
+        assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
     }
 
@@ -1526,7 +1526,7 @@ public:
         apply_padding_rule_();
 
 #if defined(DEBUG)
-        assert(cur_input_byte_idx_ == 0);
+        assert(cur_input_byte_idx_ == 0); // input buf is empty
 #endif
 
         const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);

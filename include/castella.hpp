@@ -1419,7 +1419,7 @@ public:
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& encode_update(const void* data, size_t len)
+    Duplex& add_encoded(const void* data, size_t len)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1428,9 +1428,9 @@ public:
         return *this;
     }
 
-    Duplex& encode_update(const std::span<const std::byte> byte_sp)
+    Duplex& add_encoded(const std::span<const std::byte> byte_sp)
     {
-        return encode_update(std::data(byte_sp), std::size(byte_sp));
+        return add_encoded(std::data(byte_sp), std::size(byte_sp));
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer

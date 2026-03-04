@@ -692,7 +692,7 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
 *             "Money can be exchanged for goods and services.",
 *             "Woo-hoo!",
 *             })
-*     { hash_obj.update(std::as_bytes(std::span{s})); }
+*     { hash_obj.add(std::as_bytes(std::span{s})); }
 *
 *     //hash_obj.apply_padding_rule(); // blank call
 *     //(void)hash_obj.squeeze_bytes(0); // mute call
@@ -1397,7 +1397,7 @@ public:
     * \return a reference to this object (to enable method chaining)
     */
     // }}}
-    Duplex& update(const void* data, size_t len)
+    Duplex& add(const void* data, size_t len)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1406,9 +1406,9 @@ public:
         return *this;
     }
 
-    Duplex& update(const std::span<const std::byte> byte_sp)
+    Duplex& add(const std::span<const std::byte> byte_sp)
     {
-        return update(std::data(byte_sp), std::size(byte_sp));
+        return add(std::data(byte_sp), std::size(byte_sp));
     }
 
     /// Consume left-encoded \a len then \a data into the input buffer

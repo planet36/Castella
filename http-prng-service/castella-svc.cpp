@@ -185,7 +185,7 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         if (getentropy(std::data(entropy_buf), sizeof(entropy_buf)) < 0)
             err(EXIT_FAILURE, "getentropy");
 
-        hash_obj->update(entropy_buf);
+        hash_obj->add(entropy_buf);
 
         if (spdlog::should_log(spdlog::level::level_enum::trace))
         {
@@ -370,7 +370,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     svr.Post("/absorb", [](const httplib::Request& req,
                            [[maybe_unused]] httplib::Response& res) {
-            hash_obj->update(std::data(req.body), std::size(req.body));
+            hash_obj->add(std::data(req.body), std::size(req.body));
     });
 
     // no path parameter

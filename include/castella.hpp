@@ -1352,7 +1352,7 @@ public:
     // }}}
     explicit Duplex(const uint8_t capacity_blocks,
                     const uint8_t num_rounds,
-                    const std::byte input_suffix,
+                    const std::byte input_suffix = std::byte{0},
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
         C(capacity_blocks),

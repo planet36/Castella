@@ -949,7 +949,7 @@ public:
     *     * `00` when 𝑁 and 𝑆 are both not empty strings
     *
     *
-    * Keccak calls this "delimitedSuffix".
+    * eXtended Keccak Code Package calls this "delimitedSuffix".
     *
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/FIPS202/KeccakHash.h#L49
     * \sa https://github.com/XKCP/XKCP/blob/master/Standalone/CompactFIPS202/C/Keccak-readable-and-compact.c#L56

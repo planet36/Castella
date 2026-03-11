@@ -122,6 +122,9 @@ print_usage()
     fmt::println("             Valid log levels are:");
     fmt::println("             {}", std::to_array(SPDLOG_LEVEL_NAMES));
     fmt::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
+    fmt::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
+    fmt::println("                 - The periodic entropy data added to the Castella hash object");
+    fmt::println("                 - The body data of requests & responses");
     nl;
 
     fmt::println("  -p PORT    Specify the port.  (default={:d})", default_port);

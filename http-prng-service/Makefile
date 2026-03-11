@@ -40,7 +40,7 @@ httplib.h:
 clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
-lint:
+lint: httplib.h
 	-clang-tidy --quiet --exclude-header-filter=httplib.h $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets

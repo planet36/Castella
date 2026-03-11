@@ -667,45 +667,6 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
 /// Castella: A heavyweight customizable duplex/sponge construction class
 // {{{
 /**
-* Example usage:
-* ```cpp
-* #include "castella.hpp"
-* #include <fmt/ranges.h>
-* #include <string_view>
-*
-* int main() {
-*     uint8_t capacity_blocks = 4;
-*     uint8_t num_rounds = 6;
-*     std::byte input_suffix{0b1};
-*     std::string_view function_name = "Castella";
-*     std::string_view customization_str = "Kwyjibo";
-*
-*     Castella::Duplex hash_obj(capacity_blocks,
-*                               num_rounds,
-*                               input_suffix,
-*                               function_name,
-*                               customization_str);
-*
-*     for (std::string_view s : {
-*             "Twenty dollars can buy many peanuts.",
-*             "Explain how!",
-*             "Money can be exchanged for goods and services.",
-*             "Woo-hoo!",
-*             })
-*     { hash_obj.add(std::as_bytes(std::span{s})); }
-*
-*     //hash_obj.apply_padding_rule(); // blank call
-*     //(void)hash_obj.squeeze_bytes(0); // mute call
-*
-*     //unsigned int num_bytes_to_squeeze = hash_obj.get_capacity_size_bytes() / 2;
-*     //auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
-*     auto digest_bytes = hash_obj.squeeze_bytes();
-*     fmt::println("{:02x}", fmt::join(digest_bytes, ""));
-*     return 0;
-* }
-* ```
-*
-*
 * ## _CSF-0.1.pdf_
 *
 * ### 2.2 The sponge construction

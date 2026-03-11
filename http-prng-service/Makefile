@@ -21,8 +21,8 @@ LDLIBS = -lfmt
 # for SSL (not supported yet)
 #LDLIBS +=  -lssl -lcrypto
 
-SRCS = $(wildcard castella*.cpp)
-DEPS = $(SRCS:.cpp=.d)
+SRCS = $(wildcard *.cpp)
+DEPS = $(addsuffix .d,$(basename $(SRCS)))
 BINS = $(basename $(SRCS))
 
 all: $(BINS)

@@ -1083,6 +1083,10 @@ private:
 
     void add_(const void* data, size_t len)
     {
+        // Avoid UB
+        if (data == nullptr)
+            return;
+
         const auto* src = static_cast<const std::byte*>(data);
 
         while (len > 0)

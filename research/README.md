@@ -1,4 +1,4 @@
-## Files
+## Research programs
 
 | name | purpose |
 | ---- | ------- |
@@ -7,7 +7,9 @@
 | permute-num\_rounds.cpp | For each state size, find the optimal _Nr_ for `Castella::permute` |
 | permute\_inv-verify.cpp | Verify that `Castella::permute_inv` is the inverse of `Castella::permute` |
 
-The `*-benchmark.cpp` files use Google benchmark to test their respective functions.
+## Benchmark programs
+
+The `*-benchmark.cpp` programs use [Google benchmark](https://github.com/google/benchmark) to test their respective functions.
 
 ## Usage
 

@@ -587,7 +587,7 @@ create_round_constants() noexcept
 * </blockquote>
 */
 // }}}
-const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
+inline const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 
 /// The Castella permutation function
 // {{{

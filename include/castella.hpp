@@ -521,6 +521,8 @@ using arr_blocks = std::array<block_t, N>;
 
 inline constexpr uint8_t NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
 
+#undef DEFAULT_CASTELLA_NUM_ROUNDS_MIN
+
 #if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MAX)
 // Embiggen the value as needed.
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MAX 16
@@ -531,8 +533,6 @@ inline constexpr uint8_t NUM_ROUNDS_MAX = DEFAULT_CASTELLA_NUM_ROUNDS_MAX;
 #undef DEFAULT_CASTELLA_NUM_ROUNDS_MAX
 
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
-
-#undef DEFAULT_CASTELLA_NUM_ROUNDS_MIN
 
 /// Create the first \a N Castella round constants
 /**

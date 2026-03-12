@@ -1232,6 +1232,7 @@ private:
         add_(data, len);
     }
 
+    /// \copydoc encode_bytes_(const void*, size_t)
     void encode_bytes_(const std::string_view s) noexcept
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");

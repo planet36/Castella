@@ -55,7 +55,7 @@ int main()
                 "Money can be exchanged for goods and services.",
                 "Woo-hoo!",
                 })
-        { hash_obj.add(as_byte_span(X)); }
+        { hash_obj.add(X); }
 
         // blank call
         //hash_obj.apply_padding_rule();
@@ -111,7 +111,7 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add(as_byte_span(X))
+            .add(X)
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result = "cb37b98f7acff99c34fb249d335f0e93ca061db25260851227c2a2f1fed998ca";
@@ -144,7 +144,7 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add(as_byte_span(X))
+            .add(X)
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result = "f3b2108eeae484d2a76457b83db0b845c6db1df9736200cfd0a93ae8f294f557851266f82769225f4121f880aa9056f198fcbbddd9b3bcf016de53692c4a9806";
@@ -197,9 +197,9 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(K)) // encode_string
+            .add_encoded(K) // encode_string
             .apply_padding_rule() // bytepad
-            .add(as_byte_span(X))
+            .add(X)
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -234,9 +234,9 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(K)) // encode_string
+            .add_encoded(K) // encode_string
             .apply_padding_rule() // bytepad
-            .add(as_byte_span(X))
+            .add(X)
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -271,9 +271,9 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(K)) // encode_string
+            .add_encoded(K) // encode_string
             .apply_padding_rule() // bytepad
-            .add(as_byte_span(X))
+            .add(X)
             .add(right_encode(0U))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -308,9 +308,9 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(K)) // encode_string
+            .add_encoded(K) // encode_string
             .apply_padding_rule() // bytepad
-            .add(as_byte_span(X))
+            .add(X)
             .add(right_encode(0U))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -361,15 +361,15 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(X[0])) // encode_string
-            .add_encoded(as_byte_span(X[1])) // encode_string
+            .add_encoded(X[0]) // encode_string
+            .add_encoded(X[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(Y[0])) // encode_string
-            .add_encoded(as_byte_span(Y[1])) // encode_string
+            .add_encoded(Y[0]) // encode_string
+            .add_encoded(Y[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -414,15 +414,15 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(X[0])) // encode_string
-            .add_encoded(as_byte_span(X[1])) // encode_string
+            .add_encoded(X[0]) // encode_string
+            .add_encoded(X[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(Y[0])) // encode_string
-            .add_encoded(as_byte_span(Y[1])) // encode_string
+            .add_encoded(Y[0]) // encode_string
+            .add_encoded(Y[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -467,15 +467,15 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(X[0])) // encode_string
-            .add_encoded(as_byte_span(X[1])) // encode_string
+            .add_encoded(X[0]) // encode_string
+            .add_encoded(X[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(Y[0])) // encode_string
-            .add_encoded(as_byte_span(Y[1])) // encode_string
+            .add_encoded(Y[0]) // encode_string
+            .add_encoded(Y[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -520,15 +520,15 @@ int main()
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(X[0])) // encode_string
-            .add_encoded(as_byte_span(X[1])) // encode_string
+            .add_encoded(X[0]) // encode_string
+            .add_encoded(X[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
                 input_suffix, function_name, customization_str)
-            .add_encoded(as_byte_span(Y[0])) // encode_string
-            .add_encoded(as_byte_span(Y[1])) // encode_string
+            .add_encoded(Y[0]) // encode_string
+            .add_encoded(Y[1]) // encode_string
             .add(right_encode(num_bytes_to_squeeze))
             .squeeze_bytes(num_bytes_to_squeeze);
 

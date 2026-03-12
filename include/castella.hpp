@@ -1380,6 +1380,12 @@ public:
         return add(std::data(byte_sp), std::size(byte_sp));
     }
 
+    Duplex& add(const std::string_view s)
+    {
+        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
+        return add(std::data(s), std::size(s));
+    }
+
     /// Consume left-encoded \a len then \a data into the input buffer
     // {{{
     /**
@@ -1400,6 +1406,12 @@ public:
     Duplex& add_encoded(const std::span<const std::byte> byte_sp)
     {
         return add_encoded(std::data(byte_sp), std::size(byte_sp));
+    }
+
+    Duplex& add_encoded(const std::string_view s)
+    {
+        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
+        return add_encoded(std::data(s), std::size(s));
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer

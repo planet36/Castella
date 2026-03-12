@@ -1537,6 +1537,7 @@ public:
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
+    /// The state size is fixed and does not depend on any user-provided parameters.
     [[nodiscard]] static unsigned int get_state_size_bytes() { return sizeof(block_t) * B; }
 
     [[nodiscard]] unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }

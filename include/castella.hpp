@@ -45,6 +45,7 @@
 #include <memory>
 #include <mutex>
 #include <new>
+#include <numeric>
 #include <ranges>
 #include <span>
 #include <stdexcept>
@@ -1325,7 +1326,7 @@ public:
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
         C(capacity_blocks),
-        R(B - C),
+        R(std::sub_sat(B, C)),
         NUM_ROUNDS(num_rounds),
         INPUT_SUFFIX(input_suffix)
     {

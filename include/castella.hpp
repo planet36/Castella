@@ -741,7 +741,7 @@ struct alignas(block_t) Duplex final
     */
     // }}}
     static constexpr uint8_t B = 16;
-    static_assert(B == 16);
+    static_assert(B == 16, "B must be 16 to accommodate the 16x16 byte matrix transpose");
 
     /// The minimum size (in blocks) of the capacity
     // {{{

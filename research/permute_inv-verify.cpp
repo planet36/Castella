@@ -30,10 +30,12 @@ test_permute(const Castella::arr_blocks<N>& state)
 
         Castella::permute(state_copy, num_rounds);
 
+        // verify permute(state) != state
         assert(std::memcmp(std::data(state), std::data(state_copy), sizeof(state)) != 0);
 
         Castella::permute_inv(state_copy, num_rounds);
 
+        // verify permute_inv(permute(state)) == state
         assert(std::memcmp(std::data(state), std::data(state_copy), sizeof(state)) == 0);
     }
 }

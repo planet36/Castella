@@ -94,8 +94,10 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
             "\tkurt."
             );
 
+    // number of bits in the state
     constexpr unsigned int bits = sizeof(T) * 8;
 
+    // expected number of bits changed
     constexpr size_t expected_mean = bits / 2;
 
     for (const auto& [num_rounds, rs_num_bits_changed] : num_rounds_to_rs_num_bits_changed)

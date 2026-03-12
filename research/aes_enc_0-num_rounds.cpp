@@ -59,8 +59,10 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int n
         }
     }
 
+    // number of bits in the block
     constexpr unsigned int bits = sizeof(T) * 8;
 
+    // expected number of bits changed
     constexpr size_t expected_mean = bits / 2;
 
     const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);

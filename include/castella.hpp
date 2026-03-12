@@ -963,9 +963,9 @@ private:
     // }}}
     void zeroize_()
     {
-        state_.fill(block_t{});
+        explicit_bzero(std::data(state_), sizeof(state_));
 
-        (void)std::memset(input_blocks_, 0, get_rate_size_bytes());
+        explicit_bzero(input_blocks_, get_rate_size_bytes());
 
         cur_input_byte_idx_ = 0;
     }

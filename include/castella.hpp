@@ -1008,6 +1008,11 @@ private:
         permute(state_, NUM_ROUNDS);
     }
 
+    [[nodiscard]] std::byte* get_input_bytes_() noexcept
+    {
+        return reinterpret_cast<std::byte*>(input_blocks_);
+    }
+
     /// Apply the "pad10*1" padding rule to the input buffer
     // {{{
     /**
@@ -1053,7 +1058,7 @@ private:
         assert(available_space > 0);
 #endif
 
-        auto* input_bytes = reinterpret_cast<std::byte*>(input_blocks_);
+        std::byte* input_bytes = get_input_bytes_();
         std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
         // Zeroize the available space in the input buffer.
@@ -1106,7 +1111,7 @@ private:
             assert(num_bytes_to_add > 0);
 #endif
 
-            auto* input_bytes = reinterpret_cast<std::byte*>(input_blocks_);
+            std::byte* input_bytes = get_input_bytes_();
             std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
             (void)std::memcpy(dst, src, num_bytes_to_add);

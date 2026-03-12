@@ -1343,6 +1343,12 @@ public:
     * <blockquote>
     * There are no "weak" values for 𝑁 or 𝑆.
     * </blockquote>
+    *
+    * \param capacity_blocks the size (in blocks) of the capacity
+    * \param num_rounds the number of rounds to perform in the Castella permutation function
+    * \param input_suffix the byte to append to the input buffer before squeezing
+    * \param function_name a string for algorithm domain separation; like \e N in cSHAKE terminology
+    * \param customization_str a string for user-defined domain separation; like \e S in cSHAKE terminology
     */
     // }}}
     explicit Duplex(const uint8_t capacity_blocks,

@@ -1053,8 +1053,8 @@ private:
         assert(available_space > 0);
 #endif
 
-        auto* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
-        std::byte* dst = &input_bytes_[cur_input_byte_idx_];
+        auto* input_bytes = reinterpret_cast<std::byte*>(input_blocks_);
+        std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
         // Zeroize the available space in the input buffer.
         (void)std::memset(dst, 0, num_bytes_to_add);
@@ -1066,7 +1066,7 @@ private:
                           std::byte{0},
                       "set bits must not overlap");
 
-        input_bytes_[cur_input_byte_idx_] = first_padding_byte_pattern;
+        input_bytes[cur_input_byte_idx_] = first_padding_byte_pattern;
 
         const size_t last_input_byte_idx = get_rate_size_bytes() - 1;
 
@@ -1077,7 +1077,7 @@ private:
         * last_input_byte_idx).
         */
         // }}}
-        input_bytes_[last_input_byte_idx] |= last_padding_byte_pattern;
+        input_bytes[last_input_byte_idx] |= last_padding_byte_pattern;
 
         cur_input_byte_idx_ += num_bytes_to_add;
 
@@ -1106,8 +1106,8 @@ private:
             assert(num_bytes_to_add > 0);
 #endif
 
-            auto* input_bytes_ = reinterpret_cast<std::byte*>(input_blocks_);
-            std::byte* dst = &input_bytes_[cur_input_byte_idx_];
+            auto* input_bytes = reinterpret_cast<std::byte*>(input_blocks_);
+            std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
             (void)std::memcpy(dst, src, num_bytes_to_add);
 

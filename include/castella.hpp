@@ -775,7 +775,7 @@ private:
 
     std::mutex mtx_;
 
-    block_t* input_blocks_; // size will be R
+    block_t* input_blocks_ = nullptr; // size will be R
 
     /// The current index of the input buffer
     unsigned int cur_input_byte_idx_ = 0;

@@ -948,7 +948,7 @@ private:
 
         if (R > R_MAX)
             throw std::invalid_argument("Castella::Duplex: R > R_MAX");
-        //}}}
+        // }}}
 #endif
 
         if (NUM_ROUNDS < NUM_ROUNDS_MIN)

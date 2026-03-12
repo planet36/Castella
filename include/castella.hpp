@@ -1024,6 +1024,7 @@ private:
         permute(state_, NUM_ROUNDS);
     }
 
+    /// Get a pointer to the input buffer
     [[nodiscard]] std::byte* get_input_bytes_() noexcept
     {
         return reinterpret_cast<std::byte*>(input_blocks_);

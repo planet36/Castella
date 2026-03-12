@@ -26,7 +26,7 @@ template <size_t N>
 void
 calculate_metrics_num_rounds(const unsigned int num_samples)
 {
-    using T = Castella::block_t;
+    using T = Castella::arr_blocks<N>;
 
     fmt::println("## B={}", N); // Castella uses "B" to signify the state size
 
@@ -37,7 +37,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
     // for each sample
     for (unsigned int i = 0; i < num_samples; ++i)
     {
-        Castella::arr_blocks<N> state;
+        T state;
         arc4random_buf(std::data(state), sizeof(state));
 
         // for each number of rounds
@@ -94,7 +94,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
             "\tkurt."
             );
 
-    constexpr unsigned int bits = N * sizeof(T) * 8;
+    constexpr unsigned int bits = sizeof(T) * 8;
 
     constexpr size_t expected_mean = bits / 2;
 

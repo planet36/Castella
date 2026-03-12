@@ -19,7 +19,7 @@
 void
 calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int num_rounds)
 {
-    using T = __m128i;
+    using T = Castella::block_t;
 
     running_stats<double> rs_num_bits_changed;
 

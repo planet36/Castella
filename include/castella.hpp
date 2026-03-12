@@ -799,6 +799,8 @@ public:
     /// The size (in blocks) of the input buffer
     // {{{
     /**
+    * R == B - C
+    *
     * Keccak calls this the "rate" or "bit rate".
     *
     *

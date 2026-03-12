@@ -74,28 +74,28 @@ using uint8x16_t = __m128i;
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
-aes_enc(uint8x16_t data, const uint8x16_t round_key)
+aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return _mm_aesenc_si128(data, round_key);
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
-aes_enc_inv(uint8x16_t data, const uint8x16_t round_key)
+aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
 }
 
 /// Perform 1 round of AES encryption with a zero round key on \a data
 static inline uint8x16_t
-aes_enc_0(uint8x16_t data)
+aes_enc_0(uint8x16_t data) noexcept
 {
     return _mm_aesenc_si128(data, uint8x16_t{});
 }
 
 /// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
 static inline uint8x16_t
-aes_enc_0_inv(uint8x16_t data)
+aes_enc_0_inv(uint8x16_t data) noexcept
 {
     return _mm_aesdeclast_si128(_mm_aesimc_si128(data), uint8x16_t{});
 }
@@ -108,28 +108,28 @@ aes_enc_0_inv(uint8x16_t data)
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
-aes_enc(uint8x16_t data, const uint8x16_t round_key)
+aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
-aes_enc_inv(uint8x16_t data, const uint8x16_t round_key)
+aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
 }
 
 /// Perform 1 round of AES encryption with a zero round key on \a data
 static inline uint8x16_t
-aes_enc_0(uint8x16_t data)
+aes_enc_0(uint8x16_t data) noexcept
 {
     return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{}));
 }
 
 /// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
 static inline uint8x16_t
-aes_enc_0_inv(uint8x16_t data)
+aes_enc_0_inv(uint8x16_t data) noexcept
 {
     return vaesdq_u8(vaesimcq_u8(data), uint8x16_t{});
 }
@@ -155,7 +155,7 @@ aes_enc_0_inv(uint8x16_t data)
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using SSE2 intrinsics
 static void
-transpose(std::array<__m128i, 2>& x)
+transpose(std::array<__m128i, 2>& x) noexcept
 {
     const __m128i AB_0 = _mm_unpacklo_epi64(x[0], x[1]);
     const __m128i AB_1 = _mm_unpackhi_epi64(x[0], x[1]);
@@ -169,7 +169,7 @@ transpose(std::array<__m128i, 2>& x)
 * \sa https://randombit.net/bitbashing/posts/integer_matrix_transpose_in_sse2.html
 */
 static void
-transpose(std::array<__m128i, 4>& x)
+transpose(std::array<__m128i, 4>& x) noexcept
 {
     const __m128i AB_01 = _mm_unpacklo_epi32(x[0], x[1]);
     const __m128i AB_23 = _mm_unpackhi_epi32(x[0], x[1]);
@@ -187,7 +187,7 @@ transpose(std::array<__m128i, 4>& x)
 * \sa https://stackoverflow.com/a/4951060/1892784
 */
 static void
-transpose(std::array<__m128i, 8>& x)
+transpose(std::array<__m128i, 8>& x) noexcept
 {
     const __m128i AB_03 = _mm_unpacklo_epi16(x[0], x[1]);
     const __m128i AB_47 = _mm_unpackhi_epi16(x[0], x[1]);
@@ -221,7 +221,7 @@ transpose(std::array<__m128i, 8>& x)
 * \sa https://codereview.stackexchange.com/questions/295941/16x16-integer-matrix-transpose-using-sse2-intrinsics-in-c
 */
 static void
-transpose(std::array<__m128i, 16>& x)
+transpose(std::array<__m128i, 16>& x) noexcept
 {
     const __m128i AB_07 = _mm_unpacklo_epi8(x[0x0], x[0x1]);
     const __m128i AB_8f = _mm_unpackhi_epi8(x[0x0], x[0x1]);
@@ -302,7 +302,7 @@ transpose(std::array<__m128i, 16>& x)
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint64x2_t, 2>& x)
+transpose(std::array<uint64x2_t, 2>& x) noexcept
 {
     const uint64x2_t AB_0 = vzip1q_u64(x[0], x[1]);
     const uint64x2_t AB_1 = vzip2q_u64(x[0], x[1]);
@@ -313,7 +313,7 @@ transpose(std::array<uint64x2_t, 2>& x)
 
 /// Transpose \a x (treating it as a 4x4 matrix of \c uint32_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint32x4_t, 4>& x)
+transpose(std::array<uint32x4_t, 4>& x) noexcept
 {
     const uint32x4_t AB_01 = vzip1q_u32(x[0], x[1]);
     const uint32x4_t AB_23 = vzip2q_u32(x[0], x[1]);
@@ -333,7 +333,7 @@ transpose(std::array<uint32x4_t, 4>& x)
 
 /// Transpose \a x (treating it as a 8x8 matrix of \c uint16_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint16x8_t, 8>& x)
+transpose(std::array<uint16x8_t, 8>& x) noexcept
 {
     const uint16x8_t AB_03 = vzip1q_u16(x[0], x[1]);
     const uint16x8_t AB_47 = vzip2q_u16(x[0], x[1]);
@@ -374,7 +374,7 @@ transpose(std::array<uint16x8_t, 8>& x)
 
 /// Transpose \a x (treating it as a 16x16 matrix of \c uint8_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint8x16_t, 16>& x)
+transpose(std::array<uint8x16_t, 16>& x) noexcept
 {
     const uint8x16_t AB_07 = vzip1q_u8(x[0x0], x[0x1]);
     const uint8x16_t AB_8f = vzip2q_u8(x[0x0], x[0x1]);
@@ -488,7 +488,7 @@ load16(const void* src) noexcept
 
 /// Get the byte width of an unsigned integer
 static constexpr unsigned int
-byte_width(const std::unsigned_integral auto x)
+byte_width(const std::unsigned_integral auto x) noexcept
 {
     // std::bit_width(0) returns 0, but we want it to be 1
     if (x == 0)
@@ -620,7 +620,7 @@ inline const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 // }}}
 template <size_t N>
 static void
-permute(arr_blocks<N>& state, const uint8_t num_rounds)
+permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -645,7 +645,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds)
 /// The inverse Castella permutation function
 template <size_t N>
 static void
-permute_inv(arr_blocks<N>& state, const uint8_t num_rounds)
+permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -964,7 +964,7 @@ private:
     * \pre the input buffer has been allocated
     */
     // }}}
-    void zeroize_()
+    void zeroize_() noexcept
     {
         explicit_bzero(std::data(state_), sizeof(state_));
 
@@ -990,7 +990,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void absorb_()
+    void absorb_() noexcept
     {
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ == get_rate_size_bytes()); // input buf is full
@@ -1040,7 +1040,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void apply_padding_rule_()
+    void apply_padding_rule_() noexcept
     {
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
@@ -1084,7 +1084,7 @@ private:
         absorb_();
     }
 
-    void add_(const void* data, size_t len)
+    void add_(const void* data, size_t len) noexcept
     {
         // Avoid UB
         if (data == nullptr)
@@ -1146,7 +1146,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void left_encode_(const std::unsigned_integral auto x)
+    void left_encode_(const std::unsigned_integral auto x) noexcept
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -1173,7 +1173,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void right_encode_(const std::unsigned_integral auto x)
+    void right_encode_(const std::unsigned_integral auto x) noexcept
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -1202,13 +1202,13 @@ private:
     * </blockquote>
     */
     // }}}
-    void encode_bytes_(const void* data, size_t len)
+    void encode_bytes_(const void* data, size_t len) noexcept
     {
         left_encode_(len);
         add_(data, len);
     }
 
-    void encode_bytes_(const std::string_view s)
+    void encode_bytes_(const std::string_view s) noexcept
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
         encode_bytes_(std::data(s), std::size(s));
@@ -1251,7 +1251,7 @@ private:
     * </blockquote>
     */
     // }}}
-    void init_(const std::string_view function_name, const std::string_view customization_str)
+    void init_(const std::string_view function_name, const std::string_view customization_str) noexcept
     {
         // {{{
         /*
@@ -1546,11 +1546,11 @@ public:
     }
 
     /// The state size is fixed and does not depend on any user-provided parameters.
-    [[nodiscard]] static unsigned int get_state_size_bytes() { return sizeof(block_t) * B; }
+    [[nodiscard]] static unsigned int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
 
-    [[nodiscard]] unsigned int get_capacity_size_bytes() const { return sizeof(block_t) * C; }
+    [[nodiscard]] unsigned int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
 
-    [[nodiscard]] unsigned int get_rate_size_bytes() const { return sizeof(block_t) * R; }
+    [[nodiscard]] unsigned int get_rate_size_bytes() const noexcept { return sizeof(block_t) * R; }
 };
 
 } // namespace Castella

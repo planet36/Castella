@@ -643,6 +643,22 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
 }
 
 /// The inverse Castella permutation function
+// {{{
+/**
+* \param state the state to permute
+* \param num_rounds the number of rounds to perform
+* \pre \a N ∈ {2, 4, 8, 16}
+* \pre \a num_rounds ≥ \c NUM_ROUNDS_MIN
+* \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
+* Rounds are performed in reverse order, and each round consists of the following
+* steps (in reverse order of \c permute):
+*   1. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
+*      integers.
+*   2. Perform 3 inverse rounds of AES encryption (with a zero round key) on
+*      each element of the state array.
+*   3. Apply (via XOR) the round constant to the first element of the state array.
+*/
+// }}}
 template <size_t N>
 static void
 permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept

@@ -1106,6 +1106,7 @@ private:
         absorb_();
     }
 
+    /// Add \a data to the input buffer
     void add_(const void* data, size_t len) noexcept
     {
         // Avoid UB

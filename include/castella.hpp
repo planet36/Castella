@@ -1365,6 +1365,7 @@ public:
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
     Duplex& add(const void* data, size_t len)
@@ -1376,11 +1377,13 @@ public:
         return *this;
     }
 
+    /// \copydoc add(const void*, size_t)
     Duplex& add(const std::span<const std::byte> byte_sp)
     {
         return add(std::data(byte_sp), std::size(byte_sp));
     }
 
+    /// \copydoc add(const void*, size_t)
     Duplex& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
@@ -1393,6 +1396,7 @@ public:
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
     Duplex& add_encoded(const void* data, size_t len)
@@ -1404,11 +1408,13 @@ public:
         return *this;
     }
 
+    /// \copydoc add_encoded(const void*, size_t)
     Duplex& add_encoded(const std::span<const std::byte> byte_sp)
     {
         return add_encoded(std::data(byte_sp), std::size(byte_sp));
     }
 
+    /// \copydoc add_encoded(const void*, size_t)
     Duplex& add_encoded(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
@@ -1419,6 +1425,7 @@ public:
     // {{{
     /**
     * \return a reference to this object (to enable method chaining)
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
     Duplex& apply_padding_rule()

@@ -1171,6 +1171,8 @@ private:
     * unambiguously parsed from the end of the string by inserting the length of
     * the byte string after the byte string representation of 𝑥.
     * </blockquote>
+    *
+    * \note Not currently used; retained to complement \c left_encode_().
     */
     // }}}
     void right_encode_(const std::unsigned_integral auto x) noexcept

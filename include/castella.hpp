@@ -1396,6 +1396,7 @@ public:
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
@@ -1430,6 +1431,7 @@ public:
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
@@ -1462,6 +1464,7 @@ public:
     // {{{
     /**
     * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
@@ -1481,6 +1484,8 @@ public:
     * \pre \a n ≥ 0
     * \pre \a n ≤ \c get_rate_size_bytes()
     * \param n the number of bytes to squeeze from the outer state
+    * \exception std::bad_alloc if the output vector cannot be allocated
+    * \exception std::system_error if the mutex cannot be locked
     *
     * Typical values of \a n are 32, 48, or 64.
     * A recommended value is `get_capacity_size_bytes() / 2`.

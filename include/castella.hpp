@@ -1108,10 +1108,6 @@ private:
     /// Add \a data to the input buffer
     void add_(const void* data, size_t len) noexcept
     {
-        // Avoid UB
-        if (data == nullptr)
-            return;
-
         const auto* src = static_cast<const std::byte*>(data);
 
         while (len > 0)
@@ -1401,6 +1397,9 @@ public:
     // }}}
     Duplex& add(const void* data, size_t len)
     {
+        if (data == nullptr)
+            return *this;
+
         std::scoped_lock lock{mtx_};
 
         add_(data, len);
@@ -1432,6 +1431,9 @@ public:
     // }}}
     Duplex& add_encoded(const void* data, size_t len)
     {
+        if (data == nullptr)
+            return *this;
+
         std::scoped_lock lock{mtx_};
 
         encode_bytes_(data, len);

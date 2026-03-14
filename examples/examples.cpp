@@ -57,7 +57,6 @@ int main()
                 })
         { hash_obj.add(X); }
 
-        // The default number of bytes to squeeze is `hash_obj.get_capacity_size_bytes() / 2`
         const auto digest_bytes = hash_obj.squeeze_bytes();
 
         const std::string expected_result = "04f9fd9be1ac38ee90073bc0ec1770113f02cc7eb8c498b0d299793a1ee39f12";

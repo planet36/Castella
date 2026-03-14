@@ -57,15 +57,7 @@ int main()
                 })
         { hash_obj.add(X); }
 
-        // blank call
-        //hash_obj.apply_padding_rule();
-
-        // mute call
-        //(void)hash_obj.squeeze_bytes(0);
-
         // The default number of bytes to squeeze is `hash_obj.get_capacity_size_bytes() / 2`
-        //unsigned int num_bytes_to_squeeze = hash_obj.get_capacity_size_bytes() / 2;
-        //const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
         const auto digest_bytes = hash_obj.squeeze_bytes();
 
         const std::string expected_result = "04f9fd9be1ac38ee90073bc0ec1770113f02cc7eb8c498b0d299793a1ee39f12";

@@ -67,9 +67,67 @@ squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
 
     std::vector<std::byte> result;
     result.reserve(n);
+
     std::ranges::copy(byte_sp, std::back_inserter(result));
     return result;
 }
+
+/// Squeeze \a n bytes from \a state
+template <typename T, std::size_t N>
+std::vector<std::byte>
+squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
+{
+    // clamp
+    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
+        n = sizeof(state);
+
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
+
+    std::vector<std::byte> result;
+    result.reserve(n);
+
+    result.insert(std::end(result), std::begin(byte_sp), std::end(byte_sp));
+    return result;
+}
+
+/// Squeeze \a n bytes from \a state
+template <typename T, std::size_t N>
+std::vector<std::byte>
+squeeze_bytes_5(const std::array<T, N>& state, unsigned int n)
+{
+    // clamp
+    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
+        n = sizeof(state);
+
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
+
+    std::vector<std::byte> result(n);
+
+    result.assign(std::begin(byte_sp), std::end(byte_sp));
+    return result;
+}
+
+#if defined(__cpp_lib_containers_ranges)
+/// Squeeze \a n bytes from \a state
+template <typename T, std::size_t N>
+std::vector<std::byte>
+squeeze_bytes_6(const std::array<T, N>& state, unsigned int n)
+{
+    // clamp
+    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
+        n = sizeof(state);
+
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
+
+    std::vector<std::byte> result;
+    result.reserve(n);
+
+    result.assign_range(byte_sp);
+    return result;
+}
+#else
+#error Cannot test range assignment
+#endif
 
 template <typename T, std::size_t N>
 using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, unsigned int n);
@@ -153,9 +211,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto result_1 = squeeze_bytes_1(state, n);
             const auto result_2 = squeeze_bytes_2(state, n);
             const auto result_3 = squeeze_bytes_3(state, n);
+            const auto result_4 = squeeze_bytes_4(state, n);
+            const auto result_5 = squeeze_bytes_5(state, n);
+            const auto result_6 = squeeze_bytes_6(state, n);
 
             assert(result_1 == result_2);
             assert(result_1 == result_3);
+            assert(result_1 == result_4);
+            assert(result_1 == result_5);
+            assert(result_1 == result_6);
         }
     }
 
@@ -171,12 +235,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         benchmark::RegisterBenchmark("squeeze_bytes_1", BM_squeeze_bytes<T, N>, squeeze_bytes_1<T, N>);
         benchmark::RegisterBenchmark("squeeze_bytes_2", BM_squeeze_bytes<T, N>, squeeze_bytes_2<T, N>);
         benchmark::RegisterBenchmark("squeeze_bytes_3", BM_squeeze_bytes<T, N>, squeeze_bytes_3<T, N>);
+        benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>);
+        benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>);
+        benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>);
     }
     else
     {
         benchmark::RegisterBenchmark("squeeze_bytes_1", BM_squeeze_bytes<T, N>, squeeze_bytes_1<T, N>)->Threads(num_threads);
         benchmark::RegisterBenchmark("squeeze_bytes_2", BM_squeeze_bytes<T, N>, squeeze_bytes_2<T, N>)->Threads(num_threads);
         benchmark::RegisterBenchmark("squeeze_bytes_3", BM_squeeze_bytes<T, N>, squeeze_bytes_3<T, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

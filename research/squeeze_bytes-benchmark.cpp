@@ -28,9 +28,9 @@ squeeze_bytes_1(const std::array<T, N>& state, unsigned int n)
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
         n = sizeof(state);
 
-    const auto byte_sp = as_byte_span(state);
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
 
-    return byte_sp.subspan(0, n) | std::ranges::to<std::vector>(); // range adaptor
+    return byte_sp | std::ranges::to<std::vector>(); // range adaptor
 }
 #else
 #error Cannot test range adaptor
@@ -46,9 +46,9 @@ squeeze_bytes_2(const std::array<T, N>& state, unsigned int n)
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
         n = sizeof(state);
 
-    const auto byte_sp = as_byte_span(state);
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
 
-    return std::vector<std::byte>(std::from_range, byte_sp.subspan(0, n)); // tagged ctor
+    return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
 }
 #else
 #error Cannot test tagged ctor
@@ -63,11 +63,11 @@ squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
         n = sizeof(state);
 
-    const auto byte_sp = as_byte_span(state);
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
 
     std::vector<std::byte> byte_vec;
     byte_vec.reserve(n);
-    std::ranges::copy(byte_sp.subspan(0, n), std::back_inserter(byte_vec));
+    std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
     return byte_vec;
 }
 

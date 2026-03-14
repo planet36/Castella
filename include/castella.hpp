@@ -1575,8 +1575,7 @@ public:
 #endif
     }
 
-    /// Squeeze bytes from the outer state, and return them as a
-    /// `std::vector<std::byte>`
+    /// \copydoc squeeze_bytes(unsigned int)
     // {{{
     /**
     * The number of bytes returned is equal to half the capacity.

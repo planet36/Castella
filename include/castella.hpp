@@ -1108,6 +1108,10 @@ private:
     /// Add \a data to the input buffer
     void add_(const void* data, size_t len) noexcept
     {
+#if defined(DEBUG)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         const auto* src = static_cast<const std::byte*>(data);
 
         while (len > 0)

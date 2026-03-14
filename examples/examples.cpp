@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+#define DEBUG 1
+
 #include "as_byte_span.hpp"
 #include "castella.hpp"
 #include "fixed_vector.hpp"

@@ -65,10 +65,10 @@ squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
 
     const auto byte_sp = as_byte_span(state).subspan(0, n);
 
-    std::vector<std::byte> byte_vec;
-    byte_vec.reserve(n);
-    std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
-    return byte_vec;
+    std::vector<std::byte> result;
+    result.reserve(n);
+    std::ranges::copy(byte_sp, std::back_inserter(result));
+    return result;
 }
 
 template <typename T, std::size_t N>

@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <bit>
 #if defined(DEBUG)
@@ -1553,6 +1552,9 @@ public:
         if (n > get_rate_size_bytes()) // NOLINT(readability-use-std-min-max)
             n = get_rate_size_bytes();
 
+        std::vector<std::byte> result;
+        result.reserve(n);
+
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if n is 0.
         add_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
@@ -1564,15 +1566,8 @@ public:
 
         const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
 
-#if defined(__cpp_lib_ranges_to_container)
-        return byte_sp | std::ranges::to<std::vector>(); // range adaptor
-#elif defined(__cpp_lib_containers_ranges)
-        return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
-#else
-        std::vector<std::byte> byte_vec;
-        std::ranges::copy(byte_sp, std::back_inserter(byte_vec));
-        return byte_vec;
-#endif
+        result.assign(std::begin(byte_sp), std::end(byte_sp));
+        return result;
     }
 
     /// \copydoc squeeze_bytes(unsigned int)

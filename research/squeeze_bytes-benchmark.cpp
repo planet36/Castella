@@ -147,6 +147,31 @@ squeeze_bytes_6(const std::array<T, N>& state, unsigned int n)
 #error Cannot test range assignment
 #endif
 
+#if defined(__cpp_lib_containers_ranges)
+/// Squeeze \a n bytes from \a state
+template <typename T, std::size_t N>
+std::vector<std::byte>
+squeeze_bytes_7(const std::array<T, N>& state, unsigned int n)
+{
+    // clamp
+    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
+        n = sizeof(state);
+
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
+
+    std::vector<std::byte> result;
+    result.reserve(n);
+
+    // State is mutated here in Castella::Duplex::squeeze_bytes().
+    // Vector allocation should happen before this in case of std::bad_alloc.
+
+    result.insert_range(std::end(result), byte_sp);
+    return result;
+}
+#else
+#error Cannot test range insertion
+#endif
+
 template <typename T, std::size_t N>
 using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, unsigned int n);
 
@@ -232,12 +257,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto result_4 = squeeze_bytes_4(state, n);
             const auto result_5 = squeeze_bytes_5(state, n);
             const auto result_6 = squeeze_bytes_6(state, n);
+            const auto result_7 = squeeze_bytes_7(state, n);
 
             assert(result_1 == result_2);
             assert(result_1 == result_3);
             assert(result_1 == result_4);
             assert(result_1 == result_5);
             assert(result_1 == result_6);
+            assert(result_1 == result_7);
         }
     }
 
@@ -256,6 +283,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>);
         benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>);
         benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>);
+        benchmark::RegisterBenchmark("squeeze_bytes_7", BM_squeeze_bytes<T, N>, squeeze_bytes_7<T, N>);
     }
     else
     {
@@ -265,6 +293,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>)->Threads(num_threads);
         benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>)->Threads(num_threads);
         benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("squeeze_bytes_7", BM_squeeze_bytes<T, N>, squeeze_bytes_7<T, N>)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

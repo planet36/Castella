@@ -92,7 +92,8 @@ squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
 
     const auto byte_sp = as_byte_span(state).subspan(0, n);
 
-    std::vector<std::byte> result(n);
+    std::vector<std::byte> result;
+    result.reserve(n);
 
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.

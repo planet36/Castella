@@ -84,27 +84,6 @@ squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 std::vector<std::byte>
-squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
-{
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
-
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
-
-    std::vector<std::byte> result;
-    result.reserve(n);
-
-    // State is mutated here in Castella::Duplex::squeeze_bytes().
-    // Vector allocation should happen before this in case of std::bad_alloc.
-
-    result.insert(std::end(result), std::begin(byte_sp), std::end(byte_sp));
-    return result;
-}
-
-/// Squeeze \a n bytes from \a state
-template <typename T, std::size_t N>
-std::vector<std::byte>
 squeeze_bytes_5(const std::array<T, N>& state, unsigned int n)
 {
     // clamp
@@ -146,6 +125,27 @@ squeeze_bytes_6(const std::array<T, N>& state, unsigned int n)
 #else
 #error Cannot test range assignment
 #endif
+
+/// Squeeze \a n bytes from \a state
+template <typename T, std::size_t N>
+std::vector<std::byte>
+squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
+{
+    // clamp
+    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
+        n = sizeof(state);
+
+    const auto byte_sp = as_byte_span(state).subspan(0, n);
+
+    std::vector<std::byte> result;
+    result.reserve(n);
+
+    // State is mutated here in Castella::Duplex::squeeze_bytes().
+    // Vector allocation should happen before this in case of std::bad_alloc.
+
+    result.insert(std::end(result), std::begin(byte_sp), std::end(byte_sp));
+    return result;
+}
 
 #if defined(__cpp_lib_containers_ranges)
 /// Squeeze \a n bytes from \a state

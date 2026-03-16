@@ -74,6 +74,20 @@ int main()
 
             assert(digest_bytes.size() == hash_obj.get_rate_size_bytes());
         }
+
+        hash_obj.add("My eyes!  The goggles do nothing!");
+
+        {
+            // Verify that the output matches the expected result
+            const auto digest_bytes = hash_obj.squeeze_bytes();
+
+            const std::string expected_result = "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
+            const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
+
+            fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
+
+            assert(result == expected_result);
+        }
     }
 
     {

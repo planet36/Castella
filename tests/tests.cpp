@@ -6,14 +6,13 @@
 #include "as_byte_span.hpp"
 #include "castella.hpp"
 
-#include <array>
 #include <cassert>
-#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <fmt/ranges.h>
-#include <memory>
-#include <span>
+#include <ranges>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 
 int main()

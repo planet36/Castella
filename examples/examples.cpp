@@ -13,8 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fmt/ranges.h>
-#include <memory>
-#include <span>
+#include <string>
 #include <string_view>
 
 // right_encode is only here for compatibility with NIST algorithms

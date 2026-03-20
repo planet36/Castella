@@ -40,7 +40,7 @@ inline constexpr std::string_view program_version = "2026-01-30";
 
 inline constexpr std::string_view default_host = "localhost";
 inline constexpr uint16_t default_port = 8080;
-const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(cert-err58-cpp)
+const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
 Castella::Duplex* hash_obj = nullptr;
 
@@ -50,7 +50,7 @@ std::mutex cv_mtx;
 * \c std::condition_variable_any::wait_for() accepts a \c std::stop_token, but
 * \c std::condition_variable::wait_for() does not.
 */
-std::condition_variable_any cv; // NOLINT(cert-err58-cpp)
+std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
 /// The number of consecutive bytes squeezed since high-quality entropy was
 /// added to the Castella service
@@ -250,7 +250,7 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 

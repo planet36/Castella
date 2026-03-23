@@ -4,7 +4,7 @@
 export LC_ALL = C
 
 CPPFLAGS = -MMD -MP
-CPPFLAGS += -I ../include -I ../research
+CPPFLAGS += -I $(shell git rev-parse --show-cdup) -I $(shell git rev-parse --show-cdup)research
 
 CXXFLAGS = -std=c++26
 CXXFLAGS += -pipe -Wall -Wextra -Wpedantic -Wfatal-errors

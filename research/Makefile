@@ -4,7 +4,7 @@
 export LC_ALL = C
 
 CPPFLAGS = -MMD -MP
-CPPFLAGS += -I ../include
+CPPFLAGS += -I $(shell git rev-parse --show-cdup)
 
 CXXFLAGS = -std=c++26
 CXXFLAGS += -pipe -Wall -Wextra -Wpedantic -Wfatal-errors

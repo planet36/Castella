@@ -557,7 +557,7 @@ create_round_constants() noexcept
 
     for (decltype(N) i = 1; i < N; ++i)
     {
-        result[i] = aes_enc_0(result[i-1]);
+        result[i] = aes_enc_0(result[static_cast<size_t>(i-1)]);
     }
 
     return result;

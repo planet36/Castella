@@ -97,6 +97,22 @@ int main()
 
         try
         {
+            constexpr uint8_t capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
+            static_assert((capacity_blocks % 2) != 0);
+            constexpr uint8_t num_rounds = 6;
+
+            Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
+                    function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            fmt::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
             constexpr uint8_t capacity_blocks = Castella::Duplex::C_MIN - 1; // C < C_MIN
             constexpr uint8_t num_rounds = 6;
 

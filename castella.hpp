@@ -758,6 +758,7 @@ struct alignas(block_t) Duplex final
     */
     // }}}
     static constexpr uint8_t B = 16;
+    static_assert((B % 2) == 0, "must be even");
     static_assert(B == 16, "B must be 16 to accommodate the 16x16 byte matrix transpose");
 
     /// The minimum size (in blocks) of the capacity
@@ -767,6 +768,7 @@ struct alignas(block_t) Duplex final
     */
     // }}}
     static constexpr uint8_t C_MIN = 2;
+    static_assert((C_MIN % 2) == 0, "must be even");
     static_assert(C_MIN >= 2); // (D = C/2) ∧ (D ≥ 1) ∴ C_MIN ≥ 2
 
     /// The maximum size (in blocks) of the capacity
@@ -776,15 +778,18 @@ struct alignas(block_t) Duplex final
     */
     // }}}
     static constexpr uint8_t C_MAX = B / 2;
+    static_assert((C_MAX % 2) == 0, "must be even");
     static_assert(C_MAX < B);
     static_assert(C_MIN <= C_MAX);
 
     /// The minimum size (in blocks) of the input buffer
     static constexpr uint8_t R_MIN = B - C_MAX;
+    static_assert((R_MIN % 2) == 0, "must be even");
     static_assert(R_MIN >= 1);
 
     /// The maximum size (in blocks) of the input buffer
     static constexpr uint8_t R_MAX = B - C_MIN;
+    static_assert((R_MAX % 2) == 0, "must be even");
     static_assert(R_MAX < B);
     static_assert(R_MIN <= R_MAX);
 
@@ -957,6 +962,9 @@ private:
 
         if (C > C_MAX)
             throw std::invalid_argument("Castella::Duplex: C > C_MAX");
+
+        if ((C % 2) != 0)
+            throw std::invalid_argument("Castella::Duplex: C is odd");
 
 #if defined(DEBUG)
         // {{{ These checks aren't necessary if other tests passed.
@@ -1351,6 +1359,7 @@ public:
     * \param input_suffix the byte to append to the input buffer before squeezing
     * \param function_name a string for algorithm domain separation; like \e N in cSHAKE terminology
     * \param customization_str a string for user-defined domain separation; like \e S in cSHAKE terminology
+    * \pre \a capacity_blocks is even
     */
     // }}}
     explicit Duplex(const uint8_t capacity_blocks,

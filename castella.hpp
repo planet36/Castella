@@ -95,7 +95,7 @@ aes_enc_0(uint8x16_t data) noexcept
 static inline uint8x16_t
 aes_enc_0_inv(uint8x16_t data) noexcept
 {
-    return _mm_aesdeclast_si128(_mm_aesimc_si128(data), uint8x16_t{});
+    return aes_enc_inv(data, uint8x16_t{});
 }
 
 // }}}
@@ -129,7 +129,7 @@ aes_enc_0(uint8x16_t data) noexcept
 static inline uint8x16_t
 aes_enc_0_inv(uint8x16_t data) noexcept
 {
-    return vaesdq_u8(vaesimcq_u8(data), uint8x16_t{});
+    return aes_enc_inv(data, uint8x16_t{});
 }
 
 // }}}

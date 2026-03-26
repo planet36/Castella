@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #define DEBUG 1
+#undef NDEBUG
 
 // To find the optimal minimum Nr, set it to 1.
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1

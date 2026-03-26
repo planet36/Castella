@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #define DEBUG 1
+#undef NDEBUG
 
 #include "as_byte_span.hpp"
 #include "castella.hpp"

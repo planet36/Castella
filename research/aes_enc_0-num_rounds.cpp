@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #define DEBUG 1
+#undef NDEBUG
 
 #include "castella.hpp"
 #include "mm_popcount.h"

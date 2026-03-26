@@ -37,6 +37,8 @@ right_encode(const std::unsigned_integral auto x)
 
 int main()
 {
+    using namespace std::literals;
+
     constexpr bool validate = true;
 
     // basic example
@@ -50,13 +52,10 @@ int main()
         Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                 function_name, customization_str);
 
-        for (std::string_view X : {
-                "Twenty dollars can buy many peanuts.",
-                "Explain how!",
-                "Money can be exchanged for goods and services.",
-                "Woo-hoo!",
-                })
-        { hash_obj.add(X); }
+        hash_obj.add("Twenty dollars can buy many peanuts."sv);
+        hash_obj.add("Explain how!"sv);
+        hash_obj.add("Money can be exchanged for goods and services."sv);
+        hash_obj.add("Woo-hoo!"sv);
 
         const auto digest_bytes = hash_obj.squeeze_bytes();
 

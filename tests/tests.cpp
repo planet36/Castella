@@ -39,7 +39,10 @@ int main()
             assert(digest_bytes.size() == hash_obj.get_capacity_size_bytes() / 2);
         }
 
-        hash_obj.add("With $10,000, we'd be millionaires!  We could buy all kinds of useful things like... love!"sv);
+        hash_obj.add(
+                "With $10,000, we'd be millionaires!  We could buy all kinds "
+                "of useful things like... love!"sv
+                );
 
         {
             // Test that successive squeezes are distinct

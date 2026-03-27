@@ -9,7 +9,7 @@ CPPFLAGS += -I $(shell git rev-parse --show-cdup) -I $(shell git rev-parse --sho
 CXXFLAGS = -std=c++26
 CXXFLAGS += -pipe -Wall -Wextra -Wpedantic -Wfatal-errors
 CXXFLAGS += -O3 -flto=auto -march=native
-CXXFLAGS += -maes
+CXXFLAGS += -maes -mvaes -mavx2
 CXXFLAGS += -Wno-unused-function
 #CXXFLAGS += -march=raptorlake
 

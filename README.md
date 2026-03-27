@@ -6,7 +6,7 @@ An instance of a Castella duplex can be used as a hash object or a pseudo-random
 
 ## Design
 
-The source code [castella.hpp](include/castella.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
+The source code [castella.hpp](castella.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
 The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented).  That is, all input, output, and padding are in whole bytes.
 

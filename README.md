@@ -88,8 +88,6 @@ The `squeeze_bytes` member function performs the following:
   * clang++ is not supported
 * An x84-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
 
-## Examples
-
 ## FAQ
 
 ### What is a <q>castella</q>?

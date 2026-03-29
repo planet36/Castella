@@ -113,17 +113,19 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 #endif
 
 /// Perform 1 round of AES encryption with a zero round key on \a data
-static inline uint8x16_t
-aes_enc_0(uint8x16_t data) noexcept
+template <typename T>
+static inline T
+aes_enc_0(T data) noexcept
 {
-    return aes_enc(data, uint8x16_t{});
+    return aes_enc(data, T{});
 }
 
 /// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
-static inline uint8x16_t
-aes_enc_0_inv(uint8x16_t data) noexcept
+template <typename T>
+static inline T
+aes_enc_0_inv(T data) noexcept
 {
-    return aes_enc_inv(data, uint8x16_t{});
+    return aes_enc_inv(data, T{});
 }
 
 // }}}

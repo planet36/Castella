@@ -70,6 +70,12 @@ namespace Castella::inline utils {
 
 using uint8x16_t = __m128i;
 
+#if defined(__AVX__)
+
+using uint8x16x2_t = __m256i;
+
+#endif
+
 /// Perform 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
@@ -83,6 +89,34 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
 }
+
+#if defined(__VAES__)
+
+/// There is no such intrinsic named "_mm256_aesimc_epi128".
+static inline uint8x16x2_t
+_mm256_aesimc_epi128(uint8x16x2_t data) noexcept
+{
+    const __m128i hi = _mm_aesimc_si128(_mm256_extracti128_si256(data, 1));
+    const __m128i lo = _mm_aesimc_si128(_mm256_extracti128_si256(data, 0));
+
+    return _mm256_set_m128i(hi, lo);
+}
+
+/// Perform 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16x2_t
+aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+{
+    return _mm256_aesenc_epi128(data, round_key);
+}
+
+/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16x2_t
+aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+{
+    return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), uint8x16x2_t{});
+}
+
+#endif
 
 // }}}
 
@@ -102,6 +136,20 @@ static inline uint8x16_t
 aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
+}
+
+/// Perform 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16x2_t
+aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+{
+    return {aes_enc(data.val[0], round_key.val[0]), aes_enc(data.val[1], round_key.val[1])};
+}
+
+/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+static inline uint8x16x2_t
+aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+{
+    return {aes_enc_inv(data.val[0], round_key.val[0]), aes_enc_inv(data.val[1], round_key.val[1])};
 }
 
 // }}}

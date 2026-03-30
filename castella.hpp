@@ -51,7 +51,7 @@
 #include <type_traits>
 #include <vector>
 
-#if defined(__x86_64__) && defined(__SSE2__) && defined(__AES__)
+#if defined(__x86_64__) && defined(__AES__)
 #include <immintrin.h>
 #elif defined(__aarch64__) && defined(__ARM_NEON) && defined(__ARM_FEATURE_AES)
 #include <arm_neon.h>
@@ -132,7 +132,7 @@ aes_enc_0_inv(T data) noexcept
 
 // {{{ transpose
 
-#if defined(__x86_64__) && defined(__SSE2__)
+#if defined(__x86_64__)
 
 // {{{ x86_64
 

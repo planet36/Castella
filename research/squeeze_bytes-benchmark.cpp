@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include "as_byte_span.hpp"
-
 #include "get_env.hpp"
+
 #include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark

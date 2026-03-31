@@ -673,10 +673,22 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
         state[0] ^= rc;
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
+#if defined(__x86_64__) && defined(__VAES__)
+            // Cast adjacent pairs of elements to uint8x16x2_t.
+            for (decltype(N) i = 0; i < N; i += 2)
+            {
+                uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&state[i]));
+
+                v = aes_enc_0(v);
+
+                _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&state[i]), v);
+            }
+#else
             for (decltype(N) i = 0; i < N; ++i)
             {
                 state[i] = aes_enc_0(state[i]);
             }
+#endif
         }
         transpose(state);
     }
@@ -717,10 +729,22 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
         transpose(state);
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
+#if defined(__x86_64__) && defined(__VAES__)
+            // Cast adjacent pairs of elements to uint8x16x2_t.
+            for (decltype(N) i = 0; i < N; i += 2)
+            {
+                uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&state[i]));
+
+                v = aes_enc_0_inv(v);
+
+                _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&state[i]), v);
+            }
+#else
             for (decltype(N) i = 0; i < N; ++i)
             {
                 state[i] = aes_enc_0_inv(state[i]);
             }
+#endif
         }
         state[0] ^= rc;
     }

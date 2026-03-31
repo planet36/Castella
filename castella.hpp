@@ -666,14 +666,17 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
+    constexpr unsigned int aes_num_rounds = 3;
+
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
         state[0] ^= rc;
-        for (decltype(N) i = 0; i < N; ++i)
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
-            state[i] = aes_enc_0(state[i]);
-            state[i] = aes_enc_0(state[i]);
-            state[i] = aes_enc_0(state[i]);
+            for (decltype(N) i = 0; i < N; ++i)
+            {
+                state[i] = aes_enc_0(state[i]);
+            }
         }
         transpose(state);
     }
@@ -707,14 +710,17 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
+    constexpr unsigned int aes_num_rounds = 3;
+
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {
         transpose(state);
-        for (decltype(N) i = 0; i < N; ++i)
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
-            state[i] = aes_enc_0_inv(state[i]);
-            state[i] = aes_enc_0_inv(state[i]);
-            state[i] = aes_enc_0_inv(state[i]);
+            for (decltype(N) i = 0; i < N; ++i)
+            {
+                state[i] = aes_enc_0_inv(state[i]);
+            }
         }
         state[0] ^= rc;
     }

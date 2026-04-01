@@ -2,6 +2,7 @@ aes_enc_0-num_rounds
 aes_enc_0-num_rounds-benchmark
 castella-print-info
 left_encode-right_encode-benchmark
+nested-for-loop-order-benchmark
 permute-num_rounds
 permute-num_rounds-benchmark
 permute_inv-verify

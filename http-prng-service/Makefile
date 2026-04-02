@@ -40,6 +40,9 @@ httplib.h:
 clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
+distclean: clean
+	@$(RM) --verbose -- httplib.h
+
 lint: httplib.h
 	-clang-tidy --quiet --exclude-header-filter=httplib.h $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 

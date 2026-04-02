@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #if defined(DEBUG)

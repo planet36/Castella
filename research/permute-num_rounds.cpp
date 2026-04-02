@@ -13,6 +13,7 @@
 #include "simd-bitmask.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>

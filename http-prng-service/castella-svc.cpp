@@ -14,6 +14,7 @@
 #include "spdlog/spdlog.h"
 
 #include <array>
+#include <cerrno>
 #include <chrono>
 #include <condition_variable>
 #include <csignal>
@@ -21,6 +22,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <err.h>
 #include <fmt/format.h>
 #include <fmt/ranges.h>

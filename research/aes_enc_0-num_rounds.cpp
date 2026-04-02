@@ -9,6 +9,7 @@
 #include "running_stats.hpp"
 #include "simd-bitmask.hpp"
 
+#include <cmath>
 #include <cstdlib>
 #include <err.h>
 #include <fmt/format.h>

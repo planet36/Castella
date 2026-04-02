@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
+#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>

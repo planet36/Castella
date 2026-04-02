@@ -554,7 +554,7 @@ using arr_blocks = std::array<block_t, N>;
 // This macro is only defined in certain test programs to find the optimum
 // minimum round count.
 #if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MIN)
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 3
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 3 // NOLINT(cppcoreguidelines-macro-usage)
 #endif
 
 inline constexpr uint8_t NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
@@ -563,7 +563,7 @@ inline constexpr uint8_t NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
 
 #if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MAX)
 // Embiggen the value as needed.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MAX 16
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MAX 16 // NOLINT(cppcoreguidelines-macro-usage)
 #endif
 
 inline constexpr uint8_t NUM_ROUNDS_MAX = DEFAULT_CASTELLA_NUM_ROUNDS_MAX;
@@ -883,7 +883,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t C;
+    const uint8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The size (in blocks) of the input buffer
     // {{{
@@ -907,7 +907,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t R;
+    const uint8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The number of rounds to perform in the Castella permutation function
     // {{{
@@ -927,7 +927,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t NUM_ROUNDS;
+    const uint8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The byte to append to the input buffer before squeezing
     // {{{
@@ -1011,7 +1011,7 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
     */
     // }}}
-    const std::byte INPUT_SUFFIX;
+    const std::byte INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
@@ -1442,7 +1442,7 @@ public:
         check_constraints_();
 
         // Must allocate the input buffer before calling zeroize_().
-        input_blocks_ = new (std::align_val_t{alignof(block_t)}) block_t[R];
+        input_blocks_ = new (std::align_val_t{alignof(block_t)}) block_t[R]; // NOLINT(cppcoreguidelines-owning-memory)
 
         // Must zeroize the state and input buffer before calling init_().
         zeroize_();

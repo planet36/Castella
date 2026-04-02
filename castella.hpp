@@ -41,7 +41,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <memory>
 #include <mutex>
 #include <new>
 #include <ranges>

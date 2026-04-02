@@ -8,7 +8,6 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <bit>
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <immintrin.h>

@@ -10,7 +10,6 @@
 #include "simd-bitmask.hpp"
 
 #include <cstdlib>
-#include <cstring>
 #include <err.h>
 #include <fmt/format.h>
 #include <numeric>

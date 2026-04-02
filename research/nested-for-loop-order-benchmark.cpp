@@ -218,7 +218,8 @@ void BM_test_2(benchmark::State& BM_state, const func_2_t<N>& fn, const unsigned
     benchmark::DoNotOptimize(arr);
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 

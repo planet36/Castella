@@ -16,7 +16,8 @@
 #include <string>
 #include <string_view>
 
-int main()
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 

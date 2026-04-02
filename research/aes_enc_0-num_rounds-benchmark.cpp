@@ -32,7 +32,8 @@ void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int Nr)
     benchmark::DoNotOptimize(a);
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 

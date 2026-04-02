@@ -308,7 +308,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         benchmark::RegisterBenchmark("repeat_for_each(3)", BM_test_2<N>, repeat_for_each<N>, 3);
         benchmark::RegisterBenchmark("repeat_3_for_each", BM_test_1<N>, repeat_3_for_each<N>);
         benchmark::RegisterBenchmark("repeat_for_each_cast(3)", BM_test_2<N>, repeat_for_each_cast<N>, 3);
-        benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast <N>);
+        benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast<N>);
     }
     else
     {
@@ -320,7 +320,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         benchmark::RegisterBenchmark("repeat_for_each(3)", BM_test_2<N>, repeat_for_each<N>, 3)->Threads(num_threads);
         benchmark::RegisterBenchmark("repeat_3_for_each", BM_test_1<N>, repeat_3_for_each<N>)->Threads(num_threads);
         benchmark::RegisterBenchmark("repeat_for_each_cast(3)", BM_test_2<N>, repeat_for_each_cast<N>, 3)->Threads(num_threads);
-        benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast <N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast<N>)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

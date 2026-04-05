@@ -282,16 +282,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     // {{{ determine num_threads
 
-    constexpr unsigned int min_threads = 1;
-    const unsigned int max_threads = std::max(min_threads, std::thread::hardware_concurrency());
+    constexpr int min_threads = 1;
+    const auto max_threads = std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
     // https://en.wikipedia.org/wiki/Elvis_operator
-    //const unsigned int max_threads = std::thread::hardware_concurrency() ?: min_threads;
+    //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 
-    unsigned int num_threads = min_threads;
+    auto num_threads = min_threads;
 
     try
     {
-        num_threads = static_cast<unsigned int>(std::stoi(get_env("NUM_THREADS").value_or("0")));
+        num_threads = std::stoi(get_env("NUM_THREADS").value_or("0"));
     }
     catch (...)
     {

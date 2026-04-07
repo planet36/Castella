@@ -1660,7 +1660,7 @@ public:
     }
 
     /// The state size is fixed and does not depend on any user-provided parameters.
-    [[nodiscard]] static unsigned int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
+    [[nodiscard]] constexpr static unsigned int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
 
     [[nodiscard]] unsigned int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
 

@@ -178,7 +178,7 @@ template <typename T, std::size_t N>
 using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, unsigned int n);
 
 template <typename T, std::size_t N>
-void BM_squeeze_bytes(benchmark::State& BM_state, const func_t<T, N>& fn)
+void BM_squeeze_bytes(benchmark::State& BM_state, func_t<T, N>& fn)
 {
     // Perform setup here
 

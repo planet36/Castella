@@ -180,7 +180,7 @@ using func_2_t = void (&)(Castella::arr_blocks<N>&, const unsigned int);
 
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
-void BM_test_1(benchmark::State& BM_state, const func_1_t<N>& fn)
+void BM_test_1(benchmark::State& BM_state, func_1_t<N>& fn)
 {
     // Perform setup here
 
@@ -200,7 +200,7 @@ void BM_test_1(benchmark::State& BM_state, const func_1_t<N>& fn)
 
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
-void BM_test_2(benchmark::State& BM_state, const func_2_t<N>& fn, const unsigned int Nr)
+void BM_test_2(benchmark::State& BM_state, func_2_t<N>& fn, const unsigned int Nr)
 {
     // Perform setup here
 

@@ -233,7 +233,7 @@ using func_vec_bytes_t = std::vector<std::byte> (&)(const T);
 
 template <std::unsigned_integral T>
 void BM_lr_encode_vec(benchmark::State& BM_state,
-        const func_vec_bytes_t<T>& fn)
+        func_vec_bytes_t<T>& fn)
 {
     // Perform setup here
 
@@ -253,7 +253,7 @@ using func_fvec_bytes_t = fixed_vector<std::byte, 1 + sizeof(T)> (&)(const T);
 
 template <std::unsigned_integral T>
 void BM_lr_encode_fvec(benchmark::State& BM_state,
-        const func_fvec_bytes_t<T>& fn)
+        func_fvec_bytes_t<T>& fn)
 {
     // Perform setup here
 

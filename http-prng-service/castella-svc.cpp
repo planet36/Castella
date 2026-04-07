@@ -273,7 +273,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     {
         const char* short_options = "+Vhl:p:";
-        int c;
+        int c = 0;
         while ((c = getopt(argc, argv, short_options)) != -1)
         {
             switch (c)

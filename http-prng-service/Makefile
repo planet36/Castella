@@ -3,8 +3,10 @@
 
 export LC_ALL = C
 
+ROOT := $(shell git rev-parse --show-cdup)
+
 CPPFLAGS = -MMD -MP
-CPPFLAGS += -I $(shell git rev-parse --show-cdup)
+CPPFLAGS += -I $(ROOT)
 # for SSL (not supported yet)
 #CPPFLAGS += -DCPPHTTPLIB_OPENSSL_SUPPORT
 

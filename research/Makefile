@@ -3,8 +3,10 @@
 
 export LC_ALL = C
 
+ROOT := $(shell git rev-parse --show-cdup)
+
 CPPFLAGS = -MMD -MP
-CPPFLAGS += -I $(shell git rev-parse --show-cdup)
+CPPFLAGS += -I $(ROOT)
 
 CXXFLAGS = -std=c++26
 CXXFLAGS += -pipe -Wall -Wextra -Wpedantic -Wfatal-errors

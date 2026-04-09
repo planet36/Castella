@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+#if defined(__x86_64__) && defined(__VAES__)
+
 #include "get_env.hpp"
 
 #include <algorithm>
@@ -228,3 +230,15 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     return 0;
 }
+
+#else
+
+#include <cstdio>
+
+int main()
+{
+    (void)std::fputs("This benchmark is for x86_64 VAES only", stderr);
+    return 0;
+}
+
+#endif

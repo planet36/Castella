@@ -9,7 +9,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <immintrin.h>
 #include <string>
 #include <thread>
 
@@ -47,6 +46,7 @@ for_each_repeat_3(Castella::arr_blocks<N>& arr)
     }
 }
 
+#if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
@@ -67,7 +67,9 @@ for_each_cast_repeat(Castella::arr_blocks<N>& arr, const unsigned int Nr)
         _mm256_storeu_si256(reinterpret_cast<Castella::uint8x16x2_t*>(&arr[i]), v);
     }
 }
+#endif
 
+#if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
@@ -90,6 +92,7 @@ for_each_cast_repeat_3(Castella::arr_blocks<N>& arr)
         _mm256_storeu_si256(reinterpret_cast<Castella::uint8x16x2_t*>(&arr[i]), v);
     }
 }
+#endif
 
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
@@ -125,6 +128,7 @@ repeat_3_for_each(Castella::arr_blocks<N>& arr)
     }
 }
 
+#if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
@@ -145,7 +149,9 @@ repeat_for_each_cast(Castella::arr_blocks<N>& arr, const unsigned int Nr)
         }
     }
 }
+#endif
 
+#if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
@@ -168,6 +174,7 @@ repeat_3_for_each_cast(Castella::arr_blocks<N>& arr)
         }
     }
 }
+#endif
 
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
@@ -269,30 +276,42 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
         auto result_1 = arr;
         auto result_2 = arr;
+#if defined(__x86_64__) && defined(__VAES__)
         auto result_3 = arr;
         auto result_4 = arr;
+#endif
         auto result_5 = arr;
         auto result_6 = arr;
+#if defined(__x86_64__) && defined(__VAES__)
         auto result_7 = arr;
         auto result_8 = arr;
+#endif
 
         for_each_repeat(result_1, Nr);
         for_each_repeat_3(result_2);
+#if defined(__x86_64__) && defined(__VAES__)
         for_each_cast_repeat(result_3, Nr);
         for_each_cast_repeat_3(result_4);
+#endif
 
         repeat_for_each(result_5, Nr);
         repeat_3_for_each(result_6);
+#if defined(__x86_64__) && defined(__VAES__)
         repeat_for_each_cast(result_7, Nr);
         repeat_3_for_each_cast(result_8);
+#endif
 
         assert(std::memcmp(std::data(result_1), std::data(result_2), sizeof(result_1)) == 0);
+#if defined(__x86_64__) && defined(__VAES__)
         assert(std::memcmp(std::data(result_1), std::data(result_3), sizeof(result_1)) == 0);
         assert(std::memcmp(std::data(result_1), std::data(result_4), sizeof(result_1)) == 0);
+#endif
         assert(std::memcmp(std::data(result_1), std::data(result_5), sizeof(result_1)) == 0);
         assert(std::memcmp(std::data(result_1), std::data(result_6), sizeof(result_1)) == 0);
+#if defined(__x86_64__) && defined(__VAES__)
         assert(std::memcmp(std::data(result_1), std::data(result_7), sizeof(result_1)) == 0);
         assert(std::memcmp(std::data(result_1), std::data(result_8), sizeof(result_1)) == 0);
+#endif
     }
 
     // }}}
@@ -305,25 +324,33 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     {
         benchmark::RegisterBenchmark("for_each_repeat(3)", BM_test_2<N>, for_each_repeat<N>, 3);
         benchmark::RegisterBenchmark("for_each_repeat_3", BM_test_1<N>, for_each_repeat_3<N>);
+#if defined(__x86_64__) && defined(__VAES__)
         benchmark::RegisterBenchmark("for_each_cast_repeat(3)", BM_test_2<N>, for_each_cast_repeat<N>, 3);
         benchmark::RegisterBenchmark("for_each_cast_repeat_3", BM_test_1<N>, for_each_cast_repeat_3<N>);
+#endif
 
         benchmark::RegisterBenchmark("repeat_for_each(3)", BM_test_2<N>, repeat_for_each<N>, 3);
         benchmark::RegisterBenchmark("repeat_3_for_each", BM_test_1<N>, repeat_3_for_each<N>);
+#if defined(__x86_64__) && defined(__VAES__)
         benchmark::RegisterBenchmark("repeat_for_each_cast(3)", BM_test_2<N>, repeat_for_each_cast<N>, 3);
         benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast<N>);
+#endif
     }
     else
     {
         benchmark::RegisterBenchmark("for_each_repeat(3)", BM_test_2<N>, for_each_repeat<N>, 3)->Threads(num_threads);
         benchmark::RegisterBenchmark("for_each_repeat_3", BM_test_1<N>, for_each_repeat_3<N>)->Threads(num_threads);
+#if defined(__x86_64__) && defined(__VAES__)
         benchmark::RegisterBenchmark("for_each_cast_repeat(3)", BM_test_2<N>, for_each_cast_repeat<N>, 3)->Threads(num_threads);
         benchmark::RegisterBenchmark("for_each_cast_repeat_3", BM_test_1<N>, for_each_cast_repeat_3<N>)->Threads(num_threads);
+#endif
 
         benchmark::RegisterBenchmark("repeat_for_each(3)", BM_test_2<N>, repeat_for_each<N>, 3)->Threads(num_threads);
         benchmark::RegisterBenchmark("repeat_3_for_each", BM_test_1<N>, repeat_3_for_each<N>)->Threads(num_threads);
+#if defined(__x86_64__) && defined(__VAES__)
         benchmark::RegisterBenchmark("repeat_for_each_cast(3)", BM_test_2<N>, repeat_for_each_cast<N>, 3)->Threads(num_threads);
         benchmark::RegisterBenchmark("repeat_3_for_each_cast", BM_test_1<N>, repeat_3_for_each_cast<N>)->Threads(num_threads);
+#endif
     }
 
     benchmark::RunSpecifiedBenchmarks();

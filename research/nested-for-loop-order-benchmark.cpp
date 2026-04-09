@@ -21,7 +21,7 @@ for_each_repeat(Castella::arr_blocks<N>& arr, const unsigned int Nr)
     for (size_t i = 0; i < std::size(arr); ++i)
     {
         // repeat Nr times
-        for (unsigned int r = 0; r < Nr; r++)
+        for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
         {
             arr[i] = Castella::utils::aes_enc_0(arr[i]);
         }
@@ -39,7 +39,7 @@ for_each_repeat_3(Castella::arr_blocks<N>& arr)
     for (size_t i = 0; i < std::size(arr); ++i)
     {
         // repeat Nr times
-        for (unsigned int r = 0; r < Nr; r++)
+        for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
         {
             arr[i] = Castella::utils::aes_enc_0(arr[i]);
         }
@@ -59,7 +59,7 @@ for_each_cast_repeat(Castella::arr_blocks<N>& arr, const unsigned int Nr)
         Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
         // repeat Nr times
-        for (unsigned int r = 0; r < Nr; r++)
+        for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
         {
             v = Castella::utils::aes_enc_0(v);
         }
@@ -84,7 +84,7 @@ for_each_cast_repeat_3(Castella::arr_blocks<N>& arr)
         Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
         // repeat Nr times
-        for (unsigned int r = 0; r < Nr; r++)
+        for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
         {
             v = Castella::utils::aes_enc_0(v);
         }
@@ -100,7 +100,7 @@ void
 repeat_for_each(Castella::arr_blocks<N>& arr, const unsigned int Nr)
 {
     // repeat Nr times
-    for (unsigned int r = 0; r < Nr; r++)
+    for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -118,7 +118,7 @@ repeat_3_for_each(Castella::arr_blocks<N>& arr)
     constexpr unsigned int Nr = 3;
 
     // repeat Nr times
-    for (unsigned int r = 0; r < Nr; r++)
+    for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -135,7 +135,7 @@ void
 repeat_for_each_cast(Castella::arr_blocks<N>& arr, const unsigned int Nr)
 {
     // repeat Nr times
-    for (unsigned int r = 0; r < Nr; r++)
+    for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)
@@ -160,7 +160,7 @@ repeat_3_for_each_cast(Castella::arr_blocks<N>& arr)
     constexpr unsigned int Nr = 3;
 
     // repeat Nr times
-    for (unsigned int r = 0; r < Nr; r++)
+    for (unsigned int aes_r = 0; aes_r < Nr; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)

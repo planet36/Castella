@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstdlib>
-#include <immintrin.h>
 #include <string>
 #include <thread>
 
@@ -15,7 +14,7 @@ void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int Nr)
 {
     // Perform setup here
 
-    __m128i a;
+    Castella::utils::uint8x16_t a;
     arc4random_buf(&a, sizeof(a));
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)

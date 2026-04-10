@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-// vim: set foldmethod=marker foldlevel=0:
 // vim: set textwidth=81:
 
 /// Castella: A heavyweight customizable duplex/sponge construction class

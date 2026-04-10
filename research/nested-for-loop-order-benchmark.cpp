@@ -13,7 +13,6 @@
 #include <thread>
 
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
 for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 {
@@ -29,7 +28,6 @@ for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 }
 
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
 for_each_repeat_t_param(Castella::arr_blocks<N>& arr)
 {
@@ -46,7 +44,7 @@ for_each_repeat_t_param(Castella::arr_blocks<N>& arr)
 
 #if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 {
@@ -69,7 +67,7 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 
 #if defined(__x86_64__) && defined(__VAES__)
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
 {
@@ -91,7 +89,6 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
 #endif
 
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
 repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 {
@@ -107,7 +104,6 @@ repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 }
 
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void
 repeat_for_each_t_param(Castella::arr_blocks<N>& arr)
 {
@@ -124,7 +120,7 @@ repeat_for_each_t_param(Castella::arr_blocks<N>& arr)
 
 #if defined(__x86_64__) && defined(__VAES__)
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
 {
@@ -147,7 +143,7 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 
 #if defined(__x86_64__) && defined(__VAES__)
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
 {
@@ -170,17 +166,14 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
 
 // aes_Nr is passed as a template param
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
 
 // aes_Nr is passed as a function param
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 using func_f_param_t = void (&)(Castella::arr_blocks<N>&, const unsigned int);
 
 
 template <unsigned int aes_Nr, size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_Nr, N>& fn)
 {
     // Perform setup here
@@ -200,7 +193,6 @@ void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_Nr, N>& fn)
 }
 
 template <size_t N>
-requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const unsigned int aes_Nr)
 {
     // Perform setup here

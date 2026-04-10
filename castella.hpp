@@ -52,7 +52,7 @@
 
 #if defined(__x86_64__) && defined(__AES__)
 #include <immintrin.h>
-#elif defined(__aarch64__) && defined(__ARM_NEON) && defined(__ARM_FEATURE_AES)
+#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
 #include <arm_neon.h>
 #else
 #error "Architecture not supported"

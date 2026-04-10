@@ -164,33 +164,13 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
 }
 #endif
 
-// aes_Nr is passed as a template param
-template <unsigned int aes_Nr, size_t N>
-using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
-
 // aes_Nr is passed as a function param
 template <size_t N>
 using func_f_param_t = void (&)(Castella::arr_blocks<N>&, const unsigned int);
 
-
+// aes_Nr is passed as a template param
 template <unsigned int aes_Nr, size_t N>
-void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_Nr, N>& fn)
-{
-    // Perform setup here
-
-    Castella::arr_blocks<N> arr{};
-    arc4random_buf(std::data(arr), sizeof(arr));
-
-    for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
-    {
-        // This code gets timed
-
-        fn(arr);
-    }
-
-    // This is to prevent the compiler from eliding the work above.
-    benchmark::DoNotOptimize(arr);
-}
+using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
 
 template <size_t N>
 void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const unsigned int aes_Nr)
@@ -205,6 +185,25 @@ void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const un
         // This code gets timed
 
         fn(arr, aes_Nr);
+    }
+
+    // This is to prevent the compiler from eliding the work above.
+    benchmark::DoNotOptimize(arr);
+}
+
+template <unsigned int aes_Nr, size_t N>
+void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_Nr, N>& fn)
+{
+    // Perform setup here
+
+    Castella::arr_blocks<N> arr{};
+    arc4random_buf(std::data(arr), sizeof(arr));
+
+    for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
+    {
+        // This code gets timed
+
+        fn(arr);
     }
 
     // This is to prevent the compiler from eliding the work above.

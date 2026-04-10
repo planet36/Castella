@@ -15,7 +15,6 @@
 #if defined(__x86_64__)
 
 #include <immintrin.h>
-#include <stdint.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -60,7 +59,6 @@ mm512_popcount(const __m512i x)
 #elif defined(__aarch64__) && defined(__ARM_NEON)
 
 #include <arm_neon.h>
-#include <stdint.h>
 
 #if defined(__cplusplus)
 extern "C" {

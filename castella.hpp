@@ -175,6 +175,87 @@ aes_enc_0_inv(T data) noexcept
     return aes_enc_inv(data, T{});
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+
+#if defined(__x86_64__) && defined(__VAES__)
+
+/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
+template <unsigned int aes_num_rounds, size_t N>
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
+void
+arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
+{
+    for (size_t i = 0; i < std::size(arr); i += 2)
+    {
+        // Cast adjacent pairs of elements to uint8x16x2_t.
+        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            v = aes_enc_0(v);
+        }
+
+        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+    }
+}
+
+#endif
+
+/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
+template <unsigned int aes_num_rounds, size_t N>
+void
+arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
+{
+    for (size_t i = 0; i < std::size(arr); ++i)
+    {
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            arr[i] = aes_enc_0(arr[i]);
+        }
+    }
+}
+
+#if defined(__x86_64__) && defined(__VAES__)
+
+/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
+template <unsigned int aes_num_rounds, size_t N>
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
+void
+arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr)
+{
+    for (size_t i = 0; i < std::size(arr); i += 2)
+    {
+        // Cast adjacent pairs of elements to uint8x16x2_t.
+        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            v = aes_enc_0_inv(v);
+        }
+
+        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+    }
+}
+
+#endif
+
+/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
+template <unsigned int aes_num_rounds, size_t N>
+void
+arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr)
+{
+    for (size_t i = 0; i < std::size(arr); ++i)
+    {
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            arr[i] = aes_enc_0_inv(arr[i]);
+        }
+    }
+}
+
+#pragma GCC diagnostic pop
+
 // }}}
 
 // {{{ transpose
@@ -670,25 +751,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
         state[0] ^= rc;
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
-        {
-#if defined(__x86_64__) && defined(__VAES__)
-            // Cast adjacent pairs of elements to uint8x16x2_t.
-            for (decltype(N) i = 0; i < N; i += 2)
-            {
-                uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&state[i]));
-
-                v = aes_enc_0(v);
-
-                _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&state[i]), v);
-            }
-#else
-            for (decltype(N) i = 0; i < N; ++i)
-            {
-                state[i] = aes_enc_0(state[i]);
-            }
-#endif
-        }
+        arr_aes_enc_0<aes_num_rounds>(state);
         transpose(state);
     }
 }
@@ -726,25 +789,7 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {
         transpose(state);
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
-        {
-#if defined(__x86_64__) && defined(__VAES__)
-            // Cast adjacent pairs of elements to uint8x16x2_t.
-            for (decltype(N) i = 0; i < N; i += 2)
-            {
-                uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&state[i]));
-
-                v = aes_enc_0_inv(v);
-
-                _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&state[i]), v);
-            }
-#else
-            for (decltype(N) i = 0; i < N; ++i)
-            {
-                state[i] = aes_enc_0_inv(state[i]);
-            }
-#endif
-        }
+        arr_aes_enc_0_inv<aes_num_rounds>(state);
         state[0] ^= rc;
     }
 }

@@ -184,7 +184,7 @@ aes_enc_0_inv(T data) noexcept
 template <unsigned int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
-arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
+arr_aes_enc_0(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); i += 2)
     {
@@ -205,7 +205,7 @@ arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
 /// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
 template <unsigned int aes_num_rounds, size_t N>
 void
-arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
+arr_aes_enc_0(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); ++i)
     {
@@ -222,7 +222,7 @@ arr_aes_enc_0(std::array<uint8x16_t, N>& arr)
 template <unsigned int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
-arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr)
+arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); i += 2)
     {
@@ -243,7 +243,7 @@ arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr)
 /// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
 template <unsigned int aes_num_rounds, size_t N>
 void
-arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr)
+arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); ++i)
     {

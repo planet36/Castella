@@ -57,4 +57,33 @@ mm512_popcount(const __m512i x)
 } // extern "C"
 #endif
 
+#elif defined(__aarch64__) && defined(__ARM_NEON)
+
+#include <arm_neon.h>
+#include <stdint.h>
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+static inline int
+mm_popcount(const uint8x16_t x)
+{
+    return (int)vaddvq_u8(vcntq_u8(x));
+}
+
+static inline int
+mm256_popcount(const uint8x16x2_t x)
+{
+    return mm_popcount(x.val[0]) + mm_popcount(x.val[1]);
+}
+
+#if defined(__cplusplus)
+} // extern "C"
+#endif
+
+#else
+
+#error "Architecture not supported"
+
 #endif

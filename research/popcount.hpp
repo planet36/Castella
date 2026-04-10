@@ -16,13 +16,9 @@
 
 #include <immintrin.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 #if defined(__SSE4_1__)
 static inline int
-mm_popcount(const __m128i x)
+popcount(const __m128i x)
 {
     const uint64_t x0 = (uint64_t)_mm_extract_epi64(x, 0);
     const uint64_t x1 = (uint64_t)_mm_extract_epi64(x, 1);
@@ -32,7 +28,7 @@ mm_popcount(const __m128i x)
 
 #if defined(__AVX__)
 static inline int
-mm256_popcount(const __m256i x)
+popcount(const __m256i x)
 {
     const uint64_t x0 = (uint64_t)_mm256_extract_epi64(x, 0);
     const uint64_t x1 = (uint64_t)_mm256_extract_epi64(x, 1);
@@ -45,40 +41,28 @@ mm256_popcount(const __m256i x)
 
 #if defined(__AVX512F__)
 static inline int
-mm512_popcount(const __m512i x)
+popcount(const __m512i x)
 {
-    return mm256_popcount(_mm512_extracti64x4_epi64(x, 0)) +
-           mm256_popcount(_mm512_extracti64x4_epi64(x, 1));
+    return popcount(_mm512_extracti64x4_epi64(x, 0)) +
+           popcount(_mm512_extracti64x4_epi64(x, 1));
 }
-#endif
-
-#if defined(__cplusplus)
-} // extern "C"
 #endif
 
 #elif defined(__aarch64__) && defined(__ARM_NEON)
 
 #include <arm_neon.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 static inline int
-mm_popcount(const uint8x16_t x)
+popcount(const uint8x16_t x)
 {
     return (int)vaddvq_u8(vcntq_u8(x));
 }
 
 static inline int
-mm256_popcount(const uint8x16x2_t x)
+popcount(const uint8x16x2_t x)
 {
-    return mm_popcount(x.val[0]) + mm_popcount(x.val[1]);
+    return popcount(x.val[0]) + popcount(x.val[1]);
 }
-
-#if defined(__cplusplus)
-} // extern "C"
-#endif
 
 #else
 

@@ -8,7 +8,7 @@
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1
 
 #include "castella.hpp"
-#include "mm_popcount.h"
+#include "popcount.hpp"
 #include "running_stats.hpp"
 #include "simd-bitmask.hpp"
 
@@ -76,7 +76,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
                         // for each row
                         for (size_t j = 0; j < N; ++j)
                         {
-                            num_bits_changed += mm_popcount(permuted_state[j] ^ permuted_state_p[j]);
+                            num_bits_changed += popcount(permuted_state[j] ^ permuted_state_p[j]);
                         }
 
                         num_rounds_to_rs_num_bits_changed[num_rounds].push(num_bits_changed);

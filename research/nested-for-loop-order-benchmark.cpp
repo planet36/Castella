@@ -269,7 +269,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     {
         constexpr size_t N = 16;
-        constexpr size_t aes_Nr = 3;
+        constexpr unsigned int aes_Nr = 3;
 
         Castella::arr_blocks<N> arr{};
         arc4random_buf(std::data(arr), sizeof(arr));

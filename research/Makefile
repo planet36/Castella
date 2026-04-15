@@ -5,7 +5,7 @@ export LC_ALL = C
 
 ARCH := $(shell uname -m)
 
-ROOT := $(shell git rev-parse --show-cdup)
+ROOT := ./$(shell git rev-parse --show-cdup)
 
 CPPFLAGS = -MMD -MP
 CPPFLAGS += -I $(ROOT)

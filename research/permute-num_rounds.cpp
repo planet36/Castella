@@ -4,7 +4,7 @@
 #define DEBUG 1
 #undef NDEBUG
 
-// To find the optimal minimum Nr, set it to 1.
+// To find the optimal minimum num_rounds, set it to 1.
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1
 
 #include "castella.hpp"

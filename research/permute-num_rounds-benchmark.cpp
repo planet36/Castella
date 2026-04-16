@@ -11,7 +11,7 @@
 #include <thread>
 
 template <size_t N>
-void BM_permute(benchmark::State& BM_state, const unsigned int Nr)
+void BM_permute(benchmark::State& BM_state, const unsigned int num_rounds)
 {
     // Perform setup here
 
@@ -22,7 +22,7 @@ void BM_permute(benchmark::State& BM_state, const unsigned int Nr)
     {
         // This code gets timed
 
-        Castella::permute(state, Nr);
+        Castella::permute(state, num_rounds);
     }
 
     // This is to prevent the compiler from eliding the work above.
@@ -82,7 +82,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 2;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
             }
         }
@@ -90,7 +90,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 4;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
             }
         }
@@ -98,7 +98,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 8;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
             }
         }
@@ -107,7 +107,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 16;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
             }
         }
@@ -119,7 +119,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 2;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
             }
         }
@@ -127,7 +127,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 4;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
             }
         }
@@ -135,7 +135,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 8;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
             }
         }
@@ -144,7 +144,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr size_t N = 16;
             for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                const std::string BM_name = std::format("Castella::permute<{}>(Nr={})", N, num_rounds);
+                const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
             }
         }

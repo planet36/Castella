@@ -16,7 +16,7 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# For each state size, find the optimal Nr for Castella::permute"
+echo "# For each state size, find the optimal num_rounds for Castella::permute"
 echo
 ./permute-num_rounds -n 1000 || exit
 echo "________________________________________________________________________________"

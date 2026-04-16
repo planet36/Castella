@@ -1,4 +1,4 @@
-aes_enc_0-num_rounds
+aes_enc_0-aes_num_rounds
 aes_enc_0-num_rounds-benchmark
 aesenc_arr_cast-benchmark
 castella-print-info

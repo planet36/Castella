@@ -33,7 +33,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
         auto result = data;
 
         // aes_num_rounds times
-        for (unsigned int r = 0; r < aes_num_rounds; ++r)
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
         {
             result = Castella::utils::aes_enc_0(result);
         }
@@ -46,7 +46,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
             auto result_p = data_p;
 
             // aes_num_rounds times
-            for (unsigned int r = 0; r < aes_num_rounds; ++r)
+            for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
             {
                 result_p = Castella::utils::aes_enc_0(result_p);
             }

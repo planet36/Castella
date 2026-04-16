@@ -21,7 +21,7 @@ void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
     {
         // This code gets timed
 
-        for (unsigned int r = 0; r < aes_num_rounds; r++)
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             a = Castella::utils::aes_enc_0(a);
         }

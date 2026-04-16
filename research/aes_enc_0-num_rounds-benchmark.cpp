@@ -10,7 +10,7 @@
 #include <string>
 #include <thread>
 
-void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int Nr)
+void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
 {
     // Perform setup here
 
@@ -21,7 +21,7 @@ void BM_aes_enc_0(benchmark::State& BM_state, const unsigned int Nr)
     {
         // This code gets timed
 
-        for (unsigned int r = 0; r < Nr; r++)
+        for (unsigned int r = 0; r < aes_num_rounds; r++)
         {
             a = Castella::utils::aes_enc_0(a);
         }

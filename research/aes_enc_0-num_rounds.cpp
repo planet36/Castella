@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 void
-calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int num_rounds)
+calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int aes_num_rounds)
 {
     using T = Castella::block_t;
 
@@ -32,8 +32,8 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int n
 
         auto result = data;
 
-        // num_rounds times
-        for (unsigned int r = 0; r < num_rounds; ++r)
+        // aes_num_rounds times
+        for (unsigned int r = 0; r < aes_num_rounds; ++r)
         {
             result = Castella::utils::aes_enc_0(result);
         }
@@ -45,8 +45,8 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int n
 
             auto result_p = data_p;
 
-            // num_rounds times
-            for (unsigned int r = 0; r < num_rounds; ++r)
+            // aes_num_rounds times
+            for (unsigned int r = 0; r < aes_num_rounds; ++r)
             {
                 result_p = Castella::utils::aes_enc_0(result_p);
             }
@@ -78,7 +78,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int n
             "\t{:.3f}"
             "\t{:.3f}"
             "\t{:.3f}"
-            , num_rounds
+            , aes_num_rounds
             , rs_num_bits_changed.mean()
             , abs_err
             , diffusion_pctg
@@ -142,9 +142,9 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             "\tkurt."
             );
 
-    for (unsigned int num_rounds = 1; num_rounds <= 6; num_rounds++)
+    for (unsigned int aes_num_rounds = 1; aes_num_rounds <= 6; aes_num_rounds++)
     {
-        calculate_metrics_aes_enc_0(num_samples, num_rounds);
+        calculate_metrics_aes_enc_0(num_samples, aes_num_rounds);
     }
 
     return 0;

@@ -10,7 +10,7 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# Find the optimal Nr for Castella::utils::aes_enc_0"
+echo "# Find the optimal aes_num_rounds for Castella::utils::aes_enc_0"
 echo
 ./aes_enc_0-num_rounds -n 500000 || exit
 echo "________________________________________________________________________________"

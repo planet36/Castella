@@ -14,28 +14,28 @@
 
 template <size_t N>
 void
-for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
+for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds)
 {
     // for each single item
     for (size_t i = 0; i < std::size(arr); ++i)
     {
-        // repeat aes_Nr times
-        for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+        // repeat aes_num_rounds times
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = Castella::utils::aes_enc_0(arr[i]);
         }
     }
 }
 
-template <unsigned int aes_Nr, size_t N>
+template <unsigned int aes_num_rounds, size_t N>
 void
 for_each_repeat_t_param(Castella::arr_blocks<N>& arr)
 {
     // for each single item
     for (size_t i = 0; i < std::size(arr); ++i)
     {
-        // repeat aes_Nr times
-        for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+        // repeat aes_num_rounds times
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = Castella::utils::aes_enc_0(arr[i]);
         }
@@ -46,7 +46,7 @@ for_each_repeat_t_param(Castella::arr_blocks<N>& arr)
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
-for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
+for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds)
 {
     // for each pair of items
     for (size_t i = 0; i < std::size(arr); i += 2)
@@ -54,8 +54,8 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
         // Cast adjacent pairs of elements to uint8x16x2_t.
         Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
-        // repeat aes_Nr times
-        for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+        // repeat aes_num_rounds times
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = Castella::utils::aes_enc_0(v);
         }
@@ -66,7 +66,7 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <unsigned int aes_Nr, size_t N>
+template <unsigned int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
@@ -77,8 +77,8 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
         // Cast adjacent pairs of elements to uint8x16x2_t.
         Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
-        // repeat aes_Nr times
-        for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+        // repeat aes_num_rounds times
+        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = Castella::utils::aes_enc_0(v);
         }
@@ -90,10 +90,10 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
 
 template <size_t N>
 void
-repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
+repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds)
 {
-    // repeat aes_Nr times
-    for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+    // repeat aes_num_rounds times
+    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -103,12 +103,12 @@ repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
     }
 }
 
-template <unsigned int aes_Nr, size_t N>
+template <unsigned int aes_num_rounds, size_t N>
 void
 repeat_for_each_t_param(Castella::arr_blocks<N>& arr)
 {
-    // repeat aes_Nr times
-    for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+    // repeat aes_num_rounds times
+    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -122,10 +122,10 @@ repeat_for_each_t_param(Castella::arr_blocks<N>& arr)
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
-repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_Nr)
+repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds)
 {
-    // repeat aes_Nr times
-    for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+    // repeat aes_num_rounds times
+    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)
@@ -142,13 +142,13 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <unsigned int aes_Nr, size_t N>
+template <unsigned int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 void
 repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
 {
-    // repeat aes_Nr times
-    for (unsigned int aes_r = 0; aes_r < aes_Nr; aes_r++)
+    // repeat aes_num_rounds times
+    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)
@@ -164,16 +164,16 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
 }
 #endif
 
-// aes_Nr is passed as a function param
+// aes_num_rounds is passed as a function param
 template <size_t N>
 using func_f_param_t = void (&)(Castella::arr_blocks<N>&, const unsigned int);
 
-// aes_Nr is passed as a template param
-template <unsigned int aes_Nr, size_t N>
+// aes_num_rounds is passed as a template param
+template <unsigned int aes_num_rounds, size_t N>
 using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
 
 template <size_t N>
-void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const unsigned int aes_Nr)
+void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const unsigned int aes_num_rounds)
 {
     // Perform setup here
 
@@ -184,15 +184,15 @@ void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const un
     {
         // This code gets timed
 
-        fn(arr, aes_Nr);
+        fn(arr, aes_num_rounds);
     }
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(arr);
 }
 
-template <unsigned int aes_Nr, size_t N>
-void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_Nr, N>& fn)
+template <unsigned int aes_num_rounds, size_t N>
+void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& fn)
 {
     // Perform setup here
 
@@ -254,7 +254,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     {
         constexpr size_t N = 16;
-        constexpr unsigned int aes_Nr = 3;
+        constexpr unsigned int aes_num_rounds = 3;
 
         Castella::arr_blocks<N> arr{};
         arc4random_buf(std::data(arr), sizeof(arr));
@@ -272,18 +272,18 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         auto result_8 = arr;
 #endif
 
-        for_each_repeat_f_param(result_1, aes_Nr);
-        for_each_repeat_t_param<aes_Nr>(result_2);
+        for_each_repeat_f_param(result_1, aes_num_rounds);
+        for_each_repeat_t_param<aes_num_rounds>(result_2);
 #if defined(__x86_64__) && defined(__VAES__)
-        for_each_cast_repeat_f_param(result_3, aes_Nr);
-        for_each_cast_repeat_t_param<aes_Nr>(result_4);
+        for_each_cast_repeat_f_param(result_3, aes_num_rounds);
+        for_each_cast_repeat_t_param<aes_num_rounds>(result_4);
 #endif
 
-        repeat_for_each_f_param(result_5, aes_Nr);
-        repeat_for_each_t_param<aes_Nr>(result_6);
+        repeat_for_each_f_param(result_5, aes_num_rounds);
+        repeat_for_each_t_param<aes_num_rounds>(result_6);
 #if defined(__x86_64__) && defined(__VAES__)
-        repeat_for_each_cast_f_param(result_7, aes_Nr);
-        repeat_for_each_cast_t_param<aes_Nr>(result_8);
+        repeat_for_each_cast_f_param(result_7, aes_num_rounds);
+        repeat_for_each_cast_t_param<aes_num_rounds>(result_8);
 #endif
 
         assert(std::memcmp(std::data(result_1), std::data(result_2), sizeof(result_1)) == 0);
@@ -304,38 +304,38 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // {{{ speed
 
     constexpr size_t N = 16;
-    constexpr unsigned int aes_Nr = 3;
+    constexpr unsigned int aes_num_rounds = 3;
 
     if (num_threads == 1)
     {
-        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_Nr);
-        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_Nr, N>, for_each_repeat_t_param<aes_Nr, N>);
+        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_Nr);
-        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_Nr, N>, for_each_cast_repeat_t_param<aes_Nr, N>);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>);
 #endif
 
-        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_Nr);
-        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_Nr, N>, repeat_for_each_t_param<aes_Nr, N>);
+        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_Nr);
-        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_Nr, N>, repeat_for_each_cast_t_param<aes_Nr, N>);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>);
 #endif
     }
     else
     {
-        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_Nr)->Threads(num_threads);
-        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_Nr, N>, for_each_repeat_t_param<aes_Nr, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_Nr)->Threads(num_threads);
-        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_Nr, N>, for_each_cast_repeat_t_param<aes_Nr, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #endif
 
-        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_Nr)->Threads(num_threads);
-        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_Nr, N>, repeat_for_each_t_param<aes_Nr, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_Nr)->Threads(num_threads);
-        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_Nr, N>, repeat_for_each_cast_t_param<aes_Nr, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #endif
     }
 

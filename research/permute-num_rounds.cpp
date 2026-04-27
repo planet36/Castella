@@ -5,7 +5,7 @@
 #undef NDEBUG
 
 // To find the optimal minimum num_rounds, set it to 1.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
 
 #include "castella.hpp"
 #include "popcount.hpp"

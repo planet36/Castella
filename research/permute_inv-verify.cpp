@@ -5,7 +5,7 @@
 #undef NDEBUG
 
 // To exhaustively test the permutation function, set the minimum num_rounds to 1.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1
+#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
 
 #include "castella.hpp"
 

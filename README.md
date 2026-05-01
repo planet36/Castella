@@ -101,9 +101,8 @@ I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them
 
 ### Why <q>heavyweight</q>?
 
-First, because it's the opposite of lightweight.  The state size is _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
-
-Second, because it uses dedicated AES instructions instead of only [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) operations.
+1) It's the opposite of lightweight.  The state size is _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
+2) It uses dedicated AES instructions instead of only [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) operations.
 
 ### Is this as fast as [b3sum](https://github.com/BLAKE3-team/BLAKE3)?
 

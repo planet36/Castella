@@ -30,7 +30,7 @@ The Castella permutation function uses [AES encryption CPU instructions](https:/
 
   1. Apply (via XOR) the round constant to the first element of the state array.
   2. Perform 3 rounds of AES encryption (with a zero round key) on each element of the state array.
-      * The number of AES rounds was empirically determined.  See [aes\_enc\_0-num\_rounds.cpp](research/aes_enc_0-num_rounds.cpp).
+      * The number of AES rounds was empirically determined.  See [aes_enc_0-aes_num_rounds.cpp](research/aes_enc_0-aes_num_rounds.cpp).
   3. Transpose the state, treating it as a 16x16 matrix of bytes.
 
 The minimum number of permutation rounds was empirically determined.  See [permute-num\_rounds.cpp](research/permute-num_rounds.cpp).

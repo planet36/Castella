@@ -178,7 +178,8 @@ template <typename T, std::size_t N>
 using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, unsigned int n);
 
 template <typename T, std::size_t N>
-void BM_squeeze_bytes(benchmark::State& BM_state, func_t<T, N>& fn)
+void
+BM_squeeze_bytes(benchmark::State& BM_state, func_t<T, N>& fn)
 {
     // Perform setup here
 
@@ -200,7 +201,8 @@ void BM_squeeze_bytes(benchmark::State& BM_state, func_t<T, N>& fn)
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -214,7 +216,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads = std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads =
+        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
     // https://en.wikipedia.org/wiki/Elvis_operator
     //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 

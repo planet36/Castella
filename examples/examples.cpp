@@ -37,7 +37,8 @@ right_encode(const std::unsigned_integral auto x)
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -51,8 +52,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "example";
 
-        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                function_name, customization_str);
+        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
+                                  customization_str);
 
         hash_obj.add("Twenty dollars can buy many peanuts."sv);
         hash_obj.add("Explain how!"sv);
@@ -61,7 +62,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
         const auto digest_bytes = hash_obj.squeeze_bytes();
 
-        const std::string expected_result = "04f9fd9be1ac38ee90073bc0ec1770113f02cc7eb8c498b0d299793a1ee39f12";
+        const std::string expected_result =
+            "04f9fd9be1ac38ee90073bc0ec1770113f02cc7eb8c498b0d299793a1ee39f12";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -102,12 +104,13 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like cSHAKE128";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add(X)
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add(X)
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "cb37b98f7acff99c34fb249d335f0e93ca061db25260851227c2a2f1fed998ca";
+        const std::string expected_result =
+            "cb37b98f7acff99c34fb249d335f0e93ca061db25260851227c2a2f1fed998ca";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -135,12 +138,13 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like cSHAKE256";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add(X)
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add(X)
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "f3b2108eeae484d2a76457b83db0b845c6db1df9736200cfd0a93ae8f294f557851266f82769225f4121f880aa9056f198fcbbddd9b3bcf016de53692c4a9806";
+        const std::string expected_result =
+            "f3b2108eeae484d2a76457b83db0b845c6db1df9736200cfd0a93ae8f294f557851266f82769225f4121f880aa9056f198fcbbddd9b3bcf016de53692c4a9806";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -188,15 +192,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like KMAC128";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(K) // encode_string
-            .apply_padding_rule() // bytepad
-            .add(X)
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(K)       // encode_string
+                                      .apply_padding_rule() // bytepad
+                                      .add(X)
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "c1917d4675a8e99a51653e3719250f3b0a2748b22721045f425aea61103c53e1";
+        const std::string expected_result =
+            "c1917d4675a8e99a51653e3719250f3b0a2748b22721045f425aea61103c53e1";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -225,15 +230,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like KMAC256";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(K) // encode_string
-            .apply_padding_rule() // bytepad
-            .add(X)
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(K)       // encode_string
+                                      .apply_padding_rule() // bytepad
+                                      .add(X)
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "eda4e139d791be97c023268676e5b8235b16c447d9c6fa8bf2f0d277bea6a9c448611da82dd7be8282a13647457d18ff15291e42eeea908207ed1c332900042d";
+        const std::string expected_result =
+            "eda4e139d791be97c023268676e5b8235b16c447d9c6fa8bf2f0d277bea6a9c448611da82dd7be8282a13647457d18ff15291e42eeea908207ed1c332900042d";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -262,15 +268,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like KMACXOF128";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(K) // encode_string
-            .apply_padding_rule() // bytepad
-            .add(X)
-            .add(right_encode(0U))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(K)       // encode_string
+                                      .apply_padding_rule() // bytepad
+                                      .add(X)
+                                      .add(right_encode(0U))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "0c41dccc4df8df33f708ab769dea96fa40312850b7f75d4bef28e1b8d11328ed";
+        const std::string expected_result =
+            "0c41dccc4df8df33f708ab769dea96fa40312850b7f75d4bef28e1b8d11328ed";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -299,15 +306,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like KMACXOF256";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(K) // encode_string
-            .apply_padding_rule() // bytepad
-            .add(X)
-            .add(right_encode(0U))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(K)       // encode_string
+                                      .apply_padding_rule() // bytepad
+                                      .add(X)
+                                      .add(right_encode(0U))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "7001afa5c2dde59c9956c0590807fe16726f1795d567dc778ec9f8b20d9d63133ca91acf43fde4668d26f06434432a7f4ef5211ca958296fdae7f9eed9ea5b0d";
+        const std::string expected_result =
+            "7001afa5c2dde59c9956c0590807fe16726f1795d567dc778ec9f8b20d9d63133ca91acf43fde4668d26f06434432a7f4ef5211ca958296fdae7f9eed9ea5b0d";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -352,23 +360,26 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like TupleHash128";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(X[0]) // encode_string
-            .add_encoded(X[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(X[0]) // encode_string
+                                      .add_encoded(X[1]) // encode_string
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(Y[0]) // encode_string
-            .add_encoded(Y[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes_2 =
+            Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
+                             customization_str)
+                .add_encoded(Y[0]) // encode_string
+                .add_encoded(Y[1]) // encode_string
+                .add(right_encode(num_bytes_to_squeeze))
+                .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "bf1d84d987a5e4265cf7dc04efbcf6239ab414e29dc7dc19ce466c60549a0057";
+        const std::string expected_result =
+            "bf1d84d987a5e4265cf7dc04efbcf6239ab414e29dc7dc19ce466c60549a0057";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
-        const std::string expected_result_2 = "c7f4e170438fdde9427fc3f329e220cb8bf5e6f867f892aad343545da1cbc5df";
+        const std::string expected_result_2 =
+            "c7f4e170438fdde9427fc3f329e220cb8bf5e6f867f892aad343545da1cbc5df";
         const std::string result_2 = fmt::format("{:02x}", fmt::join(digest_bytes_2, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -405,23 +416,26 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like TupleHash256";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(X[0]) // encode_string
-            .add_encoded(X[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(X[0]) // encode_string
+                                      .add_encoded(X[1]) // encode_string
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(Y[0]) // encode_string
-            .add_encoded(Y[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes_2 =
+            Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
+                             customization_str)
+                .add_encoded(Y[0]) // encode_string
+                .add_encoded(Y[1]) // encode_string
+                .add(right_encode(num_bytes_to_squeeze))
+                .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "b80e28dc4d4371a2f0e88a3d42bedcbf514e3e3d60b08cacb648b36427fa1a4f32f4f628ebd43a25223393243fa20076edeeb10cdda8202eaac77f2b1d420ef9";
+        const std::string expected_result =
+            "b80e28dc4d4371a2f0e88a3d42bedcbf514e3e3d60b08cacb648b36427fa1a4f32f4f628ebd43a25223393243fa20076edeeb10cdda8202eaac77f2b1d420ef9";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
-        const std::string expected_result_2 = "f0a0ff5dfbd7f6c00d6c277d4992d110380b61bf37fc4643eb1180d9f1d9c3c4230b5e58aebe394f5a671b7b3e66b43ed0e87931f14bd010650a657503217275";
+        const std::string expected_result_2 =
+            "f0a0ff5dfbd7f6c00d6c277d4992d110380b61bf37fc4643eb1180d9f1d9c3c4230b5e58aebe394f5a671b7b3e66b43ed0e87931f14bd010650a657503217275";
         const std::string result_2 = fmt::format("{:02x}", fmt::join(digest_bytes_2, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -458,23 +472,26 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like TupleHashXOF128";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(X[0]) // encode_string
-            .add_encoded(X[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(X[0]) // encode_string
+                                      .add_encoded(X[1]) // encode_string
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(Y[0]) // encode_string
-            .add_encoded(Y[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes_2 =
+            Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
+                             customization_str)
+                .add_encoded(Y[0]) // encode_string
+                .add_encoded(Y[1]) // encode_string
+                .add(right_encode(num_bytes_to_squeeze))
+                .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "d6b96323db5350a25ff21e4513169c14f1aba668b929ae1f9dbad047e1000eb2";
+        const std::string expected_result =
+            "d6b96323db5350a25ff21e4513169c14f1aba668b929ae1f9dbad047e1000eb2";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
-        const std::string expected_result_2 = "6e258fd00c2fe9ef62bb2d80c32fdfcd5f900e42301c5e547c89ab546f4bc830";
+        const std::string expected_result_2 =
+            "6e258fd00c2fe9ef62bb2d80c32fdfcd5f900e42301c5e547c89ab546f4bc830";
         const std::string result_2 = fmt::format("{:02x}", fmt::join(digest_bytes_2, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -511,23 +528,26 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view customization_str = "example like TupleHashXOF256";
         constexpr unsigned int num_bytes_to_squeeze = L / 8;
 
-        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(X[0]) // encode_string
-            .add_encoded(X[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                                   function_name, customization_str)
+                                      .add_encoded(X[0]) // encode_string
+                                      .add_encoded(X[1]) // encode_string
+                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .squeeze_bytes(num_bytes_to_squeeze);
 
-        const auto digest_bytes_2 = Castella::Duplex(capacity_blocks, num_rounds,
-                input_suffix, function_name, customization_str)
-            .add_encoded(Y[0]) // encode_string
-            .add_encoded(Y[1]) // encode_string
-            .add(right_encode(num_bytes_to_squeeze))
-            .squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest_bytes_2 =
+            Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
+                             customization_str)
+                .add_encoded(Y[0]) // encode_string
+                .add_encoded(Y[1]) // encode_string
+                .add(right_encode(num_bytes_to_squeeze))
+                .squeeze_bytes(num_bytes_to_squeeze);
 
-        const std::string expected_result = "0e8357b8be09857df2d9d7b3be48c0683c4046d5a551003fb23df997e0d311f68ac8b528efad16f7479be58e4936c3e0a581d0b87036cec9d95abbd1bf3d4c6d";
+        const std::string expected_result =
+            "0e8357b8be09857df2d9d7b3be48c0683c4046d5a551003fb23df997e0d311f68ac8b528efad16f7479be58e4936c3e0a581d0b87036cec9d95abbd1bf3d4c6d";
         const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
-        const std::string expected_result_2 = "c3b2753967c5958cf69c423038bcb0528e8745c1d3277823d58120c53d51f90dbd6529a8b234d4d6370ddb321461ed17cddac0a01f0e09578898e145bc910eb3";
+        const std::string expected_result_2 =
+            "c3b2753967c5958cf69c423038bcb0528e8745c1d3277823d58120c53d51f90dbd6529a8b234d4d6370ddb321461ed17cddac0a01f0e09578898e145bc910eb3";
         const std::string result_2 = fmt::format("{:02x}", fmt::join(digest_bytes_2, ""));
 
         fmt::println("{:?} {:?}: {}", function_name, customization_str, result);

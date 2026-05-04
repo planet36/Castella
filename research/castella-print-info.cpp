@@ -9,11 +9,13 @@
 #include <fmt/format.h>
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
-    fmt::println("sizeof(Castella::utils::uint8x16_t) = {}", sizeof(Castella::utils::uint8x16_t));
+    fmt::println("sizeof(Castella::utils::uint8x16_t) = {}",
+                 sizeof(Castella::utils::uint8x16_t));
     fmt::println("sizeof(Castella::block_t) = {}", sizeof(Castella::block_t));
 
     fmt::println("Castella::NUM_ROUNDS_MIN = {}", Castella::NUM_ROUNDS_MIN);

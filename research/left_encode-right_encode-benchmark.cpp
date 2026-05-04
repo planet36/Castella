@@ -70,11 +70,10 @@ left_encode_3(const std::unsigned_integral auto x)
 
     const auto byte_sp = as_byte_span(x);
 
-    return std::views::concat(
-            as_byte_span(w),
-            // the least significant w bytes
-            byte_sp.subspan(0, w)
-            ) | std::ranges::to<std::vector>(); // range adaptor
+    return std::views::concat(as_byte_span(w),
+                              // the least significant w bytes
+                              byte_sp.subspan(0, w)) |
+           std::ranges::to<std::vector>(); // range adaptor
 }
 
 /// Unambiguously encode the integer into a byte string
@@ -164,10 +163,10 @@ right_encode_3(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     return std::views::concat(
-            // the least significant w bytes
-            byte_sp.subspan(0, w),
-            as_byte_span(w)
-            ) | std::ranges::to<std::vector>(); // range adaptor
+               // the least significant w bytes
+               byte_sp.subspan(0, w),
+               as_byte_span(w)) |
+           std::ranges::to<std::vector>(); // range adaptor
 }
 
 /// Unambiguously encode the integer into a byte string
@@ -232,8 +231,8 @@ template <std::unsigned_integral T>
 using func_vec_bytes_t = std::vector<std::byte> (&)(const T);
 
 template <std::unsigned_integral T>
-void BM_lr_encode_vec(benchmark::State& BM_state,
-        func_vec_bytes_t<T>& fn)
+void
+BM_lr_encode_vec(benchmark::State& BM_state, func_vec_bytes_t<T>& fn)
 {
     // Perform setup here
 
@@ -252,8 +251,8 @@ template <std::unsigned_integral T>
 using func_fvec_bytes_t = fixed_vector<std::byte, 1 + sizeof(T)> (&)(const T);
 
 template <std::unsigned_integral T>
-void BM_lr_encode_fvec(benchmark::State& BM_state,
-        func_fvec_bytes_t<T>& fn)
+void
+BM_lr_encode_fvec(benchmark::State& BM_state, func_fvec_bytes_t<T>& fn)
 {
     // Perform setup here
 
@@ -269,7 +268,8 @@ void BM_lr_encode_fvec(benchmark::State& BM_state,
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -283,7 +283,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads = std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads =
+        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
     // https://en.wikipedia.org/wiki/Elvis_operator
     //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 

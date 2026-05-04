@@ -59,7 +59,8 @@
 #endif
 
 /// The namespace for type aliases and functions used by Castella
-namespace Castella::inline utils {
+namespace Castella::inline utils
+{
 
 // {{{ aes_enc_0
 
@@ -148,7 +149,8 @@ aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 static inline uint8x16x2_t
 aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 {
-    return {aes_enc_inv(data.val[0], round_key.val[0]), aes_enc_inv(data.val[1], round_key.val[1])};
+    return {aes_enc_inv(data.val[0], round_key.val[0]),
+            aes_enc_inv(data.val[1], round_key.val[1])};
 }
 
 // }}}
@@ -330,6 +332,7 @@ transpose(std::array<__m128i, 8>& x) noexcept
     x[6] = _mm_unpacklo_epi64(ABCD_67, EFGH_67); // ABCDEFGH_6
     x[7] = _mm_unpackhi_epi64(ABCD_67, EFGH_67); // ABCDEFGH_7
 }
+
 /// Transpose \a x (treating it as a 16x16 matrix of \c uint8_t) using SSE2 intrinsics
 /**
 * \sa https://codereview.stackexchange.com/questions/295941/16x16-integer-matrix-transpose-using-sse2-intrinsics-in-c
@@ -1396,7 +1399,8 @@ private:
     * </blockquote>
     */
     // }}}
-    void init_(const std::string_view function_name, const std::string_view customization_str) noexcept
+    void init_(const std::string_view function_name,
+               const std::string_view customization_str) noexcept
     {
         // {{{
         /*

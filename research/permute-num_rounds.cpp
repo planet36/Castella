@@ -43,13 +43,15 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
         arc4random_buf(std::data(state), sizeof(state));
 
         // for each number of rounds
-        for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN;
+             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
         {
             auto permuted_state = state;
 
             Castella::permute(permuted_state, num_rounds);
 
-            assert(std::memcmp(std::data(state), std::data(permuted_state), sizeof(state)) != 0);
+            assert(std::memcmp(std::data(state), std::data(permuted_state), sizeof(state)) !=
+                   0);
 
             // for each row
             for (size_t row = 0; row < N; ++row)
@@ -65,9 +67,11 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
 
                     Castella::permute(permuted_state_p, num_rounds);
 
-                    assert(std::memcmp(std::data(state_p), std::data(permuted_state_p), sizeof(state)) != 0);
+                    assert(std::memcmp(std::data(state_p), std::data(permuted_state_p),
+                                       sizeof(state)) != 0);
 
-                    assert(std::memcmp(std::data(permuted_state), std::data(permuted_state_p), sizeof(permuted_state)) != 0);
+                    assert(std::memcmp(std::data(permuted_state), std::data(permuted_state_p),
+                                       sizeof(permuted_state)) != 0);
 
                     // count the number of bits changed
                     {
@@ -76,7 +80,8 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
                         // for each row
                         for (size_t j = 0; j < N; ++j)
                         {
-                            num_bits_changed += popcount(permuted_state[j] ^ permuted_state_p[j]);
+                            num_bits_changed +=
+                                popcount(permuted_state[j] ^ permuted_state_p[j]);
                         }
 
                         num_rounds_to_rs_num_bits_changed[num_rounds].push(num_bits_changed);
@@ -130,7 +135,8 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 

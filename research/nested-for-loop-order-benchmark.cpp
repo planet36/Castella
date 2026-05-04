@@ -52,7 +52,8 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
     for (size_t i = 0; i < std::size(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
-        Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
+        Castella::uint8x16x2_t v =
+            _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
         // repeat aes_num_rounds times
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -75,7 +76,8 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr)
     for (size_t i = 0; i < std::size(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
-        Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
+        Castella::uint8x16x2_t v =
+            _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
         // repeat aes_num_rounds times
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -131,7 +133,8 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
         for (size_t i = 0; i < std::size(arr); i += 2)
         {
             // Cast adjacent pairs of elements to uint8x16x2_t.
-            Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
+            Castella::uint8x16x2_t v =
+                _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
             v = Castella::utils::aes_enc_0(v);
 
@@ -154,7 +157,8 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr)
         for (size_t i = 0; i < std::size(arr); i += 2)
         {
             // Cast adjacent pairs of elements to uint8x16x2_t.
-            Castella::uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
+            Castella::uint8x16x2_t v =
+                _mm256_loadu_si256(reinterpret_cast<const Castella::uint8x16x2_t*>(&arr[i]));
 
             v = Castella::utils::aes_enc_0(v);
 
@@ -173,7 +177,10 @@ template <unsigned int aes_num_rounds, size_t N>
 using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
 
 template <size_t N>
-void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const unsigned int aes_num_rounds)
+void
+BM_test_f_param(benchmark::State& BM_state,
+                func_f_param_t<N>& fn,
+                const unsigned int aes_num_rounds)
 {
     // Perform setup here
 
@@ -192,7 +199,8 @@ void BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const un
 }
 
 template <unsigned int aes_num_rounds, size_t N>
-void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& fn)
+void
+BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& fn)
 {
     // Perform setup here
 
@@ -211,7 +219,8 @@ void BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, 
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -225,7 +234,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads = std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads =
+        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
     // https://en.wikipedia.org/wiki/Elvis_operator
     //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 

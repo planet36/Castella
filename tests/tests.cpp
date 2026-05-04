@@ -17,7 +17,8 @@
 #include <string_view>
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -28,8 +29,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
-        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                function_name, customization_str);
+        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
+                                  customization_str);
 
         hash_obj.add("I am so smart!  I am so smart!  S-M-R-T!  I mean S-M-A-R-T!"sv);
 
@@ -54,9 +55,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             assert(digest_bytes != digest_bytes2);
         }
 
-        hash_obj.add(
-                "To alcohol!  The cause of, and solution to, all of life's problems."sv
-                );
+        hash_obj.add("To alcohol!  The cause of, and solution to, all of life's problems."sv);
 
         {
             // Test a mute call
@@ -85,7 +84,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             // Verify that the output matches the expected result
             const auto digest_bytes = hash_obj.squeeze_bytes();
 
-            const std::string expected_result = "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
+            const std::string expected_result =
+                "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
             const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
             fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
@@ -107,7 +107,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr uint8_t num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                    function_name, customization_str);
+                                      function_name, customization_str);
 
             return 1; // unreachable
         }
@@ -122,7 +122,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr uint8_t num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                    function_name, customization_str);
+                                      function_name, customization_str);
 
             return 1; // unreachable
         }
@@ -137,7 +137,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr uint8_t num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                    function_name, customization_str);
+                                      function_name, customization_str);
 
             return 1; // unreachable
         }
@@ -152,7 +152,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr uint8_t num_rounds = Castella::NUM_ROUNDS_MIN - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                    function_name, customization_str);
+                                      function_name, customization_str);
 
             return 1; // unreachable
         }
@@ -167,7 +167,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
             constexpr uint8_t num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                    function_name, customization_str);
+                                      function_name, customization_str);
 
             return 1; // unreachable
         }
@@ -187,11 +187,11 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
-        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                function_name, customization_str);
+        Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
+                                  customization_str);
 
-        Castella::Duplex hash_obj2(capacity_blocks, num_rounds, input_suffix,
-                function_name, customization_str);
+        Castella::Duplex hash_obj2(capacity_blocks, num_rounds, input_suffix, function_name,
+                                   customization_str);
 
         std::string_view X{
             "Can you name the truck with four-wheel drive"

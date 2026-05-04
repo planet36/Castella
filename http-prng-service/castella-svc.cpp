@@ -175,11 +175,10 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
 
     std::array<std::byte, periodic_entropy_size_bytes> entropy_buf{};
 
-    static_assert(sizeof(entropy_buf) >= 8,
-            "insufficient size of entropy buffer");
+    static_assert(sizeof(entropy_buf) >= 8, "insufficient size of entropy buffer");
 
     static_assert(sizeof(entropy_buf) <= 256,
-            "getentropy will fail if more than 256 bytes are requested");
+                  "getentropy will fail if more than 256 bytes are requested");
 
     const auto pred = [] { return consec_bytes_sqzd >= max_consec_bytes_sqzd; };
 
@@ -195,8 +194,8 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         if (spdlog::should_log(spdlog::level::level_enum::trace))
         {
             // XXX: This prints the entropy data.
-            spdlog::trace("periodic add entropy: [{:02x}] ({})",
-                    fmt::join(entropy_buf, ""), sizeof(entropy_buf));
+            spdlog::trace("periodic add entropy: [{:02x}] ({})", fmt::join(entropy_buf, ""),
+                          sizeof(entropy_buf));
         }
         else
         {
@@ -244,15 +243,16 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 
         consec_bytes_sqzd = std::add_sat(consec_bytes_sqzd, std::size(digest));
 
-        res.set_content(reinterpret_cast<const char*>(std::data(digest)),
-                        std::size(digest), content_type);
+        res.set_content(reinterpret_cast<const char*>(std::data(digest)), std::size(digest),
+                        content_type);
     }
 
     cv.notify_one();
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -261,7 +261,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     // Do not create core dump files.
     if (constexpr rlimit rlim{.rlim_cur = 0, .rlim_max = 0};
-            setrlimit(RLIMIT_CORE, &rlim) == -1)
+        setrlimit(RLIMIT_CORE, &rlim) == -1)
         err(EXIT_FAILURE, "setrlimit(RLIMIT_CORE)");
 
     std::string host{default_host};
@@ -324,11 +324,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     try
     {
-        hash_obj = new Castella::Duplex(capacity_blocks,
-                                        num_rounds,
-                                        input_suffix,
-                                        function_name,
-                                        customization_str);
+        hash_obj = new Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
     }
     catch (const std::invalid_argument& ex)
     {
@@ -373,10 +370,9 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
     httplib::Server svr;
 
-    svr.Post("/absorb", [](const httplib::Request& req,
-                           [[maybe_unused]] httplib::Response& res) {
-            hash_obj->add(std::data(req.body), std::size(req.body));
-    });
+    svr.Post("/absorb",
+             [](const httplib::Request& req, [[maybe_unused]] httplib::Response& res)
+             { hash_obj->add(std::data(req.body), std::size(req.body)); });
 
     // no path parameter
     svr.Get("/squeeze", process_req_squeeze);
@@ -384,15 +380,16 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // path parameter given
     svr.Get("/squeeze/:num_bytes_to_squeeze", process_req_squeeze);
 
-    svr.set_logger([](const httplib::Request& req, const httplib::Response& res) {
+    svr.set_logger(
+        [](const httplib::Request& req, const httplib::Response& res)
+        {
+            spdlog::debug("{} {} -> {}", req.method, req.path, res.status);
 
-        spdlog::debug("{} {} -> {}", req.method, req.path, res.status);
-
-        // XXX: This prints the body data of requests & responses.
-        spdlog::trace("[{:02x}] ({}) -> [{:02x}] ({})",
+            // XXX: This prints the body data of requests & responses.
+            spdlog::trace("[{:02x}] ({}) -> [{:02x}] ({})",
                 fmt::join(std::as_bytes(std::span{req.body}), ""), std::size(req.body),
                 fmt::join(std::as_bytes(std::span{res.body}), ""), std::size(res.body));
-    });
+        });
 
     spdlog::info("Attempting to bind to http://{}:{} ...", host, port);
 
@@ -404,14 +401,15 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     }
 
     // Run the server on a separate thread.
-    std::jthread server_thread([&]() {
-
+    std::jthread server_thread(
+        [&]()
+        {
             spdlog::info("Begin listening on http://{}:{} ...", host, port);
 
             if (!svr.listen_after_bind())
                 // Not thread safe, but this is an acceptable risk.
                 errx(EXIT_FAILURE, "svr.listen_after_bind() failed");
-    });
+        });
 
     while (true)
     {

@@ -65,7 +65,8 @@ aesenc_arr(arr_256_t<N>& arr, const __m256i round_key)
 }
 
 template <typename T, size_t N>
-void BM_aesenc_arr(benchmark::State& BM_state)
+void
+BM_aesenc_arr(benchmark::State& BM_state)
 {
     // Perform setup here
 
@@ -87,7 +88,8 @@ void BM_aesenc_arr(benchmark::State& BM_state)
 }
 
 template <typename T, size_t N>
-void BM_aesenc_arr_cast(benchmark::State& BM_state)
+void
+BM_aesenc_arr_cast(benchmark::State& BM_state)
 {
     // Perform setup here
 
@@ -109,7 +111,8 @@ void BM_aesenc_arr_cast(benchmark::State& BM_state)
 }
 
 int
-main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+main([[maybe_unused]] int argc,
+     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
 {
     using namespace std::literals;
 
@@ -123,7 +126,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads = std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads =
+        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
     // https://en.wikipedia.org/wiki/Elvis_operator
     //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 
@@ -159,7 +163,7 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
         arr_128_t<N> result_1{};
         arr_128_t<N> result_2{};
-        arr_256_t<N/2> result_3{};
+        arr_256_t<N / 2> result_3{};
 
         static_assert(sizeof(result_1) == sizeof(result_2));
         static_assert(sizeof(result_1) == sizeof(result_3));
@@ -235,7 +239,8 @@ main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) // NOLINT(bugpron
 
 #include <cstdio>
 
-int main()
+int
+main()
 {
     (void)std::fputs("This benchmark is for x86_64 VAES only", stderr);
     return 0;

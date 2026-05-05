@@ -153,7 +153,7 @@ main([[maybe_unused]] int argc,
                 try
                 {
                     const auto tmp = std::stoul(optarg);
-                    num_samples = std::saturate_cast<decltype(num_samples)>(tmp);
+                    num_samples = std::saturating_cast<decltype(num_samples)>(tmp);
                 }
                 catch (const std::invalid_argument& ex)
                 {

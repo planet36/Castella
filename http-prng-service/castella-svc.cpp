@@ -224,7 +224,7 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
         {
             const auto tmp = std::stol(req.path_params.at("num_bytes_to_squeeze"));
 
-            num_bytes_to_squeeze = std::saturate_cast<decltype(num_bytes_to_squeeze)>(tmp);
+            num_bytes_to_squeeze = std::saturating_cast<decltype(num_bytes_to_squeeze)>(tmp);
         }
         catch (const std::invalid_argument& ex)
         {
@@ -296,7 +296,7 @@ main([[maybe_unused]] int argc,
                 try
                 {
                     const auto tmp = std::stol(optarg);
-                    port = std::saturate_cast<decltype(port)>(tmp);
+                    port = std::saturating_cast<decltype(port)>(tmp);
                 }
                 catch (const std::invalid_argument& ex)
                 {

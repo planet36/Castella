@@ -1,0 +1,448 @@
+// SPDX-FileCopyrightText: Steven Ward
+// SPDX-License-Identifier: MPL-2.0
+
+#include "bytes_to_hex.hpp"
+#include "castella.hpp"
+#include "fd-utils.h"
+#include "fnv.hpp"
+#include "quote_shell_always.hpp"
+#include "unique_fd.hpp"
+
+#include <algorithm>
+#include <cstdlib>
+#include <err.h>
+#include <fcntl.h>
+#include <fmt/format.h>
+#include <functional>
+#include <getopt.h>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <unistd.h>
+#include <vector>
+
+inline constexpr std::string_view program_author = "Steven Ward";
+inline constexpr std::string_view program_license = "MPL-2.0";
+inline constexpr std::string_view program_version = "2026-05-11";
+
+inline constexpr std::string_view function_name = "Castella";
+
+// {{{ default values for options
+
+inline constexpr uint8_t default_input_suffix = 1;
+
+inline constexpr uint8_t default_num_rounds = 6;
+static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN);
+static_assert(default_num_rounds <= Castella::NUM_ROUNDS_MAX);
+
+inline constexpr unsigned int min_num_bytes_to_squeeze = 1;
+inline constexpr unsigned int max_num_bytes_to_squeeze = Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
+inline constexpr unsigned int default_num_bytes_to_squeeze = max_num_bytes_to_squeeze / 2;
+static_assert(default_num_bytes_to_squeeze >= min_num_bytes_to_squeeze);
+static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
+
+inline constexpr std::string default_customization_str = "hash";
+// }}}
+
+// {{{ options
+
+bool verbose = false;
+
+uint8_t input_suffix = default_input_suffix;
+
+uint8_t num_rounds = default_num_rounds;
+
+unsigned int num_bytes_to_squeeze = default_num_bytes_to_squeeze;
+
+std::string customization_str = default_customization_str;
+
+bool use_mmap = true;
+// }}}
+
+/// Given the number of bytes to squeeze (D), get the necessary capacity (C) in blocks
+/**
+* C must be an even number.
+* <code>C = 2 × D</code>
+* \pre \a D_bytes >= \c min_num_bytes_to_squeeze
+* \pre \a D_bytes <= \c max_num_bytes_to_squeeze
+*/
+unsigned int
+num_digest_bytes_to_capacity_blocks(const unsigned int D_bytes)
+{
+    unsigned int C = 2 * D_bytes; // bytes
+
+    // div ceil
+    C = C / sizeof(Castella::block_t) + ((C % sizeof(Castella::block_t)) != 0); // blocks
+
+    // round up to nearest even number
+    C += (C % 2) != 0; // add 1 if odd
+
+    return C;
+}
+
+/// Print the version information.
+void print_version()
+{
+    fmt::println("{} {}", program_invocation_short_name, program_version);
+    fmt::println("License {}", program_license);
+    fmt::println("Written by {}", program_author);
+}
+
+/// Print the help message.
+void print_usage()
+{
+    fmt::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
+    fmt::println("");
+
+    fmt::println("Compute the Castella duplex/sponge hash.");
+    fmt::println("");
+
+    fmt::println("If FILE is absent, or when FILE is '-', read standard input.");
+    fmt::println("");
+
+    fmt::println("OPTIONS");
+    fmt::println("");
+
+    fmt::println("  -V, --version");
+    fmt::println("        Print the version information, then exit.");
+
+    fmt::println("  -h, --help");
+    fmt::println("        Print this message, then exit.");
+
+    fmt::println("  -v, --verbose");
+    fmt::println("        Print diagnostics.");
+
+    fmt::println("  --custom=STRING");
+    fmt::println("        Specify the customization string of the Castella Duplex object.");
+    fmt::println("        (default={:?})", default_customization_str);
+
+    fmt::println("  --no-mmap");
+    fmt::println("        Do not use memory mapping to read FILE.");
+
+    fmt::println("  --rounds=NUM_ROUNDS");
+    fmt::println("        Specify the number of rounds to perform in the Castella permutation function.");
+    fmt::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+            default_num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
+
+    fmt::println("  --size=SIZE");
+    fmt::println("        Specify the output size (in bytes).");
+    fmt::println("        Typical values are: 32, 48, or 64.");
+    fmt::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+            default_num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
+
+    fmt::println("  --suffix=BYTE");
+    fmt::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
+    fmt::println("        (default={:d}) (minimum=0) (maximum=255)",
+            default_input_suffix);
+
+    fmt::println("");
+
+    fmt::println("The output format is a line for each FILE with the following information:");
+    fmt::println("    digest, spaces, quoted FILE");
+    fmt::println("");
+
+    fmt::println("In this program, the capacity of the Castella Duplex object is about 2×SIZE.");
+    fmt::println("");
+
+    fmt::println("https://github.com/planet36/Castella");
+    fmt::println("https://keccak.team/sponge_duplex.html");
+}
+
+/// Process the command line options.
+/**
+* \param argc the arg count
+* \param argv the arg vector
+*/
+void process_options(int argc, char* argv[])
+{
+    using namespace std::literals;
+
+    const char* short_options = "+Vh";
+
+    constexpr int OPTION_HASH_VERSION  = static_cast<int>(fnv1a_32("version" ));
+    constexpr int OPTION_HASH_HELP     = static_cast<int>(fnv1a_32("help"    ));
+    constexpr int OPTION_HASH_VERBOSE  = static_cast<int>(fnv1a_32("verbose" ));
+    constexpr int OPTION_HASH_CUSTOM   = static_cast<int>(fnv1a_32("custom"  ));
+    constexpr int OPTION_HASH_NO_MMAP  = static_cast<int>(fnv1a_32("no-mmap" ));
+    constexpr int OPTION_HASH_ROUNDS   = static_cast<int>(fnv1a_32("rounds"  ));
+    constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
+    constexpr int OPTION_HASH_SUFFIX   = static_cast<int>(fnv1a_32("suffix"  ));
+
+    using long_option = option;
+
+    constexpr long_option long_options[] =
+    {
+        // const char*, int              , int*   , int
+        // name       , has_arg          , flag   , val
+        {"version"    , no_argument      , nullptr, OPTION_HASH_VERSION },
+        {"help"       , no_argument      , nullptr, OPTION_HASH_HELP    },
+        {"verbose"    , no_argument      , nullptr, OPTION_HASH_VERBOSE },
+        {"custom"     , required_argument, nullptr, OPTION_HASH_CUSTOM  },
+        {"no-mmap"    , no_argument      , nullptr, OPTION_HASH_NO_MMAP },
+        {"rounds"     , required_argument, nullptr, OPTION_HASH_ROUNDS  },
+        {"size"       , required_argument, nullptr, OPTION_HASH_SIZE    },
+        {"suffix"     , required_argument, nullptr, OPTION_HASH_SUFFIX  },
+        {nullptr      , 0                , nullptr, 0                   },
+    };
+
+    int c = 0;
+    while ((c = getopt_long(argc, argv, short_options, long_options, nullptr)) != -1)
+    {
+        switch (c)
+        {
+        case 'V':
+        case OPTION_HASH_VERSION:
+            print_version();
+            std::exit(EXIT_SUCCESS);
+            break;
+
+        case 'h':
+        case OPTION_HASH_HELP:
+            print_usage();
+            std::exit(EXIT_SUCCESS);
+            break;
+
+        case 'v':
+        case OPTION_HASH_VERBOSE:
+            verbose = true;
+            break;
+
+        case OPTION_HASH_CUSTOM:
+            customization_str = optarg;
+            break;
+
+        case OPTION_HASH_NO_MMAP:
+            use_mmap = false;
+            break;
+
+        case OPTION_HASH_ROUNDS:
+            try
+            {
+                const auto tmp = std::stol(optarg);
+                num_rounds = std::saturating_cast<decltype(num_rounds)>(tmp);
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
+            break;
+
+        case OPTION_HASH_SIZE:
+            try
+            {
+                const auto tmp = std::stol(optarg);
+                num_bytes_to_squeeze = std::saturating_cast<decltype(num_bytes_to_squeeze)>(tmp);
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
+            break;
+
+        case OPTION_HASH_SUFFIX:
+            try
+            {
+                const auto tmp = std::stol(optarg);
+                input_suffix = std::saturating_cast<decltype(input_suffix)>(tmp);
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
+            break;
+
+        default:
+            std::exit(EXIT_FAILURE);
+        }
+    }
+}
+
+
+// https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36
+// Gnulib uses 32768 for the buffer size
+#define BLOCKSIZE 32768
+#if BLOCKSIZE % 128 != 0
+# error "invalid BLOCKSIZE"
+#endif
+
+// helper
+/**
+* \retval true upon error
+* \retval false upon success
+*/
+bool
+process_file_read_fd(int fd, auto& hash_obj)
+{
+    std::vector<uint8_t> buf(BLOCKSIZE);
+
+    ssize_t num_bytes_read = 0;
+    // https://www.man7.org/linux/man-pages/man3/read.3p.html#RETURN_VALUE
+    // read(3p) returns either an error code or the number of bytes read
+    while ((num_bytes_read = ::read(fd, std::data(buf), std::size(buf))) > 0)
+    {
+        hash_obj.add(std::data(buf), num_bytes_read);
+    }
+
+    return num_bytes_read < 0;
+}
+
+
+#define SYSERR_PATH(PATH) \
+    std::system_error(std::make_error_code(std::errc{errno}), quote_shell_always(PATH));
+
+void
+process_file(const std::string& path, auto& hash_obj)
+{
+    const unique_fd fd{(path == "-") ? ::dup(STDIN_FILENO) : ::open(path.c_str(), O_RDONLY)};
+
+    if (!fd.ok())
+        throw SYSERR_PATH(path);
+
+    // lock file for reading
+    if (acq_read_lock_fd(fd.get()) < 0)
+        throw SYSERR_PATH(path);
+
+    if (is_seekable(fd.get()))
+    {
+        if (fadvise_sequential_noreuse(fd.get()))
+            throw SYSERR_PATH(path);
+    }
+
+    if (use_mmap)
+    {
+        const long file_size = get_file_size(fd.get());
+        if (file_size < 0)
+            throw SYSERR_PATH(path);
+
+        if (file_size < BLOCKSIZE)
+        {
+            if (process_file_read_fd(fd.get(), hash_obj))
+                throw SYSERR_PATH(path);
+            return;
+        }
+
+        const size_t mmap_size = get_mmap_size(file_size);
+
+        void* mmap_addr = ::mmap(nullptr, mmap_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);
+
+        if (mmap_addr == MAP_FAILED)
+        {
+            // mmap may have failed because the file isn't memory-mappable.
+
+            if (process_file_read_fd(fd.get(), hash_obj))
+                throw SYSERR_PATH(path);
+            return;
+        }
+
+        if (madvise_sequential_willneed(mmap_addr, file_size))
+            throw SYSERR_PATH(path);
+
+        hash_obj.add(mmap_addr, file_size);
+
+        if (::munmap(mmap_addr, mmap_size) < 0)
+            throw SYSERR_PATH(path);
+    }
+    else
+    {
+        if (process_file_read_fd(fd.get(), hash_obj))
+            throw SYSERR_PATH(path);
+    }
+}
+
+
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
+    using namespace std::literals;
+
+    int exit_status = EXIT_SUCCESS;
+
+    process_options(argc, argv);
+
+    if (verbose)
+    {
+        fmt::println(stderr, "# num_rounds={} (before clamp)", num_rounds);
+        fmt::println(stderr, "# num_bytes_to_squeeze={} (before clamp)", num_bytes_to_squeeze);
+    }
+
+    num_rounds = std::clamp(num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
+
+    num_bytes_to_squeeze = std::clamp(num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
+
+    const uint8_t capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
+
+    if (verbose)
+    {
+        fmt::println(stderr, "# num_rounds={} (after clamp)", num_rounds);
+        fmt::println(stderr, "# num_bytes_to_squeeze={} (after clamp)", num_bytes_to_squeeze);
+        fmt::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
+        fmt::println(stderr, "# input_suffix={:d}", input_suffix);
+        fmt::println(stderr, "# function_name={:?}", function_name);
+        fmt::println(stderr, "# customization_str={:?}", customization_str);
+    }
+
+    std::vector<std::string> paths;
+
+    for (int i = optind; i < argc; ++i)
+    {
+        paths.push_back(argv[i]);
+    }
+
+    if (paths.empty())
+    {
+        paths.push_back("-"); // stdin
+    }
+
+    for (const auto& path : paths)
+    {
+        try
+        {
+            Castella::Duplex hash_obj(capacity_blocks, num_rounds,
+                    std::byte{input_suffix}, function_name, customization_str);
+
+            if (verbose)
+            {
+                fmt::println(stderr, "# processing file {:?}", path);
+            }
+
+            process_file(path, hash_obj);
+
+            const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
+
+            fmt::println("{}  {}", bytes_to_hex(digest_bytes), path);
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            (void)std::fflush(stdout);
+            warnx("invalid argument: %s", ex.what());
+            exit_status = EXIT_FAILURE;
+            break;
+        }
+        catch (const std::system_error& ex)
+        {
+            (void)std::fflush(stdout);
+            warnx("%s", ex.what());
+            exit_status = EXIT_FAILURE;
+        }
+    }
+
+    return exit_status;
+}

@@ -205,7 +205,7 @@ public:
 
     compress_castella_hash() = default;
 
-    compress_castella_hash(const decltype(mix_rate_) mix_rate) : mix_rate_{
+    explicit compress_castella_hash(const decltype(mix_rate_) mix_rate) : mix_rate_{
             std::clamp(mix_rate, MIX_RATE_MIN, MIX_RATE_MAX)}
     {
     }

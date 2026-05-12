@@ -114,13 +114,12 @@ void process_options(int argc, char* argv[])
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
     constexpr long_option long_options[] =
     {
-        // const char*, int              , int*   , int
-        // name       , has_arg          , flag   , val
-        {"version"    , no_argument      , nullptr, OPTION_HASH_VERSION },
-        {"help"       , no_argument      , nullptr, OPTION_HASH_HELP    },
-        {"no-mmap"    , no_argument      , nullptr, OPTION_HASH_NO_MMAP },
-        {"size"       , required_argument, nullptr, OPTION_HASH_SIZE    },
-        {nullptr      , 0                , nullptr, 0                   },
+        // const char*      , int                       , int*         , int
+        {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
+        {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
+        {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP },
+        {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE    },
+        {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                   },
     };
 
     int c = 0;

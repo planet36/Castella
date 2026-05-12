@@ -124,7 +124,7 @@ void process_options(int argc, char* argv[])
     };
 
     int c = 0;
-    while ((c = getopt_long(argc, argv, short_options, long_options, nullptr)) != -1)
+    while ((c = getopt_long(argc, argv, short_options, &long_options[0], nullptr)) != -1)
     {
         switch (c)
         {

@@ -45,7 +45,7 @@ is_seekable(const int fd)
 static inline off_t
 get_file_size(const int fd)
 {
-    struct stat statbuf;
+    struct stat statbuf = {};
 
     if (fstat(fd, &statbuf) < 0)
         return -1;

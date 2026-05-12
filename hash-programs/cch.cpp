@@ -105,8 +105,8 @@ void process_options(int argc, char* argv[])
 
     constexpr int OPTION_HASH_VERSION  = static_cast<int>(fnv1a_32("version" ));
     constexpr int OPTION_HASH_HELP     = static_cast<int>(fnv1a_32("help"    ));
-    constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
     constexpr int OPTION_HASH_NO_MMAP  = static_cast<int>(fnv1a_32("no-mmap" ));
+    constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
 
     using long_option = option;
 
@@ -116,8 +116,8 @@ void process_options(int argc, char* argv[])
         // name       , has_arg          , flag   , val
         {"version"    , no_argument      , nullptr, OPTION_HASH_VERSION },
         {"help"       , no_argument      , nullptr, OPTION_HASH_HELP    },
-        {"size"       , required_argument, nullptr, OPTION_HASH_SIZE    },
         {"no-mmap"    , no_argument      , nullptr, OPTION_HASH_NO_MMAP },
+        {"size"       , required_argument, nullptr, OPTION_HASH_SIZE    },
         {nullptr      , 0                , nullptr, 0                   },
     };
 
@@ -138,6 +138,10 @@ void process_options(int argc, char* argv[])
             std::exit(EXIT_SUCCESS);
             break;
 
+        case OPTION_HASH_NO_MMAP:
+            use_mmap = false;
+            break;
+
         case OPTION_HASH_SIZE:
             try
             {
@@ -154,10 +158,6 @@ void process_options(int argc, char* argv[])
                 (void)std::fflush(stdout);
                 errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
             }
-            break;
-
-        case OPTION_HASH_NO_MMAP:
-            use_mmap = false;
             break;
 
         default:

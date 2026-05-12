@@ -210,6 +210,13 @@ public:
     {
     }
 
+    // Disable copying and moving
+    // https://stackoverflow.com/a/38820178
+    compress_castella_hash(const compress_castella_hash&) = delete;
+    compress_castella_hash& operator=(const compress_castella_hash&) = delete;
+    compress_castella_hash(compress_castella_hash&&) = delete;
+    compress_castella_hash& operator=(compress_castella_hash&&) = delete;
+
     ~compress_castella_hash()
     {
         std::scoped_lock lock{mtx_};

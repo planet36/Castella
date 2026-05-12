@@ -271,12 +271,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     for (int i = optind; i < argc; ++i)
     {
-        paths.push_back(argv[i]);
+        paths.emplace_back(argv[i]);
     }
 
     if (paths.empty())
     {
-        paths.push_back("-"); // stdin
+        paths.emplace_back("-"); // stdin
     }
 
     for (const auto& path : paths)

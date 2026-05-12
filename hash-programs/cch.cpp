@@ -97,6 +97,7 @@ void print_usage()
 * \param argc the arg count
 * \param argv the arg vector
 */
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
 void process_options(int argc, char* argv[])
 {
     using namespace std::literals;
@@ -110,6 +111,7 @@ void process_options(int argc, char* argv[])
 
     using long_option = option;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
     constexpr long_option long_options[] =
     {
         // const char*, int              , int*   , int
@@ -169,6 +171,7 @@ void process_options(int argc, char* argv[])
 
 // https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36
 // Gnulib uses 32768 for the buffer size
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define BLOCKSIZE 32768
 #if BLOCKSIZE % 128 != 0
 # error "invalid BLOCKSIZE"
@@ -196,6 +199,7 @@ process_file_read_fd(int fd, auto& hash_obj)
 }
 
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define SYSERR_PATH(PATH) \
     std::system_error(std::make_error_code(std::errc{errno}), quote_shell_always(PATH));
 

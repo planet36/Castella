@@ -89,9 +89,8 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
             );
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

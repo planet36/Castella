@@ -32,9 +32,8 @@ BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
     benchmark::DoNotOptimize(a);
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

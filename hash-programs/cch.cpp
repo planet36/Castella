@@ -259,9 +259,8 @@ process_file(const std::string& path, auto& hash_obj)
 }
 
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

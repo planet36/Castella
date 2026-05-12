@@ -250,9 +250,8 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
     cv.notify_one();
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

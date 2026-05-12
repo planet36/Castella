@@ -30,9 +30,8 @@ BM_permute(benchmark::State& BM_state, const unsigned int num_rounds)
     benchmark::DoNotOptimize(state);
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

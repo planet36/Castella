@@ -218,9 +218,8 @@ BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& f
     benchmark::DoNotOptimize(arr);
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

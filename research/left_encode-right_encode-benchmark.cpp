@@ -267,9 +267,8 @@ BM_lr_encode_fvec(benchmark::State& BM_state, func_fvec_bytes_t<T>& fn)
     }
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

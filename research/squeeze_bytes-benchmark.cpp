@@ -200,9 +200,8 @@ BM_squeeze_bytes(benchmark::State& BM_state, func_t<T, N>& fn)
     benchmark::DoNotOptimize(state);
 }
 
-int
-main([[maybe_unused]] int argc,
-     [[maybe_unused]] char* argv[]) // NOLINT(bugprone-exception-escape)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 

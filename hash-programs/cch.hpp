@@ -41,7 +41,7 @@
 */
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
-void
+static void
 arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
     for (size_t i = 0; i < N; i += 2)

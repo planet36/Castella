@@ -13,7 +13,6 @@
 #include <err.h>
 #include <fcntl.h>
 #include <fmt/format.h>
-#include <functional>
 #include <getopt.h>
 #include <numeric>
 #include <stdexcept>

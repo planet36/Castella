@@ -15,19 +15,15 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #if defined(DEBUG)
 #include <cassert>
 #endif
 #include <cstddef>
 #include <cstdint>
-#include <immintrin.h>
 #include <limits>
 #include <mutex>
 #include <span>
 #include <stdexcept>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #pragma GCC diagnostic push

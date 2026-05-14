@@ -8,7 +8,6 @@
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 
-#include <algorithm>
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>

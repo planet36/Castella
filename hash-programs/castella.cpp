@@ -222,6 +222,12 @@ void process_options(int argc, char* argv[])
             {
                 const auto tmp = std::stol(optarg);
                 num_rounds = std::saturating_cast<decltype(num_rounds)>(tmp);
+
+                if (num_rounds < Castella::NUM_ROUNDS_MIN ||
+                    num_rounds > Castella::NUM_ROUNDS_MAX)
+                {
+                    throw std::invalid_argument("--rounds");
+                }
             }
             catch (const std::invalid_argument& ex)
             {
@@ -240,6 +246,12 @@ void process_options(int argc, char* argv[])
             {
                 const auto tmp = std::stol(optarg);
                 num_bytes_to_squeeze = std::saturating_cast<decltype(num_bytes_to_squeeze)>(tmp);
+
+                if (num_bytes_to_squeeze < min_num_bytes_to_squeeze ||
+                    num_bytes_to_squeeze > max_num_bytes_to_squeeze)
+                {
+                    throw std::invalid_argument("--size");
+                }
             }
             catch (const std::invalid_argument& ex)
             {
@@ -381,22 +393,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     process_options(argc, argv);
 
-    if (verbose)
-    {
-        fmt::println(stderr, "# num_rounds={} (before clamp)", num_rounds);
-        fmt::println(stderr, "# num_bytes_to_squeeze={} (before clamp)", num_bytes_to_squeeze);
-    }
-
-    num_rounds = std::clamp(num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
-
-    num_bytes_to_squeeze = std::clamp(num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
-
     const uint8_t capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
 
     if (verbose)
     {
-        fmt::println(stderr, "# num_rounds={} (after clamp)", num_rounds);
-        fmt::println(stderr, "# num_bytes_to_squeeze={} (after clamp)", num_bytes_to_squeeze);
+        fmt::println(stderr, "# num_rounds={}", num_rounds);
+        fmt::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
         fmt::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
         fmt::println(stderr, "# input_suffix={:d}", input_suffix);
         fmt::println(stderr, "# function_name={:?}", function_name);

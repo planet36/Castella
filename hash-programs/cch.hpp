@@ -291,7 +291,7 @@ public:
 
     [[nodiscard]] constexpr static unsigned int get_state_size_bytes() noexcept { return sizeof(state_); }
 
-    [[nodiscard]] constexpr static unsigned int get_max_digest_size_bytes() noexcept { return sizeof(state_) / 2; }
+    [[nodiscard]] constexpr static unsigned int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 2; }
 
     [[nodiscard]] constexpr auto get_mix_rate() const noexcept { return mix_rate_; }
 };

@@ -246,7 +246,7 @@ arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
 
 // }}}
 
-// {{{ transpose
+// {{{ simd_transpose
 
 #if defined(__x86_64__)
 
@@ -257,7 +257,7 @@ arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using SSE2 intrinsics
 static void
-transpose(std::array<__m128i, 2>& x) noexcept
+simd_transpose(std::array<__m128i, 2>& x) noexcept
 {
     const __m128i AB_0 = _mm_unpacklo_epi64(x[0], x[1]);
     const __m128i AB_1 = _mm_unpackhi_epi64(x[0], x[1]);
@@ -271,7 +271,7 @@ transpose(std::array<__m128i, 2>& x) noexcept
 * \sa https://randombit.net/bitbashing/posts/integer_matrix_transpose_in_sse2.html
 */
 static void
-transpose(std::array<__m128i, 4>& x) noexcept
+simd_transpose(std::array<__m128i, 4>& x) noexcept
 {
     const __m128i AB_01 = _mm_unpacklo_epi32(x[0], x[1]);
     const __m128i AB_23 = _mm_unpackhi_epi32(x[0], x[1]);
@@ -289,7 +289,7 @@ transpose(std::array<__m128i, 4>& x) noexcept
 * \sa https://stackoverflow.com/a/4951060/1892784
 */
 static void
-transpose(std::array<__m128i, 8>& x) noexcept
+simd_transpose(std::array<__m128i, 8>& x) noexcept
 {
     const __m128i AB_03 = _mm_unpacklo_epi16(x[0], x[1]);
     const __m128i AB_47 = _mm_unpackhi_epi16(x[0], x[1]);
@@ -324,7 +324,7 @@ transpose(std::array<__m128i, 8>& x) noexcept
 * \sa https://codereview.stackexchange.com/questions/295941/16x16-integer-matrix-transpose-using-sse2-intrinsics-in-c
 */
 static void
-transpose(std::array<__m128i, 16>& x) noexcept
+simd_transpose(std::array<__m128i, 16>& x) noexcept
 {
     const __m128i AB_07 = _mm_unpacklo_epi8(x[0x0], x[0x1]);
     const __m128i AB_8f = _mm_unpackhi_epi8(x[0x0], x[0x1]);
@@ -405,7 +405,7 @@ transpose(std::array<__m128i, 16>& x) noexcept
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint64x2_t, 2>& x) noexcept
+simd_transpose(std::array<uint64x2_t, 2>& x) noexcept
 {
     const uint64x2_t AB_0 = vzip1q_u64(x[0], x[1]);
     const uint64x2_t AB_1 = vzip2q_u64(x[0], x[1]);
@@ -416,7 +416,7 @@ transpose(std::array<uint64x2_t, 2>& x) noexcept
 
 /// Transpose \a x (treating it as a 4x4 matrix of \c uint32_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint32x4_t, 4>& x) noexcept
+simd_transpose(std::array<uint32x4_t, 4>& x) noexcept
 {
     const uint32x4_t AB_01 = vzip1q_u32(x[0], x[1]);
     const uint32x4_t AB_23 = vzip2q_u32(x[0], x[1]);
@@ -436,7 +436,7 @@ transpose(std::array<uint32x4_t, 4>& x) noexcept
 
 /// Transpose \a x (treating it as a 8x8 matrix of \c uint16_t) using ARM Neon intrinsics
 static void
-transpose(std::array<uint16x8_t, 8>& x) noexcept
+simd_transpose(std::array<uint16x8_t, 8>& x) noexcept
 {
     const uint16x8_t AB_03 = vzip1q_u16(x[0], x[1]);
     const uint16x8_t AB_47 = vzip2q_u16(x[0], x[1]);
@@ -480,7 +480,7 @@ transpose(std::array<uint16x8_t, 8>& x) noexcept
 * \sa https://codereview.stackexchange.com/questions/301656/16x16-byte-matrix-transpose-using-arm-neon-intrinsics-in-c
 */
 static void
-transpose(std::array<uint8x16_t, 16>& x) noexcept
+simd_transpose(std::array<uint8x16_t, 16>& x) noexcept
 {
     const uint8x16_t AB_07 = vzip1q_u8(x[0x0], x[0x1]);
     const uint8x16_t AB_8f = vzip2q_u8(x[0x0], x[0x1]);
@@ -741,7 +741,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     {
         state[0] ^= rc;
         arr_aes_enc_0<aes_num_rounds>(state);
-        transpose(state);
+        simd_transpose(state);
     }
 }
 
@@ -777,7 +777,7 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {
-        transpose(state);
+        simd_transpose(state);
         arr_aes_enc_0_inv<aes_num_rounds>(state);
         state[0] ^= rc;
     }

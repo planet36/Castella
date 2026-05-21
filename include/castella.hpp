@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "byte_width.hpp"
 #include "simd_types.hpp"
 
 #include <algorithm>
@@ -590,17 +591,6 @@ simd_load16(const void* src) noexcept
     uint8x16_t dst{};
     (void)std::memcpy(&dst, src, sizeof(dst));
     return dst;
-}
-
-/// Get the byte width of an unsigned integer
-static constexpr unsigned int
-byte_width(const std::unsigned_integral auto x) noexcept
-{
-    // std::bit_width(0) returns 0, but we want it to be 1
-    if (x == 0)
-        return 1;
-    const auto w = static_cast<unsigned int>(std::bit_width(x));
-    return (w / 8) + (w % 8 != 0);
 }
 
 }

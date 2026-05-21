@@ -24,7 +24,7 @@ right_encode(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = static_cast<uint8_t>(Castella::utils::byte_width(x));
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     const auto byte_sp = as_byte_span(x);
 

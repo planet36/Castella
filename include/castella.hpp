@@ -585,7 +585,7 @@ transpose(std::array<uint8x16_t, 16>& x) noexcept
 */
 // }}}
 static inline uint8x16_t
-load16(const void* src) noexcept
+simd_load16(const void* src) noexcept
 {
     uint8x16_t dst{};
     (void)std::memcpy(&dst, src, sizeof(dst));
@@ -656,7 +656,7 @@ create_round_constants() noexcept
     arr_blocks<N> result;
 
     // It's a perfectly cromulent initial value.
-    const auto rc_0 = load16("expand 16-byte c");
+    const auto rc_0 = simd_load16("expand 16-byte c");
 
     result[0] = rc_0;
 

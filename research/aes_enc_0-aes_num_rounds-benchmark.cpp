@@ -15,7 +15,7 @@ BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
 {
     // Perform setup here
 
-    Castella::utils::uint8x16_t a;
+    uint8x16_t a;
     arc4random_buf(&a, sizeof(a));
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)

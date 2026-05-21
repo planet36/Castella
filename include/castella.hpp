@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "simd_types.hpp"
+
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -50,14 +52,6 @@
 #include <type_traits>
 #include <vector>
 
-#if defined(__x86_64__) && defined(__AES__)
-#include <immintrin.h>
-#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
-#include <arm_neon.h>
-#else
-#error "Architecture not supported"
-#endif
-
 /// The namespace for type aliases and functions used by Castella
 namespace Castella::inline utils
 {
@@ -67,14 +61,6 @@ namespace Castella::inline utils
 #if defined(__x86_64__) && defined(__AES__)
 
 // {{{ x86_64
-
-using uint8x16_t = __m128i;
-
-#if defined(__AVX__)
-
-using uint8x16x2_t = __m256i;
-
-#endif
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
 static inline uint8x16_t

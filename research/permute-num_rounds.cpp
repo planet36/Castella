@@ -8,9 +8,9 @@
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
 
 #include "castella-permute.hpp"
-#include "popcount.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
+#include "simd_popcount.hpp"
 
 #include <cassert>
 #include <cmath>

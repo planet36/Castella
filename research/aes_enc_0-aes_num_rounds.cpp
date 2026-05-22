@@ -5,9 +5,9 @@
 #undef NDEBUG
 
 #include "aes.hpp"
-#include "popcount.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
+#include "simd_popcount.hpp"
 
 #include <cmath>
 #include <cstdlib>

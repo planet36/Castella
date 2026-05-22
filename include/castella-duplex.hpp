@@ -448,7 +448,7 @@ private:
 #endif
 
         const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
-        const size_t num_bytes_to_add = available_space;
+        const auto num_bytes_to_add = available_space;
 
 #if defined(DEBUG)
         assert(available_space > 0);
@@ -469,7 +469,7 @@ private:
 
         input_bytes[cur_input_byte_idx_] = first_padding_byte_pattern;
 
-        const size_t last_input_byte_idx = get_rate_size_bytes() - 1;
+        const auto last_input_byte_idx = get_rate_size_bytes() - 1;
 
         // {{{
         /*
@@ -501,7 +501,7 @@ private:
 #endif
 
             const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
-            const size_t num_bytes_to_add = std::min(available_space, len);
+            const auto num_bytes_to_add = std::min(available_space, len);
 
 #if defined(DEBUG)
             assert(available_space > 0);

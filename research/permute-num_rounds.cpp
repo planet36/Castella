@@ -57,7 +57,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
             for (size_t row = 0; row < N; ++row)
             {
                 // for each bitmask
-                for (const auto& bitmask : bitmask128_arr)
+                for (const auto& bitmask : simd_bitmask128_arr)
                 {
                     auto state_p = state; // will have 1 bit changed
 

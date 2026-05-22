@@ -39,7 +39,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
         }
 
         // for each bitmask
-        for (const auto& bitmask : bitmask128_arr)
+        for (const auto& bitmask : simd_bitmask128_arr)
         {
             const auto data_p = data ^ bitmask; // will have 1 bit changed
 

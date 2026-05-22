@@ -81,7 +81,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
                         for (size_t j = 0; j < N; ++j)
                         {
                             num_bits_changed +=
-                                popcount(permuted_state[j] ^ permuted_state_p[j]);
+                                simd_popcount(permuted_state[j] ^ permuted_state_p[j]);
                         }
 
                         num_rounds_to_rs_num_bits_changed[num_rounds].push(num_bits_changed);

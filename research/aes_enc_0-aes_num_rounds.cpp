@@ -53,7 +53,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
 
             {
                 // count the number of bits changed
-                const unsigned int num_bits_changed = popcount(result ^ result_p);
+                const unsigned int num_bits_changed = simd_popcount(result ^ result_p);
 
                 rs_num_bits_changed.push(num_bits_changed);
             }

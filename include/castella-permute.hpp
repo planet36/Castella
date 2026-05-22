@@ -155,7 +155,7 @@ permute(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
         state[0] ^= rc;
-        arr_aes_enc_0<aes_num_rounds>(state);
+        aes_enc_0_arr<aes_num_rounds>(state);
         simd_transpose(state);
     }
 }

@@ -12,8 +12,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <err.h>
-#include <fmt/format.h>
 #include <numeric>
+#include <print>
 #include <string>
 #include <unistd.h>
 
@@ -70,7 +70,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
 
     const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / bits;
 
-    fmt::println("{:2d}:"
+    std::println("{:2d}:"
             "\t{:.3f}"
             "\t{:.3f}"
             "\t{:.1f}%"
@@ -128,11 +128,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     if (num_samples < 1) // NOLINT(readability-use-std-min-max)
         num_samples = 1;
 
-    fmt::println("## num_samples: {}", num_samples);
-    fmt::println("");
+    std::println("## num_samples: {}", num_samples);
+    std::println("");
 
-    fmt::println("aes_enc_0");
-    fmt::println("Nr:"
+    std::println("aes_enc_0");
+    std::println("Nr:"
             "\tmean"
             "\tΔ"
             "\tdiff.%"

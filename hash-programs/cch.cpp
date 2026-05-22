@@ -11,9 +11,9 @@
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
-#include <fmt/format.h>
 #include <getopt.h>
 #include <numeric>
+#include <print>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -22,7 +22,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-11";
+inline constexpr std::string_view program_version = "2026-05-22";
 
 // {{{ default values for options
 inline constexpr unsigned int default_digest_size_bytes = 32;
@@ -37,58 +37,58 @@ bool use_mmap = true;
 /// Print the version information.
 void print_version()
 {
-    fmt::println("{} {}", program_invocation_short_name, program_version);
-    fmt::println("License {}", program_license);
-    fmt::println("Written by {}", program_author);
+    std::println("{} {}", program_invocation_short_name, program_version);
+    std::println("License {}", program_license);
+    std::println("Written by {}", program_author);
 }
 
 /// Print the help message.
 void print_usage()
 {
-    fmt::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
-    fmt::println("");
+    std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
+    std::println("");
 
-    fmt::println("Compute the Compress-Castella hash (CCH).");
+    std::println("Compute the Compress-Castella hash (CCH).");
 
-    fmt::println("If FILE is absent, or when FILE is '-', read standard input.");
-    fmt::println("");
+    std::println("If FILE is absent, or when FILE is '-', read standard input.");
+    std::println("");
 
-    fmt::println("OPTIONS");
-    fmt::println("");
+    std::println("OPTIONS");
+    std::println("");
 
-    fmt::println("  -V, --version");
-    fmt::println("        Print the version information, then exit.");
+    std::println("  -V, --version");
+    std::println("        Print the version information, then exit.");
 
-    fmt::println("  -h, --help");
-    fmt::println("        Print this message, then exit.");
+    std::println("  -h, --help");
+    std::println("        Print this message, then exit.");
 
-    fmt::println("  --no-mmap");
-    fmt::println("        Do not use memory mapping to read FILE.");
+    std::println("  --no-mmap");
+    std::println("        Do not use memory mapping to read FILE.");
 
-    fmt::println("  --size=SIZE");
-    fmt::println("        Specify the output size (in bytes).");
-    fmt::println("        Typical values are: 32, 48, or 64.");
-    fmt::println("        SIZE is clamped to {} bytes.",
+    std::println("  --size=SIZE");
+    std::println("        Specify the output size (in bytes).");
+    std::println("        Typical values are: 32, 48, or 64.");
+    std::println("        SIZE is clamped to {} bytes.",
             compress_castella_hash<>::get_max_digest_size_bytes());
-    fmt::println("        (default={})", default_digest_size_bytes);
+    std::println("        (default={})", default_digest_size_bytes);
 
-    fmt::println("");
+    std::println("");
 
-    fmt::println("The output format is a line for each FILE with the following information:");
-    fmt::println("    digest, spaces, quoted FILE");
-    fmt::println("");
+    std::println("The output format is a line for each FILE with the following information:");
+    std::println("    digest, spaces, quoted FILE");
+    std::println("");
 
-    fmt::println("CCH ALGORITHM DESCRIPTION");
-    fmt::println("");
+    std::println("CCH ALGORITHM DESCRIPTION");
+    std::println("");
 
-    fmt::println("Input data is absorbed into the internal state via a one-way compression function.");
-    fmt::println("The internal state is mixed by the Castella permutation function every {} bytes of input, ensuring full state diffusion.", compress_castella_hash<>::DEFAULT_MIX_RATE);
-    fmt::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");
-    fmt::println("The Castella permutation function is then applied to the state to produce the digest.");
-    fmt::println("");
+    std::println("Input data is absorbed into the internal state via a one-way compression function.");
+    std::println("The internal state is mixed by the Castella permutation function every {} bytes of input, ensuring full state diffusion.", compress_castella_hash<>::DEFAULT_MIX_RATE);
+    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");
+    std::println("The Castella permutation function is then applied to the state to produce the digest.");
+    std::println("");
 
-    fmt::println("https://github.com/planet36/Castella");
-    fmt::println("https://en.wikipedia.org/wiki/One-way_compression_function");
+    std::println("https://github.com/planet36/Castella");
+    std::println("https://en.wikipedia.org/wiki/One-way_compression_function");
 }
 
 /// Process the command line options.
@@ -292,7 +292,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes = hash_obj.final_digest_bytes(digest_size_bytes);
 
-            fmt::println("{}  {}", bytes_to_hex(digest_bytes), path);
+            std::println("{}  {}", bytes_to_hex(digest_bytes), path);
         }
         catch (const std::invalid_argument& ex)
         {

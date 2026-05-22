@@ -15,7 +15,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <fmt/format.h>
+#include <print>
 #include <string>
 #include <string_view>
 
@@ -67,7 +67,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "04f9fd9be1ac38ee90073bc0ec1770113f02cc7eb8c498b0d299793a1ee39f12";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -114,7 +114,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "cb37b98f7acff99c34fb249d335f0e93ca061db25260851227c2a2f1fed998ca";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -148,7 +148,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "f3b2108eeae484d2a76457b83db0b845c6db1df9736200cfd0a93ae8f294f557851266f82769225f4121f880aa9056f198fcbbddd9b3bcf016de53692c4a9806";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -205,7 +205,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "c1917d4675a8e99a51653e3719250f3b0a2748b22721045f425aea61103c53e1";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -243,7 +243,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "eda4e139d791be97c023268676e5b8235b16c447d9c6fa8bf2f0d277bea6a9c448611da82dd7be8282a13647457d18ff15291e42eeea908207ed1c332900042d";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -281,7 +281,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "0c41dccc4df8df33f708ab769dea96fa40312850b7f75d4bef28e1b8d11328ed";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -319,7 +319,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "7001afa5c2dde59c9956c0590807fe16726f1795d567dc778ec9f8b20d9d63133ca91acf43fde4668d26f06434432a7f4ef5211ca958296fdae7f9eed9ea5b0d";
         const std::string result = bytes_to_hex(digest_bytes);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
         if (validate)
         {
@@ -383,8 +383,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "c7f4e170438fdde9427fc3f329e220cb8bf5e6f867f892aad343545da1cbc5df";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
 
         if (validate)
         {
@@ -439,8 +439,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "f0a0ff5dfbd7f6c00d6c277d4992d110380b61bf37fc4643eb1180d9f1d9c3c4230b5e58aebe394f5a671b7b3e66b43ed0e87931f14bd010650a657503217275";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
 
         if (validate)
         {
@@ -495,8 +495,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "6e258fd00c2fe9ef62bb2d80c32fdfcd5f900e42301c5e547c89ab546f4bc830";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
 
         if (validate)
         {
@@ -551,8 +551,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "c3b2753967c5958cf69c423038bcb0528e8745c1d3277823d58120c53d51f90dbd6529a8b234d4d6370ddb321461ed17cddac0a01f0e09578898e145bc910eb3";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
-        fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result_2);
 
         if (validate)
         {

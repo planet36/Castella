@@ -28,9 +28,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
-#include <fmt/format.h>
 #include <mutex>
 #include <numeric>
+#include <print>
 #include <span>
 #include <string>
 #include <string_view>
@@ -84,9 +84,9 @@ get_default_num_bytes_to_squeeze()
 void
 print_version()
 {
-    fmt::println("{} {}", program_invocation_short_name, program_version);
-    fmt::println("License {}", program_license);
-    fmt::println("Written by {}", program_author);
+    std::println("{} {}", program_invocation_short_name, program_version);
+    std::println("License {}", program_license);
+    std::println("Written by {}", program_author);
 }
 
 /// Print the help message.
@@ -95,77 +95,77 @@ print_usage()
 {
 #define nl (void)std::putchar('\n')
 
-    fmt::println("Usage: {} [OPTION]... [HOST]", program_invocation_short_name);
+    std::println("Usage: {} [OPTION]... [HOST]", program_invocation_short_name);
     nl;
 
-    fmt::println("Start a Castella HTTP PRNG service.  Send SIGINT to stop it.");
+    std::println("Start a Castella HTTP PRNG service.  Send SIGINT to stop it.");
     nl;
 
-    fmt::println(R"(The server endpoints are "absorb" and "squeeze", just like for a sponge/duplex construction.)");
+    std::println(R"(The server endpoints are "absorb" and "squeeze", just like for a sponge/duplex construction.)");
     nl;
 
-    fmt::println(R"(All occurrences of "entropy" refer to high-quality entropy from getentropy(3).)");
+    std::println(R"(All occurrences of "entropy" refer to high-quality entropy from getentropy(3).)");
     nl;
 
-    fmt::println("Entropy is added to the Castella service after any of these conditions:");
-    fmt::println("  1) {}s elapsed since entropy was added.", period_sec);
-    fmt::println("  2) {} bytes were squeezed since entropy was added.",
+    std::println("Entropy is added to the Castella service after any of these conditions:");
+    std::println("  1) {}s elapsed since entropy was added.", period_sec);
+    std::println("  2) {} bytes were squeezed since entropy was added.",
             max_consec_bytes_sqzd);
     nl;
 
-    fmt::println("OPTIONS");
+    std::println("OPTIONS");
     nl;
 
-    fmt::println("  -V         Print the version information, then exit.");
+    std::println("  -V         Print the version information, then exit.");
     nl;
 
-    fmt::println("  -h         Print this message, then exit.");
+    std::println("  -h         Print this message, then exit.");
     nl;
 
-    fmt::println("  -l LEVEL   Specify the log level.  (default={})",
+    std::println("  -l LEVEL   Specify the log level.  (default={})",
             quote_shell_always(std::string_view{spdlog::level::to_string_view(default_log_level)}));
-    fmt::println("             Valid log levels are:");
-    fmt::println("                 {}", str_join(std::to_array(SPDLOG_LEVEL_NAMES), ", "));
-    fmt::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
-    fmt::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
-    fmt::println("                 - The periodic entropy data added to the Castella hash object");
-    fmt::println("                 - The body data of requests & responses");
+    std::println("             Valid log levels are:");
+    std::println("                 {}", str_join(std::to_array(SPDLOG_LEVEL_NAMES), ", "));
+    std::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
+    std::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
+    std::println("                 - The periodic entropy data added to the Castella hash object");
+    std::println("                 - The body data of requests & responses");
     nl;
 
-    fmt::println("  -p PORT    Specify the port.  (default={:d})", default_port);
+    std::println("  -p PORT    Specify the port.  (default={:d})", default_port);
     nl;
 
-    fmt::println("The default HOST is {}.", quote_shell_always(default_host));
+    std::println("The default HOST is {}.", quote_shell_always(default_host));
     nl;
 
-    fmt::println("EXAMPLES");
+    std::println("EXAMPLES");
     nl;
 
-    fmt::println("Squeeze 32 bytes from the Castella service:");
-    fmt::println(R"(    curl --show-error --silent "http://{}:{}/squeeze/32" )"
+    std::println("Squeeze 32 bytes from the Castella service:");
+    std::println(R"(    curl --show-error --silent "http://{}:{}/squeeze/32" )"
             "| basenc --wrap=0 --base58", default_host, default_port);
     nl;
 
-    fmt::println("Squeeze bytes (default={}) from the Castella service:",
+    std::println("Squeeze bytes (default={}) from the Castella service:",
             get_default_num_bytes_to_squeeze());
-    fmt::println(R"(    curl --show-error --silent "http://{}:{}/squeeze" )"
+    std::println(R"(    curl --show-error --silent "http://{}:{}/squeeze" )"
             "| basenc --wrap=0 --base58", default_host, default_port);
-    fmt::println("The default number is equal to half the capacity of the Castella service.");
+    std::println("The default number is equal to half the capacity of the Castella service.");
     nl;
 
-    fmt::println("Send data to the Castella service to be absorbed:");
-    fmt::println("    head --bytes=32 /dev/urandom | curl --data-binary @- "
+    std::println("Send data to the Castella service to be absorbed:");
+    std::println("    head --bytes=32 /dev/urandom | curl --data-binary @- "
             R"(--header "Content-Type: application/octet-stream" )"
             R"("http://{}:{}/absorb")", default_host, default_port);
     nl;
 
-    fmt::println("REFERENCES");
+    std::println("REFERENCES");
     nl;
 
-    fmt::println("Castella : https://github.com/planet36/Castella");
-    fmt::println("HTTP server : https://github.com/yhirose/cpp-httplib");
-    fmt::println("Logger : https://github.com/gabime/spdlog");
-    fmt::println("Sponge/Duplex construction : https://keccak.team/sponge_duplex.html");
+    std::println("Castella : https://github.com/planet36/Castella");
+    std::println("HTTP server : https://github.com/yhirose/cpp-httplib");
+    std::println("Logger : https://github.com/gabime/spdlog");
+    std::println("Sponge/Duplex construction : https://keccak.team/sponge_duplex.html");
     nl;
 
 #undef nl

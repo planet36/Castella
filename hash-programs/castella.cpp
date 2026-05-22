@@ -11,9 +11,9 @@
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
-#include <fmt/format.h>
 #include <getopt.h>
 #include <numeric>
+#include <print>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -22,7 +22,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-13";
+inline constexpr std::string_view program_version = "2026-05-22";
 
 inline constexpr std::string_view function_name = "Castella";
 
@@ -83,69 +83,69 @@ num_digest_bytes_to_capacity_blocks(const unsigned int D_bytes)
 /// Print the version information.
 void print_version()
 {
-    fmt::println("{} {}", program_invocation_short_name, program_version);
-    fmt::println("License {}", program_license);
-    fmt::println("Written by {}", program_author);
+    std::println("{} {}", program_invocation_short_name, program_version);
+    std::println("License {}", program_license);
+    std::println("Written by {}", program_author);
 }
 
 /// Print the help message.
 void print_usage()
 {
-    fmt::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
-    fmt::println("");
+    std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
+    std::println("");
 
-    fmt::println("Compute the Castella duplex/sponge hash.");
-    fmt::println("");
+    std::println("Compute the Castella duplex/sponge hash.");
+    std::println("");
 
-    fmt::println("If FILE is absent, or when FILE is '-', read standard input.");
-    fmt::println("");
+    std::println("If FILE is absent, or when FILE is '-', read standard input.");
+    std::println("");
 
-    fmt::println("OPTIONS");
-    fmt::println("");
+    std::println("OPTIONS");
+    std::println("");
 
-    fmt::println("  -V, --version");
-    fmt::println("        Print the version information, then exit.");
+    std::println("  -V, --version");
+    std::println("        Print the version information, then exit.");
 
-    fmt::println("  -h, --help");
-    fmt::println("        Print this message, then exit.");
+    std::println("  -h, --help");
+    std::println("        Print this message, then exit.");
 
-    fmt::println("  -v, --verbose");
-    fmt::println("        Print diagnostics.");
+    std::println("  -v, --verbose");
+    std::println("        Print diagnostics.");
 
-    fmt::println("  --custom=STRING");
-    fmt::println("        Specify the customization string of the Castella Duplex object.");
-    fmt::println("        (default={})", quote_shell_always(default_customization_str));
+    std::println("  --custom=STRING");
+    std::println("        Specify the customization string of the Castella Duplex object.");
+    std::println("        (default={})", quote_shell_always(default_customization_str));
 
-    fmt::println("  --no-mmap");
-    fmt::println("        Do not use memory mapping to read FILE.");
+    std::println("  --no-mmap");
+    std::println("        Do not use memory mapping to read FILE.");
 
-    fmt::println("  --rounds=NUM_ROUNDS");
-    fmt::println("        Specify the number of rounds to perform in the Castella permutation function.");
-    fmt::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+    std::println("  --rounds=NUM_ROUNDS");
+    std::println("        Specify the number of rounds to perform in the Castella permutation function.");
+    std::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
             default_num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
 
-    fmt::println("  --size=SIZE");
-    fmt::println("        Specify the output size (in bytes).");
-    fmt::println("        Typical values are: 32, 48, or 64.");
-    fmt::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+    std::println("  --size=SIZE");
+    std::println("        Specify the output size (in bytes).");
+    std::println("        Typical values are: 32, 48, or 64.");
+    std::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
             default_num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
 
-    fmt::println("  --suffix=BYTE");
-    fmt::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
-    fmt::println("        (default={:d}) (minimum=0) (maximum=255)",
+    std::println("  --suffix=BYTE");
+    std::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
+    std::println("        (default={:d}) (minimum=0) (maximum=255)",
             default_input_suffix);
 
-    fmt::println("");
+    std::println("");
 
-    fmt::println("The output format is a line for each FILE with the following information:");
-    fmt::println("    digest, spaces, quoted FILE");
-    fmt::println("");
+    std::println("The output format is a line for each FILE with the following information:");
+    std::println("    digest, spaces, quoted FILE");
+    std::println("");
 
-    fmt::println("In this program, the capacity of the Castella Duplex object is about 2×SIZE.");
-    fmt::println("");
+    std::println("In this program, the capacity of the Castella Duplex object is about 2×SIZE.");
+    std::println("");
 
-    fmt::println("https://github.com/planet36/Castella");
-    fmt::println("https://keccak.team/sponge_duplex.html");
+    std::println("https://github.com/planet36/Castella");
+    std::println("https://keccak.team/sponge_duplex.html");
 }
 
 /// Process the command line options.
@@ -396,12 +396,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (verbose)
     {
-        fmt::println(stderr, "# num_rounds={}", num_rounds);
-        fmt::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
-        fmt::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
-        fmt::println(stderr, "# input_suffix={:d}", input_suffix);
-        fmt::println(stderr, "# function_name={}", quote_shell_always(function_name));
-        fmt::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
+        std::println(stderr, "# num_rounds={}", num_rounds);
+        std::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
+        std::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
+        std::println(stderr, "# input_suffix={:d}", input_suffix);
+        std::println(stderr, "# function_name={}", quote_shell_always(function_name));
+        std::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
     }
 
     std::vector<std::string> paths;
@@ -425,14 +425,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             if (verbose)
             {
-                fmt::println(stderr, "# processing file {}", quote_shell_always(path));
+                std::println(stderr, "# processing file {}", quote_shell_always(path));
             }
 
             process_file(path, hash_obj);
 
             const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
 
-            fmt::println("{}  {}", bytes_to_hex(digest_bytes), path);
+            std::println("{}  {}", bytes_to_hex(digest_bytes), path);
         }
         catch (const std::invalid_argument& ex)
         {

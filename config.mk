@@ -25,5 +25,5 @@ endif
 
 #LDFLAGS =
 
-LDLIBS = -lfmt
+#LDLIBS =
 

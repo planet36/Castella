@@ -18,9 +18,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
-#include <fmt/format.h>
 #include <map>
 #include <numeric>
+#include <print>
 #include <string>
 #include <unistd.h>
 
@@ -30,7 +30,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
 {
     using T = Castella::arr_blocks<N>;
 
-    fmt::println("## B={}", N); // Castella uses "B" to signify the state size
+    std::println("## B={}", N); // Castella uses "B" to signify the state size
 
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -91,7 +91,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
         }
     }
 
-    fmt::println("Nr:"
+    std::println("Nr:"
             "\tmean"
             "\tΔ"
             "\tdiff.%"
@@ -113,7 +113,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
 
         const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / bits;
 
-        fmt::println("{:2d}:"
+        std::println("{:2d}:"
                 "\t{:.3f}"
                 "\t{:.3f}"
                 "\t{:.1f}%"
@@ -131,7 +131,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
                 , rs_num_bits_changed.kurtosis()
                 );
     }
-    fmt::println("");
+    std::println("");
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -173,8 +173,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     if (num_samples < 1) // NOLINT(readability-use-std-min-max)
         num_samples = 1;
 
-    fmt::println("## num_samples: {}", num_samples);
-    fmt::println("");
+    std::println("## num_samples: {}", num_samples);
+    std::println("");
 
     calculate_metrics_num_rounds<2>(num_samples);
     calculate_metrics_num_rounds<4>(num_samples);

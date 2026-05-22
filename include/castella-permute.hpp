@@ -150,7 +150,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    constexpr unsigned int aes_num_rounds = 3;
+    constexpr int aes_num_rounds = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
@@ -188,7 +188,7 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    constexpr unsigned int aes_num_rounds = 3;
+    constexpr int aes_num_rounds = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {

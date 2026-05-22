@@ -15,6 +15,7 @@
 #define SPDLOG_USE_STD_FORMAT
 #include "spdlog/cfg/env.h"
 #include "spdlog/spdlog.h"
+#include "str_join.hpp"
 
 #include <array>
 #include <cerrno>
@@ -28,7 +29,6 @@
 #include <cstring>
 #include <err.h>
 #include <fmt/format.h>
-#include <fmt/ranges.h>
 #include <mutex>
 #include <numeric>
 #include <span>
@@ -41,7 +41,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-01-30";
+inline constexpr std::string_view program_version = "2026-05-22";
 
 inline constexpr std::string_view default_host = "localhost";
 inline constexpr uint16_t default_port = 8080;
@@ -125,7 +125,7 @@ print_usage()
     fmt::println("  -l LEVEL   Specify the log level.  (default={})",
             quote_shell_always(std::string_view{spdlog::level::to_string_view(default_log_level)}));
     fmt::println("             Valid log levels are:");
-    fmt::println("             {}", std::to_array(SPDLOG_LEVEL_NAMES));
+    fmt::println("                 {}", str_join(std::to_array(SPDLOG_LEVEL_NAMES), ", "));
     fmt::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
     fmt::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
     fmt::println("                 - The periodic entropy data added to the Castella hash object");

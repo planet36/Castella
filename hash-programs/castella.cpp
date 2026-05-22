@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include "bytes_to_hex.hpp"
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
 #include "quote_shell_always.hpp"

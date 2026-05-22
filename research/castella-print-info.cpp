@@ -4,7 +4,7 @@
 #define DEBUG 1
 #undef NDEBUG
 
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 
 #include <fmt/format.h>
 

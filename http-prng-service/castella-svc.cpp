@@ -7,7 +7,7 @@
 * \author Steven Ward
 */
 
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 #include "config.h"
 #include "httplib.h"
 #include "spdlog/cfg/env.h"

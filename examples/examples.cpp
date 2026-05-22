@@ -5,7 +5,7 @@
 #undef NDEBUG
 
 #include "as_byte_span.hpp"
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 #include "fixed_vector.hpp"
 
 #include <array>

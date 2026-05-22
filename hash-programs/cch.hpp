@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 #include "fixed_vector.hpp"
 #include "simd-compress.hpp"
 

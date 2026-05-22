@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#include "castella.hpp"
+#include "castella-duplex.hpp"
 #include "get_env.hpp"
 
 #include <algorithm>

@@ -7,7 +7,7 @@
 // To find the optimal minimum num_rounds, set it to 1.
 #define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
 
-#include "castella-duplex.hpp"
+#include "castella-permute.hpp"
 #include "popcount.hpp"
 #include "running_stats.hpp"
 #include "simd-bitmask.hpp"

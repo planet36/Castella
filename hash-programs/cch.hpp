@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "castella-duplex.hpp"
+#include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "simd_compress.hpp"
 
@@ -74,7 +74,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 /**
 * \c N=2 is quite slow.
 */
-template <unsigned int N = Castella::Duplex::B>
+template <unsigned int N = 16>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {

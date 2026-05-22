@@ -24,7 +24,7 @@ BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
 
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
-            a = Castella::utils::aes_enc_0(a);
+            a = aes_enc_0(a);
         }
     }
 
@@ -81,19 +81,19 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (num_threads == 1)
     {
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(2)", BM_aes_enc_0, 2);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(3)", BM_aes_enc_0, 3);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(4)", BM_aes_enc_0, 4);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(5)", BM_aes_enc_0, 5);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(6)", BM_aes_enc_0, 6);
+        benchmark::RegisterBenchmark("aes_enc_0(2)", BM_aes_enc_0, 2);
+        benchmark::RegisterBenchmark("aes_enc_0(3)", BM_aes_enc_0, 3);
+        benchmark::RegisterBenchmark("aes_enc_0(4)", BM_aes_enc_0, 4);
+        benchmark::RegisterBenchmark("aes_enc_0(5)", BM_aes_enc_0, 5);
+        benchmark::RegisterBenchmark("aes_enc_0(6)", BM_aes_enc_0, 6);
     }
     else
     {
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(2)", BM_aes_enc_0, 2)->Threads(num_threads);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(3)", BM_aes_enc_0, 3)->Threads(num_threads);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(4)", BM_aes_enc_0, 4)->Threads(num_threads);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(5)", BM_aes_enc_0, 5)->Threads(num_threads);
-        benchmark::RegisterBenchmark("Castella::utils::aes_enc_0(6)", BM_aes_enc_0, 6)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_0(2)", BM_aes_enc_0, 2)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_0(3)", BM_aes_enc_0, 3)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_0(4)", BM_aes_enc_0, 4)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_0(5)", BM_aes_enc_0, 5)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_0(6)", BM_aes_enc_0, 6)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

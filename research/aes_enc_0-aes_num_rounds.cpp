@@ -35,7 +35,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
         // aes_num_rounds times
         for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
         {
-            result = Castella::utils::aes_enc_0(result);
+            result = aes_enc_0(result);
         }
 
         // for each bitmask
@@ -48,7 +48,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
             // aes_num_rounds times
             for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
             {
-                result_p = Castella::utils::aes_enc_0(result_p);
+                result_p = aes_enc_0(result_p);
             }
 
             {
@@ -131,7 +131,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     fmt::println("## num_samples: {}", num_samples);
     fmt::println("");
 
-    fmt::println("Castella::utils::aes_enc_0");
+    fmt::println("aes_enc_0");
     fmt::println("Nr:"
             "\tmean"
             "\tΔ"

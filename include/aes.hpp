@@ -165,7 +165,7 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 template <unsigned int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); i += 2)
     {
@@ -186,7 +186,7 @@ arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
 /// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
 template <unsigned int aes_num_rounds, size_t N>
 static void
-arr_aes_enc_0_inv(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); ++i)
     {

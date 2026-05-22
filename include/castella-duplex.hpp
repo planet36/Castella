@@ -31,8 +31,8 @@
 
 #pragma once
 
-#include "castella-permute.hpp"
 #include "byte_width.hpp"
+#include "castella-permute.hpp"
 
 #include <algorithm>
 #include <array>

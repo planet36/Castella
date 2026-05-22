@@ -127,7 +127,7 @@ struct alignas(block_t) Duplex final
     * This would cause unsatisfactory performance.
     */
     // }}}
-    static constexpr uint8_t B = 16;
+    static constexpr int B = 16;
     static_assert((B % 2) == 0, "must be even");
     static_assert(B == 16, "B must be 16 to accommodate the 16x16 byte matrix transpose");
 
@@ -137,7 +137,7 @@ struct alignas(block_t) Duplex final
     * This constraint is to ensure good security.
     */
     // }}}
-    static constexpr uint8_t C_MIN = 2;
+    static constexpr int C_MIN = 2;
     static_assert((C_MIN % 2) == 0, "must be even");
     static_assert(C_MIN >= 2); // (D = C/2) ∧ (D ≥ 1) ∴ C_MIN ≥ 2
 
@@ -147,18 +147,18 @@ struct alignas(block_t) Duplex final
     * This constraint is to ensure good performance.
     */
     // }}}
-    static constexpr uint8_t C_MAX = B / 2;
+    static constexpr int C_MAX = B / 2;
     static_assert((C_MAX % 2) == 0, "must be even");
     static_assert(C_MAX < B);
     static_assert(C_MIN <= C_MAX);
 
     /// The minimum size (in blocks) of the input buffer
-    static constexpr uint8_t R_MIN = B - C_MAX;
+    static constexpr int R_MIN = B - C_MAX;
     static_assert((R_MIN % 2) == 0, "must be even");
     static_assert(R_MIN >= 1);
 
     /// The maximum size (in blocks) of the input buffer
-    static constexpr uint8_t R_MAX = B - C_MIN;
+    static constexpr int R_MAX = B - C_MIN;
     static_assert((R_MAX % 2) == 0, "must be even");
     static_assert(R_MAX < B);
     static_assert(R_MIN <= R_MAX);

@@ -4,7 +4,7 @@
 
 export LC_ALL=C
 
-echo "# Print Castella size info and params"
+echo "# Print info about the Castella round constants and duplex params"
 echo
 ./castella-print-info || exit
 echo "________________________________________________________________________________"

@@ -11,7 +11,7 @@
 
 #include "castella-duplex.hpp"
 #include "fixed_vector.hpp"
-#include "simd-compress.hpp"
+#include "simd_compress.hpp"
 
 #include <algorithm>
 #include <array>

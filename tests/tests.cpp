@@ -5,13 +5,14 @@
 #undef NDEBUG
 
 #include "as_byte_span.hpp"
+#include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
 #include "quote_shell_always.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <fmt/ranges.h>
+#include <fmt/format.h>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -86,7 +87,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const std::string expected_result =
                 "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
-            const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
+            const std::string result = bytes_to_hex(digest_bytes);
 
             fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 

@@ -7,6 +7,7 @@
 * \author Steven Ward
 */
 
+#include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
 #include "config.h"
 #include "httplib.h"
@@ -195,7 +196,7 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         if (spdlog::should_log(spdlog::level::level_enum::trace))
         {
             // XXX: This prints the entropy data.
-            spdlog::trace("periodic add entropy: [{:02x}] ({})", fmt::join(entropy_buf, ""),
+            spdlog::trace("periodic add entropy: [{}] ({})", bytes_to_hex(entropy_buf),
                           sizeof(entropy_buf));
         }
         else
@@ -386,9 +387,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             spdlog::debug("{} {} -> {}", req.method, req.path, res.status);
 
             // XXX: This prints the body data of requests & responses.
-            spdlog::trace("[{:02x}] ({}) -> [{:02x}] ({})",
-                fmt::join(std::as_bytes(std::span{req.body}), ""), std::size(req.body),
-                fmt::join(std::as_bytes(std::span{res.body}), ""), std::size(res.body));
+            spdlog::trace("[{}] ({}) -> [{}] ({})",
+                bytes_to_hex(std::as_bytes(std::span{req.body})), std::size(req.body),
+                bytes_to_hex(std::as_bytes(std::span{res.body})), std::size(res.body));
         });
 
     spdlog::info("Attempting to bind to http://{}:{} ...", host, port);

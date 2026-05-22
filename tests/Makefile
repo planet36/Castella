@@ -3,8 +3,6 @@
 
 include ../config.mk
 
-CPPFLAGS += -I $(ROOT)research
-
 SRCS = $(wildcard *.cpp)
 DEPS = $(addsuffix .d,$(basename $(SRCS)))
 BINS = $(basename $(SRCS))

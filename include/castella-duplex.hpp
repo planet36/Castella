@@ -3,7 +3,7 @@
 
 // vim: set textwidth=81:
 
-/// Castella: A heavyweight customizable duplex/sponge construction class
+/// Castella duplex class
 // {{{
 /**
 * \file
@@ -60,7 +60,7 @@
 namespace Castella
 {
 
-/// Castella: A heavyweight customizable duplex/sponge construction class
+/// A heavyweight customizable duplex/sponge construction class
 // {{{
 /**
 * ## _CSF-0.1.pdf_

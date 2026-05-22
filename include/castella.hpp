@@ -56,8 +56,6 @@
 #include <type_traits>
 #include <vector>
 
-/// The namespace for the Castella round constants, permutation function, and duplex
-/// class
 namespace Castella
 {
 
@@ -233,6 +231,11 @@ permute_inv(arr_blocks<N>& state, const uint8_t num_rounds) noexcept
         state[0] ^= rc;
     }
 }
+
+} // namespace Castella
+
+namespace Castella
+{
 
 /// Castella: A heavyweight customizable duplex/sponge construction class
 // {{{

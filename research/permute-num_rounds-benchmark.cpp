@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstdlib>
+#include <format>
 #include <string>
 #include <thread>
 

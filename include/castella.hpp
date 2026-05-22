@@ -33,6 +33,7 @@
 
 #include "aes.hpp"
 #include "byte_width.hpp"
+#include "simd_load.hpp"
 #include "simd_transpose.hpp"
 #include "simd_types.hpp"
 
@@ -54,26 +55,6 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
-
-/// The namespace for type aliases and functions used by Castella
-namespace Castella::inline utils
-{
-
-/// Load 16 bytes from \a src into a \c uint8x16_t
-// {{{
-/**
-* \pre \a src points to at least 16 bytes of data
-*/
-// }}}
-static inline uint8x16_t
-simd_load16(const void* src) noexcept
-{
-    uint8x16_t dst{};
-    (void)std::memcpy(&dst, src, sizeof(dst));
-    return dst;
-}
-
-}
 
 /// The namespace for the Castella round constants, permutation function, and duplex
 /// class

@@ -31,7 +31,7 @@
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \c compress_aesenc4 on corresponding elements of \a arr_1 and \a arr_2
+/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
 /**
 * \pre \a arr_2 points to \a N elements
 */
@@ -46,7 +46,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
         uint8x16x2_t v_1 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_1[i]));
         uint8x16x2_t v_2 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_2[i]));
 
-        v_1 = compress_aesenc4(v_1, v_2);
+        v_1 = simd_compress_aes_enc_r4(v_1, v_2);
 
         _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr_1[i]), v_1);
     }
@@ -54,7 +54,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 
 #endif
 
-/// Perform \c compress_aesenc4 on corresponding elements of \a arr_1 and \a arr_2
+/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
 /**
 * \pre \a arr_2 points to \a N elements
 */
@@ -64,7 +64,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 {
     for (size_t i = 0; i < N; ++i)
     {
-        arr_1[i] = compress_aesenc4(arr_1[i], arr_2[i]);
+        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], arr_2[i]);
     }
 }
 

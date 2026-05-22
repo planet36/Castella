@@ -10,7 +10,7 @@
 #include "castella-permute.hpp"
 #include "popcount.hpp"
 #include "running_stats.hpp"
-#include "simd-bitmask.hpp"
+#include "simd_bitmask.hpp"
 
 #include <cassert>
 #include <cmath>

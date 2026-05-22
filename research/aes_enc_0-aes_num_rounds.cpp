@@ -7,7 +7,7 @@
 #include "aes.hpp"
 #include "popcount.hpp"
 #include "running_stats.hpp"
-#include "simd-bitmask.hpp"
+#include "simd_bitmask.hpp"
 
 #include <cmath>
 #include <cstdlib>

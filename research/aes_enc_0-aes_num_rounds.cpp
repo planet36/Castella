@@ -4,7 +4,7 @@
 #define DEBUG 1
 #undef NDEBUG
 
-#include "castella-duplex.hpp"
+#include "aes.hpp"
 #include "popcount.hpp"
 #include "running_stats.hpp"
 #include "simd-bitmask.hpp"
@@ -20,7 +20,7 @@
 void
 calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int aes_num_rounds)
 {
-    using T = Castella::block_t;
+    using T = uint8x16_t;
 
     running_stats<double> rs_num_bits_changed;
 

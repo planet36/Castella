@@ -9,13 +9,12 @@
 
 #pragma once
 
+#include "simd_types.hpp"
+
 #include <array>
 #include <cstdint>
 
 #if defined(__x86_64__)
-
-#include <immintrin.h>
-using uint8x16_t = __m128i;
 
 static inline uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo)
@@ -27,8 +26,6 @@ combine_u64x2(const uint64_t hi, const uint64_t lo)
 }
 
 #elif defined(__aarch64__)
-
-#include <arm_neon.h>
 
 /**
 * \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vcreate_u64
@@ -42,7 +39,9 @@ combine_u64x2(const uint64_t hi, const uint64_t lo)
 }
 
 #else
+
 #error "Architecture not supported"
+
 #endif
 
 #pragma GCC diagnostic push

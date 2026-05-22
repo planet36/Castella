@@ -29,7 +29,7 @@ using arr_256_t = std::array<__m256i, N>;
 
 template <size_t N>
 requires (std::has_single_bit(N)) && (N > 1)
-void
+static void
 aesenc_arr(arr_128_t<N>& arr, const __m128i round_key)
 {
     for (size_t i = 0; i < N; ++i)
@@ -40,7 +40,7 @@ aesenc_arr(arr_128_t<N>& arr, const __m128i round_key)
 
 template <size_t N>
 requires (std::has_single_bit(N)) && (N > 1)
-void
+static void
 aesenc_arr_cast(arr_128_t<N>& arr, const __m128i round_key)
 {
     const __m256i round_key_256 = _mm256_set_m128i(round_key, round_key);
@@ -55,7 +55,7 @@ aesenc_arr_cast(arr_128_t<N>& arr, const __m128i round_key)
 
 template <size_t N>
 requires (std::has_single_bit(N))
-void
+static void
 aesenc_arr(arr_256_t<N>& arr, const __m256i round_key)
 {
     for (size_t i = 0; i < N; ++i)

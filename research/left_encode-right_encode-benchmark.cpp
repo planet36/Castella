@@ -23,7 +23,7 @@
 // NOTE: These functions make a copy of the input data.
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 left_encode_1(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -42,7 +42,7 @@ left_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 left_encode_2(std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -63,7 +63,7 @@ left_encode_2(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 left_encode_3(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -77,7 +77,7 @@ left_encode_3(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-auto
+static auto
 left_encode_4(std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -97,7 +97,7 @@ left_encode_4(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-auto
+static auto
 left_encode_5(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -115,7 +115,7 @@ left_encode_5(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 right_encode_1(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -134,7 +134,7 @@ right_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 right_encode_2(std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -155,7 +155,7 @@ right_encode_2(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-std::vector<std::byte>
+static std::vector<std::byte>
 right_encode_3(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -170,7 +170,7 @@ right_encode_3(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-auto
+static auto
 right_encode_4(std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -190,7 +190,7 @@ right_encode_4(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-auto
+static auto
 right_encode_5(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;

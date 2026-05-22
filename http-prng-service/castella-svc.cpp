@@ -10,6 +10,7 @@
 #include "castella-duplex.hpp"
 #include "config.h"
 #include "httplib.h"
+#include "quote_shell_always.hpp"
 #include "spdlog/cfg/env.h"
 #include "spdlog/spdlog.h"
 
@@ -119,8 +120,8 @@ print_usage()
     fmt::println("  -h         Print this message, then exit.");
     nl;
 
-    fmt::println("  -l LEVEL   Specify the log level.  (default={:?})",
-            spdlog::level::to_string_view(default_log_level));
+    fmt::println("  -l LEVEL   Specify the log level.  (default={})",
+            quote_shell_always(std::string_view{spdlog::level::to_string_view(default_log_level)}));
     fmt::println("             Valid log levels are:");
     fmt::println("             {}", std::to_array(SPDLOG_LEVEL_NAMES));
     fmt::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
@@ -132,7 +133,7 @@ print_usage()
     fmt::println("  -p PORT    Specify the port.  (default={:d})", default_port);
     nl;
 
-    fmt::println("The default HOST is {:?}.", default_host);
+    fmt::println("The default HOST is {}.", quote_shell_always(default_host));
     nl;
 
     fmt::println("EXAMPLES");

@@ -6,6 +6,7 @@
 
 #include "as_byte_span.hpp"
 #include "castella-duplex.hpp"
+#include "quote_shell_always.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -87,7 +88,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
             const std::string result = fmt::format("{:02x}", fmt::join(digest_bytes, ""));
 
-            fmt::println("{:?} {:?}: {}", function_name, customization_str, result);
+            fmt::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
 
             assert(result == expected_result);
         }

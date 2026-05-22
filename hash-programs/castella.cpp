@@ -114,7 +114,7 @@ void print_usage()
 
     fmt::println("  --custom=STRING");
     fmt::println("        Specify the customization string of the Castella Duplex object.");
-    fmt::println("        (default={:?})", default_customization_str);
+    fmt::println("        (default={})", quote_shell_always(default_customization_str));
 
     fmt::println("  --no-mmap");
     fmt::println("        Do not use memory mapping to read FILE.");
@@ -400,8 +400,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         fmt::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
         fmt::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
         fmt::println(stderr, "# input_suffix={:d}", input_suffix);
-        fmt::println(stderr, "# function_name={:?}", function_name);
-        fmt::println(stderr, "# customization_str={:?}", customization_str);
+        fmt::println(stderr, "# function_name={}", quote_shell_always(function_name));
+        fmt::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
     }
 
     std::vector<std::string> paths;
@@ -425,7 +425,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             if (verbose)
             {
-                fmt::println(stderr, "# processing file {:?}", path);
+                fmt::println(stderr, "# processing file {}", quote_shell_always(path));
             }
 
             process_file(path, hash_obj);

@@ -938,9 +938,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        // clamp
-        if (n > get_rate_size_bytes()) // NOLINT(readability-use-std-min-max)
-            n = get_rate_size_bytes();
+        n = std::clamp(n, 0, get_rate_size_bytes());
 
         std::vector<std::byte> result;
         result.reserve(n);

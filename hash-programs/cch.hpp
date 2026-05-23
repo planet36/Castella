@@ -266,11 +266,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        // clamp
-        if (n > get_max_digest_size_bytes()) // NOLINT(readability-use-std-min-max)
-        {
-            n = get_max_digest_size_bytes();
-        }
+        n = std::clamp(n, 0, get_max_digest_size_bytes());
 
         std::vector<std::byte> result;
         result.reserve(n);

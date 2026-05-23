@@ -25,9 +25,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_1(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
@@ -46,9 +44,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_2(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
@@ -66,9 +62,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_3(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -87,9 +81,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_4(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -109,9 +101,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_5(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -133,9 +123,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_6(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -155,9 +143,7 @@ template <typename T, std::size_t N>
 static std::vector<std::byte>
 squeeze_bytes_7(const std::array<T, N>& state, int n)
 {
-    // clamp
-    if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
-        n = sizeof(state);
+    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
 
     std::vector<std::byte> result;
     result.reserve(n);

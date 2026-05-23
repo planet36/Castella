@@ -971,8 +971,10 @@ public:
     /// The state size is fixed and does not depend on any user-provided parameters.
     [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
 
+    /// The size (in bytes) of the capacity portion of the state.
     [[nodiscard]] int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
 
+    /// The size (in bytes) of the rate (input buffer) portion of the state.
     [[nodiscard]] int get_rate_size_bytes() const noexcept { return sizeof(block_t) * R; }
 };
 

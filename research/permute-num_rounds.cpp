@@ -24,7 +24,7 @@
 #include <string>
 #include <unistd.h>
 
-template <size_t N>
+template <int N>
 void
 calculate_metrics_num_rounds(const int num_samples)
 {
@@ -34,7 +34,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
-    std::map<uint8_t, running_stats<double>> num_rounds_to_rs_num_bits_changed;
+    std::map<int, running_stats<double>> num_rounds_to_rs_num_bits_changed;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)
@@ -43,7 +43,7 @@ calculate_metrics_num_rounds(const int num_samples)
         arc4random_buf(std::data(state), sizeof(state));
 
         // for each number of rounds
-        for (uint8_t num_rounds = Castella::NUM_ROUNDS_MIN;
+        for (int num_rounds = Castella::NUM_ROUNDS_MIN;
              num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
         {
             auto permuted_state = state;
@@ -54,7 +54,7 @@ calculate_metrics_num_rounds(const int num_samples)
                    0);
 
             // for each row
-            for (size_t row = 0; row < N; ++row)
+            for (int row = 0; row < N; ++row)
             {
                 // for each bitmask
                 for (const auto& bitmask : simd_bitmask128_arr)
@@ -78,7 +78,7 @@ calculate_metrics_num_rounds(const int num_samples)
                         int num_bits_changed = 0;
 
                         // for each row
-                        for (size_t j = 0; j < N; ++j)
+                        for (int j = 0; j < N; ++j)
                         {
                             num_bits_changed +=
                                 simd_popcount(permuted_state[j] ^ permuted_state_p[j]);
@@ -105,7 +105,7 @@ calculate_metrics_num_rounds(const int num_samples)
     constexpr int bits = sizeof(T) * 8;
 
     // expected number of bits changed
-    constexpr size_t expected_mean = bits / 2;
+    constexpr int expected_mean = bits / 2;
 
     for (const auto& [num_rounds, rs_num_bits_changed] : num_rounds_to_rs_num_bits_changed)
     {

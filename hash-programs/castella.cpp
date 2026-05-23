@@ -30,13 +30,13 @@ inline constexpr std::string_view function_name = "Castella";
 
 inline constexpr uint8_t default_input_suffix = 1;
 
-inline constexpr uint8_t default_num_rounds = 6;
+inline constexpr int default_num_rounds = 6;
 static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN);
 static_assert(default_num_rounds <= Castella::NUM_ROUNDS_MAX);
 
-inline constexpr unsigned int min_num_bytes_to_squeeze = 1;
-inline constexpr unsigned int max_num_bytes_to_squeeze = Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
-inline constexpr unsigned int default_num_bytes_to_squeeze = max_num_bytes_to_squeeze / 2;
+inline constexpr int min_num_bytes_to_squeeze = 1;
+inline constexpr int max_num_bytes_to_squeeze = Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
+inline constexpr int default_num_bytes_to_squeeze = max_num_bytes_to_squeeze / 2;
 static_assert(default_num_bytes_to_squeeze >= min_num_bytes_to_squeeze);
 static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
 
@@ -49,9 +49,9 @@ bool verbose = false;
 
 uint8_t input_suffix = default_input_suffix;
 
-uint8_t num_rounds = default_num_rounds;
+int num_rounds = default_num_rounds;
 
-unsigned int num_bytes_to_squeeze = default_num_bytes_to_squeeze;
+int num_bytes_to_squeeze = default_num_bytes_to_squeeze;
 
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 std::string customization_str = default_customization_str;
@@ -66,10 +66,10 @@ bool use_mmap = true;
 * \pre \a D_bytes >= \c min_num_bytes_to_squeeze
 * \pre \a D_bytes <= \c max_num_bytes_to_squeeze
 */
-unsigned int
-num_digest_bytes_to_capacity_blocks(const unsigned int D_bytes)
+int
+num_digest_bytes_to_capacity_blocks(const int D_bytes)
 {
-    unsigned int C = 2 * D_bytes; // bytes
+    int C = 2 * D_bytes; // bytes
 
     // div ceil
     C = C / sizeof(Castella::block_t) + ((C % sizeof(Castella::block_t)) != 0); // blocks
@@ -392,7 +392,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     process_options(argc, argv);
 
-    const uint8_t capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
+    const int capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
 
     if (verbose)
     {

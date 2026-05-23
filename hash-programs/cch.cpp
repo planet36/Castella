@@ -25,12 +25,12 @@ inline constexpr std::string_view program_license = "MPL-2.0";
 inline constexpr std::string_view program_version = "2026-05-22";
 
 // {{{ default values for options
-inline constexpr unsigned int default_digest_size_bytes = 32;
+inline constexpr int default_digest_size_bytes = 32;
 static_assert(default_digest_size_bytes <= compress_castella_hash<>::get_max_digest_size_bytes());
 // }}}
 
 // {{{ options
-unsigned int digest_size_bytes = default_digest_size_bytes;
+int digest_size_bytes = default_digest_size_bytes;
 bool use_mmap = true;
 // }}}
 

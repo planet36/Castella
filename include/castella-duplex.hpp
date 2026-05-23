@@ -178,7 +178,7 @@ private:
     block_t* input_blocks_ = nullptr; // size will be R
 
     /// The current index of the input buffer
-    unsigned int cur_input_byte_idx_ = 0;
+    int16_t cur_input_byte_idx_ = 0;
 
 public:
     /// The size (in blocks) of the capacity
@@ -194,7 +194,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The size (in blocks) of the input buffer
     // {{{
@@ -218,7 +218,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The number of rounds to perform in the Castella permutation function
     // {{{
@@ -238,7 +238,7 @@ public:
     * </blockquote>
     */
     // }}}
-    const uint8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The byte to append to the input buffer before squeezing
     // {{{
@@ -934,7 +934,7 @@ public:
     * </blockquote>
     */
     // }}}
-    [[nodiscard]] std::vector<std::byte> squeeze_bytes(unsigned int n)
+    [[nodiscard]] std::vector<std::byte> squeeze_bytes(int n)
     {
         std::scoped_lock lock{mtx_};
 
@@ -960,7 +960,7 @@ public:
         return result;
     }
 
-    /// \copydoc squeeze_bytes(unsigned int)
+    /// \copydoc squeeze_bytes(int)
     // {{{
     /**
     * The number of bytes returned is equal to half the capacity.
@@ -972,11 +972,11 @@ public:
     }
 
     /// The state size is fixed and does not depend on any user-provided parameters.
-    [[nodiscard]] constexpr static unsigned int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
+    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
 
-    [[nodiscard]] unsigned int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
+    [[nodiscard]] int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
 
-    [[nodiscard]] unsigned int get_rate_size_bytes() const noexcept { return sizeof(block_t) * R; }
+    [[nodiscard]] int get_rate_size_bytes() const noexcept { return sizeof(block_t) * R; }
 };
 
 } // namespace Castella

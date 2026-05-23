@@ -24,8 +24,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     using namespace std::literals;
 
     {
-        constexpr uint8_t capacity_blocks = 4;
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 4;
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
@@ -72,7 +72,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         {
             // Test the clamping of the input parameter of squeeze_bytes
-            const unsigned int num_bytes_to_squeeze = hash_obj.get_rate_size_bytes() + 1;
+            const int num_bytes_to_squeeze = hash_obj.get_rate_size_bytes() + 1;
 
             const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
 
@@ -103,9 +103,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr uint8_t capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
             static_assert((capacity_blocks % 2) != 0);
-            constexpr uint8_t num_rounds = 6;
+            constexpr int num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -119,8 +119,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr uint8_t capacity_blocks = Castella::Duplex::C_MIN - 1; // C < C_MIN
-            constexpr uint8_t num_rounds = 6;
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 1; // C < C_MIN
+            constexpr int num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -134,8 +134,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr uint8_t capacity_blocks = Castella::Duplex::C_MAX + 1; // C > C_MAX
-            constexpr uint8_t num_rounds = 6;
+            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 1; // C > C_MAX
+            constexpr int num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -149,8 +149,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr uint8_t capacity_blocks = 4;
-            constexpr uint8_t num_rounds = Castella::NUM_ROUNDS_MIN - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -164,8 +164,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr uint8_t capacity_blocks = 4;
-            constexpr uint8_t num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -182,8 +182,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // Test an input size that is greater than the outer state.
         // Ensure that when the input is split into chucks, it results in the
         // same digest as if the data was added in one chunk.
-        constexpr uint8_t capacity_blocks = 4;
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 4;
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";

@@ -64,7 +64,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
     constexpr int bits = sizeof(T) * 8;
 
     // expected number of bits changed
-    constexpr size_t expected_mean = bits / 2;
+    constexpr int expected_mean = bits / 2;
 
     const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
 

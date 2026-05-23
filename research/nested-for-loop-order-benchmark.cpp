@@ -258,7 +258,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ accuracy testing
 
     {
-        constexpr size_t N = 16;
+        constexpr int N = 16;
         constexpr int aes_num_rounds = 3;
 
         Castella::arr_blocks<N> arr{};
@@ -308,7 +308,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    constexpr size_t N = 16;
+    constexpr int N = 16;
     constexpr int aes_num_rounds = 3;
 
     if (num_threads == 1)

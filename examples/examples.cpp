@@ -26,7 +26,7 @@ right_encode(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = static_cast<uint8_t>(byte_width(x));
+    const auto w = byte_width(x);
 
     const auto byte_sp = as_byte_span(x);
 
@@ -47,8 +47,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // basic example
     {
-        constexpr uint8_t capacity_blocks = 4;
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 4;
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "example";
@@ -95,15 +95,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * KECCAK[256](bytepad(encode_string(N) || encode_string(S), 168) || X || 00, L)
         */
 
-        constexpr unsigned int L = 256; // bits
+        constexpr int L = 256; // bits
         constexpr std::string_view X{"Kwyjibo"};
 
-        constexpr uint8_t capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE128";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
@@ -129,15 +129,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * KECCAK[512](bytepad(encode_string(N) || encode_string(S), 136) || X || 00, L)
         */
 
-        constexpr unsigned int L = 512; // bits
+        constexpr int L = 512; // bits
         constexpr std::string_view X{"What's a battle?"};
 
-        constexpr uint8_t capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE256";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
@@ -183,22 +183,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 2. return cSHAKE128(newX, L, "KMAC", S).
         */
 
-        constexpr unsigned int L = 256; // bits
+        constexpr int L = 256; // bits
         constexpr std::string_view X{"Hi, Super Nintendo Chalmers!"};
 
-        constexpr uint8_t capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC128";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(K)       // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -221,22 +221,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 2. return cSHAKE256(newX, L, "KMAC", S).
         */
 
-        constexpr unsigned int L = 512; // bits
+        constexpr int L = 512; // bits
         constexpr std::string_view X{"I choo-choo-choose you."};
 
-        constexpr uint8_t capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC256";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(K)       // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -259,15 +259,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 2. return cSHAKE128(newX, L, "KMAC", S).
         */
 
-        constexpr unsigned int L = 256; // bits
+        constexpr int L = 256; // bits
         constexpr std::string_view X{"Me fail English?  That's unpossible!"};
 
-        constexpr uint8_t capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF128";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
@@ -297,15 +297,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 2. return cSHAKE256(newX, L, "KMAC", S).
         */
 
-        constexpr unsigned int L = 512; // bits
+        constexpr int L = 512; // bits
         constexpr std::string_view X{"My cat's breath smells like cat food."};
 
-        constexpr uint8_t capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF256";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
@@ -350,22 +350,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 5. return cSHAKE128(newX, L, "TupleHash", S).
         */
 
-        constexpr unsigned int L = 256; // bits
+        constexpr int L = 256; // bits
         constexpr std::array<std::string_view, 2> X{"abc", "d"};
         constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
 
-        constexpr uint8_t capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash128";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -373,7 +373,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -406,22 +406,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 5. return cSHAKE256(newX, L, "TupleHash", S).
         */
 
-        constexpr unsigned int L = 512; // bits
+        constexpr int L = 512; // bits
         constexpr std::array<std::string_view, 2> X{"abc", "d"};
         constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
 
-        constexpr uint8_t capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash256";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -429,7 +429,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -462,22 +462,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 5. return cSHAKE128(newX, L, "TupleHash", S).
         */
 
-        constexpr unsigned int L = 256; // bits
+        constexpr int L = 256; // bits
         constexpr std::array<std::string_view, 2> X{"abc", "d"};
         constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
 
-        constexpr uint8_t capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF128";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -485,7 +485,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -518,22 +518,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         * 5. return cSHAKE256(newX, L, "TupleHash", S).
         */
 
-        constexpr unsigned int L = 512; // bits
+        constexpr int L = 512; // bits
         constexpr std::array<std::string_view, 2> X{"abc", "d"};
         constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
 
-        constexpr uint8_t capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr uint8_t num_rounds = 6;
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr int num_rounds = 6;
         constexpr std::byte input_suffix{0};
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF256";
-        constexpr unsigned int num_bytes_to_squeeze = L / 8;
+        constexpr int num_bytes_to_squeeze = L / 8;
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -541,7 +541,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =

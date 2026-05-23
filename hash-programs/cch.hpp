@@ -74,7 +74,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 /**
 * \c N=2 is quite slow.
 */
-template <unsigned int N = 16>
+template <int N = 16>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {
@@ -83,9 +83,9 @@ public:
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
 
-    static constexpr uint16_t MIX_RATE_MIN = 1U << 10;
-    static constexpr uint16_t MIX_RATE_MAX = std::numeric_limits<uint16_t>::max();
-    static constexpr uint16_t DEFAULT_MIX_RATE = 1U << 15;
+    static constexpr int MIX_RATE_MIN = 1U << 10;
+    static constexpr int MIX_RATE_MAX = std::numeric_limits<uint16_t>::max();
+    static constexpr int DEFAULT_MIX_RATE = 1U << 15;
     static_assert(MIX_RATE_MIN <= MIX_RATE_MAX);
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
@@ -100,7 +100,7 @@ private:
     mutable std::mutex mtx_;
 
     /// The number of bytes absorbed since the state was last mixed
-    uint32_t bytes_absorbed_ = 0;
+    int32_t bytes_absorbed_ = 0;
 
     /// After this many bytes are absorbed, the state is mixed.
     const uint16_t mix_rate_ = DEFAULT_MIX_RATE; // bytes absorbed per mix
@@ -262,7 +262,7 @@ public:
     * This adds padding bytes and prevents future updates to the state.
     * \a n is clamped to \c get_max_digest_size_bytes().
     */
-    [[nodiscard]] std::vector<std::byte> final_digest_bytes(unsigned int n)
+    [[nodiscard]] std::vector<std::byte> final_digest_bytes(int n)
     {
         std::scoped_lock lock{mtx_};
 
@@ -289,9 +289,9 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr static unsigned int get_state_size_bytes() noexcept { return sizeof(state_); }
+    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return sizeof(state_); }
 
-    [[nodiscard]] constexpr static unsigned int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 2; }
+    [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 2; }
 
-    [[nodiscard]] constexpr auto get_mix_rate() const noexcept { return mix_rate_; }
+    [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };

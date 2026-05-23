@@ -28,7 +28,7 @@ using simd_arr_32_t = std::array<__m256i, N>;
 #pragma GCC diagnostic pop
 
 template <size_t N>
-requires (std::has_single_bit(N)) && (N > 1)
+requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
 aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
@@ -39,7 +39,7 @@ aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
 }
 
 template <size_t N>
-requires (std::has_single_bit(N)) && (N > 1)
+requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
 aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
@@ -54,7 +54,7 @@ aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
 }
 
 template <size_t N>
-requires (std::has_single_bit(N))
+requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
 aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key)
 {

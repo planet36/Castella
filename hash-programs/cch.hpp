@@ -121,7 +121,7 @@ private:
     {
 #if defined(DEBUG)
         assert(input_bytes_.is_full());
-        assert(!has_been_finalized_);
+        assert(!is_finalized());
 #endif
 
         const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
@@ -144,7 +144,7 @@ private:
     void add_(const void* data, size_t len)
     {
 #if defined(DEBUG)
-        assert(!has_been_finalized_);
+        assert(!is_finalized());
 #endif
 
         const auto* src = static_cast<const std::byte*>(data);
@@ -187,7 +187,7 @@ private:
     {
 #if defined(DEBUG)
         assert(!input_bytes_.is_full());
-        assert(!has_been_finalized_);
+        assert(!is_finalized());
 #endif
 
         for (uint8_t i = 0; !input_bytes_.is_full(); ++i)
@@ -241,7 +241,7 @@ public:
 
         std::scoped_lock lock{mtx_};
 
-        if (has_been_finalized_)
+        if (is_finalized())
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
@@ -278,7 +278,7 @@ public:
         std::vector<std::byte> result;
         result.reserve(n);
 
-        if (!has_been_finalized_)
+        if (!is_finalized())
         {
             add_padding_bytes_();
             Castella::permute(state_, Castella::NUM_ROUNDS_MAX);

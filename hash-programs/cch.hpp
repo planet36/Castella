@@ -221,18 +221,22 @@ public:
         zeroize_();
     }
 
-    /// Consume the input data into the input buffer
+    /// Consume \a data into the input buffer
     // {{{
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \exception std::logic_error if this object has been finalized
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    void add(const void* data, size_t len)
+    compress_castella_hash& add(const void* data, size_t len)
     {
         if (data == nullptr)
         {
-            return;
+            return *this;
         }
 
         std::scoped_lock lock{mtx_};
@@ -243,19 +247,21 @@ public:
         }
 
         add_(data, len);
+
+        return *this;
     }
 
     /// \copydoc add(const void*, size_t)
-    void add(const std::span<const std::byte> byte_sp)
+    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
     {
-        add(std::data(byte_sp), std::size(byte_sp));
+        return add(std::data(byte_sp), std::size(byte_sp));
     }
 
     /// \copydoc add(const void*, size_t)
-    void add(const std::string_view s)
+    compress_castella_hash& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        add(std::data(s), std::size(s));
+        return add(std::data(s), std::size(s));
     }
 
     /// Get the final digest bytes

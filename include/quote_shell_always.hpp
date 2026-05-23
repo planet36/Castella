@@ -18,6 +18,8 @@
 
 /// Quote the string for a POSIX shell
 /**
+* \param s the string to quote
+* \return \a s quoted for a POSIX shell
 * \sa https://www.gnu.org/software/bash/manual/bash.html#Single-Quotes
 * <blockquote>
 Enclosing characters in single quotes (‘'’) preserves the literal value of each

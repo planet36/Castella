@@ -20,17 +20,17 @@
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 
 template <size_t N>
-using arr_128_t = std::array<__m128i, N>;
+using simd_arr_16_t = std::array<__m128i, N>;
 
 template <size_t N>
-using arr_256_t = std::array<__m256i, N>;
+using simd_arr_32_t = std::array<__m256i, N>;
 
 #pragma GCC diagnostic pop
 
 template <size_t N>
 requires (std::has_single_bit(N)) && (N > 1)
 static void
-aesenc_arr(arr_128_t<N>& arr, const __m128i round_key)
+aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
     for (size_t i = 0; i < N; ++i)
     {
@@ -41,7 +41,7 @@ aesenc_arr(arr_128_t<N>& arr, const __m128i round_key)
 template <size_t N>
 requires (std::has_single_bit(N)) && (N > 1)
 static void
-aesenc_arr_cast(arr_128_t<N>& arr, const __m128i round_key)
+aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
     const __m256i round_key_256 = _mm256_set_m128i(round_key, round_key);
 
@@ -56,7 +56,7 @@ aesenc_arr_cast(arr_128_t<N>& arr, const __m128i round_key)
 template <size_t N>
 requires (std::has_single_bit(N))
 static void
-aesenc_arr(arr_256_t<N>& arr, const __m256i round_key)
+aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key)
 {
     for (size_t i = 0; i < N; ++i)
     {
@@ -158,11 +158,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr size_t max_iterations = 10;
 
-        arr_128_t<N> data{};
+        simd_arr_16_t<N> data{};
 
-        arr_128_t<N> result_1{};
-        arr_128_t<N> result_2{};
-        arr_256_t<N / 2> result_3{};
+        simd_arr_16_t<N> result_1{};
+        simd_arr_16_t<N> result_2{};
+        simd_arr_32_t<N / 2> result_3{};
 
         static_assert(sizeof(result_1) == sizeof(result_2));
         static_assert(sizeof(result_1) == sizeof(result_3));

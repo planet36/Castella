@@ -32,7 +32,7 @@ requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
 aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         arr[i] = _mm_aesenc_si128(arr[i], round_key);
     }
@@ -45,7 +45,7 @@ aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
 {
     const __m256i round_key_256 = _mm256_set_m128i(round_key, round_key);
 
-    for (size_t i = 0; i < N; i += 2)
+    for (int i = 0; i < std::ssize(arr); i += 2)
     {
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
         v = _mm256_aesenc_epi128(v, round_key_256);
@@ -58,7 +58,7 @@ requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
 aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key)
 {
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         arr[i] = _mm256_aesenc_epi128(arr[i], round_key);
     }

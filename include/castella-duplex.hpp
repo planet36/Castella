@@ -33,6 +33,7 @@
 
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
+#include "to_unsigned.hpp"
 
 #include <algorithm>
 #include <array>
@@ -50,13 +51,6 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
-
-/// Cast the integer to unsigned integer
-constexpr auto
-to_unsigned(const std::integral auto x)
-{
-    return static_cast<std::make_unsigned_t<decltype(x)>>(x);
-}
 
 namespace Castella
 {

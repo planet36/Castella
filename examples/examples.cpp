@@ -9,6 +9,7 @@
 #include "castella-duplex.hpp"
 #include "fixed_vector.hpp"
 #include "quote_shell_always.hpp"
+#include "to_unsigned.hpp"
 
 #include <array>
 #include <cassert>

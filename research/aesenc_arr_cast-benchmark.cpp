@@ -242,7 +242,7 @@ int
 main()
 {
     (void)std::fputs("This benchmark is for x86_64 VAES only", stderr);
-    return 0;
+    return 1;
 }
 
 #endif

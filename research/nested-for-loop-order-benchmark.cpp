@@ -14,20 +14,20 @@
 
 template <size_t N>
 static void
-for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds) noexcept
+for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // for each single item
     for (size_t i = 0; i < std::size(arr); ++i)
     {
         // repeat aes_num_rounds times
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
     }
 }
 
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 static void
 for_each_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
 {
@@ -35,7 +35,7 @@ for_each_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
     for (size_t i = 0; i < std::size(arr); ++i)
     {
         // repeat aes_num_rounds times
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -46,7 +46,7 @@ for_each_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds) noexcept
+for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // for each pair of items
     for (size_t i = 0; i < std::size(arr); i += 2)
@@ -55,7 +55,7 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
 
         // repeat aes_num_rounds times
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -66,7 +66,7 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
@@ -78,7 +78,7 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
 
         // repeat aes_num_rounds times
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -90,10 +90,10 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
 
 template <size_t N>
 static void
-repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds) noexcept
+repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // repeat aes_num_rounds times
-    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -103,12 +103,12 @@ repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num
     }
 }
 
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 static void
 repeat_for_each_t_param(Castella::arr_blocks<N>& arr) noexcept
 {
     // repeat aes_num_rounds times
-    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
         for (size_t i = 0; i < std::size(arr); ++i)
@@ -122,10 +122,10 @@ repeat_for_each_t_param(Castella::arr_blocks<N>& arr) noexcept
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int aes_num_rounds) noexcept
+repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // repeat aes_num_rounds times
-    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)
@@ -142,13 +142,13 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const unsigned int ae
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr) noexcept
 {
     // repeat aes_num_rounds times
-    for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
         for (size_t i = 0; i < std::size(arr); i += 2)
@@ -166,17 +166,17 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr) noexcept
 
 // aes_num_rounds is passed as a function param
 template <size_t N>
-using func_f_param_t = void (&)(Castella::arr_blocks<N>&, const unsigned int);
+using func_f_param_t = void (&)(Castella::arr_blocks<N>&, const int);
 
 // aes_num_rounds is passed as a template param
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 using func_t_param_t = void (&)(Castella::arr_blocks<N>&);
 
 template <size_t N>
 void
 BM_test_f_param(benchmark::State& BM_state,
                 func_f_param_t<N>& fn,
-                const unsigned int aes_num_rounds)
+                const int aes_num_rounds)
 {
     // Perform setup here
 
@@ -194,7 +194,7 @@ BM_test_f_param(benchmark::State& BM_state,
     benchmark::DoNotOptimize(arr);
 }
 
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 void
 BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& fn)
 {
@@ -259,7 +259,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     {
         constexpr size_t N = 16;
-        constexpr unsigned int aes_num_rounds = 3;
+        constexpr int aes_num_rounds = 3;
 
         Castella::arr_blocks<N> arr{};
         arc4random_buf(std::data(arr), sizeof(arr));
@@ -309,7 +309,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ speed
 
     constexpr size_t N = 16;
-    constexpr unsigned int aes_num_rounds = 3;
+    constexpr int aes_num_rounds = 3;
 
     if (num_threads == 1)
     {

@@ -23,7 +23,7 @@
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_1(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_1(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -44,7 +44,7 @@ squeeze_bytes_1(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_2(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_2(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -64,7 +64,7 @@ squeeze_bytes_2(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_3(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -85,7 +85,7 @@ squeeze_bytes_3(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_4(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -107,7 +107,7 @@ squeeze_bytes_4(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_5(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_5(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -131,7 +131,7 @@ squeeze_bytes_5(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_6(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_6(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -153,7 +153,7 @@ squeeze_bytes_6(const std::array<T, N>& state, unsigned int n)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
 static std::vector<std::byte>
-squeeze_bytes_7(const std::array<T, N>& state, unsigned int n)
+squeeze_bytes_7(const std::array<T, N>& state, int n)
 {
     // clamp
     if (n > sizeof(state)) // NOLINT(readability-use-std-min-max)
@@ -175,7 +175,7 @@ squeeze_bytes_7(const std::array<T, N>& state, unsigned int n)
 #endif
 
 template <typename T, std::size_t N>
-using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, unsigned int n);
+using func_t = std::vector<std::byte> (&)(const std::array<T, N>& state, int n);
 
 template <typename T, std::size_t N>
 void
@@ -251,10 +251,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         arc4random_buf(std::data(state), sizeof(state));
 
-        constexpr unsigned int size_bytes = sizeof(state);
+        constexpr int size_bytes = sizeof(state);
 
         // Test all possible values and beyond to test clamping
-        for (unsigned int n = 0; n <= size_bytes + 10; ++n)
+        for (int n = 0; n <= size_bytes + 10; ++n)
         {
             const auto result_1 = squeeze_bytes_1(state, n);
             const auto result_2 = squeeze_bytes_2(state, n);

@@ -26,7 +26,7 @@
 
 template <size_t N>
 void
-calculate_metrics_num_rounds(const unsigned int num_samples)
+calculate_metrics_num_rounds(const int num_samples)
 {
     using T = Castella::arr_blocks<N>;
 
@@ -37,7 +37,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
     std::map<uint8_t, running_stats<double>> num_rounds_to_rs_num_bits_changed;
 
     // for each sample
-    for (unsigned int i = 0; i < num_samples; ++i)
+    for (int i = 0; i < num_samples; ++i)
     {
         T state;
         arc4random_buf(std::data(state), sizeof(state));
@@ -75,7 +75,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
 
                     // count the number of bits changed
                     {
-                        unsigned int num_bits_changed = 0;
+                        int num_bits_changed = 0;
 
                         // for each row
                         for (size_t j = 0; j < N; ++j)
@@ -102,7 +102,7 @@ calculate_metrics_num_rounds(const unsigned int num_samples)
             );
 
     // number of bits in the state
-    constexpr unsigned int bits = sizeof(T) * 8;
+    constexpr int bits = sizeof(T) * 8;
 
     // expected number of bits changed
     constexpr size_t expected_mean = bits / 2;
@@ -139,7 +139,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    unsigned int num_samples = 1; // number of random samples to test
+    int num_samples = 1; // number of random samples to test
 
     {
         const char* short_options = "+n:";

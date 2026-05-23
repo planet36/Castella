@@ -13,7 +13,7 @@
 
 template <size_t N>
 void
-BM_permute(benchmark::State& BM_state, const unsigned int num_rounds)
+BM_permute(benchmark::State& BM_state, const int num_rounds)
 {
     // Perform setup here
 

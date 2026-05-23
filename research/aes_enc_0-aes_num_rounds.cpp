@@ -18,14 +18,14 @@
 #include <unistd.h>
 
 void
-calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int aes_num_rounds)
+calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
 {
     using T = uint8x16_t;
 
     running_stats<double> rs_num_bits_changed;
 
     // for each sample
-    for (unsigned int i = 0; i < num_samples; ++i)
+    for (int i = 0; i < num_samples; ++i)
     {
         T data{};
         arc4random_buf(&data, sizeof(data));
@@ -33,7 +33,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
         auto result = data;
 
         // aes_num_rounds times
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
+        for (int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
         {
             result = aes_enc_0(result);
         }
@@ -46,14 +46,14 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
             auto result_p = data_p;
 
             // aes_num_rounds times
-            for (unsigned int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
+            for (int aes_r = 0; aes_r < aes_num_rounds; ++aes_r)
             {
                 result_p = aes_enc_0(result_p);
             }
 
             {
                 // count the number of bits changed
-                const unsigned int num_bits_changed = simd_popcount(result ^ result_p);
+                const int num_bits_changed = simd_popcount(result ^ result_p);
 
                 rs_num_bits_changed.push(num_bits_changed);
             }
@@ -61,7 +61,7 @@ calculate_metrics_aes_enc_0(const unsigned int num_samples, const unsigned int a
     }
 
     // number of bits in the block
-    constexpr unsigned int bits = sizeof(T) * 8;
+    constexpr int bits = sizeof(T) * 8;
 
     // expected number of bits changed
     constexpr size_t expected_mean = bits / 2;
@@ -94,7 +94,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    unsigned int num_samples = 1; // number of random samples to test
+    int num_samples = 1; // number of random samples to test
 
     {
         const char* short_options = "+n:";
@@ -142,7 +142,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             "\tkurt."
             );
 
-    for (unsigned int aes_num_rounds = 1; aes_num_rounds <= 6; aes_num_rounds++)
+    for (int aes_num_rounds = 1; aes_num_rounds <= 6; aes_num_rounds++)
     {
         calculate_metrics_aes_enc_0(num_samples, aes_num_rounds);
     }

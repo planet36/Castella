@@ -47,7 +47,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    unsigned int num_samples = 0; // number of random samples to test
+    int num_samples = 0; // number of random samples to test
 
     {
         const char* short_options = "+n:";
@@ -163,7 +163,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // Test state with all random bytes
 
-    for (unsigned int i = 0; i < num_samples; ++i)
+    for (int i = 0; i < num_samples; ++i)
     {
         {
             constexpr size_t N = 2;

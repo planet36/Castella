@@ -124,7 +124,7 @@ aes_enc_0_inv(T data) noexcept
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
@@ -134,7 +134,7 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
 
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -146,13 +146,13 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 #endif
 
 /// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); ++i)
     {
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -162,7 +162,7 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
@@ -172,7 +172,7 @@ aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
 
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0_inv(v);
         }
@@ -184,13 +184,13 @@ aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 #endif
 
 /// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <unsigned int aes_num_rounds, size_t N>
+template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (size_t i = 0; i < std::size(arr); ++i)
     {
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             arr[i] = aes_enc_0_inv(arr[i]);
         }

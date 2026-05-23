@@ -11,7 +11,7 @@
 #include <thread>
 
 void
-BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
+BM_aes_enc_0(benchmark::State& BM_state, const int aes_num_rounds)
 {
     // Perform setup here
 
@@ -22,7 +22,7 @@ BM_aes_enc_0(benchmark::State& BM_state, const unsigned int aes_num_rounds)
     {
         // This code gets timed
 
-        for (unsigned int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             a = aes_enc_0(a);
         }

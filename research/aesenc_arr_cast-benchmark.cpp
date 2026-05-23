@@ -154,9 +154,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ accuracy testing
 
     {
-        constexpr size_t N = 16;
+        constexpr int N = 16;
 
-        constexpr size_t max_iterations = 10;
+        constexpr int max_iterations = 10;
 
         simd_arr_16_t<N> data{};
 
@@ -176,7 +176,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         const auto round_key_128 = _mm_setzero_si128();
         const auto round_key_256 = _mm256_setzero_si256();
 
-        for (size_t i = 0; i < max_iterations; ++i)
+        for (int i = 0; i < max_iterations; ++i)
         {
             aesenc_arr(result_1, round_key_128);
             aesenc_arr_cast(result_2, round_key_128);

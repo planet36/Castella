@@ -311,9 +311,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ accuracy testing
 
     {
-        const size_t max_len = 1'000'000;
+        const unsigned int max_len = 1'000'000;
 
-        for (size_t len = 0; len < max_len; ++len)
+        for (unsigned int len = 0; len < max_len; ++len)
         {
             const auto l_enc_bytes_1 = left_encode_1(len);
             const auto l_enc_bytes_2 = left_encode_2(len);
@@ -343,7 +343,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    using T = size_t;
+    using T = unsigned int;
 
     if (num_threads == 1)
     {

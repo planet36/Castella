@@ -183,7 +183,7 @@ void process_options(int argc, char* argv[])
 bool
 process_file_read_fd(int fd, auto& hash_obj)
 {
-    std::vector<uint8_t> buf(BLOCKSIZE);
+    std::vector<std::byte> buf(BLOCKSIZE);
 
     ssize_t num_bytes_read = 0;
     // https://www.man7.org/linux/man-pages/man3/read.3p.html#RETURN_VALUE

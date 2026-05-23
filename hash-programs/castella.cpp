@@ -343,7 +343,7 @@ process_file(const std::string& path, auto& hash_obj)
 
     if (use_mmap)
     {
-        const long file_size = get_file_size(fd.get());
+        const auto file_size = get_file_size(fd.get());
         if (file_size < 0)
             throw SYSERR_PATH(path);
 
@@ -354,7 +354,7 @@ process_file(const std::string& path, auto& hash_obj)
             return;
         }
 
-        const size_t mmap_size = get_mmap_size(file_size);
+        const auto mmap_size = get_mmap_size(file_size);
 
         void* mmap_addr = ::mmap(nullptr, mmap_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);
 

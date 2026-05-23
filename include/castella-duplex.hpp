@@ -36,7 +36,6 @@
 #include "to_unsigned.hpp"
 
 #include <algorithm>
-#include <array>
 #if defined(DEBUG)
 #include <cassert>
 #endif

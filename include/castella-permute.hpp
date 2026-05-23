@@ -18,7 +18,7 @@
 #if defined(DEBUG)
 #include <cassert>
 #endif
-#include <cstdint>
+#include <cstddef>
 #include <ranges>
 #include <span>
 

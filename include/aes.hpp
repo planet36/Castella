@@ -129,7 +129,7 @@ requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
-    for (size_t i = 0; i < std::size(arr); i += 2)
+    for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
@@ -150,7 +150,7 @@ template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
-    for (size_t i = 0; i < std::size(arr); ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
@@ -167,7 +167,7 @@ requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
-    for (size_t i = 0; i < std::size(arr); i += 2)
+    for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
@@ -188,7 +188,7 @@ template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
-    for (size_t i = 0; i < std::size(arr); ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {

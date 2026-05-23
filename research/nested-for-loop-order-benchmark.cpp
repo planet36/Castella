@@ -17,7 +17,7 @@ static void
 for_each_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // for each single item
-    for (size_t i = 0; i < std::size(arr); ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         // repeat aes_num_rounds times
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -32,7 +32,7 @@ static void
 for_each_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
 {
     // for each single item
-    for (size_t i = 0; i < std::size(arr); ++i)
+    for (int i = 0; i < std::ssize(arr); ++i)
     {
         // repeat aes_num_rounds times
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -49,7 +49,7 @@ static void
 for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) noexcept
 {
     // for each pair of items
-    for (size_t i = 0; i < std::size(arr); i += 2)
+    for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
@@ -72,7 +72,7 @@ static void
 for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
 {
     // for each pair of items
-    for (size_t i = 0; i < std::size(arr); i += 2)
+    for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to uint8x16x2_t.
         uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
@@ -96,7 +96,7 @@ repeat_for_each_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rounds) 
     for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
-        for (size_t i = 0; i < std::size(arr); ++i)
+        for (int i = 0; i < std::ssize(arr); ++i)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -111,7 +111,7 @@ repeat_for_each_t_param(Castella::arr_blocks<N>& arr) noexcept
     for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each single item
-        for (size_t i = 0; i < std::size(arr); ++i)
+        for (int i = 0; i < std::ssize(arr); ++i)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -128,7 +128,7 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rou
     for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
-        for (size_t i = 0; i < std::size(arr); i += 2)
+        for (int i = 0; i < std::ssize(arr); i += 2)
         {
             // Cast adjacent pairs of elements to uint8x16x2_t.
             uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
@@ -151,7 +151,7 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr) noexcept
     for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
     {
         // for each pair of items
-        for (size_t i = 0; i < std::size(arr); i += 2)
+        for (int i = 0; i < std::ssize(arr); i += 2)
         {
             // Cast adjacent pairs of elements to uint8x16x2_t.
             uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));

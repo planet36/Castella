@@ -40,7 +40,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // `hash_obj.get_capacity_size_bytes() / 2`
             const auto digest_bytes = hash_obj.squeeze_bytes();
 
-            assert(digest_bytes.size() == hash_obj.get_capacity_size_bytes() / 2);
+            assert(std::ssize(digest_bytes) == hash_obj.get_capacity_size_bytes() / 2);
         }
 
         hash_obj.add(
@@ -76,7 +76,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
 
-            assert(digest_bytes.size() == hash_obj.get_rate_size_bytes());
+            assert(std::ssize(digest_bytes) == hash_obj.get_rate_size_bytes());
         }
 
         hash_obj.add("My eyes!  The goggles do nothing!");
@@ -222,7 +222,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         };
 
         // Ensure the input size is greater than the outer state size.
-        assert(std::size(X) > hash_obj.get_rate_size_bytes());
+        assert(std::ssize(X) > hash_obj.get_rate_size_bytes());
 
         // Add all the data at once
         hash_obj.add(X);

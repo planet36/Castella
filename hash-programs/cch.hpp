@@ -20,6 +20,7 @@
 #endif
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <mutex>
 #include <span>
@@ -109,8 +110,8 @@ private:
 
     void zeroize_()
     {
-        state_.fill(block_t{});
-        input_bytes_.fill_capacity(std::byte{});
+        explicit_bzero(std::data(state_), sizeof(state_));
+        explicit_bzero(input_bytes_.data(), input_bytes_.capacity());
         input_bytes_.clear();
         bytes_absorbed_ = 0;
         has_been_finalized_ = false;

@@ -561,6 +561,7 @@ private:
 
 #if defined(DEBUG)
         assert(w >= 1);
+        assert(w <= 255);
 #endif
 
         add_(&w, sizeof(w));
@@ -590,6 +591,7 @@ private:
 
 #if defined(DEBUG)
         assert(w >= 1);
+        assert(w <= 255);
 #endif
 
         add_(&x, w);

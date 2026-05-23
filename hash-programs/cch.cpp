@@ -270,8 +270,6 @@ process_file(const std::string& path, auto& hash_obj)
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    using namespace std::literals;
-
     int exit_status = EXIT_SUCCESS;
 
     process_options(argc, argv);

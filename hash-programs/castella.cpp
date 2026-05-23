@@ -374,7 +374,12 @@ process_file(const std::string& path, auto& hash_obj)
         }
 
         if (madvise_sequential_willneed(mmap_addr, file_size))
+        {
+            const int saved_errno = errno;
+            (void)::munmap(mmap_addr, mmap_size);
+            errno = saved_errno;
             throw SYSERR_PATH(path);
+        }
 
         hash_obj.add(mmap_addr, file_size);
 

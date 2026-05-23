@@ -34,7 +34,7 @@ quote_shell_always(std::string_view s)
     constexpr char delim = SINGLE_QUOTE;
 
     std::string result;
-    result.reserve(s.size() + 2);
+    result.reserve(std::size(s) + 2);
 
     result += delim;
 

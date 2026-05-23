@@ -66,7 +66,9 @@ left_encode_2(std::unsigned_integral auto x)
 static std::vector<std::byte>
 left_encode_3(const std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     const auto byte_sp = as_byte_span(x);
 
@@ -158,7 +160,9 @@ right_encode_2(std::unsigned_integral auto x)
 static std::vector<std::byte>
 right_encode_3(const std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     const auto byte_sp = as_byte_span(x);
 

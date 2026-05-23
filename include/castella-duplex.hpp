@@ -51,6 +51,13 @@
 #include <type_traits>
 #include <vector>
 
+/// Cast the integer to unsigned integer
+constexpr auto
+to_unsigned(const std::integral auto x)
+{
+    return static_cast<std::make_unsigned_t<decltype(x)>>(x);
+}
+
 namespace Castella
 {
 
@@ -690,8 +697,8 @@ private:
         */
         // }}}
 
-        left_encode_(get_state_size_bytes());
-        left_encode_(get_rate_size_bytes()); // cSHAKE does this.
+        left_encode_(to_unsigned(get_state_size_bytes()));
+        left_encode_(to_unsigned(get_rate_size_bytes())); // cSHAKE does this.
         encode_bytes_(function_name);
         encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)

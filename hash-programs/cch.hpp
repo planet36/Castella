@@ -297,4 +297,12 @@ public:
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 2; }
 
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
+
+    /// Returns \c true if this object has been finalized.
+    /**
+    * This does not acquire the mutex and may race with a concurrent call to
+    * \c final_digest_bytes().  The result is suitable for informal polling but
+    * must not be used as a synchronization guard.
+    */
+    [[nodiscard]] bool is_finalized() const noexcept { return has_been_finalized_; }
 };

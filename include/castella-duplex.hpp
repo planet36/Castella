@@ -559,6 +559,8 @@ private:
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
 #if defined(DEBUG)
         assert(w >= 1);
         assert(w <= 255);
@@ -588,6 +590,8 @@ private:
     void right_encode_(const std::unsigned_integral auto x) noexcept
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
+
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
 #if defined(DEBUG)
         assert(w >= 1);

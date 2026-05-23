@@ -323,6 +323,12 @@ process_file_read_fd(int fd, auto& hash_obj)
 #define SYSERR_PATH(PATH) \
     std::system_error(std::make_error_code(std::errc{errno}), quote_shell_always(PATH));
 
+/// Hash the contents of the file at \a path into \a hash_obj
+/**
+* \param path the file path; "-" means stdin
+* \param hash_obj the hash object to absorb the file contents into
+* \exception std::system_error on I/O error
+*/
 void
 process_file(const std::string& path, auto& hash_obj)
 {

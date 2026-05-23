@@ -151,7 +151,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             case 'n':
                 try
                 {
-                    const auto tmp = std::stoul(optarg);
+                    const auto tmp = std::stoi(optarg);
                     num_samples = std::saturating_cast<decltype(num_samples)>(tmp);
                 }
                 catch (const std::invalid_argument& ex)

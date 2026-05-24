@@ -45,14 +45,14 @@ inline constexpr std::string default_customization_str = "hash";
 // {{{ options
 bool verbose = false;
 
-int input_suffix = default_input_suffix;
+auto input_suffix = default_input_suffix;
 
-int num_rounds = default_num_rounds;
+auto num_rounds = default_num_rounds;
 
-int num_bytes_to_squeeze = default_num_bytes_to_squeeze;
+auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
 
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
-std::string customization_str = default_customization_str;
+auto customization_str = default_customization_str;
 
 bool use_mmap = true;
 // }}}

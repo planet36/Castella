@@ -30,7 +30,8 @@ static_assert(default_digest_size_bytes <= compress_castella_hash<>::get_max_dig
 // }}}
 
 // {{{ options
-int digest_size_bytes = default_digest_size_bytes;
+auto digest_size_bytes = default_digest_size_bytes;
+
 bool use_mmap = true;
 // }}}
 

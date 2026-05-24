@@ -44,7 +44,7 @@ inline constexpr std::string_view program_license = "MPL-2.0";
 inline constexpr std::string_view program_version = "2026-05-22";
 
 inline constexpr std::string_view default_host = "localhost";
-inline constexpr uint16_t default_port = 8080;
+inline constexpr int default_port = 8080;
 const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
 Castella::Duplex* hash_obj = nullptr;

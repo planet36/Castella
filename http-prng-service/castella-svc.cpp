@@ -132,7 +132,7 @@ print_usage()
     std::println("                 - The body data of requests & responses");
     nl;
 
-    std::println("  -p PORT    Specify the port.  (default={:d})", default_port);
+    std::println("  -p PORT    Specify the port.  (default={})", default_port);
     nl;
 
     std::println("The default HOST is {}.", quote_shell_always(default_host));

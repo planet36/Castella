@@ -119,18 +119,18 @@ void print_usage()
 
     std::println("  --rounds=NUM_ROUNDS");
     std::println("        Specify the number of rounds to perform in the Castella permutation function.");
-    std::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+    std::println("        (default={}) (minimum={}) (maximum={})",
             default_num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
     std::println("        Specify the output size (in bytes).");
     std::println("        Typical values are: 32, 48, or 64.");
-    std::println("        (default={:d}) (minimum={:d}) (maximum={:d})",
+    std::println("        (default={}) (minimum={}) (maximum={})",
             default_num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
 
     std::println("  --suffix=BYTE");
     std::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
-    std::println("        (default={:d}) (minimum=0) (maximum=255)",
+    std::println("        (default={}) (minimum=0) (maximum=255)",
             default_input_suffix);
 
     std::println("");
@@ -405,8 +405,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         std::println(stderr, "# num_rounds={}", num_rounds);
         std::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
-        std::println(stderr, "# capacity_blocks={:d}", capacity_blocks);
-        std::println(stderr, "# input_suffix={:d}", input_suffix);
+        std::println(stderr, "# capacity_blocks={}", capacity_blocks);
+        std::println(stderr, "# input_suffix={}", input_suffix);
         std::println(stderr, "# function_name={}", quote_shell_always(function_name));
         std::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
     }

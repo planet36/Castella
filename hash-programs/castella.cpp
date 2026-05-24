@@ -27,8 +27,7 @@ inline constexpr std::string_view program_version = "2026-05-22";
 inline constexpr std::string_view function_name = "Castella";
 
 // {{{ default values for options
-
-inline constexpr uint8_t default_input_suffix = 1;
+inline constexpr int default_input_suffix = 1;
 
 inline constexpr int default_num_rounds = 6;
 static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN);
@@ -44,10 +43,9 @@ inline constexpr std::string default_customization_str = "hash";
 // }}}
 
 // {{{ options
-
 bool verbose = false;
 
-uint8_t input_suffix = default_input_suffix;
+int input_suffix = default_input_suffix;
 
 int num_rounds = default_num_rounds;
 

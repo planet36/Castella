@@ -219,7 +219,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_ROUNDS:
             try
             {
-                const auto tmp = std::stol(optarg);
+                const auto tmp = std::stoi(optarg);
                 num_rounds = std::saturating_cast<decltype(num_rounds)>(tmp);
 
                 if (num_rounds < Castella::NUM_ROUNDS_MIN ||
@@ -243,7 +243,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_SIZE:
             try
             {
-                const auto tmp = std::stol(optarg);
+                const auto tmp = std::stoi(optarg);
                 num_bytes_to_squeeze = std::saturating_cast<decltype(num_bytes_to_squeeze)>(tmp);
 
                 if (num_bytes_to_squeeze < min_num_bytes_to_squeeze ||
@@ -267,7 +267,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_SUFFIX:
             try
             {
-                const auto tmp = std::stol(optarg);
+                const auto tmp = std::stoi(optarg);
                 input_suffix = std::saturating_cast<decltype(input_suffix)>(tmp);
             }
             catch (const std::invalid_argument& ex)

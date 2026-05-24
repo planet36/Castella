@@ -145,7 +145,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_SIZE:
             try
             {
-                const auto tmp = std::stol(optarg);
+                const auto tmp = std::stoi(optarg);
                 digest_size_bytes = std::saturating_cast<decltype(digest_size_bytes)>(tmp);
             }
             catch (const std::invalid_argument& ex)

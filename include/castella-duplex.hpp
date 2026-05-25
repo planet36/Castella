@@ -317,7 +317,7 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
     */
     // }}}
-    const std::byte INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
 

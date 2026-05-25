@@ -11,6 +11,7 @@
 
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
+#include "in_range.hpp"
 #include "simd_compress.hpp"
 
 #include <algorithm>
@@ -105,6 +106,9 @@ private:
 
     /// After this many bytes are absorbed, the state is mixed.
     const uint16_t mix_rate_ = DEFAULT_MIX_RATE; // bytes absorbed per mix
+    static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MIN));
+    static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MAX));
+    static_assert(in_range<decltype(mix_rate_)>(DEFAULT_MIX_RATE));
 
     bool has_been_finalized_ = false;
 

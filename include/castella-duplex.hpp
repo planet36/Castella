@@ -33,6 +33,7 @@
 
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
+#include "narrow_cast.hpp"
 #include "to_unsigned.hpp"
 
 #include <algorithm>
@@ -748,10 +749,10 @@ public:
                     const int input_suffix = 0,
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
-        C(capacity_blocks),
-        R(B - C),
-        NUM_ROUNDS(num_rounds),
-        INPUT_SUFFIX(input_suffix)
+        C{narrow_cast<decltype(C)>(capacity_blocks)},
+        R{narrow_cast<decltype(R)>(B - C)},
+        NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
+        INPUT_SUFFIX{narrow_cast<decltype(INPUT_SUFFIX)>(input_suffix)}
     {
         // Must check constraints before allocating the input buffer.
         check_constraints_();

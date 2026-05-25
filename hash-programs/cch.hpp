@@ -12,6 +12,7 @@
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
+#include "narrow_cast.hpp"
 #include "simd_compress.hpp"
 
 #include <algorithm>
@@ -225,8 +226,8 @@ public:
 
     compress_castella_hash() = default;
 
-    explicit compress_castella_hash(const int mix_rate) : mix_rate_{
-            std::clamp(mix_rate, MIX_RATE_MIN, MIX_RATE_MAX)}
+    explicit compress_castella_hash(const int mix_rate) :
+        mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {
         check_constraints_();
     }

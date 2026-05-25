@@ -164,6 +164,7 @@ struct alignas(block_t) Duplex final
     static_assert(R_MIN <= R_MAX);
 
 private:
+
     arr_blocks<B> state_{};
 
     std::mutex mtx_;
@@ -174,6 +175,7 @@ private:
     int32_t cur_input_byte_idx_ = 0;
 
 public:
+
     /// The size (in blocks) of the capacity
     // {{{
     /**
@@ -318,6 +320,7 @@ public:
     const std::byte INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
+
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
     // {{{
     /**
@@ -706,6 +709,7 @@ private:
     }
 
 public:
+
     /// ctor
     // {{{
     /**
@@ -739,8 +743,8 @@ public:
     * \pre \a capacity_blocks is even
     */
     // }}}
-    explicit Duplex(const uint8_t capacity_blocks,
-                    const uint8_t num_rounds,
+    explicit Duplex(const int capacity_blocks,
+                    const int num_rounds,
                     const std::byte input_suffix = std::byte{0},
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :

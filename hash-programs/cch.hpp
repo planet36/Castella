@@ -86,7 +86,7 @@ public:
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
 
-    static constexpr int MIX_RATE_MIN = 1U << 10;
+    static constexpr int MIX_RATE_MIN = 1U << 8;
     static constexpr int MIX_RATE_MAX = std::numeric_limits<uint16_t>::max();
     static constexpr int DEFAULT_MIX_RATE = 1U << 15;
     static_assert(MIX_RATE_MIN <= MIX_RATE_MAX);

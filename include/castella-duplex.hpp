@@ -493,6 +493,7 @@ private:
     void add_(const void* data, size_t len) noexcept
     {
 #if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 

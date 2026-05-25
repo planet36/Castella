@@ -35,6 +35,7 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 
 /// There is no such intrinsic named "_mm256_aesimc_epi128".
 static inline uint8x16x2_t
+// NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 _mm256_aesimc_epi128(uint8x16x2_t data) noexcept
 {
     const __m128i hi = _mm_aesimc_si128(_mm256_extracti128_si256(data, 1));

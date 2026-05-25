@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "aes.hpp"
+#include "aes_enc.hpp"
 #include "simd_load.hpp"
 #include "simd_transpose.hpp"
 #include "simd_types.hpp"

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#include "aes.hpp"
+#include "aes_enc.hpp"
 #include "get_env.hpp"
 
 #include <algorithm>

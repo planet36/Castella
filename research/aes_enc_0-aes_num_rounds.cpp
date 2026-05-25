@@ -4,7 +4,7 @@
 #define DEBUG 1
 #undef NDEBUG
 
-#include "aes.hpp"
+#include "aes_enc.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
 #include "simd_popcount.hpp"

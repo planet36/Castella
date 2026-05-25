@@ -112,6 +112,25 @@ private:
 
     bool has_been_finalized_ = false;
 
+    /// Check the value of \c mix_rate_
+    // {{{
+    /**
+    * \exception std::invalid_argument if \c mix_rate_ is invalid
+    */
+    // }}}
+    void check_constraints_() const
+    {
+        if (mix_rate_ < MIX_RATE_MIN)
+        {
+            throw std::invalid_argument("compress_castella_hash: mix_rate_ < MIX_RATE_MIN");
+        }
+
+        if (mix_rate_ > MIX_RATE_MAX)
+        {
+            throw std::invalid_argument("compress_castella_hash: mix_rate_ > MIX_RATE_MAX");
+        }
+    }
+
     void zeroize_()
     {
         explicit_bzero(std::data(state_), sizeof(state_));
@@ -209,6 +228,7 @@ public:
     explicit compress_castella_hash(const int mix_rate) : mix_rate_{
             std::clamp(mix_rate, MIX_RATE_MIN, MIX_RATE_MAX)}
     {
+        check_constraints_();
     }
 
     // Disable copying and moving

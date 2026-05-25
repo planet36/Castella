@@ -18,14 +18,14 @@
 // {{{ x86_64
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return _mm_aesenc_si128(data, round_key);
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
@@ -34,7 +34,7 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 #if defined(__VAES__)
 
 /// There is no such intrinsic named "_mm256_aesimc_epi128".
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 // NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 _mm256_aesimc_epi128(uint8x16x2_t data) noexcept
 {
@@ -45,14 +45,14 @@ _mm256_aesimc_epi128(uint8x16x2_t data) noexcept
 }
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 {
     return _mm256_aesenc_epi128(data, round_key);
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 {
     return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), uint8x16x2_t{});
@@ -67,28 +67,28 @@ aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 // {{{ ARM64
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
     return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
 }
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 {
     return {aes_enc(data.val[0], round_key.val[0]), aes_enc(data.val[1], round_key.val[1])};
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 {
     return {aes_enc_inv(data.val[0], round_key.val[0]),
@@ -105,7 +105,7 @@ aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
 
 /// Perform 1 round of AES encryption with a zero round key on \a data
 template <typename T>
-static inline T
+[[nodiscard]] static inline T
 aes_enc_0(T data) noexcept
 {
     return aes_enc(data, T{});
@@ -113,7 +113,7 @@ aes_enc_0(T data) noexcept
 
 /// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
 template <typename T>
-static inline T
+[[nodiscard]] static inline T
 aes_enc_0_inv(T data) noexcept
 {
     return aes_enc_inv(data, T{});

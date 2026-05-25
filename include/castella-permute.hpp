@@ -63,7 +63,7 @@ static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 * AES encryption (with a zero round key) on the preceding one.
 */
 template <int N>
-static auto
+[[nodiscard]] static auto
 create_round_constants() noexcept
 {
     static_assert(N > 0);

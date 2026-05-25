@@ -19,7 +19,7 @@
 * \pre \a src points to at least 16 bytes of data
 */
 // }}}
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 simd_load16(const void* src) noexcept
 {
     uint8x16_t dst{};

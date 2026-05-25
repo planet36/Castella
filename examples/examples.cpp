@@ -50,7 +50,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         constexpr int capacity_blocks = 4;
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "example";
 
@@ -101,7 +101,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE128";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -135,7 +135,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE256";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -189,7 +189,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC128";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -227,7 +227,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC256";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -265,7 +265,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF128";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -303,7 +303,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF256";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -357,7 +357,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash128";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -413,7 +413,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash256";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -469,7 +469,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF128";
         constexpr int num_bytes_to_squeeze = L / 8;
@@ -525,7 +525,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF256";
         constexpr int num_bytes_to_squeeze = L / 8;

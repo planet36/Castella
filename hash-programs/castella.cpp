@@ -428,7 +428,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             Castella::Duplex hash_obj(capacity_blocks, num_rounds,
-                    std::byte{input_suffix}, function_name, customization_str);
+                    input_suffix, function_name, customization_str);
 
             if (verbose)
             {

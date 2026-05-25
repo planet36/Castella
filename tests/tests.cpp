@@ -26,7 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         constexpr int capacity_blocks = 4;
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
@@ -97,7 +97,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     {
         // Test constraint violations
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
@@ -184,7 +184,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // same digest as if the data was added in one chunk.
         constexpr int capacity_blocks = 4;
         constexpr int num_rounds = 6;
-        constexpr std::byte input_suffix{0};
+        constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 

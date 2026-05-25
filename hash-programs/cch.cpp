@@ -22,15 +22,19 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-22";
+inline constexpr std::string_view program_version = "2026-05-25";
 
 // {{{ default values for options
 inline constexpr int default_digest_size_bytes = 32;
 static_assert(default_digest_size_bytes <= compress_castella_hash<>::get_max_digest_size_bytes());
+
+inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 // }}}
 
 // {{{ options
 auto digest_size_bytes = default_digest_size_bytes;
+
+auto mix_rate = default_mix_rate;
 
 bool use_mmap = true;
 // }}}
@@ -63,6 +67,13 @@ void print_usage()
     std::println("  -h, --help");
     std::println("        Print this message, then exit.");
 
+    std::println("  --mix-rate=RATE");
+    std::println("        Specify the number of bytes absorbed per state mix.");
+    std::println("        Valid range: [{}, {}].",
+            compress_castella_hash<>::MIX_RATE_MIN,
+            compress_castella_hash<>::MIX_RATE_MAX);
+    std::println("        (default={})", default_mix_rate);
+
     std::println("  --no-mmap");
     std::println("        Do not use memory mapping to read FILE.");
 
@@ -83,7 +94,7 @@ void print_usage()
     std::println("");
 
     std::println("Input data is absorbed into the internal state via a one-way compression function.");
-    std::println("The internal state is mixed by the Castella permutation function every {} bytes of input, ensuring full state diffusion.", compress_castella_hash<>::DEFAULT_MIX_RATE);
+    std::println("The internal state is mixed by the Castella permutation function every RATE bytes of input, ensuring full state diffusion.");
     std::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");
     std::println("The Castella permutation function is then applied to the state to produce the digest.");
     std::println("");
@@ -106,6 +117,7 @@ void process_options(int argc, char* argv[])
 
     constexpr int OPTION_HASH_VERSION  = static_cast<int>(fnv1a_32("version" ));
     constexpr int OPTION_HASH_HELP     = static_cast<int>(fnv1a_32("help"    ));
+    constexpr int OPTION_HASH_MIX_RATE = static_cast<int>(fnv1a_32("mix-rate"));
     constexpr int OPTION_HASH_NO_MMAP  = static_cast<int>(fnv1a_32("no-mmap" ));
     constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
 
@@ -117,6 +129,7 @@ void process_options(int argc, char* argv[])
         // const char*      , int                       , int*         , int
         {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
         {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
+        {.name="mix-rate"   , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_MIX_RATE},
         {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP },
         {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE    },
         {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                   },
@@ -137,6 +150,24 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_HELP:
             print_usage();
             std::exit(EXIT_SUCCESS);
+            break;
+
+        case OPTION_HASH_MIX_RATE:
+            try
+            {
+                const auto tmp = std::stoi(optarg);
+                mix_rate = std::saturating_cast<decltype(mix_rate)>(tmp);
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
             break;
 
         case OPTION_HASH_NO_MMAP:
@@ -296,7 +327,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         try
         {
-            compress_castella_hash<> hash_obj;
+            compress_castella_hash<> hash_obj{mix_rate};
 
             process_file(path, hash_obj);
 
@@ -308,6 +339,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             (void)std::fflush(stdout);
             warnx("invalid argument: %s", ex.what());
+            exit_status = EXIT_FAILURE;
+            break;
+        }
+        catch (const std::range_error& ex)
+        {
+            (void)std::fflush(stdout);
+            warnx("range error: %s", ex.what());
             exit_status = EXIT_FAILURE;
             break;
         }

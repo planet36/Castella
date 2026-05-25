@@ -171,7 +171,7 @@ private:
     block_t* input_blocks_ = nullptr; // size will be R
 
     /// The current index of the input buffer
-    int16_t cur_input_byte_idx_ = 0;
+    int32_t cur_input_byte_idx_ = 0;
 
 public:
     /// The size (in blocks) of the capacity

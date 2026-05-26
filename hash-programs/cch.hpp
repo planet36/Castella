@@ -158,13 +158,17 @@ private:
 
         arr_compress_aesenc4(state_, input_blocks);
 
-        bytes_absorbed_ += get_state_size_bytes();
-
-        // Periodically mix the state.
-        if ((mix_rate_ != 0) && (bytes_absorbed_ >= mix_rate_))
+        if (mix_rate_ != 0)
         {
-            Castella::permute(state_, Castella::NUM_ROUNDS_MIN);
-            bytes_absorbed_ = 0;
+            // Periodically mix the state.
+
+            bytes_absorbed_ += get_state_size_bytes();
+
+            if (bytes_absorbed_ >= mix_rate_)
+            {
+                Castella::permute(state_, Castella::NUM_ROUNDS_MIN);
+                bytes_absorbed_ = 0;
+            }
         }
 
         // zeroizing the input buffer is unnecessary

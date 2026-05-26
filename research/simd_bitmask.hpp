@@ -16,7 +16,7 @@
 
 #if defined(__x86_64__)
 
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo)
 {
 #pragma GCC diagnostic push
@@ -32,7 +32,7 @@ combine_u64x2(const uint64_t hi, const uint64_t lo)
 * \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vcombine_u64
 * \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u8_u64
 */
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo)
 {
     return vreinterpretq_u8_u64(vcombine_u64(vcreate_u64(lo), vcreate_u64(hi)));

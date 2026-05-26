@@ -62,7 +62,7 @@
 * \li diffusion rate of \a a = 50.3%
 * \li diffusion rate of \a b = 12.7%
 */
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 simd_compress_aes_enc_r2(const uint8x16_t a, const uint8x16_t b)
 {
 #if defined(__x86_64__) && defined(__AES__)
@@ -83,7 +83,7 @@ simd_compress_aes_enc_r2(const uint8x16_t a, const uint8x16_t b)
 * \li diffusion rate of \a a = 50.2%
 * \li diffusion rate of \a b = 50.0%
 */
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 simd_compress_aes_enc_r3(const uint8x16_t a, const uint8x16_t b)
 {
 #if defined(__x86_64__) && defined(__AES__)
@@ -108,7 +108,7 @@ simd_compress_aes_enc_r3(const uint8x16_t a, const uint8x16_t b)
 * \li diffusion rate of \a a = 50.0%
 * \li diffusion rate of \a b = 50.0%
 */
-static inline uint8x16_t
+[[nodiscard]] static inline uint8x16_t
 simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b)
 {
 #if defined(__x86_64__) && defined(__AES__)
@@ -133,7 +133,7 @@ simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b)
 
 /// Compress (via 2 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 simd_compress_aes_enc_r2(const uint8x16x2_t a, const uint8x16x2_t b)
 {
 #if defined(__x86_64__) && defined(__VAES__)
@@ -157,7 +157,7 @@ simd_compress_aes_enc_r2(const uint8x16x2_t a, const uint8x16x2_t b)
 
 /// Compress (via 3 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 simd_compress_aes_enc_r3(const uint8x16x2_t a, const uint8x16x2_t b)
 {
 #if defined(__x86_64__) && defined(__VAES__)
@@ -183,7 +183,7 @@ simd_compress_aes_enc_r3(const uint8x16x2_t a, const uint8x16x2_t b)
 
 /// Compress (via 4 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-static inline uint8x16x2_t
+[[nodiscard]] static inline uint8x16x2_t
 simd_compress_aes_enc_r4(const uint8x16x2_t a, const uint8x16x2_t b)
 {
 #if defined(__x86_64__) && defined(__VAES__)

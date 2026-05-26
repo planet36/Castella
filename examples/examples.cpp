@@ -22,7 +22,7 @@
 
 // right_encode is only here for compatibility with NIST algorithms
 
-auto
+[[nodiscard]] auto
 right_encode(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;

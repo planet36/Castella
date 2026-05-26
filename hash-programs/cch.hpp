@@ -73,11 +73,16 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 
 #pragma GCC diagnostic pop
 
+// This macro can be used by a program to find the optimum state size (in blocks).
+#if !defined(DEFAULT_CCH_STATE_SIZE_BLOCKS)
+#define DEFAULT_CCH_STATE_SIZE_BLOCKS 16 // NOLINT(cppcoreguidelines-macro-usage)
+#endif
+
 /// A hash class that uses one-way compression and the Castella permutation function
 /**
 * \c N=2 is quite slow.
 */
-template <int N = 16>
+template <int N = DEFAULT_CCH_STATE_SIZE_BLOCKS>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {
@@ -342,3 +347,5 @@ public:
     */
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };
+
+#undef DEFAULT_CCH_STATE_SIZE_BLOCKS

@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-// vim: set textwidth=81:
-
 /// Castella duplex class
 // {{{
 /**

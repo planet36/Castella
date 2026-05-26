@@ -151,7 +151,7 @@ private:
     {
 #if defined(DEBUG)
         assert(input_bytes_.is_full());
-        assert(!is_finalized());
+        assert(!has_been_finalized_);
 #endif
 
         const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
@@ -174,7 +174,7 @@ private:
     void add_(const void* data, size_t len)
     {
 #if defined(DEBUG)
-        assert(!is_finalized());
+        assert(!has_been_finalized_);
 #endif
 
         const auto* src = static_cast<const std::byte*>(data);
@@ -217,7 +217,7 @@ private:
     {
 #if defined(DEBUG)
         assert(!input_bytes_.is_full());
-        assert(!is_finalized());
+        assert(!has_been_finalized_);
 #endif
 
         for (uint8_t i = 0; !input_bytes_.is_full(); ++i)
@@ -272,7 +272,7 @@ public:
 
         std::scoped_lock lock{mtx_};
 
-        if (is_finalized())
+        if (has_been_finalized_)
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
@@ -309,7 +309,7 @@ public:
         std::vector<std::byte> result;
         result.reserve(n);
 
-        if (!is_finalized())
+        if (!has_been_finalized_)
         {
             add_padding_bytes_();
             Castella::permute(state_, Castella::NUM_ROUNDS_MAX);
@@ -328,12 +328,4 @@ public:
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 4; }
 
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
-
-    /// Returns \c true if this object has been finalized.
-    /**
-    * This does not acquire the mutex and may race with a concurrent call to
-    * \c final_digest_bytes().  The result is suitable for informal polling but
-    * must not be used as a synchronization guard.
-    */
-    [[nodiscard]] bool is_finalized() const noexcept { return has_been_finalized_; }
 };

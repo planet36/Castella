@@ -41,7 +41,7 @@
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
     for (size_t i = 0; i < N; i += 2)
     {
@@ -63,7 +63,7 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 */
 template <size_t N>
 static void
-arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
     for (size_t i = 0; i < N; ++i)
     {
@@ -162,7 +162,7 @@ private:
 
         const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
 
-        arr_compress_aesenc4(state_, input_blocks);
+        simd_compress_aes_enc_r4_arr(state_, input_blocks);
 
         if (mix_rate_ != 0)
         {

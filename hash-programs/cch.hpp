@@ -298,7 +298,10 @@ public:
     /// Get the final digest bytes
     /**
     * This adds padding bytes and prevents future updates to the state.
-    * \a n is clamped to \c get_max_digest_size_bytes().
+    * \param n the number of digest bytes to return
+    * \return the first \a n bytes of the state after finalization
+    * \exception std::system_error if the mutex cannot be locked
+    * \note \a n is clamped to \c get_max_digest_size_bytes().
     */
     [[nodiscard]] std::vector<std::byte> final_digest_bytes(int n)
     {
@@ -323,9 +326,15 @@ public:
         return result;
     }
 
+    /// Get the size (in bytes) of the state.
     [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return sizeof(state_); }
 
+    /// Get the maximum number of digest bytes that can be returned.
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 4; }
 
+    /// Get the mix rate (i.e. the number of bytes absorbed before the state is mixed).
+    /**
+    * 0 means periodic mixing is disabled.
+    */
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };

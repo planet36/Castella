@@ -875,16 +875,13 @@ public:
     /// `std::vector<std::byte>`
     // {{{
     /**
-    * \pre \a n ≥ 0
-    * \pre \a n ≤ \c get_rate_size_bytes()
     * \param n the number of bytes to squeeze from the outer state
     * \exception std::bad_alloc if the output vector cannot be allocated
     * \exception std::system_error if the mutex cannot be locked
+    * \note \a n is clamped to the interval <code>[0, get_rate_size_bytes()]</code>.
     *
     * Typical values of \a n are 32, 48, or 64.
     * A recommended value is `get_capacity_size_bytes() / 2`.
-    *
-    * \a n is clamped to \c get_rate_size_bytes().
     *
     * At most \c get_rate_size_bytes() bytes are squeezed.
     *

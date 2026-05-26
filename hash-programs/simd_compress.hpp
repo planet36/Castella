@@ -53,6 +53,9 @@
 
 #include "simd_types.hpp"
 
+#include <array>
+#include <cstddef>
+
 /// Compress (via 2 rounds of AES encryption) 2 128-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
 /**
@@ -205,3 +208,47 @@ simd_compress_aes_enc_r4(const uint8x16x2_t a, const uint8x16x2_t b)
         simd_compress_aes_enc_r4(a.val[1], b.val[1]) };
 #endif
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+
+#if defined(__x86_64__) && defined(__VAES__)
+
+/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
+/**
+* \pre \a arr_2 points to \a N elements
+*/
+template <size_t N>
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
+static void
+simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+{
+    for (size_t i = 0; i < N; i += 2)
+    {
+        // Cast adjacent pairs of elements to uint8x16x2_t.
+        uint8x16x2_t v_1 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_1[i]));
+        uint8x16x2_t v_2 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_2[i]));
+
+        v_1 = simd_compress_aes_enc_r4(v_1, v_2);
+
+        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr_1[i]), v_1);
+    }
+}
+
+#endif
+
+/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
+/**
+* \pre \a arr_2 points to \a N elements
+*/
+template <size_t N>
+static void
+simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+{
+    for (size_t i = 0; i < N; ++i)
+    {
+        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], arr_2[i]);
+    }
+}
+
+#pragma GCC diagnostic pop

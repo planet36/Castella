@@ -72,6 +72,7 @@ void print_usage()
     std::println("        Valid range: [{}, {}].",
             compress_castella_hash<>::MIX_RATE_MIN,
             compress_castella_hash<>::MIX_RATE_MAX);
+    std::println("        Use 0 to disable periodic mixing.");
     std::println("        (default={})", default_mix_rate);
 
     std::println("  --no-mmap");

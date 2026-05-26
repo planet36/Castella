@@ -121,6 +121,12 @@ private:
     // }}}
     void check_constraints_() const
     {
+        // Periodic mixing is disabled.
+        if (mix_rate_ == 0)
+        {
+            return;
+        }
+
         if (mix_rate_ < MIX_RATE_MIN)
         {
             throw std::invalid_argument("compress_castella_hash: mix_rate_ < MIX_RATE_MIN");
@@ -155,7 +161,7 @@ private:
         bytes_absorbed_ += get_state_size_bytes();
 
         // Periodically mix the state.
-        if (bytes_absorbed_ >= mix_rate_)
+        if ((mix_rate_ != 0) && (bytes_absorbed_ >= mix_rate_))
         {
             Castella::permute(state_, Castella::NUM_ROUNDS_MIN);
             bytes_absorbed_ = 0;

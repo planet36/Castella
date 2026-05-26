@@ -80,7 +80,8 @@ arr_compress_aesenc4(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) 
 
 /// A hash class that uses one-way compression and the Castella permutation function
 /**
-* \c N=2 is quite slow.
+* \tparam N The size (in blocks) of the state
+* \note \c N=2 is quite slow.
 */
 template <int N = DEFAULT_CCH_STATE_SIZE_BLOCKS>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
@@ -310,7 +311,9 @@ public:
     * \param n the number of digest bytes to return
     * \return the first \a n bytes of the state after finalization
     * \exception std::system_error if the mutex cannot be locked
-    * \note \a n is clamped to \c get_max_digest_size_bytes().
+    * \note \a n is clamped to the interval <code>[0, get_max_digest_size_bytes()]</code>.
+    *
+    * Typical values of \a n are 32, 48, or 64.
     */
     [[nodiscard]] std::vector<std::byte> final_digest_bytes(int n)
     {

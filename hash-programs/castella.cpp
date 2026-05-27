@@ -69,8 +69,10 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes)
 {
     int C = 2 * D_bytes; // bytes
 
+    constexpr auto block_size = static_cast<int>(sizeof(Castella::block_t));
+
     // div ceil
-    C = C / sizeof(Castella::block_t) + ((C % sizeof(Castella::block_t)) != 0); // blocks
+    C = C / block_size + ((C % block_size) != 0); // blocks
 
     // round up to nearest even number
     C += (C % 2) != 0; // add 1 if odd

@@ -59,12 +59,6 @@ simd_popcount(const uint8x16_t x)
     return vaddvq_u8(vcntq_u8(x));
 }
 
-[[nodiscard]] static inline int
-simd_popcount(const uint8x16x2_t x)
-{
-    return simd_popcount(x.val[0]) + simd_popcount(x.val[1]);
-}
-
 #else
 
 #error "Architecture not supported"

@@ -80,22 +80,6 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
     return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
 }
 
-/// Perform 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16x2_t
-aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
-{
-    return {aes_enc(data.val[0], round_key.val[0]),
-            aes_enc(data.val[1], round_key.val[1])};
-}
-
-/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16x2_t
-aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
-{
-    return {aes_enc_inv(data.val[0], round_key.val[0]),
-            aes_enc_inv(data.val[1], round_key.val[1])};
-}
-
 // }}}
 
 #else

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <array>
+
 #if defined(__x86_64__) && defined(__AES__)
 
 #include <immintrin.h>
@@ -30,3 +32,11 @@ using uint8x16x2_t = __m256i;
 #error "Architecture not supported"
 
 #endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+
+template <size_t N>
+using simd_arr_t = std::array<uint8x16_t, N>;
+
+#pragma GCC diagnostic pop

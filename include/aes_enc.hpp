@@ -13,25 +13,29 @@
 
 #include <array>
 
-#if defined(__x86_64__) && defined(__AES__)
-
-// {{{ x86_64
-
 /// Perform 1 round of AES encryption with \a round_key on \a data
 [[nodiscard]] static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
+#if defined(__x86_64__) && defined(__AES__)
     return _mm_aesenc_si128(data, round_key);
+#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
+    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
+#endif
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
 [[nodiscard]] static inline uint8x16_t
 aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 {
+#if defined(__x86_64__) && defined(__AES__)
     return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
+#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
+    return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
+#endif
 }
 
-#if defined(__VAES__)
+#if defined(__x86_64__) && defined(__VAES__)
 
 /// There is no such intrinsic named "_mm256_aesimc_epi128".
 [[nodiscard]] static inline __m256i
@@ -57,34 +61,6 @@ aes_enc_inv(__m256i data, const __m256i round_key) noexcept
 {
     return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), __m256i{});
 }
-
-#endif
-
-// }}}
-
-#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
-
-// {{{ ARM64
-
-/// Perform 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16_t
-aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
-{
-    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
-}
-
-/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16_t
-aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
-{
-    return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
-}
-
-// }}}
-
-#else
-
-#error "Architecture not supported"
 
 #endif
 

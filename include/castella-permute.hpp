@@ -27,13 +27,8 @@ namespace Castella
 
 using block_t = uint8x16_t;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-attributes"
-
 template <size_t N>
-using arr_blocks = std::array<block_t, N>;
-
-#pragma GCC diagnostic pop
+using arr_blocks = simd_arr_t<N>;
 
 // This macro is only defined in certain test programs to find the optimum
 // minimum round count.

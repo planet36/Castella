@@ -104,16 +104,13 @@ aes_enc_0_inv(T data) noexcept
     return aes_enc_inv(data, T{});
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-attributes"
-
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
 template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
@@ -134,7 +131,7 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 /// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
 template <int aes_num_rounds, size_t N>
 static void
-aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
@@ -151,7 +148,7 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 template <int aes_num_rounds, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
@@ -172,7 +169,7 @@ aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 /// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
 template <int aes_num_rounds, size_t N>
 static void
-aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
+aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
@@ -182,5 +179,3 @@ aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
         }
     }
 }
-
-#pragma GCC diagnostic pop

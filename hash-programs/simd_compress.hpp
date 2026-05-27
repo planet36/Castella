@@ -171,9 +171,6 @@ simd_compress_aes_enc_r4(const __m256i a, const __m256i b)
 
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-attributes"
-
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
@@ -183,7 +180,7 @@ simd_compress_aes_enc_r4(const __m256i a, const __m256i b)
 template <size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
     for (size_t i = 0; i < N; i += 2)
     {
@@ -205,12 +202,10 @@ simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t*
 */
 template <size_t N>
 static void
-simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t* arr_2) noexcept
+simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
     for (size_t i = 0; i < N; ++i)
     {
         arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], arr_2[i]);
     }
 }
-
-#pragma GCC diagnostic pop

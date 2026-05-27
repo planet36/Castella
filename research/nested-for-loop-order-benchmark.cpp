@@ -51,8 +51,8 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rou
     // for each pair of items
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
-        // Cast adjacent pairs of elements to uint8x16x2_t.
-        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
         // repeat aes_num_rounds times
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -60,7 +60,7 @@ for_each_cast_repeat_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rou
             v = aes_enc_0(v);
         }
 
-        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
     }
 }
 #endif
@@ -74,8 +74,8 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
     // for each pair of items
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
-        // Cast adjacent pairs of elements to uint8x16x2_t.
-        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
         // repeat aes_num_rounds times
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
@@ -83,7 +83,7 @@ for_each_cast_repeat_t_param(Castella::arr_blocks<N>& arr) noexcept
             v = aes_enc_0(v);
         }
 
-        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
     }
 }
 #endif
@@ -130,12 +130,12 @@ repeat_for_each_cast_f_param(Castella::arr_blocks<N>& arr, const int aes_num_rou
         // for each pair of items
         for (int i = 0; i < std::ssize(arr); i += 2)
         {
-            // Cast adjacent pairs of elements to uint8x16x2_t.
-            uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+            // Cast adjacent pairs of elements to __m256i.
+            __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
             v = aes_enc_0(v);
 
-            _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
         }
     }
 }
@@ -153,12 +153,12 @@ repeat_for_each_cast_t_param(Castella::arr_blocks<N>& arr) noexcept
         // for each pair of items
         for (int i = 0; i < std::ssize(arr); i += 2)
         {
-            // Cast adjacent pairs of elements to uint8x16x2_t.
-            uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+            // Cast adjacent pairs of elements to __m256i.
+            __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
             v = aes_enc_0(v);
 
-            _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
         }
     }
 }

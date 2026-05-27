@@ -34,9 +34,9 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
 #if defined(__VAES__)
 
 /// There is no such intrinsic named "_mm256_aesimc_epi128".
-[[nodiscard]] static inline uint8x16x2_t
+[[nodiscard]] static inline __m256i
 // NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
-_mm256_aesimc_epi128(uint8x16x2_t data) noexcept
+_mm256_aesimc_epi128(__m256i data) noexcept
 {
     const __m128i hi = _mm_aesimc_si128(_mm256_extracti128_si256(data, 1));
     const __m128i lo = _mm_aesimc_si128(_mm256_extracti128_si256(data, 0));
@@ -45,17 +45,17 @@ _mm256_aesimc_epi128(uint8x16x2_t data) noexcept
 }
 
 /// Perform 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16x2_t
-aes_enc(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+[[nodiscard]] static inline __m256i
+aes_enc(__m256i data, const __m256i round_key) noexcept
 {
     return _mm256_aesenc_epi128(data, round_key);
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
-[[nodiscard]] static inline uint8x16x2_t
-aes_enc_inv(uint8x16x2_t data, const uint8x16x2_t round_key) noexcept
+[[nodiscard]] static inline __m256i
+aes_enc_inv(__m256i data, const __m256i round_key) noexcept
 {
-    return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), uint8x16x2_t{});
+    return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), __m256i{});
 }
 
 #endif
@@ -117,15 +117,15 @@ aes_enc_0_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
-        // Cast adjacent pairs of elements to uint8x16x2_t.
-        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0(v);
         }
 
-        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
     }
 }
 
@@ -155,15 +155,15 @@ aes_enc_0_inv_arr(std::array<uint8x16_t, N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
-        // Cast adjacent pairs of elements to uint8x16x2_t.
-        uint8x16x2_t v = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr[i]));
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
         for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
         {
             v = aes_enc_0_inv(v);
         }
 
-        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr[i]), v);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
     }
 }
 

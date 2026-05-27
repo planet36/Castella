@@ -135,8 +135,8 @@ simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b)
 
 /// Compress (via 2 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-[[nodiscard]] static inline uint8x16x2_t
-simd_compress_aes_enc_r2(const uint8x16x2_t a, const uint8x16x2_t b)
+[[nodiscard]] static inline __m256i
+simd_compress_aes_enc_r2(const __m256i a, const __m256i b)
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(a, b),
@@ -145,8 +145,8 @@ simd_compress_aes_enc_r2(const uint8x16x2_t a, const uint8x16x2_t b)
 
 /// Compress (via 3 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-[[nodiscard]] static inline uint8x16x2_t
-simd_compress_aes_enc_r3(const uint8x16x2_t a, const uint8x16x2_t b)
+[[nodiscard]] static inline __m256i
+simd_compress_aes_enc_r3(const __m256i a, const __m256i b)
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(
@@ -157,8 +157,8 @@ simd_compress_aes_enc_r3(const uint8x16x2_t a, const uint8x16x2_t b)
 
 /// Compress (via 4 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
-[[nodiscard]] static inline uint8x16x2_t
-simd_compress_aes_enc_r4(const uint8x16x2_t a, const uint8x16x2_t b)
+[[nodiscard]] static inline __m256i
+simd_compress_aes_enc_r4(const __m256i a, const __m256i b)
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(
@@ -187,13 +187,13 @@ simd_compress_aes_enc_r4_arr(std::array<uint8x16_t, N>& arr_1, const uint8x16_t*
 {
     for (size_t i = 0; i < N; i += 2)
     {
-        // Cast adjacent pairs of elements to uint8x16x2_t.
-        uint8x16x2_t v_1 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_1[i]));
-        uint8x16x2_t v_2 = _mm256_loadu_si256(reinterpret_cast<const uint8x16x2_t*>(&arr_2[i]));
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v_1 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr_1[i]));
+        __m256i v_2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr_2[i]));
 
         v_1 = simd_compress_aes_enc_r4(v_1, v_2);
 
-        _mm256_storeu_si256(reinterpret_cast<uint8x16x2_t*>(&arr_1[i]), v_1);
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr_1[i]), v_1);
     }
 }
 

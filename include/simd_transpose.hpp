@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include "simd_types.hpp"
-
 #include <array>
 
 #if defined(__x86_64__)
 
 // {{{ x86_64
+
+#include <immintrin.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
@@ -167,6 +167,8 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
 #elif defined(__aarch64__) && defined(__ARM_NEON)
 
 // {{{ ARM64
+
+#include <arm_neon.h>
 
 /// Transpose \a x (treating it as a 2x2 matrix of \c uint64_t) using ARM Neon intrinsics
 static void

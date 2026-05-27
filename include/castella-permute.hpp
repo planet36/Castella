@@ -70,7 +70,7 @@ create_round_constants() noexcept
 
     result[0] = rc_0;
 
-    for (decltype(N) i = 1; i < N; ++i)
+    for (int i = 1; i < std::ssize(result); ++i)
     {
         result[i] = aes_enc_0(result[i-1]);
     }

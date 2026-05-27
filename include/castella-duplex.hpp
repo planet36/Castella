@@ -393,7 +393,7 @@ private:
         assert(cur_input_byte_idx_ == get_rate_size_bytes()); // input buf is full
 #endif
 
-        for (std::remove_const_t<decltype(R)> i = 0; i < R; ++i)
+        for (int i = 0; i < R; ++i)
         {
             state_[i] ^= input_blocks_[i];
         }
@@ -449,7 +449,7 @@ private:
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
-        const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+        const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
         const auto num_bytes_to_add = available_space;
 
 #if defined(DEBUG)
@@ -503,8 +503,8 @@ private:
             assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
-            const size_t available_space = get_rate_size_bytes() - cur_input_byte_idx_;
-            const auto num_bytes_to_add = std::min(available_space, len);
+            const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+            const auto num_bytes_to_add = static_cast<int>(std::min<size_t>(available_space, len));
 
 #if defined(DEBUG)
             assert(available_space > 0);

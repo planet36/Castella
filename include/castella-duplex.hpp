@@ -973,13 +973,13 @@ public:
     /**
     * The state size is fixed and does not depend on any user-provided parameters.
     */
-    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return sizeof(block_t) * B; }
+    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return static_cast<int>(sizeof(block_t)) * B; }
 
     /// Get the size (in bytes) of the capacity portion of the state.
-    [[nodiscard]] int get_capacity_size_bytes() const noexcept { return sizeof(block_t) * C; }
+    [[nodiscard]] int get_capacity_size_bytes() const noexcept { return static_cast<int>(sizeof(block_t)) * C; }
 
     /// Get the size (in bytes) of the rate (input buffer) portion of the state.
-    [[nodiscard]] int get_rate_size_bytes() const noexcept { return sizeof(block_t) * R; }
+    [[nodiscard]] int get_rate_size_bytes() const noexcept { return static_cast<int>(sizeof(block_t)) * R; }
 };
 
 } // namespace Castella

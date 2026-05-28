@@ -156,8 +156,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_MIX_RATE:
             try
             {
-                const auto tmp = std::stoi(optarg);
-                mix_rate = std::saturating_cast<decltype(mix_rate)>(tmp);
+                mix_rate = std::stoi(optarg);
             }
             catch (const std::invalid_argument& ex)
             {
@@ -178,8 +177,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_SIZE:
             try
             {
-                const auto tmp = std::stoi(optarg);
-                digest_size_bytes = std::saturating_cast<decltype(digest_size_bytes)>(tmp);
+                digest_size_bytes = std::stoi(optarg);
             }
             catch (const std::invalid_argument& ex)
             {

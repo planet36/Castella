@@ -242,8 +242,13 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 
         const auto digest = hash_obj->squeeze_bytes(num_bytes_to_squeeze);
 
+#if defined(__cpp_lib_saturation_arithmetic)
         consec_bytes_sqzd = std::saturating_add(consec_bytes_sqzd,
                 static_cast<decltype(consec_bytes_sqzd)>(std::ssize(digest)));
+#else
+        // Overflow is improbable.
+        consec_bytes_sqzd += static_cast<decltype(consec_bytes_sqzd)>(std::ssize(digest));
+#endif
 
         res.set_content(reinterpret_cast<const char*>(std::data(digest)), std::size(digest),
                         content_type);

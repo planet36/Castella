@@ -10,7 +10,7 @@ ROOT := ./$(shell git rev-parse --show-cdup)
 CPPFLAGS = -MMD -MP
 CPPFLAGS += -I $(ROOT)include
 
-CXXFLAGS = -std=c++26
+CXXFLAGS = -std=c++23
 CXXFLAGS += -pipe -Wall -Wextra -Wpedantic -Wfatal-errors
 CXXFLAGS += -O3 -flto=auto
 CXXFLAGS += -Wno-unused-function

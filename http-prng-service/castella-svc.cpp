@@ -243,7 +243,7 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
         const auto digest = hash_obj->squeeze_bytes(num_bytes_to_squeeze);
 
         consec_bytes_sqzd = std::saturating_add(consec_bytes_sqzd,
-                static_cast<decltype(consec_bytes_sqzd)>(std::size(digest)));
+                static_cast<decltype(consec_bytes_sqzd)>(std::ssize(digest)));
 
         res.set_content(reinterpret_cast<const char*>(std::data(digest)), std::size(digest),
                         content_type);

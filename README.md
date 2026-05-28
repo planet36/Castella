@@ -84,7 +84,7 @@ The `squeeze_bytes` member function performs the following:
 ### To build and use Castella
 
 * [GCC 14](https://gcc.gnu.org/gcc-14/changes.html) or newer
-  * [C++23](https://cppreference.com/w/cpp/23.html) features are used
+  * [C++23](https://cppreference.com/cpp/23) features are used
   * clang++ is not supported
 * An x84-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
 

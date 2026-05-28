@@ -62,6 +62,7 @@ left_encode_2(std::unsigned_integral auto x)
     return result;
 }
 
+#if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
 static std::vector<std::byte>
 left_encode_3(const std::unsigned_integral auto x)
@@ -77,6 +78,7 @@ left_encode_3(const std::unsigned_integral auto x)
                               byte_sp.subspan(0, w)) |
            std::ranges::to<std::vector>(); // range adaptor
 }
+#endif
 
 /// Unambiguously encode the integer into a byte string
 static auto
@@ -156,6 +158,7 @@ right_encode_2(std::unsigned_integral auto x)
     return result;
 }
 
+#if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
 static std::vector<std::byte>
 right_encode_3(const std::unsigned_integral auto x)
@@ -172,6 +175,7 @@ right_encode_3(const std::unsigned_integral auto x)
                as_byte_span(w)) |
            std::ranges::to<std::vector>(); // range adaptor
 }
+#endif
 
 /// Unambiguously encode the integer into a byte string
 static auto
@@ -321,23 +325,31 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             const auto l_enc_bytes_1 = left_encode_1(len);
             const auto l_enc_bytes_2 = left_encode_2(len);
+#if defined(__cpp_lib_ranges_concat)
             const auto l_enc_bytes_3 = left_encode_3(len);
+#endif
             const auto l_enc_bytes_4 = left_encode_4(len);
             const auto l_enc_bytes_5 = left_encode_5(len);
 
             assert(l_enc_bytes_1 == l_enc_bytes_2);
+#if defined(__cpp_lib_ranges_concat)
             assert(l_enc_bytes_1 == l_enc_bytes_3);
+#endif
             assert(std::ranges::equal(l_enc_bytes_1, l_enc_bytes_4));
             assert(std::ranges::equal(l_enc_bytes_1, l_enc_bytes_5));
 
             const auto r_enc_bytes_1 = right_encode_1(len);
             const auto r_enc_bytes_2 = right_encode_2(len);
+#if defined(__cpp_lib_ranges_concat)
             const auto r_enc_bytes_3 = right_encode_3(len);
+#endif
             const auto r_enc_bytes_4 = right_encode_4(len);
             const auto r_enc_bytes_5 = right_encode_5(len);
 
             assert(r_enc_bytes_1 == r_enc_bytes_2);
+#if defined(__cpp_lib_ranges_concat)
             assert(r_enc_bytes_1 == r_enc_bytes_3);
+#endif
             assert(std::ranges::equal(r_enc_bytes_1, r_enc_bytes_4));
             assert(std::ranges::equal(r_enc_bytes_1, r_enc_bytes_5));
         }
@@ -353,13 +365,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         benchmark::RegisterBenchmark("left_encode_1", BM_lr_encode_vec<T>, left_encode_1<T>);
         benchmark::RegisterBenchmark("left_encode_2", BM_lr_encode_vec<T>, left_encode_2<T>);
+#if defined(__cpp_lib_ranges_concat)
         benchmark::RegisterBenchmark("left_encode_3", BM_lr_encode_vec<T>, left_encode_3<T>);
+#endif
         benchmark::RegisterBenchmark("left_encode_4", BM_lr_encode_fvec<T>, left_encode_4<T>);
         benchmark::RegisterBenchmark("left_encode_5", BM_lr_encode_fvec<T>, left_encode_5<T>);
 
         benchmark::RegisterBenchmark("right_encode_1", BM_lr_encode_vec<T>, right_encode_1<T>);
         benchmark::RegisterBenchmark("right_encode_2", BM_lr_encode_vec<T>, right_encode_2<T>);
+#if defined(__cpp_lib_ranges_concat)
         benchmark::RegisterBenchmark("right_encode_3", BM_lr_encode_vec<T>, right_encode_3<T>);
+#endif
         benchmark::RegisterBenchmark("right_encode_4", BM_lr_encode_fvec<T>, right_encode_4<T>);
         benchmark::RegisterBenchmark("right_encode_5", BM_lr_encode_fvec<T>, right_encode_5<T>);
     }
@@ -367,13 +383,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         benchmark::RegisterBenchmark("left_encode_1", BM_lr_encode_vec<T>, left_encode_1<T>)->Threads(num_threads);
         benchmark::RegisterBenchmark("left_encode_2", BM_lr_encode_vec<T>, left_encode_2<T>)->Threads(num_threads);
+#if defined(__cpp_lib_ranges_concat)
         benchmark::RegisterBenchmark("left_encode_3", BM_lr_encode_vec<T>, left_encode_3<T>)->Threads(num_threads);
+#endif
         benchmark::RegisterBenchmark("left_encode_4", BM_lr_encode_fvec<T>, left_encode_4<T>)->Threads(num_threads);
         benchmark::RegisterBenchmark("left_encode_5", BM_lr_encode_fvec<T>, left_encode_5<T>)->Threads(num_threads);
 
         benchmark::RegisterBenchmark("right_encode_1", BM_lr_encode_vec<T>, right_encode_1<T>)->Threads(num_threads);
         benchmark::RegisterBenchmark("right_encode_2", BM_lr_encode_vec<T>, right_encode_2<T>)->Threads(num_threads);
+#if defined(__cpp_lib_ranges_concat)
         benchmark::RegisterBenchmark("right_encode_3", BM_lr_encode_vec<T>, right_encode_3<T>)->Threads(num_threads);
+#endif
         benchmark::RegisterBenchmark("right_encode_4", BM_lr_encode_fvec<T>, right_encode_4<T>)->Threads(num_threads);
         benchmark::RegisterBenchmark("right_encode_5", BM_lr_encode_fvec<T>, right_encode_5<T>)->Threads(num_threads);
     }

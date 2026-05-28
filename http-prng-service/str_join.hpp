@@ -23,7 +23,7 @@ str_join(R&& range_strings, std::string_view joiner)
 
     bool first = true;
 
-    for (std::string_view s : range_strings)
+    for (std::string_view s : std::forward<R>(range_strings))
     {
         if (first)
         {

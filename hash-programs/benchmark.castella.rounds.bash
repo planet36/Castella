@@ -16,6 +16,6 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
 # Vary --rounds
 hyperfine --shell=none --time-unit millisecond --warmup=5 \
-    --export-csv "${OUTPUT_DIR}/benchmark.castella.num-rounds.${DATETIME}.txt" \
+    --export-csv "${OUTPUT_DIR}/benchmark.castella.num-rounds.${DATETIME}.csv" \
     --parameter-scan ROUNDS 3 16 \
     './castella --rounds={ROUNDS} /tmp/test.txt'

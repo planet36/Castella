@@ -16,6 +16,6 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
 # Vary --size
 hyperfine --shell=none --time-unit millisecond --warmup=5 \
-    --export-csv "${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.txt" \
+    --export-csv "${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv" \
     --parameter-scan SIZE 16 64 --parameter-step-size 16 \
     './castella --size={SIZE} /tmp/test.txt'

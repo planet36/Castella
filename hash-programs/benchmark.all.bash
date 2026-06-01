@@ -20,7 +20,7 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 #openssl dgst --list | sed -e '1d' -e 's|[[:blank:]]*$||' -e 's| \+|\n|g' | command grep -v -x -E -- '-(md4|mdc2|whirlpool)'
 
 
-# Takes about 7:40
+# Takes about 7:16
 time hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv" \
     --ignore-failure \
@@ -101,11 +101,10 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 'b3sum                 /tmp/test.txt' \
 'b3sum --no-mmap       /tmp/test.txt' \
 'b3sum --num-threads=1 /tmp/test.txt' \
-'xxhsum    /tmp/test.txt' \
-'xxh3sum   /tmp/test.txt' \
-'xxh32sum  /tmp/test.txt' \
-'xxh64sum  /tmp/test.txt' \
-'xxh128sum /tmp/test.txt' \
+'xxhsum -H0 /tmp/test.txt' \
+'xxhsum -H1 /tmp/test.txt' \
+'xxhsum -H2 /tmp/test.txt' \
+'xxhsum -H3 /tmp/test.txt' \
 'keccak-224sum  /tmp/test.txt' \
 'keccak-256sum  /tmp/test.txt' \
 'keccak-384sum  /tmp/test.txt' \
@@ -127,100 +126,99 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 
 Summary
   b3sum                 /tmp/test.txt ran
-    1.33 ± 0.54 times faster than ./cch --mix-rate=0     /tmp/test.txt
-    1.35 ± 0.55 times faster than xxh3sum   /tmp/test.txt
-    1.35 ± 0.54 times faster than ./cch --mix-rate=32768 /tmp/test.txt
-    1.38 ± 0.57 times faster than xxh128sum /tmp/test.txt
-    1.38 ± 0.58 times faster than ./cch --mix-rate=65535 /tmp/test.txt
-    1.42 ± 0.58 times faster than ./cch --mix-rate=16384 /tmp/test.txt
-    1.46 ± 0.58 times faster than ./cch --mix-rate=8192  /tmp/test.txt
-    1.48 ± 0.60 times faster than ./cch --mix-rate=4096  /tmp/test.txt
-    1.61 ± 0.65 times faster than cksum --untagged --algorithm crc               /tmp/test.txt
-    1.62 ± 0.63 times faster than uu-cksum --untagged --algorithm crc32b                /tmp/test.txt
-    1.62 ± 0.63 times faster than uu-cksum --untagged --algorithm crc                   /tmp/test.txt
-    1.63 ± 0.67 times faster than cksum --untagged --algorithm crc32b            /tmp/test.txt
-    1.66 ± 0.67 times faster than ./cch --mix-rate=2048  /tmp/test.txt
-    1.91 ± 0.80 times faster than cksum --untagged --algorithm sysv              /tmp/test.txt
-    1.93 ± 0.75 times faster than xxhsum    /tmp/test.txt
-    1.96 ± 0.76 times faster than xxh64sum  /tmp/test.txt
-    1.98 ± 0.77 times faster than ./cch --mix-rate=1024  /tmp/test.txt
-    2.22 ± 0.90 times faster than uu-cksum --untagged --algorithm sysv                  /tmp/test.txt
-    2.76 ± 1.10 times faster than ./cch --mix-rate=512   /tmp/test.txt
-    3.93 ± 1.51 times faster than b3sum --num-threads=1 /tmp/test.txt
-    4.20 ± 1.59 times faster than uu-cksum --untagged --algorithm blake3                /tmp/test.txt
-    4.21 ± 1.60 times faster than ./cch --mix-rate=256   /tmp/test.txt
-    4.38 ± 1.63 times faster than b3sum --no-mmap       /tmp/test.txt
-    4.67 ± 1.76 times faster than xxh32sum  /tmp/test.txt
-    4.87 ± 1.83 times faster than ./castella --size=32 --rounds=3 /tmp/test.txt
-    5.63 ± 2.13 times faster than ./castella --size=48 --rounds=3 /tmp/test.txt
-    6.85 ± 2.64 times faster than ./castella --size=64 --rounds=3 /tmp/test.txt
-    7.32 ± 2.75 times faster than uu-cksum --untagged --algorithm sha1                  /tmp/test.txt
-    7.50 ± 2.82 times faster than openssl dgst -r -ssl3-sha1           /tmp/test.txt
-    7.55 ± 2.86 times faster than openssl dgst -r -sha1                /tmp/test.txt
-    7.57 ± 2.89 times faster than cksum --untagged --algorithm sha1              /tmp/test.txt
-    7.71 ± 2.90 times faster than uu-cksum --untagged --algorithm bsd                   /tmp/test.txt
-    7.84 ± 2.92 times faster than uu-cksum --untagged --algorithm sha2 --length 224     /tmp/test.txt
-    8.05 ± 3.04 times faster than uu-cksum --untagged --algorithm sha2 --length 256     /tmp/test.txt
-    8.26 ± 3.09 times faster than cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt
-    8.27 ± 3.11 times faster than openssl dgst -r -sha256              /tmp/test.txt
-    8.30 ± 3.10 times faster than openssl dgst -r -sha224              /tmp/test.txt
-    8.38 ± 3.15 times faster than cksum --untagged --algorithm sha2 --length 224 /tmp/test.txt
-    8.67 ± 3.24 times faster than ./castella --size=32 --rounds=6 /tmp/test.txt
-   10.11 ± 3.78 times faster than ./castella --size=48 --rounds=6 /tmp/test.txt
-   11.66 ± 4.40 times faster than uu-cksum --untagged --algorithm blake2b               /tmp/test.txt
-   12.42 ± 4.71 times faster than ./castella --size=64 --rounds=6 /tmp/test.txt
-   14.15 ± 5.30 times faster than openssl dgst -r -blake2b512          /tmp/test.txt
-   14.75 ± 5.59 times faster than cksum --untagged --algorithm blake2b           /tmp/test.txt
-   15.95 ± 5.91 times faster than openssl dgst -r -ssl3-md5            /tmp/test.txt
-   16.24 ± 6.05 times faster than cksum --untagged --algorithm md5               /tmp/test.txt
-   16.31 ± 6.16 times faster than openssl dgst -r -md5                 /tmp/test.txt
-   16.65 ± 6.16 times faster than openssl dgst -r -sha512-256          /tmp/test.txt
-   16.75 ± 6.21 times faster than openssl dgst -r -sha512-224          /tmp/test.txt
-   16.96 ± 6.32 times faster than openssl dgst -r -sha384              /tmp/test.txt
-   17.10 ± 6.43 times faster than openssl dgst -r -sha512              /tmp/test.txt
-   17.29 ± 6.43 times faster than cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt
-   17.62 ± 6.54 times faster than cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt
-   18.56 ± 6.94 times faster than cksum --untagged --algorithm bsd               /tmp/test.txt
-   19.49 ± 7.22 times faster than openssl dgst -r -shake128 -xoflen 32 /tmp/test.txt
-   19.83 ± 7.35 times faster than uu-cksum --untagged --algorithm md5                   /tmp/test.txt
-   22.15 ± 8.23 times faster than openssl dgst -r -md5-sha1            /tmp/test.txt
-   22.32 ± 8.34 times faster than openssl dgst -r -blake2s256          /tmp/test.txt
-   23.67 ± 8.82 times faster than uu-cksum --untagged --algorithm sha2 --length 384     /tmp/test.txt
-   24.07 ± 8.91 times faster than openssl dgst -r -shake256 -xoflen 64 /tmp/test.txt
-   24.10 ± 9.10 times faster than uu-cksum --untagged --algorithm sha2 --length 512     /tmp/test.txt
-   24.31 ± 9.03 times faster than openssl dgst -r -sha3-224            /tmp/test.txt
-   24.56 ± 9.09 times faster than cksum --untagged --algorithm sha3 --length=224 /tmp/test.txt
-   24.67 ± 9.13 times faster than uu-cksum --untagged --algorithm shake128 --length 256 /tmp/test.txt
-   24.86 ± 9.27 times faster than openssl dgst -r -sha3-256            /tmp/test.txt
-   25.63 ± 9.49 times faster than rawshake128sum /tmp/test.txt
-   25.64 ± 9.50 times faster than shake128sum    /tmp/test.txt
-   26.02 ± 9.71 times faster than cksum --untagged --algorithm sha3 --length=256 /tmp/test.txt
-   28.86 ± 10.67 times faster than keccak-224sum  /tmp/test.txt
-   29.05 ± 10.75 times faster than uu-cksum --untagged --algorithm sha3 --length 224     /tmp/test.txt
-   29.83 ± 11.06 times faster than sha3-224sum    /tmp/test.txt
-   30.09 ± 11.13 times faster than uu-cksum --untagged --algorithm shake256 --length 512 /tmp/test.txt
-   30.38 ± 11.25 times faster than sha3sum        /tmp/test.txt
-   30.48 ± 11.27 times faster than rawshake256sum /tmp/test.txt
-   30.51 ± 11.28 times faster than uu-cksum --untagged --algorithm sha3 --length 256     /tmp/test.txt
-   30.94 ± 11.46 times faster than sha3-256sum    /tmp/test.txt
-   31.30 ± 11.57 times faster than shake256sum    /tmp/test.txt
-   31.40 ± 11.64 times faster than keccak-256sum  /tmp/test.txt
-   31.68 ± 11.76 times faster than openssl dgst -r -sha3-384            /tmp/test.txt
-   32.32 ± 11.97 times faster than keccaksum      /tmp/test.txt
-   32.39 ± 11.98 times faster than cksum --untagged --algorithm sha3 --length=384 /tmp/test.txt
-   32.40 ± 11.99 times faster than uu-cksum --untagged --algorithm sm3                   /tmp/test.txt
-   33.67 ± 12.47 times faster than openssl dgst -r -sm3                 /tmp/test.txt
-   36.29 ± 13.42 times faster than cksum --untagged --algorithm sm3               /tmp/test.txt
-   38.41 ± 14.19 times faster than openssl dgst -r -rmd160              /tmp/test.txt
-   38.57 ± 14.25 times faster than openssl dgst -r -ripemd160           /tmp/test.txt
-   38.71 ± 14.41 times faster than uu-cksum --untagged --algorithm sha3 --length 384     /tmp/test.txt
-   39.42 ± 14.56 times faster than openssl dgst -r -ripemd              /tmp/test.txt
-   40.39 ± 14.94 times faster than keccak-384sum  /tmp/test.txt
-   40.59 ± 15.07 times faster than sha3-384sum    /tmp/test.txt
-   45.50 ± 16.84 times faster than openssl dgst -r -sha3-512            /tmp/test.txt
-   47.86 ± 17.82 times faster than cksum --untagged --algorithm sha3 --length=512 /tmp/test.txt
-   55.93 ± 20.70 times faster than sha3-512sum    /tmp/test.txt
-   56.32 ± 20.82 times faster than keccak-512sum  /tmp/test.txt
-   56.66 ± 20.99 times faster than uu-cksum --untagged --algorithm sha3 --length 512     /tmp/test.txt
+    1.38 ± 0.19 times faster than ./cch --mix-rate=0     /tmp/test.txt
+    1.41 ± 0.20 times faster than xxhsum -H3 /tmp/test.txt
+    1.46 ± 0.22 times faster than xxhsum -H2 /tmp/test.txt
+    1.49 ± 0.21 times faster than ./cch --mix-rate=65535 /tmp/test.txt
+    1.54 ± 0.21 times faster than ./cch --mix-rate=32768 /tmp/test.txt
+    1.55 ± 0.23 times faster than ./cch --mix-rate=4096  /tmp/test.txt
+    1.59 ± 0.23 times faster than ./cch --mix-rate=16384 /tmp/test.txt
+    1.62 ± 0.26 times faster than ./cch --mix-rate=8192  /tmp/test.txt
+    1.70 ± 0.25 times faster than ./cch --mix-rate=2048  /tmp/test.txt
+    1.72 ± 0.22 times faster than cksum --untagged --algorithm crc               /tmp/test.txt
+    1.72 ± 0.23 times faster than cksum --untagged --algorithm crc32b            /tmp/test.txt
+    1.78 ± 0.23 times faster than uu-cksum --untagged --algorithm crc                   /tmp/test.txt
+    1.80 ± 0.24 times faster than uu-cksum --untagged --algorithm crc32b                /tmp/test.txt
+    2.02 ± 0.31 times faster than ./cch --mix-rate=1024  /tmp/test.txt
+    2.06 ± 0.29 times faster than cksum --untagged --algorithm sysv              /tmp/test.txt
+    2.14 ± 0.28 times faster than xxhsum -H1 /tmp/test.txt
+    2.38 ± 0.34 times faster than uu-cksum --untagged --algorithm sysv                  /tmp/test.txt
+    2.81 ± 0.38 times faster than ./cch --mix-rate=512   /tmp/test.txt
+    4.33 ± 0.54 times faster than b3sum --num-threads=1 /tmp/test.txt
+    4.46 ± 0.59 times faster than ./cch --mix-rate=256   /tmp/test.txt
+    4.62 ± 0.58 times faster than uu-cksum --untagged --algorithm blake3                /tmp/test.txt
+    4.95 ± 0.61 times faster than b3sum --no-mmap       /tmp/test.txt
+    5.19 ± 0.66 times faster than xxhsum -H0 /tmp/test.txt
+    5.44 ± 0.68 times faster than ./castella --size=32 --rounds=3 /tmp/test.txt
+    6.35 ± 0.78 times faster than ./castella --size=48 --rounds=3 /tmp/test.txt
+    7.52 ± 0.94 times faster than ./castella --size=64 --rounds=3 /tmp/test.txt
+    7.92 ± 0.96 times faster than cksum --untagged --algorithm sha1              /tmp/test.txt
+    8.11 ± 1.00 times faster than uu-cksum --untagged --algorithm sha1                  /tmp/test.txt
+    8.14 ± 1.00 times faster than openssl dgst -r -ssl3-sha1           /tmp/test.txt
+    8.15 ± 0.99 times faster than openssl dgst -r -sha1                /tmp/test.txt
+    8.47 ± 1.05 times faster than uu-cksum --untagged --algorithm bsd                   /tmp/test.txt
+    8.61 ± 1.07 times faster than uu-cksum --untagged --algorithm sha2 --length 256     /tmp/test.txt
+    8.65 ± 1.06 times faster than uu-cksum --untagged --algorithm sha2 --length 224     /tmp/test.txt
+    8.79 ± 1.06 times faster than cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt
+    8.80 ± 1.07 times faster than cksum --untagged --algorithm sha2 --length 224 /tmp/test.txt
+    8.96 ± 1.08 times faster than openssl dgst -r -sha256              /tmp/test.txt
+    8.98 ± 1.09 times faster than openssl dgst -r -sha224              /tmp/test.txt
+    9.45 ± 1.20 times faster than ./castella --size=32 --rounds=6 /tmp/test.txt
+   11.17 ± 1.36 times faster than ./castella --size=48 --rounds=6 /tmp/test.txt
+   12.22 ± 1.48 times faster than uu-cksum --untagged --algorithm blake2b               /tmp/test.txt
+   13.48 ± 1.62 times faster than ./castella --size=64 --rounds=6 /tmp/test.txt
+   15.03 ± 1.81 times faster than cksum --untagged --algorithm blake2b           /tmp/test.txt
+   15.31 ± 1.87 times faster than openssl dgst -r -blake2b512          /tmp/test.txt
+   17.41 ± 2.10 times faster than cksum --untagged --algorithm md5               /tmp/test.txt
+   17.54 ± 2.13 times faster than openssl dgst -r -ssl3-md5            /tmp/test.txt
+   17.66 ± 2.14 times faster than openssl dgst -r -md5                 /tmp/test.txt
+   18.46 ± 2.22 times faster than openssl dgst -r -sha384              /tmp/test.txt
+   18.52 ± 2.23 times faster than openssl dgst -r -sha512              /tmp/test.txt
+   18.60 ± 2.26 times faster than openssl dgst -r -sha512-256          /tmp/test.txt
+   18.67 ± 2.26 times faster than openssl dgst -r -sha512-224          /tmp/test.txt
+   18.77 ± 2.30 times faster than cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt
+   18.94 ± 2.34 times faster than cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt
+   19.65 ± 2.39 times faster than cksum --untagged --algorithm bsd               /tmp/test.txt
+   21.58 ± 2.58 times faster than uu-cksum --untagged --algorithm md5                   /tmp/test.txt
+   22.23 ± 2.70 times faster than openssl dgst -r -shake128 -xoflen 32 /tmp/test.txt
+   23.59 ± 2.88 times faster than openssl dgst -r -blake2s256          /tmp/test.txt
+   23.80 ± 2.86 times faster than openssl dgst -r -md5-sha1            /tmp/test.txt
+   24.59 ± 2.97 times faster than uu-cksum --untagged --algorithm sha2 --length 384     /tmp/test.txt
+   24.85 ± 3.03 times faster than uu-cksum --untagged --algorithm sha2 --length 512     /tmp/test.txt
+   25.50 ± 3.09 times faster than openssl dgst -r -sha3-224            /tmp/test.txt
+   26.30 ± 3.18 times faster than cksum --untagged --algorithm sha3 --length=224 /tmp/test.txt
+   26.89 ± 3.24 times faster than openssl dgst -r -sha3-256            /tmp/test.txt
+   27.00 ± 3.27 times faster than openssl dgst -r -shake256 -xoflen 64 /tmp/test.txt
+   27.38 ± 3.30 times faster than uu-cksum --untagged --algorithm shake128 --length 256 /tmp/test.txt
+   27.61 ± 3.37 times faster than cksum --untagged --algorithm sha3 --length=256 /tmp/test.txt
+   28.53 ± 3.46 times faster than shake128sum    /tmp/test.txt
+   28.65 ± 3.48 times faster than rawshake128sum /tmp/test.txt
+   31.66 ± 3.87 times faster than uu-cksum --untagged --algorithm sha3 --length 224     /tmp/test.txt
+   32.37 ± 3.91 times faster than sha3sum        /tmp/test.txt
+   32.72 ± 4.03 times faster than keccak-224sum  /tmp/test.txt
+   32.76 ± 3.94 times faster than uu-cksum --untagged --algorithm shake256 --length 512 /tmp/test.txt
+   32.87 ± 3.95 times faster than sha3-224sum    /tmp/test.txt
+   32.90 ± 4.00 times faster than uu-cksum --untagged --algorithm sha3 --length 256     /tmp/test.txt
+   34.21 ± 4.19 times faster than sha3-256sum    /tmp/test.txt
+   34.35 ± 4.19 times faster than rawshake256sum /tmp/test.txt
+   34.50 ± 4.16 times faster than openssl dgst -r -sha3-384            /tmp/test.txt
+   34.53 ± 4.17 times faster than shake256sum    /tmp/test.txt
+   34.56 ± 4.15 times faster than uu-cksum --untagged --algorithm sm3                   /tmp/test.txt
+   34.60 ± 4.24 times faster than keccak-256sum  /tmp/test.txt
+   36.09 ± 4.37 times faster than keccaksum      /tmp/test.txt
+   36.35 ± 4.41 times faster than cksum --untagged --algorithm sha3 --length=384 /tmp/test.txt
+   36.58 ± 4.41 times faster than openssl dgst -r -sm3                 /tmp/test.txt
+   37.27 ± 4.56 times faster than cksum --untagged --algorithm sm3               /tmp/test.txt
+   41.75 ± 5.06 times faster than openssl dgst -r -ripemd              /tmp/test.txt
+   42.53 ± 5.16 times faster than uu-cksum --untagged --algorithm sha3 --length 384     /tmp/test.txt
+   42.75 ± 5.15 times faster than sha3-384sum    /tmp/test.txt
+   42.75 ± 5.13 times faster than openssl dgst -r -ripemd160           /tmp/test.txt
+   42.91 ± 5.16 times faster than openssl dgst -r -rmd160              /tmp/test.txt
+   44.07 ± 5.35 times faster than keccak-384sum  /tmp/test.txt
+   48.75 ± 5.86 times faster than openssl dgst -r -sha3-512            /tmp/test.txt
+   49.93 ± 6.13 times faster than cksum --untagged --algorithm sha3 --length=512 /tmp/test.txt
+   60.55 ± 7.34 times faster than sha3-512sum    /tmp/test.txt
+   61.01 ± 7.56 times faster than uu-cksum --untagged --algorithm sha3 --length 512     /tmp/test.txt
+   62.32 ± 7.52 times faster than keccak-512sum  /tmp/test.txt
 
 EOT

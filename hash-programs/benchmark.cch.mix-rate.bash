@@ -17,5 +17,5 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 # Vary --mix-rate
 hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "${OUTPUT_DIR}/benchmark.cch.mix-rate.${DATETIME}.csv" \
-    --parameter-list MIX-RATE 256,362,512,724,1024,1448,2048,2896,4096,5793,8192,11585,16384,23170,32768,46341,65535 \
+    --parameter-list MIX-RATE 0,256,512,768,1024,1536,2048,3072,4096,6144,8192,12288,16384,24576,32768,49152,65535 \
     './cch --mix-rate={MIX-RATE} /tmp/test.txt'

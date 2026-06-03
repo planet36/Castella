@@ -62,7 +62,7 @@ inline constexpr std::array<uint8_t, 256> unique_bytes{
 };
 
 /// Test state with byte values that are 0
-template <size_t N>
+template <int N>
 void
 test_permute_zero_bytes()
 {
@@ -72,7 +72,7 @@ test_permute_zero_bytes()
 }
 
 /// Test state with byte values that are unique
-template <size_t N>
+template <int N>
 void
 test_permute_unique_bytes()
 {
@@ -83,7 +83,7 @@ test_permute_unique_bytes()
 }
 
 /// Test state with byte values that are random
-template <size_t N>
+template <int N>
 void
 test_permute_random_bytes()
 {

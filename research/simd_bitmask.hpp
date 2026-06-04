@@ -17,7 +17,7 @@
 #if defined(__x86_64__)
 
 [[nodiscard]] static inline uint8x16_t
-combine_u64x2(const uint64_t hi, const uint64_t lo)
+combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -33,7 +33,7 @@ combine_u64x2(const uint64_t hi, const uint64_t lo)
 * \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u8_u64
 */
 [[nodiscard]] static inline uint8x16_t
-combine_u64x2(const uint64_t hi, const uint64_t lo)
+combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 {
     return vreinterpretq_u8_u64(vcombine_u64(vcreate_u64(lo), vcreate_u64(hi)));
 }

@@ -30,7 +30,7 @@ using simd_arr_32_t = std::array<__m256i, N>;
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
+aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
@@ -41,7 +41,7 @@ aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
+aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 {
     const __m256i round_key_256 = _mm256_set_m128i(round_key, round_key);
 
@@ -56,7 +56,7 @@ aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key)
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key)
+aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {

@@ -37,7 +37,7 @@ inline constexpr uint64_t fnv_offset_basis = UINT64_C(14'695'981'039'346'656'037
 
 /// FNV-1 32-bit hash
 [[nodiscard]] constexpr auto
-fnv1_32(const std::string_view s)
+fnv1_32(const std::string_view s) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -56,7 +56,7 @@ fnv1_32(const std::string_view s)
 
 /// FNV-1a 32-bit hash
 [[nodiscard]] constexpr auto
-fnv1a_32(const std::string_view s)
+fnv1a_32(const std::string_view s) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -75,7 +75,7 @@ fnv1a_32(const std::string_view s)
 
 /// FNV-1 64-bit hash
 [[nodiscard]] constexpr auto
-fnv1_64(const std::string_view s)
+fnv1_64(const std::string_view s) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;
@@ -94,7 +94,7 @@ fnv1_64(const std::string_view s)
 
 /// FNV-1a 64-bit hash
 [[nodiscard]] constexpr auto
-fnv1a_64(const std::string_view s)
+fnv1a_64(const std::string_view s) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;
@@ -115,7 +115,7 @@ fnv1a_64(const std::string_view s)
 template <std::input_iterator Iter>
 requires (sizeof(std::iter_value_t<Iter>) == 1)
 [[nodiscard]] constexpr auto
-fnv1_32(Iter first, const Iter last)
+fnv1_32(Iter first, const Iter last) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -136,7 +136,7 @@ fnv1_32(Iter first, const Iter last)
 template <std::input_iterator Iter>
 requires (sizeof(std::iter_value_t<Iter>) == 1)
 [[nodiscard]] constexpr auto
-fnv1a_32(Iter first, const Iter last)
+fnv1a_32(Iter first, const Iter last) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -157,7 +157,7 @@ fnv1a_32(Iter first, const Iter last)
 template <std::input_iterator Iter>
 requires (sizeof(std::iter_value_t<Iter>) == 1)
 [[nodiscard]] constexpr auto
-fnv1_64(Iter first, const Iter last)
+fnv1_64(Iter first, const Iter last) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;
@@ -178,7 +178,7 @@ fnv1_64(Iter first, const Iter last)
 template <std::input_iterator Iter>
 requires (sizeof(std::iter_value_t<Iter>) == 1)
 [[nodiscard]] constexpr auto
-fnv1a_64(Iter first, const Iter last)
+fnv1a_64(Iter first, const Iter last) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;
@@ -197,7 +197,7 @@ fnv1a_64(Iter first, const Iter last)
 
 /// FNV-1 32-bit hash
 [[nodiscard]] constexpr auto
-fnv1_32(const std::span<const std::byte> bytes)
+fnv1_32(const std::span<const std::byte> bytes) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -216,7 +216,7 @@ fnv1_32(const std::span<const std::byte> bytes)
 
 /// FNV-1a 32-bit hash
 [[nodiscard]] constexpr auto
-fnv1a_32(const std::span<const std::byte> bytes)
+fnv1a_32(const std::span<const std::byte> bytes) noexcept
 {
     using fnv_const_32::fnv_offset_basis;
     using fnv_const_32::fnv_prime;
@@ -235,7 +235,7 @@ fnv1a_32(const std::span<const std::byte> bytes)
 
 /// FNV-1 64-bit hash
 [[nodiscard]] constexpr auto
-fnv1_64(const std::span<const std::byte> bytes)
+fnv1_64(const std::span<const std::byte> bytes) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;
@@ -254,7 +254,7 @@ fnv1_64(const std::span<const std::byte> bytes)
 
 /// FNV-1a 64-bit hash
 [[nodiscard]] constexpr auto
-fnv1a_64(const std::span<const std::byte> bytes)
+fnv1a_64(const std::span<const std::byte> bytes) noexcept
 {
     using fnv_const_64::fnv_offset_basis;
     using fnv_const_64::fnv_prime;

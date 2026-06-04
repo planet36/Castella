@@ -8,7 +8,7 @@
 
 /// Cast the integer to its unsigned equivalent
 [[nodiscard]] constexpr auto
-to_unsigned(const std::integral auto x)
+to_unsigned(const std::integral auto x) noexcept
 {
     return static_cast<std::make_unsigned_t<decltype(x)>>(x);
 }

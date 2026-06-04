@@ -63,7 +63,7 @@
 * \li diffusion rate of \a b = 12.7%
 */
 [[nodiscard]] static inline uint8x16_t
-simd_compress_aes_enc_r2(const uint8x16_t a, const uint8x16_t b)
+simd_compress_aes_enc_r2(const uint8x16_t a, const uint8x16_t b) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
     return _mm_aesenc_si128(
@@ -84,7 +84,7 @@ simd_compress_aes_enc_r2(const uint8x16_t a, const uint8x16_t b)
 * \li diffusion rate of \a b = 50.0%
 */
 [[nodiscard]] static inline uint8x16_t
-simd_compress_aes_enc_r3(const uint8x16_t a, const uint8x16_t b)
+simd_compress_aes_enc_r3(const uint8x16_t a, const uint8x16_t b) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
     return _mm_aesenc_si128(
@@ -109,7 +109,7 @@ simd_compress_aes_enc_r3(const uint8x16_t a, const uint8x16_t b)
 * \li diffusion rate of \a b = 50.0%
 */
 [[nodiscard]] static inline uint8x16_t
-simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b)
+simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
     return _mm_aesenc_si128(
@@ -136,7 +136,7 @@ simd_compress_aes_enc_r4(const uint8x16_t a, const uint8x16_t b)
 /// Compress (via 2 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
 [[nodiscard]] static inline __m256i
-simd_compress_aes_enc_r2(const __m256i a, const __m256i b)
+simd_compress_aes_enc_r2(const __m256i a, const __m256i b) noexcept
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(a, b),
@@ -146,7 +146,7 @@ simd_compress_aes_enc_r2(const __m256i a, const __m256i b)
 /// Compress (via 3 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
 [[nodiscard]] static inline __m256i
-simd_compress_aes_enc_r3(const __m256i a, const __m256i b)
+simd_compress_aes_enc_r3(const __m256i a, const __m256i b) noexcept
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(
@@ -158,7 +158,7 @@ simd_compress_aes_enc_r3(const __m256i a, const __m256i b)
 /// Compress (via 4 rounds of AES encryption) 2 256-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
 [[nodiscard]] static inline __m256i
-simd_compress_aes_enc_r4(const __m256i a, const __m256i b)
+simd_compress_aes_enc_r4(const __m256i a, const __m256i b) noexcept
 {
     return _mm256_aesenc_epi128(
                 _mm256_aesenc_epi128(

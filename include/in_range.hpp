@@ -8,9 +8,8 @@
 * \sa https://en.cppreference.com/cpp/utility/in_range
 * \sa https://eel.is/c++draft/utility.intcmp#lib:in_range
 *
-* As of g++ 16.1.1, libstdc++ does not allow const-qualified result types.
+* \c std::in_range does not allow const-qualified template types.
 * \sa https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125439
-* \sa https://godbolt.org/z/YdEoPjd8o
 */
 
 #pragma once
@@ -28,7 +27,8 @@
 * \note This is not as restrictive as \c std::in_range.
 */
 template <std::integral R, std::integral T>
-[[nodiscard]] constexpr bool in_range(T t) noexcept
+[[nodiscard]] constexpr bool
+in_range(T t) noexcept
 {
     return std::cmp_greater_equal(t, std::numeric_limits<R>::min()) &&
         std::cmp_less_equal(t, std::numeric_limits<R>::max());

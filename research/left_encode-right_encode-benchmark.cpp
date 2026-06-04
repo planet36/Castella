@@ -23,7 +23,7 @@
 // NOTE: These functions make a copy of the input data.
 
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 left_encode_1(const std::unsigned_integral auto x)
 {
     const auto w = byte_width(x);
@@ -42,7 +42,7 @@ left_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 left_encode_2(std::unsigned_integral auto x)
 {
     const auto w = byte_width(x);
@@ -64,7 +64,7 @@ left_encode_2(std::unsigned_integral auto x)
 
 #if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 left_encode_3(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -81,7 +81,7 @@ left_encode_3(const std::unsigned_integral auto x)
 #endif
 
 /// Unambiguously encode the integer into a byte string
-static auto
+[[nodiscard]] static auto
 left_encode_4(std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -101,7 +101,7 @@ left_encode_4(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-static auto
+[[nodiscard]] static auto
 left_encode_5(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -119,7 +119,7 @@ left_encode_5(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 right_encode_1(const std::unsigned_integral auto x)
 {
     const auto w = byte_width(x);
@@ -138,7 +138,7 @@ right_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 right_encode_2(std::unsigned_integral auto x)
 {
     const auto w = byte_width(x);
@@ -160,7 +160,7 @@ right_encode_2(std::unsigned_integral auto x)
 
 #if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 right_encode_3(const std::unsigned_integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -178,7 +178,7 @@ right_encode_3(const std::unsigned_integral auto x)
 #endif
 
 /// Unambiguously encode the integer into a byte string
-static auto
+[[nodiscard]] static auto
 right_encode_4(std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -198,7 +198,7 @@ right_encode_4(std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
-static auto
+[[nodiscard]] static auto
 right_encode_5(const std::unsigned_integral auto x)
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
@@ -216,7 +216,7 @@ right_encode_5(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the byte string
-std::vector<std::byte>
+[[nodiscard]] std::vector<std::byte>
 encode_bytes(const std::span<const std::byte> byte_sp)
 {
     std::vector<std::byte> result;
@@ -228,7 +228,7 @@ encode_bytes(const std::span<const std::byte> byte_sp)
 }
 
 /// Unambiguously encode the byte string
-std::vector<std::byte>
+[[nodiscard]] std::vector<std::byte>
 encode_bytes(const std::string_view s)
 {
     static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");

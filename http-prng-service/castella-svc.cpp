@@ -71,7 +71,7 @@ cleanup()
 }
 
 /// Get the default number of bytes to squeeze
-int
+[[nodiscard]] int
 get_default_num_bytes_to_squeeze()
 {
     if (hash_obj != nullptr)

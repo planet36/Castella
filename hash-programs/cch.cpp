@@ -211,7 +211,7 @@ void process_options(int argc, char* argv[])
 * \retval true upon error
 * \retval false upon success
 */
-bool
+[[nodiscard]] bool
 process_file_read_fd(int fd, auto& hash_obj)
 {
     std::vector<std::byte> buf(BLOCKSIZE);

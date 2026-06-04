@@ -22,7 +22,7 @@
 #if defined(__cpp_lib_ranges_to_container)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_1(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -41,7 +41,7 @@ squeeze_bytes_1(const std::array<T, N>& state, int n)
 #if defined(__cpp_lib_containers_ranges)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_2(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -59,7 +59,7 @@ squeeze_bytes_2(const std::array<T, N>& state, int n)
 
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_3(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -78,7 +78,7 @@ squeeze_bytes_3(const std::array<T, N>& state, int n)
 
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_4(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -98,7 +98,7 @@ squeeze_bytes_4(const std::array<T, N>& state, int n)
 #if defined(__cpp_lib_containers_ranges)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_5(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -120,7 +120,7 @@ squeeze_bytes_5(const std::array<T, N>& state, int n)
 
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_6(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
@@ -140,7 +140,7 @@ squeeze_bytes_6(const std::array<T, N>& state, int n)
 #if defined(__cpp_lib_containers_ranges)
 /// Squeeze \a n bytes from \a state
 template <typename T, std::size_t N>
-static std::vector<std::byte>
+[[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_7(const std::array<T, N>& state, int n)
 {
     n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));

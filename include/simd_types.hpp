@@ -17,12 +17,6 @@
 
 using uint8x16_t = __m128i;
 
-#if defined(__AVX__)
-
-using uint8x16x2_t = __m256i;
-
-#endif
-
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
 
 #include <arm_neon.h>

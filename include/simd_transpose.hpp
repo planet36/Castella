@@ -13,8 +13,6 @@
 
 #if defined(__x86_64__)
 
-// {{{ x86_64
-
 #include <immintrin.h>
 
 #pragma GCC diagnostic push
@@ -162,11 +160,7 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
 
 #pragma GCC diagnostic pop
 
-// }}}
-
 #elif defined(__aarch64__) && defined(__ARM_NEON)
-
-// {{{ ARM64
 
 #include <arm_neon.h>
 
@@ -334,8 +328,6 @@ simd_transpose(std::array<uint8x16_t, 16>& x) noexcept
     x[0xe] = vreinterpretq_u8_u64(ABCDEFGHIJKLMNOP_e);
     x[0xf] = vreinterpretq_u8_u64(ABCDEFGHIJKLMNOP_f);
 }
-
-// }}}
 
 #else
 

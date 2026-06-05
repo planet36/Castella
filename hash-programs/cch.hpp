@@ -47,9 +47,9 @@ public:
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
 
-    static constexpr int MIX_RATE_MIN = 1U << 8;
-    static constexpr int MIX_RATE_MAX = std::numeric_limits<uint16_t>::max();
-    static constexpr int DEFAULT_MIX_RATE = 1U << 15;
+    static constexpr int MIX_RATE_MIN = 1;
+    static constexpr int MIX_RATE_MAX = 2048;
+    static constexpr int DEFAULT_MIX_RATE = 128;
     static_assert(MIX_RATE_MIN <= MIX_RATE_MAX);
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
@@ -63,11 +63,11 @@ private:
 
     mutable std::mutex mtx_;
 
-    /// The number of bytes absorbed since the state was last mixed
-    int32_t bytes_absorbed_ = 0;
+    /// The number of absorptions since the state was last mixed
+    int32_t absorbs_since_mix_ = 0;
 
-    /// After this many bytes are absorbed, the state is mixed.
-    const uint16_t mix_rate_ = DEFAULT_MIX_RATE; // bytes absorbed per mix
+    /// After this many absorptions, the state is mixed.
+    const uint16_t mix_rate_ = DEFAULT_MIX_RATE; // absorptions per mix
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MIN));
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MAX));
     static_assert(in_range<decltype(mix_rate_)>(DEFAULT_MIX_RATE));
@@ -82,9 +82,9 @@ private:
     // }}}
     void check_constraints_() const
     {
-        // Periodic mixing is disabled.
         if (mix_rate_ == 0)
         {
+            // Periodic mixing is disabled.
             return;
         }
 
@@ -104,7 +104,7 @@ private:
         explicit_bzero(std::data(state_), sizeof(state_));
         explicit_bzero(input_bytes_.data(), input_bytes_.capacity());
         input_bytes_.clear();
-        bytes_absorbed_ = 0;
+        absorbs_since_mix_ = 0;
         has_been_finalized_ = false;
     }
 
@@ -119,16 +119,16 @@ private:
 
         simd_compress_aes_enc_r4_arr(state_, input_blocks);
 
-        if (mix_rate_ != 0)
+        if (mix_rate_ > 0)
         {
             // Periodically mix the state.
 
-            bytes_absorbed_ += get_state_size_bytes();
+            ++absorbs_since_mix_;
 
-            if (bytes_absorbed_ >= mix_rate_)
+            if (absorbs_since_mix_ >= mix_rate_)
             {
                 Castella::permute(state_, Castella::NUM_ROUNDS_MIN);
-                bytes_absorbed_ = 0;
+                absorbs_since_mix_ = 0;
             }
         }
 
@@ -299,7 +299,7 @@ public:
     /// Get the maximum number of digest bytes that can be returned.
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 4; }
 
-    /// Get the mix rate (i.e. the number of bytes absorbed before the state is mixed).
+    /// Get the mix rate (i.e. the number of absorptions before the state is mixed).
     /**
     * 0 means periodic mixing is disabled.
     */

@@ -22,7 +22,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-25";
+inline constexpr std::string_view program_version = "2026-06-05";
 
 // {{{ default values for options
 inline constexpr int default_digest_size_bytes = 32;
@@ -68,7 +68,7 @@ void print_usage()
     std::println("        Print this message, then exit.");
 
     std::println("  --mix-rate=RATE");
-    std::println("        Specify the number of bytes absorbed per state mix.");
+    std::println("        Specify the number of absorptions (full-block inputs) per state mix.");
     std::println("        Valid range: [{}, {}].",
             compress_castella_hash<>::MIX_RATE_MIN,
             compress_castella_hash<>::MIX_RATE_MAX);
@@ -95,7 +95,7 @@ void print_usage()
     std::println("");
 
     std::println("Input data is absorbed into the internal state via a one-way compression function.");
-    std::println("The internal state is mixed by the Castella permutation function every RATE bytes of input, ensuring full state diffusion.");
+    std::println("The internal state is mixed by the Castella permutation function every RATE absorptions, ensuring full state diffusion.");
     std::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");
     std::println("The Castella permutation function is then applied to the state to produce the digest.");
     std::println("");

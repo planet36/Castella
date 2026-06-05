@@ -27,7 +27,7 @@ namespace Castella
 
 using block_t = uint8x16_t;
 
-template <size_t N>
+template <unsigned int N>
 using arr_blocks = simd_arr_t<N>;
 
 // This macro is only defined in certain test programs to find the optimum

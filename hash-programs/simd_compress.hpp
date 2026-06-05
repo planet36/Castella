@@ -182,7 +182,7 @@ requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
-    for (size_t i = 0; i < N; i += 2)
+    for (unsigned int i = 0; i < N; i += 2)
     {
         // Cast adjacent pairs of elements to __m256i.
         __m256i v_1 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr_1[i]));
@@ -204,7 +204,7 @@ template <size_t N>
 static void
 simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
 {
-    for (size_t i = 0; i < N; ++i)
+    for (unsigned int i = 0; i < N; ++i)
     {
         arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], arr_2[i]);
     }

@@ -231,7 +231,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     {
         using T = std::byte;
-        constexpr size_t N = 256 / sizeof(T);
+        constexpr int N = 256 / sizeof(T);
 
         std::array<T, N> state{};
 
@@ -264,7 +264,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ speed
 
     using T = std::byte;
-    constexpr size_t N = 256 / sizeof(T);
+    constexpr int N = 256 / sizeof(T);
 
     if (num_threads == 1)
     {

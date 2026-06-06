@@ -13,6 +13,10 @@ The output format is a line for each FILE:
 
 Run `--help` for full option descriptions.
 
+## Test script
+
+`test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, and confirming that distinct `--mix-rate` values produce distinct digests.
+
 ## Benchmark scripts
 
 | name | purpose |
@@ -31,4 +35,5 @@ Use `plot-results.py` to plot a benchmark CSV file.
 Run these commands:
 
 * `make`
+* `bash test-correctness.bash`
 * `bash benchmark.all.bash` (or any individual benchmark script)

@@ -51,7 +51,7 @@ y_data = df[y_axis_col].mul(1000) # convert from seconds to milliseconds
 plt.scatter(x_data, y_data)
 
 if args.xlog:
-    plt.xscale('log', base=2)
+    plt.xscale('symlog', base=2)
 
 plt.title(xlabel + ' vs ' + ylabel)
 plt.xlabel(xlabel)

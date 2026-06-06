@@ -98,7 +98,7 @@ print_usage()
     std::println("Usage: {} [OPTION]... [HOST]", program_invocation_short_name);
     nl;
 
-    std::println("Start a Castella HTTP PRNG service.  Send SIGINT to stop it.");
+    std::println("Start a Castella HTTP PRNG service.  Send SIGINT, SIGTERM, or SIGHUP to stop it.");
     nl;
 
     std::println(R"(The server endpoints are "absorb" and "squeeze", just like for a sponge/duplex construction.)");

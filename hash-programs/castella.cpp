@@ -438,7 +438,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
 
-            std::println("{}  {}", bytes_to_hex(digest_bytes), path);
+            std::println("{}  {}", bytes_to_hex(digest_bytes), quote_shell_always(path));
         }
         catch (const std::invalid_argument& ex)
         {

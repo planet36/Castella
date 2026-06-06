@@ -56,5 +56,6 @@ if args.xlog:
 plt.title(xlabel + ' vs ' + ylabel)
 plt.xlabel(xlabel)
 plt.ylabel(ylabel)
+plt.minorticks_on()
 plt.grid()
 plt.show()

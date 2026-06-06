@@ -4,9 +4,20 @@ This C++ class implements a [duplex/sponge](https://keccak.team/sponge_duplex.ht
 
 An instance of a Castella duplex can be used as a hash object or a pseudo-random number generator (PRNG).
 
+## Repository Layout
+
+| directory | contents |
+|-----------|----------|
+| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`) and supporting headers |
+| `examples/` | Usage examples: cSHAKE-like, KMAC-like, and TupleHash-like operations |
+| `tests/` | Correctness tests |
+| `research/` | Programs for empirically determining optimal parameters; benchmarks |
+| `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |
+| `http-prng-service/` | HTTP server exposing a Castella-backed PRNG via `/absorb` and `/squeeze` endpoints |
+
 ## Design
 
-The source code [include/castella-duplex.hpp](castella-duplex.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
+The source code [include/castella-duplex.hpp](include/castella-duplex.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
 The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented).  That is, all input, output, and padding are in whole bytes.
 
@@ -14,9 +25,9 @@ The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented
 
 The Castella state is an array of `B` blocks, where `B = 16`.  A block is 16-bytes that fit in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g. x86-64 XMM, ARM Neon).
 
-The _inner_ part of the state (i.e. the <q>capacity</q>) is `C` blocks in size, where `2 ≤ C ≤ B/2`.
+The _inner_ part of the state (i.e. the <q>capacity</q>) is `C` blocks in size, where `2 ≤ C ≤ B/2` and `C` must be even.
 
-The _outer_ part of the state (i.e. the <q>rate</q>) is `R` blocks in size, where `R = C-B`.
+The _outer_ part of the state (i.e. the <q>rate</q>) is `R` blocks in size, where `R = B-C`.
 
 ### Round Constants
 
@@ -51,7 +62,7 @@ The number of rounds determines the safety margin.  The capacity size determines
 
 ### Adding/Absorbing Input
 
-Input data maybe be given in the form of raw data (i.e. a `const void*`, `size_t` pair) or a byte span (i.e. `const std::span<const std::byte>`) with these member functions:
+Input data may be given in the form of raw data (i.e. a `const void*`, `size_t` pair) or a byte span (i.e. `const std::span<const std::byte>`) with these member functions:
 * `add`
     * Add the given data to the input buffer.
 * `add_encoded`
@@ -84,9 +95,9 @@ The `squeeze_bytes` member function performs the following:
 ### To build and use Castella
 
 * [GCC 14](https://gcc.gnu.org/gcc-14/changes.html) or newer
-  * [C++23](https://cppreference.com/cpp/23) features are used
+  * [C++23](https://en.cppreference.com/cpp/23) features are used
   * clang++ is not supported
-* An x84-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
+* An x86-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
 
 ## FAQ
 

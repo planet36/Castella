@@ -6,12 +6,12 @@
 
 __author__ = 'Steven Ward'
 __license__ = 'MPL-2.0'
-__version__ = '2026-05-29'
+__version__ = '2026-06-08'
 
 import argparse
+import csv
 
 import matplotlib.pyplot as plt
-import pandas as pd
 
 parser = argparse.ArgumentParser()
 
@@ -37,16 +37,18 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-df = pd.read_csv(args.FILE)
+with open(args.FILE, newline='', encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    rows = list(reader)
+    x_axis_col = reader.fieldnames[-1] # The parameter that varied is the last column.
 
-x_axis_col = df.columns[-1] # The parameter that varied is the last column.
 y_axis_col = args.column
 
 xlabel = x_axis_col.removeprefix('parameter_').title()
 ylabel = y_axis_col.title() + ' Time (ms)'
 
-x_data = df[x_axis_col]
-y_data = df[y_axis_col].mul(1000) # convert from seconds to milliseconds
+x_data = [float(row[x_axis_col]) for row in rows]
+y_data = [float(row[y_axis_col]) * 1000 for row in rows] # convert from seconds to milliseconds
 
 plt.scatter(x_data, y_data)
 

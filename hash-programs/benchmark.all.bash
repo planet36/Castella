@@ -82,12 +82,12 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 'openssl dgst -r -sm3                 /tmp/test.txt' \
 'openssl dgst -r -ssl3-md5            /tmp/test.txt' \
 'openssl dgst -r -ssl3-sha1           /tmp/test.txt' \
-'./castella --size=32 --rounds=3 /tmp/test.txt' \
-'./castella --size=48 --rounds=3 /tmp/test.txt' \
-'./castella --size=64 --rounds=3 /tmp/test.txt' \
-'./castella --size=32 --rounds=6 /tmp/test.txt' \
-'./castella --size=48 --rounds=6 /tmp/test.txt' \
-'./castella --size=64 --rounds=6 /tmp/test.txt' \
+'./castella --rounds=3 --size=32 /tmp/test.txt' \
+'./castella --rounds=3 --size=48 /tmp/test.txt' \
+'./castella --rounds=3 --size=64 /tmp/test.txt' \
+'./castella --rounds=6 --size=32 /tmp/test.txt' \
+'./castella --rounds=6 --size=48 /tmp/test.txt' \
+'./castella --rounds=6 --size=64 /tmp/test.txt' \
 './cch --mix-rate=0     /tmp/test.txt' \
 './cch --mix-rate=256   /tmp/test.txt' \
 './cch --mix-rate=512   /tmp/test.txt' \

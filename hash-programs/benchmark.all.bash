@@ -91,7 +91,6 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 './castella --rounds=16 --size=32 /tmp/test.txt' \
 './castella --rounds=16 --size=48 /tmp/test.txt' \
 './castella --rounds=16 --size=64 /tmp/test.txt' \
-'./cch --mix-rate=0     /tmp/test.txt' \
 './cch --mix-rate=1     /tmp/test.txt' \
 './cch --mix-rate=2     /tmp/test.txt' \
 './cch --mix-rate=4     /tmp/test.txt' \
@@ -104,6 +103,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 './cch --mix-rate=512   /tmp/test.txt' \
 './cch --mix-rate=1024  /tmp/test.txt' \
 './cch --mix-rate=2048  /tmp/test.txt' \
+'./cch --mix-rate=0     /tmp/test.txt' \
 'b3sum                 /tmp/test.txt' \
 'b3sum --no-mmap       /tmp/test.txt' \
 'b3sum --num-threads=1 /tmp/test.txt' \

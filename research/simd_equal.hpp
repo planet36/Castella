@@ -34,3 +34,15 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b)
     return vmaxvq_u8(vorrq_u8(neq0, neq1)) == 0;
 #endif
 }
+
+[[nodiscard]] static inline bool
+simd_equal(const uint8x16_t a, const uint8x16_t b)
+{
+    return simd128_equal(a, b);
+}
+
+[[nodiscard]] static inline bool
+simd_equal(const uint8x16x2_t a, const uint8x16x2_t b)
+{
+    return simd256_equal(a, b);
+}

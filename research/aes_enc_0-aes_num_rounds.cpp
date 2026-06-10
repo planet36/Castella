@@ -131,14 +131,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::println("");
 
     std::println("aes_enc_0");
-    std::println("Nr:"
-            "\tmean"
-            "\tΔ"
-            "\tdiff.%"
-            "\tvar."
-            "\tstddev"
-            "\tskew."
-            "\tkurt."
+    std::println("Nr:" // number of rounds
+            "\tμ" // mean
+            "\tε" // absolute error
+            "\tdiff.%" // diffusion percentage
+            "\tσ²" // variance
+            "\tσ" // standard deviation
+            "\tγ₁" // skewness
+            "\tκ" // kurtosis
             );
 
     for (int aes_num_rounds = 1; aes_num_rounds <= 6; aes_num_rounds++)

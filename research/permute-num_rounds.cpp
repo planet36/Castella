@@ -28,11 +28,11 @@ template <int N>
 void
 calculate_metrics_num_rounds(const int num_samples)
 {
+    static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
+
     using T = Castella::arr_blocks<N>;
 
     std::println("## B={}", N); // Castella uses "B" to signify the state size
-
-    static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
     std::map<int, running_stats<double>> num_rounds_to_rs_num_bits_changed;
 

@@ -9,23 +9,25 @@
 
 #pragma once
 
+#include "simd_types.hpp"
+
 #if defined(__x86_64__)
 
 #include <immintrin.h>
 
 [[nodiscard]] static inline bool
-simd128_equal(const __m128i a, const __m128i b)
+simd128_equal(const uint8x16_t a, const uint8x16_t b)
 {
-    const __m128i neq = _mm_xor_si128(a, b);
+    const uint8x16_t neq = _mm_xor_si128(a, b);
     return _mm_test_all_zeros(neq, neq);
 }
 
 #if defined(__AVX2__)
 
 [[nodiscard]] static inline bool
-simd256_equal(const __m256i a, const __m256i b)
+simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b)
 {
-    const __m256i neq = _mm256_xor_si256(a, b);
+    const uint8x16x2_t neq = _mm256_xor_si256(a, b);
     return _mm256_testz_si256(neq, neq);
 }
 

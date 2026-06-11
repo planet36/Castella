@@ -53,7 +53,7 @@ calculate_metrics_num_rounds(const int num_samples)
                    0);
 
             // for each row
-            for (int row = 0; row < N; ++row)
+            for (decltype(N) row = 0; row < N; ++row)
             {
                 // for each bitmask
                 for (const auto& bitmask : simd_bitmask128_arr)
@@ -77,7 +77,7 @@ calculate_metrics_num_rounds(const int num_samples)
                         int num_bits_changed = 0;
 
                         // for each row
-                        for (int j = 0; j < N; ++j)
+                        for (decltype(N) j = 0; j < N; ++j)
                         {
                             num_bits_changed +=
                                 simd_popcount(permuted_state[j] ^ permuted_state_p[j]);

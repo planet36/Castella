@@ -7,6 +7,7 @@
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
 #include "simd_compress.hpp"
+#include "simd_equal.hpp"
 #include "simd_popcount.hpp"
 
 #include <cassert>
@@ -39,7 +40,7 @@ calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
             arc4random_buf(&a, sizeof(a));
             arc4random_buf(&b, sizeof(b));
         }
-        while (std::memcmp(&a, &b, sizeof(a)) == 0);
+        while (simd_equal(a, b));
 
         const auto result = fn(a, b);
 
@@ -47,7 +48,7 @@ calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
         {
             const auto result_swap = fn(b, a);
 
-            assert(std::memcmp(&result, &result_swap, sizeof(result)) != 0);
+            assert(!simd_equal(result, result_swap));
         }
 
         // for each bitmask
@@ -57,11 +58,11 @@ calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
             {
                 const auto a_p = a ^ bitmask; // will have 1 bit changed
 
-                assert(std::memcmp(&a, &a_p, sizeof(a)) != 0);
+                assert(!simd_equal(a, a_p));
 
                 const auto result_p = fn(a_p, b);
 
-                assert(std::memcmp(&result, &result_p, sizeof(result)) != 0);
+                assert(!simd_equal(result, result_p));
 
                 // count the number of bits changed
                 const int num_bits_changed = simd_popcount(result ^ result_p);
@@ -72,11 +73,11 @@ calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
             {
                 const auto b_p = b ^ bitmask; // will have 1 bit changed
 
-                assert(std::memcmp(&b, &b_p, sizeof(b)) != 0);
+                assert(!simd_equal(b, b_p));
 
                 const auto result_p = fn(a, b_p);
 
-                assert(std::memcmp(&result, &result_p, sizeof(result)) != 0);
+                assert(!simd_equal(result, result_p));
 
                 // count the number of bits changed
                 const int num_bits_changed = simd_popcount(result ^ result_p);

@@ -3,6 +3,7 @@
 
 #include "get_env.hpp"
 #include "simd_compress.hpp"
+#include "simd_equal.hpp"
 
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
@@ -29,7 +30,7 @@ BM_compress(benchmark::State& BM_state, func_compress_t<T>& fn)
         arc4random_buf(&a, sizeof(a));
         arc4random_buf(&b, sizeof(b));
     }
-    while (std::memcmp(&a, &b, sizeof(a)) == 0);
+    while (simd_equal(a, b));
 
     for (auto _ : BM_state)
     {
@@ -99,7 +100,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 arc4random_buf(&a, sizeof(a));
                 arc4random_buf(&b, sizeof(b));
             }
-            while (std::memcmp(&a, &b, sizeof(a)) == 0);
+            while (simd_equal(a, b));
 
             const auto result_aes_enc_r2_ab = simd_compress_aes_enc_r2(a, b);
             const auto result_aes_enc_r3_ab = simd_compress_aes_enc_r3(a, b);
@@ -109,9 +110,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto result_aes_enc_r3_ba = simd_compress_aes_enc_r3(b, a);
             const auto result_aes_enc_r4_ba = simd_compress_aes_enc_r4(b, a);
 
-            assert(std::memcmp(&result_aes_enc_r2_ab, &result_aes_enc_r2_ba, sizeof(result_aes_enc_r2_ab)) != 0);
-            assert(std::memcmp(&result_aes_enc_r3_ab, &result_aes_enc_r3_ba, sizeof(result_aes_enc_r3_ab)) != 0);
-            assert(std::memcmp(&result_aes_enc_r4_ab, &result_aes_enc_r4_ba, sizeof(result_aes_enc_r4_ab)) != 0);
+            assert(!simd_equal(result_aes_enc_r2_ab, result_aes_enc_r2_ba));
+            assert(!simd_equal(result_aes_enc_r3_ab, result_aes_enc_r3_ba));
+            assert(!simd_equal(result_aes_enc_r4_ab, result_aes_enc_r4_ba));
         }
 
 #if defined(__x86_64__) && defined(__VAES__)
@@ -126,7 +127,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 arc4random_buf(&a, sizeof(a));
                 arc4random_buf(&b, sizeof(b));
             }
-            while (std::memcmp(&a, &b, sizeof(a)) == 0);
+            while (simd_equal(a, b));
 
             const auto result_aes_enc_r2_ab = simd_compress_aes_enc_r2(a, b);
             const auto result_aes_enc_r3_ab = simd_compress_aes_enc_r3(a, b);
@@ -136,9 +137,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto result_aes_enc_r3_ba = simd_compress_aes_enc_r3(b, a);
             const auto result_aes_enc_r4_ba = simd_compress_aes_enc_r4(b, a);
 
-            assert(std::memcmp(&result_aes_enc_r2_ab, &result_aes_enc_r2_ba, sizeof(result_aes_enc_r2_ab)) != 0);
-            assert(std::memcmp(&result_aes_enc_r3_ab, &result_aes_enc_r3_ba, sizeof(result_aes_enc_r3_ab)) != 0);
-            assert(std::memcmp(&result_aes_enc_r4_ab, &result_aes_enc_r4_ba, sizeof(result_aes_enc_r4_ab)) != 0);
+            assert(!simd_equal(result_aes_enc_r2_ab, result_aes_enc_r2_ba));
+            assert(!simd_equal(result_aes_enc_r3_ab, result_aes_enc_r3_ba));
+            assert(!simd_equal(result_aes_enc_r4_ab, result_aes_enc_r4_ba));
         }
 #endif
     }

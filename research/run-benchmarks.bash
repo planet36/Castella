@@ -4,8 +4,8 @@
 
 export LC_ALL=C
 
-# Use N-1 threads
-NUM_THREADS="$(nproc --ignore=1)"
+#NUM_THREADS="$(nproc --ignore=1)" # Use N-1 threads
+NUM_THREADS=1
 export NUM_THREADS
 
 # Should be an odd number for simpler median

@@ -19,7 +19,6 @@
 #include <cstring>
 #include <err.h>
 #include <map>
-#include <numeric>
 #include <print>
 #include <string>
 #include <unistd.h>

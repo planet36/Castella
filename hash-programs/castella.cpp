@@ -12,7 +12,6 @@
 #include <err.h>
 #include <fcntl.h>
 #include <getopt.h>
-#include <numeric>
 #include <print>
 #include <stdexcept>
 #include <string>

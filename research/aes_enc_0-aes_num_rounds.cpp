@@ -12,7 +12,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <err.h>
-#include <numeric>
 #include <print>
 #include <string>
 #include <unistd.h>

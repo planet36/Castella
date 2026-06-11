@@ -15,7 +15,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
-#include <numeric>
 #include <string>
 #include <unistd.h>
 

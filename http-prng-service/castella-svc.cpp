@@ -29,7 +29,6 @@
 #include <cstring>
 #include <err.h>
 #include <mutex>
-#include <numeric>
 #include <print>
 #include <span>
 #include <string>

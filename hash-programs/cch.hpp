@@ -117,7 +117,7 @@ private:
 
         const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
 
-        simd_compress_aes_enc_r4_arr(state_, input_blocks);
+        simd_compress_aes_enc_r3_arr(state_, input_blocks);
 
         if (mix_rate_ > 0)
         {

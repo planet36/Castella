@@ -21,7 +21,7 @@
 using func_compress_t = uint8x16_t (&)(const uint8x16_t, const uint8x16_t);
 
 void
-calculate_metrics_simd_compress(const func_compress_t& fn, const int num_samples,
+calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
         const int num_rounds, const bool vary_a)
 {
     using T = uint8x16_t;

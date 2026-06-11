@@ -1,0 +1,189 @@
+// SPDX-FileCopyrightText: Steven Ward
+// SPDX-License-Identifier: MPL-2.0
+
+#define DEBUG 1
+#undef NDEBUG
+
+#include "running_stats.hpp"
+#include "simd_bitmask.hpp"
+#include "simd_compress.hpp"
+#include "simd_popcount.hpp"
+
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <err.h>
+#include <print>
+#include <string>
+#include <unistd.h>
+
+using func_compress_t = uint8x16_t (&)(const uint8x16_t, const uint8x16_t);
+
+void
+calculate_metrics_simd_compress(const func_compress_t& fn, const int num_samples,
+        const int num_rounds, const bool vary_a)
+{
+    using T = uint8x16_t;
+
+    running_stats<double> rs_num_bits_changed;
+
+    // for each sample
+    for (int i = 0; i < num_samples; ++i)
+    {
+        T a{};
+        T b{};
+
+        do
+        {
+            arc4random_buf(&a, sizeof(a));
+            arc4random_buf(&b, sizeof(b));
+        }
+        while (std::memcmp(&a, &b, sizeof(a)) == 0);
+
+        const auto result = fn(a, b);
+
+        // ensure asymmetry
+        {
+            const auto result_swap = fn(b, a);
+
+            assert(std::memcmp(&result, &result_swap, sizeof(result)) != 0);
+        }
+
+        // for each bitmask
+        for (const auto& bitmask : simd_bitmask128_arr)
+        {
+            if (vary_a)
+            {
+                const auto a_p = a ^ bitmask; // will have 1 bit changed
+
+                assert(std::memcmp(&a, &a_p, sizeof(a)) != 0);
+
+                const auto result_p = fn(a_p, b);
+
+                assert(std::memcmp(&result, &result_p, sizeof(result)) != 0);
+
+                // count the number of bits changed
+                const int num_bits_changed = simd_popcount(result ^ result_p);
+
+                rs_num_bits_changed.push(num_bits_changed);
+            }
+            else
+            {
+                const auto b_p = b ^ bitmask; // will have 1 bit changed
+
+                assert(std::memcmp(&b, &b_p, sizeof(b)) != 0);
+
+                const auto result_p = fn(a, b_p);
+
+                assert(std::memcmp(&result, &result_p, sizeof(result)) != 0);
+
+                // count the number of bits changed
+                const int num_bits_changed = simd_popcount(result ^ result_p);
+
+                rs_num_bits_changed.push(num_bits_changed);
+            }
+        }
+    }
+
+    // number of bits in the block
+    constexpr int bits = sizeof(T) * 8;
+
+    // expected number of bits changed
+    constexpr int expected_mean = bits / 2;
+
+    const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
+
+    const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / bits;
+
+    std::println("{:2d}:"
+            "\t{:.3f}"
+            "\t{:.3f}"
+            "\t{:.1f}%"
+            "\t{:.3f}"
+            "\t{:.3f}"
+            "\t{:.3f}"
+            "\t{:.3f}"
+            , num_rounds
+            , rs_num_bits_changed.mean()
+            , abs_err
+            , diffusion_pctg
+            , rs_num_bits_changed.variance()
+            , rs_num_bits_changed.standard_deviation()
+            , rs_num_bits_changed.skewness()
+            , rs_num_bits_changed.kurtosis()
+            );
+}
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
+    using namespace std::literals;
+
+    int num_samples = 1; // number of random samples to test
+
+    {
+        const char* short_options = "+n:";
+        int c = 0;
+        while ((c = getopt(argc, argv, short_options)) != -1)
+        {
+            switch (c) // NOLINT(hicpp-multiway-paths-covered)
+            {
+            case 'n':
+                try
+                {
+                    num_samples = std::stoi(optarg);
+                }
+                catch (const std::invalid_argument& ex)
+                {
+                    errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+                }
+                catch (const std::out_of_range& ex)
+                {
+                    errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+                }
+                break;
+
+            default:
+                std::exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    if (num_samples < 1) // NOLINT(readability-use-std-min-max)
+    {
+        num_samples = 1;
+    }
+
+    std::println("## num_samples: {}", num_samples);
+    std::println("");
+
+    for (bool vary_a : {true, false})
+    {
+        if (vary_a)
+        {
+            std::println("## vary a");
+        }
+        else
+        {
+            std::println("## vary b");
+        }
+
+        std::println("Nr:" // number of rounds
+                "\tμ" // mean
+                "\tε" // absolute error
+                "\tdiff.%" // diffusion percentage
+                "\tσ²" // variance
+                "\tσ" // standard deviation
+                "\tγ₁" // skewness
+                "\tκ" // kurtosis
+                );
+
+        calculate_metrics_simd_compress(simd_compress_aes_enc_r2, num_samples, 2, vary_a);
+        calculate_metrics_simd_compress(simd_compress_aes_enc_r3, num_samples, 3, vary_a);
+        calculate_metrics_simd_compress(simd_compress_aes_enc_r4, num_samples, 4, vary_a);
+        std::println("");
+    }
+
+    return 0;
+}

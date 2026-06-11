@@ -27,3 +27,9 @@ echo
 ./permute_inv-verify -n 50000 || exit
 echo "________________________________________________________________________________"
 echo
+
+echo "# Find the bit diffusion rate of simd_compress_aes_enc_r{2,3,4} when each param varies"
+echo
+./simd_compress_aes_enc-num_rounds -n 250000 || exit
+echo "________________________________________________________________________________"
+echo

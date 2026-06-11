@@ -38,7 +38,7 @@
 * \tparam N The size (in blocks) of the state
 * \note \c N=2 is quite slow.
 */
-template <int N = DEFAULT_CCH_STATE_SIZE_BLOCKS>
+template <size_t N = DEFAULT_CCH_STATE_SIZE_BLOCKS>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {

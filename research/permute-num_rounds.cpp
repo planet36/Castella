@@ -23,7 +23,7 @@
 #include <string>
 #include <unistd.h>
 
-template <int N>
+template <size_t N>
 void
 calculate_metrics_num_rounds(const int num_samples)
 {

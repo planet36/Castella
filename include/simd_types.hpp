@@ -36,7 +36,7 @@ using uint8x16x2_t = __m256i;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 
-template <int N>
+template <size_t N>
 using simd_arr_t = std::array<uint8x16_t, N>;
 
 #pragma GCC diagnostic pop

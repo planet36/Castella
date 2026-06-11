@@ -11,7 +11,7 @@
 #include <string>
 #include <thread>
 
-template <int N>
+template <size_t N>
 void
 BM_permute(benchmark::State& BM_state, const int num_rounds)
 {

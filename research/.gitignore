@@ -9,4 +9,5 @@ permute-num_rounds-benchmark
 permute_inv-verify
 results/
 simd_compress_aes_enc-num_rounds
+simd_compress_aes_enc-num_rounds-benchmark
 squeeze_bytes-benchmark

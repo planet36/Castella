@@ -4,17 +4,6 @@ This C++ class implements a [duplex/sponge](https://keccak.team/sponge_duplex.ht
 
 An instance of a Castella duplex can be used as a hash object or a pseudo-random number generator (PRNG).
 
-## Repository Layout
-
-| directory | contents |
-|-----------|----------|
-| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`) and supporting headers |
-| `examples/` | Usage examples: cSHAKE-like, KMAC-like, and TupleHash-like operations |
-| `tests/` | Correctness tests |
-| `research/` | Programs for empirically determining optimal parameters; benchmarks |
-| `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |
-| `http-prng-service/` | HTTP server exposing a Castella-backed PRNG via `/absorb` and `/squeeze` endpoints |
-
 ## Design
 
 The source code [include/castella-duplex.hpp](include/castella-duplex.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
@@ -137,6 +126,17 @@ This project was started to satiate a curiosity about the sponge construction an
 The capacity (`C`) determines the rate (`R`).  The size of the input buffer is `R` blocks and it has an alignment of 1 block (i.e. 16 bytes).
 
 If the unit of the capacity was _bytes_ instead of blocks, the value would have to be a multiple of 16 anyways.
+
+## Repository Layout
+
+| directory | contents |
+|-----------|----------|
+| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`) and supporting headers |
+| `examples/` | Usage examples: cSHAKE-like, KMAC-like, and TupleHash-like operations |
+| `tests/` | Correctness tests |
+| `research/` | Programs for empirically determining optimal parameters; benchmarks |
+| `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |
+| `http-prng-service/` | HTTP server exposing a Castella-backed PRNG via `/absorb` and `/squeeze` endpoints |
 
 ## References
 

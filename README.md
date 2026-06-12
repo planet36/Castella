@@ -160,15 +160,15 @@ If the unit of the capacity was _bytes_ instead of blocks, the value would have 
 * [The Design Of Rijndael – Errata](https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_Errata_2014.pdf)
 
 ## Keywords
+* permutation function
+* AES
+* matrix transpose/transposition
+* bit diffusion
 * duplex
 * sponge
 * customizable
 * hash
 * PRNG
-* permutation function
-* AES
-* matrix transpose/transposition
-* bit diffusion
 * Keccak
 * SHA-3
 * XOF

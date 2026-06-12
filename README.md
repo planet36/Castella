@@ -63,7 +63,7 @@ See [The sponge and duplex constructions](https://keccak.team/sponge_duplex.html
 
 ### Padding Scheme
 
-Castella uses the [<q>pad10\*1</q>](https://en.wikipedia.org/wiki/SHA-3#Padding) padding rule.
+The duplex uses the [<q>pad10\*1</q>](https://en.wikipedia.org/wiki/SHA-3#Padding) padding rule.
 
 Input padding bytes are added before every `squeeze_bytes`, even if 0 bytes are squeezed.
 
@@ -121,7 +121,7 @@ I don't know because it hasn't been scrutinized by others.  Although I myself ca
 
 This project was started to satiate a curiosity about the sponge construction and SHA-3.  Sometimes it's fun to build something just to learn how it works.
 
-### Why is the input parameter _capacity_ in blocks instead of bytes?
+### Why is the duplex input parameter _capacity_ in blocks instead of bytes?
 
 The capacity (`C`) determines the rate (`R`).  The size of the input buffer is `R` blocks and it has an alignment of 1 block (i.e., 16 bytes).
 

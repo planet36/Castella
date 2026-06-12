@@ -1,10 +1,10 @@
-# Castella: A heavyweight customizable duplex/sponge construction class
+# Castella: A heavyweight AES-based permutation function
 
 This C++ class implements a [duplex/sponge](https://keccak.team/sponge_duplex.html) construction inspired by [Keccak](https://keccak.team/keccak.html) (which won the [SHA-3](https://csrc.nist.gov/projects/hash-functions/sha-3-project) competition).
 
 An instance of a Castella duplex can be used as a hash object or a pseudo-random number generator (PRNG).
 
-### Permutation Function
+## The Castella Permutation Function
 
 The Castella permutation function uses [AES encryption CPU instructions](https://www.intel.com/content/www/us/en/developer/articles/technical/advanced-encryption-standard-instructions-aes-ni.html) and matrix transpositions in every round like this:
 
@@ -21,13 +21,13 @@ The first Castella round constant is <q>expand 16-byte c</q>.  Then each subsequ
 
 The number of round constants generated equals `Castella::NUM_ROUNDS_MAX`.  Embiggen the value as needed.
 
-## Design
+## The Castella Duplex Construction
 
 The source code [include/castella-duplex.hpp](include/castella-duplex.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
 The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented).  That is, all input, output, and padding are in whole bytes.
 
-### State
+### Capacity and Rate
 
 The Castella state is an array of `B` blocks, where `B = 16`.  A block is 16-bytes that fit in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g., x86-64 XMM, ARM Neon).
 

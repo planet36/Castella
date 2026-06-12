@@ -31,11 +31,7 @@ The source code is liberally documented with many annotations and excerpts from 
 
 ### Capacity and Rate
 
-The Castella state is an array of `B` blocks, where `B = 16`.  A block is 16-bytes that fit in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g., x86-64 XMM, ARM Neon).
-
-The _inner_ part of the state (i.e., the <q>capacity</q>) is `C` blocks in size, where `2 ≤ C ≤ B/2` and `C` must be even.
-
-The _outer_ part of the state (i.e., the <q>rate</q>) is `R` blocks in size, where `R = B-C`.
+The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.
 
 ### Instantiation Parameters
 

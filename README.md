@@ -106,9 +106,9 @@ I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them
 
 ### Is this as fast as [b3sum](https://github.com/BLAKE3-team/BLAKE3)?
 
-No!  Nothing is as fast as b3sum!
+_No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, some configurations of Castella (with minimal rounds) are faster than b2sum, sha1sum, and md5sum.
+But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum.  And [Compress-Castella hash](hash-programs/cch.cpp) is often as fast as [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 

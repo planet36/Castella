@@ -12,11 +12,11 @@ The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented
 
 ### State
 
-The Castella state is an array of `B` blocks, where `B = 16`.  A block is 16-bytes that fit in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g. x86-64 XMM, ARM Neon).
+The Castella state is an array of `B` blocks, where `B = 16`.  A block is 16-bytes that fit in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g., x86-64 XMM, ARM Neon).
 
-The _inner_ part of the state (i.e. the <q>capacity</q>) is `C` blocks in size, where `2 ≤ C ≤ B/2` and `C` must be even.
+The _inner_ part of the state (i.e., the <q>capacity</q>) is `C` blocks in size, where `2 ≤ C ≤ B/2` and `C` must be even.
 
-The _outer_ part of the state (i.e. the <q>rate</q>) is `R` blocks in size, where `R = B-C`.
+The _outer_ part of the state (i.e., the <q>rate</q>) is `R` blocks in size, where `R = B-C`.
 
 ### Permutation Function
 
@@ -51,7 +51,7 @@ The number of rounds determines the safety margin.  The capacity size determines
 
 ### Adding/Absorbing Input
 
-Input data may be given in the form of raw data (i.e. a `const void*`, `size_t` pair) or a byte span (i.e. `const std::span<const std::byte>`) with these member functions:
+Input data may be given in the form of raw data (i.e., a `const void*`, `size_t` pair) or a byte span (i.e., `const std::span<const std::byte>`) with these member functions:
 * `add`
     * Add the given data to the input buffer.
 * `add_encoded`
@@ -123,7 +123,7 @@ This project was started to satiate a curiosity about the sponge construction an
 
 ### Why is the input parameter _capacity_ in blocks instead of bytes?
 
-The capacity (`C`) determines the rate (`R`).  The size of the input buffer is `R` blocks and it has an alignment of 1 block (i.e. 16 bytes).
+The capacity (`C`) determines the rate (`R`).  The size of the input buffer is `R` blocks and it has an alignment of 1 block (i.e., 16 bytes).
 
 If the unit of the capacity was _bytes_ instead of blocks, the value would have to be a multiple of 16 anyways.
 

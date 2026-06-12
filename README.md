@@ -23,9 +23,11 @@ The number of round constants generated equals `Castella::NUM_ROUNDS_MAX`.  Embi
 
 ## The Castella Duplex Construction
 
-The source code [include/castella-duplex.hpp](include/castella-duplex.hpp) is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
+The Castella [duplex class](include/castella-duplex.hpp) implements a customizable [duplex/sponge](https://keccak.team/sponge_duplex.html) construction inspired by [Keccak](https://keccak.team/keccak.html) (which won the [SHA-3](https://csrc.nist.gov/projects/hash-functions/sha-3-project) competition).  It is byte-oriented (i.e., all input, output, and padding are in whole bytes), unlike SHA-3, which is bit-oriented.
 
-The Castella duplex object is byte-oriented, unlike SHA-3 (which is bit-oriented).  That is, all input, output, and padding are in whole bytes.
+An instance of a duplex can be used as a hash object or a pseudo-random number generator (PRNG).
+
+The source code is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
 ### Capacity and Rate
 

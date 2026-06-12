@@ -4,7 +4,9 @@ This C++ library implements a heavyweight permutation function using AES CPU ins
 
 ## The Castella Permutation Function
 
-The Castella permutation function uses [AES encryption CPU instructions](https://www.intel.com/content/www/us/en/developer/articles/technical/advanced-encryption-standard-instructions-aes-ni.html) and matrix transpositions in every round like this:
+The Castella [permutation function](include/castella-permute.hpp) operates on a state array of `N` blocks, where `N` ∈ {2, 4, 8, 16} and each block is 16 bytes fitting in a <abbr title="Single Instruction, Multiple Data">SIMD</abbr> register (e.g., x86-64 XMM, ARM NEON).  It uses [AES encryption CPU instructions](https://www.intel.com/content/www/us/en/developer/articles/technical/advanced-encryption-standard-instructions-aes-ni.html) and matrix transpositions to achieve full diffusion of the state array.
+
+Each round of the permutation does the following:
 
   1. Apply (via XOR) the round constant to the first element of the state array.
   2. Perform 3 rounds of AES encryption (with a zero round key) on each element of the state array.

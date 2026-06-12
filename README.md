@@ -1,8 +1,6 @@
 # Castella: A heavyweight AES-based permutation function
 
-This C++ class implements a [duplex/sponge](https://keccak.team/sponge_duplex.html) construction inspired by [Keccak](https://keccak.team/keccak.html) (which won the [SHA-3](https://csrc.nist.gov/projects/hash-functions/sha-3-project) competition).
-
-An instance of a Castella duplex can be used as a hash object or a pseudo-random number generator (PRNG).
+This C++ library implements a heavyweight permutation function using AES CPU instructions, along with higher-level constructions built on it.
 
 ## The Castella Permutation Function
 

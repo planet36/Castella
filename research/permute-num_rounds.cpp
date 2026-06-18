@@ -28,7 +28,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
     using T = Castella::arr_blocks<N>;
 
-    std::println("## B={}", N); // Castella uses "B" to signify the state size
+    std::println("## N={}", N);
 
     std::map<int, running_stats<double>> num_rounds_to_rs_num_bits_changed;
 

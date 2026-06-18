@@ -63,7 +63,7 @@ inline constexpr std::array<uint8_t, 256> unique_bytes{
 /// Test state with byte values that are 0
 template <size_t N>
 void
-test_permute_zero_bytes()
+test_permute_bytes_zero()
 {
     Castella::arr_blocks<N> state;
     (void)std::memset(std::data(state), 0, sizeof(state));
@@ -73,7 +73,7 @@ test_permute_zero_bytes()
 /// Test state with byte values that are unique
 template <size_t N>
 void
-test_permute_unique_bytes()
+test_permute_bytes_unique()
 {
     Castella::arr_blocks<N> state;
     static_assert(sizeof(state) <= sizeof(unique_bytes));
@@ -84,7 +84,7 @@ test_permute_unique_bytes()
 /// Test state with byte values that are random
 template <size_t N>
 void
-test_permute_random_bytes()
+test_permute_bytes_random()
 {
     Castella::arr_blocks<N> state;
     arc4random_buf(std::data(state), sizeof(state));
@@ -126,22 +126,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
-    test_permute_zero_bytes<2>();
-    test_permute_zero_bytes<4>();
-    test_permute_zero_bytes<8>();
-    test_permute_zero_bytes<16>();
+    test_permute_bytes_zero<2>();
+    test_permute_bytes_zero<4>();
+    test_permute_bytes_zero<8>();
+    test_permute_bytes_zero<16>();
 
-    test_permute_unique_bytes<2>();
-    test_permute_unique_bytes<4>();
-    test_permute_unique_bytes<8>();
-    test_permute_unique_bytes<16>();
+    test_permute_bytes_unique<2>();
+    test_permute_bytes_unique<4>();
+    test_permute_bytes_unique<8>();
+    test_permute_bytes_unique<16>();
 
     for (int i = 0; i < num_samples; ++i)
     {
-        test_permute_random_bytes<2>();
-        test_permute_random_bytes<4>();
-        test_permute_random_bytes<8>();
-        test_permute_random_bytes<16>();
+        test_permute_bytes_random<2>();
+        test_permute_bytes_random<4>();
+        test_permute_bytes_random<8>();
+        test_permute_bytes_random<16>();
     }
 
     return 0;

@@ -30,15 +30,7 @@ using block_t = uint8x16_t;
 template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
-// This macro is only defined in certain test programs to find the optimum
-// minimum round count.
-#if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MIN)
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 3 // NOLINT(cppcoreguidelines-macro-usage)
-#endif
-
-inline constexpr int NUM_ROUNDS_MIN = DEFAULT_CASTELLA_NUM_ROUNDS_MIN;
-
-#undef DEFAULT_CASTELLA_NUM_ROUNDS_MIN
+inline constexpr int NUM_ROUNDS_MIN = 3;
 
 #if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MAX)
 // Embiggen the value as needed.

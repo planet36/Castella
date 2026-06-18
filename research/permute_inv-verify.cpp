@@ -4,9 +4,6 @@
 #define DEBUG 1
 #undef NDEBUG
 
-// To exhaustively test the permutation function, set the minimum num_rounds to 1.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
-
 #include "castella-permute.hpp"
 
 #include <array>
@@ -24,8 +21,7 @@ test_permute(const Castella::arr_blocks<N>& state)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
-    for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX;
-         ++num_rounds)
+    for (auto num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
         auto state_copy = state;
 

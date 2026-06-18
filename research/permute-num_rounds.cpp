@@ -4,9 +4,6 @@
 #define DEBUG 1
 #undef NDEBUG
 
-// To find the optimal minimum num_rounds, set it to 1.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MIN 1 // NOLINT(cppcoreguidelines-macro-usage)
-
 #include "castella-permute.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
@@ -42,8 +39,7 @@ calculate_metrics_num_rounds(const int num_samples)
         arc4random_buf(std::data(state), sizeof(state));
 
         // for each number of rounds
-        for (int num_rounds = Castella::NUM_ROUNDS_MIN;
-             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        for (int num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
         {
             auto permuted_state = state;
 

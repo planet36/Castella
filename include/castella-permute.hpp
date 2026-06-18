@@ -32,14 +32,8 @@ using arr_blocks = simd_arr_t<N>;
 
 inline constexpr int NUM_ROUNDS_MIN = 3;
 
-#if !defined(DEFAULT_CASTELLA_NUM_ROUNDS_MAX)
 // Embiggen the value as needed.
-#define DEFAULT_CASTELLA_NUM_ROUNDS_MAX 16 // NOLINT(cppcoreguidelines-macro-usage)
-#endif
-
-inline constexpr int NUM_ROUNDS_MAX = DEFAULT_CASTELLA_NUM_ROUNDS_MAX;
-
-#undef DEFAULT_CASTELLA_NUM_ROUNDS_MAX
+inline constexpr int NUM_ROUNDS_MAX = 16;
 
 static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
 

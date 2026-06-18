@@ -61,6 +61,7 @@ consteval int NUM_ROUNDS_MIN()
     case 4: return 2;
     case 8: return 2;
     case 16: return 3;
+    default: break;
     }
 }
 

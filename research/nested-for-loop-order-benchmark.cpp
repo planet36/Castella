@@ -169,7 +169,7 @@ repeat_for_each_cast_t_param(simd_arr_t<N>& arr) noexcept
 template <size_t N>
 using func_f_param_t = void (&)(simd_arr_t<N>&, const int);
 
-// AES_NUM_ROUNDS is passed as a template param
+// AES_NUM_ROUNDS is passed as a template value param
 template <int AES_NUM_ROUNDS, size_t N>
 using func_t_param_t = void (&)(simd_arr_t<N>&);
 

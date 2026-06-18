@@ -62,7 +62,7 @@ private:
     int32_t absorbs_since_mix_ = 0;
 
     /// After this many absorptions, the state is mixed.
-    const uint16_t mix_rate_ = DEFAULT_MIX_RATE; // absorptions per mix
+    const int16_t mix_rate_ = DEFAULT_MIX_RATE; // absorptions per mix
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MIN));
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MAX));
     static_assert(in_range<decltype(mix_rate_)>(DEFAULT_MIX_RATE));

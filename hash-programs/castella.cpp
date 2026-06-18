@@ -29,7 +29,7 @@ inline constexpr std::string_view function_name = "Castella";
 inline constexpr int default_input_suffix = 1;
 
 inline constexpr int default_num_rounds = 6;
-static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN);
+static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
 static_assert(default_num_rounds <= Castella::NUM_ROUNDS_MAX);
 
 inline constexpr int min_num_bytes_to_squeeze = 1;
@@ -121,7 +121,7 @@ void print_usage()
     std::println("  --rounds=NUM_ROUNDS");
     std::println("        Specify the number of rounds to perform in the Castella permutation function.");
     std::println("        (default={}) (minimum={}) (maximum={})",
-            default_num_rounds, Castella::NUM_ROUNDS_MIN, Castella::NUM_ROUNDS_MAX);
+            default_num_rounds, Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
     std::println("        Specify the output size (in bytes).");
@@ -220,7 +220,7 @@ void process_options(int argc, char* argv[])
             {
                 num_rounds = std::stoi(optarg);
 
-                if (num_rounds < Castella::NUM_ROUNDS_MIN ||
+                if (num_rounds < Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() ||
                     num_rounds > Castella::NUM_ROUNDS_MAX)
                 {
                     throw std::invalid_argument("--rounds");

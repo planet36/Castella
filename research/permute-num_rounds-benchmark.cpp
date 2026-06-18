@@ -83,7 +83,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         /*
         {
             constexpr int N = 2;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
@@ -91,7 +91,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         {
             constexpr int N = 4;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
@@ -99,7 +99,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         {
             constexpr int N = 8;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds);
@@ -108,7 +108,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
         {
             constexpr int N = 16;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN;
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
                  num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name =
@@ -122,7 +122,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         /*
         {
             constexpr int N = 2;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
@@ -130,7 +130,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         {
             constexpr int N = 4;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
@@ -138,7 +138,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         {
             constexpr int N = 8;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>(); num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name = std::format("Castella::permute<{}>(num_rounds={})", N, num_rounds);
                 benchmark::RegisterBenchmark(BM_name, BM_permute<N>, num_rounds)->Threads(num_threads);
@@ -147,7 +147,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
         {
             constexpr int N = 16;
-            for (auto num_rounds = Castella::NUM_ROUNDS_MIN;
+            for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
                  num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
                 const std::string BM_name =

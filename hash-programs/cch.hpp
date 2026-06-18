@@ -127,7 +127,7 @@ private:
 
             if (absorbs_since_mix_ >= mix_rate_)
             {
-                Castella::permute(state_, Castella::NUM_ROUNDS_MIN);
+                Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
                 absorbs_since_mix_ = 0;
             }
         }

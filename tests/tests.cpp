@@ -150,7 +150,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             constexpr int capacity_blocks = 4;
-            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);

@@ -30,12 +30,28 @@ using block_t = uint8x16_t;
 template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
-inline constexpr int NUM_ROUNDS_MIN = 3;
+/// For state size \a N, get the minimum number of rounds for \c Castella::permute to achieve full bit diffusion
+template <int N>
+requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
+consteval int NUM_ROUNDS_MIN()
+{
+    // The values were obtained from research/permute-num_rounds.cpp
+    switch (N)
+    {
+    case 2: return 2;
+    case 4: return 2;
+    case 8: return 2;
+    case 16: return 3;
+    }
+}
 
 // Embiggen the value as needed.
 inline constexpr int NUM_ROUNDS_MAX = 16;
 
-static_assert(NUM_ROUNDS_MIN <= NUM_ROUNDS_MAX);
+static_assert(NUM_ROUNDS_MIN<2>() <= NUM_ROUNDS_MAX);
+static_assert(NUM_ROUNDS_MIN<4>() <= NUM_ROUNDS_MAX);
+static_assert(NUM_ROUNDS_MIN<8>() <= NUM_ROUNDS_MAX);
+static_assert(NUM_ROUNDS_MIN<16>() <= NUM_ROUNDS_MAX);
 
 /// Create the first \a N Castella round constants
 /**

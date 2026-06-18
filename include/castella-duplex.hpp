@@ -348,8 +348,8 @@ private:
         // }}}
 #endif
 
-        if (NUM_ROUNDS < NUM_ROUNDS_MIN)
-            throw std::invalid_argument("Castella::Duplex: NUM_ROUNDS < NUM_ROUNDS_MIN");
+        if (NUM_ROUNDS < NUM_ROUNDS_MIN<B>())
+            throw std::invalid_argument("Castella::Duplex: NUM_ROUNDS < NUM_ROUNDS_MIN<B>()");
 
         if (NUM_ROUNDS > NUM_ROUNDS_MAX)
             throw std::invalid_argument("Castella::Duplex: NUM_ROUNDS > NUM_ROUNDS_MAX");

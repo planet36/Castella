@@ -28,15 +28,15 @@ for_each_repeat_f_param(simd_arr_t<N>& arr, const int aes_num_rounds) noexcept
     }
 }
 
-template <int aes_num_rounds, size_t N>
+template <int AES_NUM_ROUNDS, size_t N>
 static void
 for_each_repeat_t_param(simd_arr_t<N>& arr) noexcept
 {
     // for each single item
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        // repeat aes_num_rounds times
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        // repeat AES_NUM_ROUNDS times
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -67,7 +67,7 @@ for_each_cast_repeat_f_param(simd_arr_t<N>& arr, const int aes_num_rounds) noexc
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <int aes_num_rounds, size_t N>
+template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 for_each_cast_repeat_t_param(simd_arr_t<N>& arr) noexcept
@@ -78,8 +78,8 @@ for_each_cast_repeat_t_param(simd_arr_t<N>& arr) noexcept
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        // repeat aes_num_rounds times
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        // repeat AES_NUM_ROUNDS times
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -104,12 +104,12 @@ repeat_for_each_f_param(simd_arr_t<N>& arr, const int aes_num_rounds) noexcept
     }
 }
 
-template <int aes_num_rounds, size_t N>
+template <int AES_NUM_ROUNDS, size_t N>
 static void
 repeat_for_each_t_param(simd_arr_t<N>& arr) noexcept
 {
-    // repeat aes_num_rounds times
-    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    // repeat AES_NUM_ROUNDS times
+    for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
     {
         // for each single item
         for (int i = 0; i < std::ssize(arr); ++i)
@@ -143,13 +143,13 @@ repeat_for_each_cast_f_param(simd_arr_t<N>& arr, const int aes_num_rounds) noexc
 #endif
 
 #if defined(__x86_64__) && defined(__VAES__)
-template <int aes_num_rounds, size_t N>
+template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 repeat_for_each_cast_t_param(simd_arr_t<N>& arr) noexcept
 {
-    // repeat aes_num_rounds times
-    for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+    // repeat AES_NUM_ROUNDS times
+    for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
     {
         // for each pair of items
         for (int i = 0; i < std::ssize(arr); i += 2)
@@ -169,8 +169,8 @@ repeat_for_each_cast_t_param(simd_arr_t<N>& arr) noexcept
 template <size_t N>
 using func_f_param_t = void (&)(simd_arr_t<N>&, const int);
 
-// aes_num_rounds is passed as a template param
-template <int aes_num_rounds, size_t N>
+// AES_NUM_ROUNDS is passed as a template param
+template <int AES_NUM_ROUNDS, size_t N>
 using func_t_param_t = void (&)(simd_arr_t<N>&);
 
 template <size_t N>
@@ -195,9 +195,9 @@ BM_test_f_param(benchmark::State& BM_state,
     benchmark::DoNotOptimize(arr);
 }
 
-template <int aes_num_rounds, size_t N>
+template <int AES_NUM_ROUNDS, size_t N>
 void
-BM_test_t_param(benchmark::State& BM_state, func_t_param_t<aes_num_rounds, N>& fn)
+BM_test_t_param(benchmark::State& BM_state, func_t_param_t<AES_NUM_ROUNDS, N>& fn)
 {
     // Perform setup here
 

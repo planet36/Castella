@@ -10,7 +10,7 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# Find the optimal aes_num_rounds for Castella::utils::aes_enc_0"
+echo "# Find the minimum aes_num_rounds of aes_enc_0 to achieve full bit diffusion"
 echo
 ./aes_enc_0-aes_num_rounds -n 300000 || exit
 echo "________________________________________________________________________________"

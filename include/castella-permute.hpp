@@ -30,6 +30,23 @@ using block_t = uint8x16_t;
 template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
+/// The minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion
+/**
+* The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
+*
+* ## _JDA_VRI_Rijndael_2002.pdf_
+* ### 3.5 The Number of Rounds
+* #### Page 41 (56)
+*
+* <blockquote>
+* Two rounds of Rijndael provide 'full diffusion' in the following sense: every
+* state bit depends on all state bits two rounds ago, or a change in one state
+* bit is likely to affect half of the state bits after two rounds.
+* </blockquote>
+* \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
+*/
+inline constexpr int AES_NUM_ROUNDS = 3;
+
 /// For state size \a N, get the minimum number of rounds for \c Castella::permute to achieve full bit diffusion
 /**
 * The values were obtained from research/permute-num_rounds.cpp
@@ -123,18 +140,6 @@ inline const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 *      element of the state array.
 *   3. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
-*
-*
-* ## _JDA_VRI_Rijndael_2002.pdf_
-* ### 3.5 The Number of Rounds
-* #### Page 41 (56)
-*
-* <blockquote>
-* Two rounds of Rijndael provide 'full diffusion' in the following sense: every
-* state bit depends on all state bits two rounds ago, or a change in one state
-* bit is likely to affect half of the state bits after two rounds.
-* </blockquote>
-* \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
 */
 // }}}
 template <size_t N>
@@ -146,10 +151,6 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 #if defined(DEBUG)
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
-
-    // This is the minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion.
-    // The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
-    constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
@@ -184,10 +185,6 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
 #if defined(DEBUG)
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
-
-    // This is the minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion.
-    // The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
-    constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {

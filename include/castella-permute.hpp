@@ -145,12 +145,12 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    constexpr int aes_num_rounds = 3;
+    constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
         state[0] ^= rc;
-        aes_enc_0_arr<aes_num_rounds>(state);
+        aes_enc_0_arr<AES_NUM_ROUNDS>(state);
         simd_transpose(state);
     }
 }
@@ -181,12 +181,12 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    constexpr int aes_num_rounds = 3;
+    constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
     {
         simd_transpose(state);
-        aes_enc_0_inv_arr<aes_num_rounds>(state);
+        aes_enc_0_inv_arr<AES_NUM_ROUNDS>(state);
         state[0] ^= rc;
     }
 }

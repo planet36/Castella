@@ -311,37 +311,38 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     constexpr int N = 16;
     constexpr int aes_num_rounds = 3;
+    const std::string aes_num_rounds_str = std::to_string(AES_NUM_ROUNDS);
 
     if (num_threads == 1)
     {
-        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds);
-        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>);
+        benchmark::RegisterBenchmark("for_each_repeat_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("for_each_repeat_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds);
-        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>);
 #endif
 
-        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds);
-        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>);
+        benchmark::RegisterBenchmark("repeat_for_each_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("repeat_for_each_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds);
-        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>);
 #endif
     }
     else
     {
-        benchmark::RegisterBenchmark("for_each_repeat_f_param(3)", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
-        benchmark::RegisterBenchmark("for_each_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_repeat_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, for_each_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_repeat_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, for_each_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(3)", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
-        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<3>", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, for_each_cast_repeat_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("for_each_cast_repeat_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, for_each_cast_repeat_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #endif
 
-        benchmark::RegisterBenchmark("repeat_for_each_f_param(3)", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds)->Threads(num_threads);
-        benchmark::RegisterBenchmark("repeat_for_each_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, repeat_for_each_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(3)", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds)->Threads(num_threads);
-        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<3>", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_f_param(" + aes_num_rounds_str + ")", BM_test_f_param<N>, repeat_for_each_cast_f_param<N>, aes_num_rounds)->Threads(num_threads);
+        benchmark::RegisterBenchmark("repeat_for_each_cast_t_param<" + aes_num_rounds_str + ">", BM_test_t_param<aes_num_rounds, N>, repeat_for_each_cast_t_param<aes_num_rounds, N>)->Threads(num_threads);
 #endif
     }
 

@@ -31,11 +31,13 @@ template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
 /// For state size \a N, get the minimum number of rounds for \c Castella::permute to achieve full bit diffusion
+/**
+* The values were obtained from research/permute-num_rounds.cpp
+*/
 template <int N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 consteval int NUM_ROUNDS_MIN()
 {
-    // The values were obtained from research/permute-num_rounds.cpp
     switch (N)
     {
     case 2: return 2;

@@ -145,6 +145,8 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
+    // This is the minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion.
+    // The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
     constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
@@ -181,6 +183,8 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
+    // This is the minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion.
+    // The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
     constexpr int AES_NUM_ROUNDS = 3;
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)

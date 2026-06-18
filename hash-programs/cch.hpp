@@ -28,17 +28,12 @@
 #include <stdexcept>
 #include <vector>
 
-// This macro can be used by a program to find the optimum state size (in blocks).
-#if !defined(DEFAULT_CCH_STATE_SIZE_BLOCKS)
-#define DEFAULT_CCH_STATE_SIZE_BLOCKS 16 // NOLINT(cppcoreguidelines-macro-usage)
-#endif
-
 /// A hash class that uses one-way compression and the Castella permutation function
 /**
 * \tparam N The size (in blocks) of the state
 * \note \c N=2 is quite slow.
 */
-template <size_t N = DEFAULT_CCH_STATE_SIZE_BLOCKS>
+template <size_t N = 16>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {
@@ -305,5 +300,3 @@ public:
     */
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };
-
-#undef DEFAULT_CCH_STATE_SIZE_BLOCKS

@@ -1,6 +1,6 @@
 aes_enc_0-aes_num_rounds
 aes_enc_0-aes_num_rounds-benchmark
-aesenc_arr_cast-benchmark
+aes_enc_arr_cast-benchmark
 castella-print-info
 left_encode-right_encode-benchmark
 nested-for-loop-order-benchmark

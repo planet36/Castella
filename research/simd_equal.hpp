@@ -12,7 +12,7 @@
 #include "simd_types.hpp"
 
 [[nodiscard]] static inline bool
-simd128_equal(const uint8x16_t a, const uint8x16_t b)
+simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
 #if defined(__x86_64__)
     const uint8x16_t neq = _mm_xor_si128(a, b);
@@ -23,7 +23,7 @@ simd128_equal(const uint8x16_t a, const uint8x16_t b)
 }
 
 [[nodiscard]] static inline bool
-simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b)
+simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
 #if defined(__x86_64__) && defined(__AVX2__)
     const uint8x16x2_t neq = _mm256_xor_si256(a, b);
@@ -36,13 +36,13 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b)
 }
 
 [[nodiscard]] static inline bool
-simd_equal(const uint8x16_t a, const uint8x16_t b)
+simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
     return simd128_equal(a, b);
 }
 
 [[nodiscard]] static inline bool
-simd_equal(const uint8x16x2_t a, const uint8x16x2_t b)
+simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
     return simd256_equal(a, b);
 }

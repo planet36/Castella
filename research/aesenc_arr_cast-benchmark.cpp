@@ -30,7 +30,7 @@ using simd_arr_32_t = std::array<__m256i, N>;
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
+aes_enc_arr(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
@@ -41,7 +41,7 @@ aesenc_arr(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
+aes_enc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 {
     const __m256i round_key_256 = _mm256_set_m128i(round_key, round_key);
 
@@ -56,7 +56,7 @@ aesenc_arr_cast(simd_arr_16_t<N>& arr, const __m128i round_key) noexcept
 template <size_t N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 static void
-aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key) noexcept
+aes_enc_arr(simd_arr_32_t<N>& arr, const __m256i round_key) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
@@ -66,7 +66,7 @@ aesenc_arr(simd_arr_32_t<N>& arr, const __m256i round_key) noexcept
 
 template <typename T, size_t N>
 void
-BM_aesenc_arr(benchmark::State& BM_state)
+BM_aes_enc_arr(benchmark::State& BM_state)
 {
     // Perform setup here
 
@@ -80,7 +80,7 @@ BM_aesenc_arr(benchmark::State& BM_state)
     {
         // This code gets timed
 
-        aesenc_arr(arr, round_key);
+        aes_enc_arr(arr, round_key);
     }
 
     // This is to prevent the compiler from eliding the work above.
@@ -89,7 +89,7 @@ BM_aesenc_arr(benchmark::State& BM_state)
 
 template <typename T, size_t N>
 void
-BM_aesenc_arr_cast(benchmark::State& BM_state)
+BM_aes_enc_arr_cast(benchmark::State& BM_state)
 {
     // Perform setup here
 
@@ -103,7 +103,7 @@ BM_aesenc_arr_cast(benchmark::State& BM_state)
     {
         // This code gets timed
 
-        aesenc_arr_cast(arr, round_key);
+        aes_enc_arr_cast(arr, round_key);
     }
 
     // This is to prevent the compiler from eliding the work above.
@@ -178,9 +178,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         for (int i = 0; i < max_iterations; ++i)
         {
-            aesenc_arr(result_1, round_key_128);
-            aesenc_arr_cast(result_2, round_key_128);
-            aesenc_arr(result_3, round_key_256);
+            aes_enc_arr(result_1, round_key_128);
+            aes_enc_arr_cast(result_2, round_key_128);
+            aes_enc_arr(result_3, round_key_256);
         }
 
         assert(std::memcmp(std::data(result_1), std::data(result_2), sizeof(result_1)) == 0);
@@ -193,37 +193,37 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (num_threads == 1)
     {
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,2>", BM_aesenc_arr<__m128i, 2>);
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,4>", BM_aesenc_arr<__m128i, 4>);
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,8>", BM_aesenc_arr<__m128i, 8>);
-        benchmark::RegisterBenchmark("aesenc_arr<m128i,16>", BM_aesenc_arr<__m128i, 16>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,2>", BM_aes_enc_arr<__m128i, 2>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,4>", BM_aes_enc_arr<__m128i, 4>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,8>", BM_aes_enc_arr<__m128i, 8>);
+        benchmark::RegisterBenchmark("aes_enc_arr<m128i,16>", BM_aes_enc_arr<__m128i, 16>);
 
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,2>", BM_aesenc_arr_cast<__m128i, 2>);
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,4>", BM_aesenc_arr_cast<__m128i, 4>);
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,8>", BM_aesenc_arr_cast<__m128i, 8>);
-        benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,16>", BM_aesenc_arr_cast<__m128i, 16>);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,2>", BM_aes_enc_arr_cast<__m128i, 2>);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,4>", BM_aes_enc_arr_cast<__m128i, 4>);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,8>", BM_aes_enc_arr_cast<__m128i, 8>);
+        benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,16>", BM_aes_enc_arr_cast<__m128i, 16>);
 
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,1>", BM_aesenc_arr<__m256i, 1>);
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,2>", BM_aesenc_arr<__m256i, 2>);
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,4>", BM_aesenc_arr<__m256i, 4>);
-        benchmark::RegisterBenchmark("aesenc_arr<m256i,8>", BM_aesenc_arr<__m256i, 8>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,1>", BM_aes_enc_arr<__m256i, 1>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,2>", BM_aes_enc_arr<__m256i, 2>);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,4>", BM_aes_enc_arr<__m256i, 4>);
+        benchmark::RegisterBenchmark("aes_enc_arr<m256i,8>", BM_aes_enc_arr<__m256i, 8>);
     }
     else
     {
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,2>", BM_aesenc_arr<__m128i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,4>", BM_aesenc_arr<__m128i, 4>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr<m128i,8>", BM_aesenc_arr<__m128i, 8>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aesenc_arr<m128i,16>", BM_aesenc_arr<__m128i, 16>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,2>", BM_aes_enc_arr<__m128i, 2>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,4>", BM_aes_enc_arr<__m128i, 4>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,8>", BM_aes_enc_arr<__m128i, 8>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_arr<m128i,16>", BM_aes_enc_arr<__m128i, 16>)->Threads(num_threads);
 
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,2>", BM_aesenc_arr_cast<__m128i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,4>", BM_aesenc_arr_cast<__m128i, 4>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,8>", BM_aesenc_arr_cast<__m128i, 8>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aesenc_arr_cast<m128i,16>", BM_aesenc_arr_cast<__m128i, 16>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,2>", BM_aes_enc_arr_cast<__m128i, 2>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,4>", BM_aes_enc_arr_cast<__m128i, 4>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,8>", BM_aes_enc_arr_cast<__m128i, 8>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,16>", BM_aes_enc_arr_cast<__m128i, 16>)->Threads(num_threads);
 
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,1>", BM_aesenc_arr<__m256i, 1>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,2>", BM_aesenc_arr<__m256i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aesenc_arr<m256i,4>", BM_aesenc_arr<__m256i, 4>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aesenc_arr<m256i,8>", BM_aesenc_arr<__m256i, 8>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,1>", BM_aes_enc_arr<__m256i, 1>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,2>", BM_aes_enc_arr<__m256i, 2>)->Threads(num_threads);
+        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,4>", BM_aes_enc_arr<__m256i, 4>)->Threads(num_threads);
+        benchmark::RegisterBenchmark("aes_enc_arr<m256i,8>", BM_aes_enc_arr<__m256i, 8>)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

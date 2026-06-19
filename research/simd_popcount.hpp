@@ -45,8 +45,9 @@ simd_popcount(const __m256i x) noexcept
 [[nodiscard]] static inline int
 simd_popcount(const __m512i x) noexcept
 {
-    return simd_popcount(_mm512_extracti64x4_epi64(x, 0)) +
-           simd_popcount(_mm512_extracti64x4_epi64(x, 1));
+    const auto x0 = _mm512_extracti64x4_epi64(x, 0);
+    const auto x1 = _mm512_extracti64x4_epi64(x, 1);
+    return simd_popcount(x0) + simd_popcount(x1);
 }
 #endif
 

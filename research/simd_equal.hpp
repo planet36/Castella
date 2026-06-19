@@ -11,6 +11,10 @@
 
 #include "simd_types.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+
 [[nodiscard]] static inline bool
 simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
@@ -45,4 +49,22 @@ simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
     return simd256_equal(a, b);
+}
+
+/**
+* \warning This function stops comparing at the first mismatch, making it vulnerable to a timing attack.
+*/
+template <std::size_t N>
+[[nodiscard]] static inline bool
+simd128_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
+{
+    return std::ranges::equal(lhs, rhs, simd128_equal);
+}
+
+/// \copydoc simd128_arr_equal(const simd_arr_t<N>&, const simd_arr_t<N>&)
+template <std::size_t N>
+[[nodiscard]] static inline bool
+simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
+{
+    return simd128_arr_equal(lhs, rhs);
 }

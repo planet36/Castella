@@ -22,6 +22,7 @@
 * \sa https://cryptologie.net/posts/byte-ordering-and-bit-numbering-in-keccak-and-sha-3/
 * \sa https://cryptologie.net/posts/shake-cshake-and-some-more-bit-ordering/
 * \sa https://cryptologie.net/posts/shake-and-sp-800-185/
+* \sa https://codingpirate.com/understanding-fips-202-the-design-of-keccak-sha-3-and-shake-aaad72608cc9
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_2002.pdf
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_Errata_2014.pdf
 */
@@ -313,6 +314,7 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/Standalone/CompactFIPS202/C/Keccak-readable-and-compact.c#L56
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakSponge.inc#L87
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
+    * \sa https://en.wikipedia.org/wiki/Domain_separation
     */
     // }}}
     const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)

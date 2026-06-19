@@ -7,6 +7,7 @@
 #include "castella-permute.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
+#include "simd_equal.hpp"
 #include "simd_popcount.hpp"
 
 #include <cassert>
@@ -45,8 +46,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
             Castella::permute(permuted_state, num_rounds);
 
-            assert(std::memcmp(std::data(state), std::data(permuted_state), sizeof(state)) !=
-                   0);
+            assert(!simd_arr_equal(state, permuted_state));
 
             // for each row
             for (decltype(N) row = 0; row < N; ++row)
@@ -62,11 +62,9 @@ calculate_metrics_num_rounds(const int num_samples)
 
                     Castella::permute(permuted_state_p, num_rounds);
 
-                    assert(std::memcmp(std::data(state_p), std::data(permuted_state_p),
-                                       sizeof(state)) != 0);
+                    assert(!simd_arr_equal(state_p, permuted_state_p));
 
-                    assert(std::memcmp(std::data(permuted_state), std::data(permuted_state_p),
-                                       sizeof(permuted_state)) != 0);
+                    assert(!simd_arr_equal(permuted_state, permuted_state_p));
 
                     // count the number of bits changed
                     {

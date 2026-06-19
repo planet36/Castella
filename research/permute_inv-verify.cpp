@@ -5,6 +5,7 @@
 #undef NDEBUG
 
 #include "castella-permute.hpp"
+#include "simd_equal.hpp"
 
 #include <array>
 #include <cassert>
@@ -28,12 +29,12 @@ test_permute(const Castella::arr_blocks<N>& state)
         Castella::permute(state_copy, num_rounds);
 
         // verify permute(state) != state
-        assert(std::memcmp(std::data(state), std::data(state_copy), sizeof(state)) != 0);
+        assert(!simd_arr_equal(state, state_copy));
 
         Castella::permute_inv(state_copy, num_rounds);
 
         // verify permute_inv(permute(state)) == state
-        assert(std::memcmp(std::data(state), std::data(state_copy), sizeof(state)) == 0);
+        assert(simd_arr_equal(state, state_copy));
     }
 }
 

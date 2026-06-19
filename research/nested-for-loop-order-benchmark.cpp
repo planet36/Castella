@@ -3,6 +3,7 @@
 
 #include "aes_enc.hpp"
 #include "get_env.hpp"
+#include "simd_equal.hpp"
 #include "simd_types.hpp"
 
 #include <algorithm>
@@ -292,16 +293,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         repeat_for_each_cast_t_param<AES_NUM_ROUNDS>(result_8);
 #endif
 
-        assert(std::memcmp(std::data(result_1), std::data(result_2), sizeof(result_1)) == 0);
+        assert(simd_arr_equal(result_1, result_2));
 #if defined(__x86_64__) && defined(__VAES__)
-        assert(std::memcmp(std::data(result_1), std::data(result_3), sizeof(result_1)) == 0);
-        assert(std::memcmp(std::data(result_1), std::data(result_4), sizeof(result_1)) == 0);
+        assert(simd_arr_equal(result_1, result_3));
+        assert(simd_arr_equal(result_1, result_4));
 #endif
-        assert(std::memcmp(std::data(result_1), std::data(result_5), sizeof(result_1)) == 0);
-        assert(std::memcmp(std::data(result_1), std::data(result_6), sizeof(result_1)) == 0);
+        assert(simd_arr_equal(result_1, result_5));
+        assert(simd_arr_equal(result_1, result_6));
 #if defined(__x86_64__) && defined(__VAES__)
-        assert(std::memcmp(std::data(result_1), std::data(result_7), sizeof(result_1)) == 0);
-        assert(std::memcmp(std::data(result_1), std::data(result_8), sizeof(result_1)) == 0);
+        assert(simd_arr_equal(result_1, result_7));
+        assert(simd_arr_equal(result_1, result_8));
 #endif
     }
 

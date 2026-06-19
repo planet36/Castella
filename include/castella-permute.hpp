@@ -137,7 +137,7 @@ inline const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
 *   1. Apply (via XOR) the round constant to the first element of the state array.
-*   2. Perform 3 rounds of AES encryption (with a zero round key) on each
+*   2. Perform \c AES_NUM_ROUNDS rounds of AES encryption (with a zero round key) on each
 *      element of the state array.
 *   3. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
@@ -172,7 +172,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 * steps (in reverse order of \c permute):
 *   1. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
-*   2. Perform 3 inverse rounds of AES encryption (with a zero round key) on
+*   2. Perform \c AES_NUM_ROUNDS inverse rounds of AES encryption (with a zero round key) on
 *      each element of the state array.
 *   3. Apply (via XOR) the round constant to the first element of the state array.
 */

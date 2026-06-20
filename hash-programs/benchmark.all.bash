@@ -34,10 +34,10 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 'cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt' \
 'cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt' \
 'cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length=224 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length=256 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length=384 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length=512 /tmp/test.txt' \
+'cksum --untagged --algorithm sha3 --length 224 /tmp/test.txt' \
+'cksum --untagged --algorithm sha3 --length 256 /tmp/test.txt' \
+'cksum --untagged --algorithm sha3 --length 384 /tmp/test.txt' \
+'cksum --untagged --algorithm sha3 --length 512 /tmp/test.txt' \
 'cksum --untagged --algorithm blake2b           /tmp/test.txt' \
 'cksum --untagged --algorithm sm3               /tmp/test.txt' \
 'uu-cksum --untagged --algorithm sysv                  /tmp/test.txt' \

@@ -34,6 +34,25 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 #endif
 }
 
+static inline void
+separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
+{
+#if defined(__SSE4_1__)
+
+    lo = static_cast<uint64_t>(_mm_extract_epi64(v, 0));
+    hi = static_cast<uint64_t>(_mm_extract_epi64(v, 1));
+
+#elif defined(__aarch64__)
+
+    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u64_u8
+    const uint64x2_t tmp = vreinterpretq_u64_u8(v);
+    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vgetq_lane_u64
+    lo = vgetq_lane_u64(tmp, 0);
+    hi = vgetq_lane_u64(tmp, 1);
+
+#endif
+}
+
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 const simd_arr_t<128> simd_bitmask128_arr{
     // hi, lo

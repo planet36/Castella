@@ -36,8 +36,7 @@ simd_popcount(const __m256i x) noexcept
     const auto x1 = static_cast<uint64_t>(_mm256_extract_epi64(x, 1));
     const auto x2 = static_cast<uint64_t>(_mm256_extract_epi64(x, 2));
     const auto x3 = static_cast<uint64_t>(_mm256_extract_epi64(x, 3));
-    return std::popcount(x0) + std::popcount(x1) +
-           std::popcount(x2) + std::popcount(x3);
+    return std::popcount(x0) + std::popcount(x1) + std::popcount(x2) + std::popcount(x3);
 }
 #endif
 

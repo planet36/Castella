@@ -33,7 +33,8 @@ static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B
 static_assert(default_num_rounds <= Castella::NUM_ROUNDS_MAX);
 
 inline constexpr int min_num_bytes_to_squeeze = 1;
-inline constexpr int max_num_bytes_to_squeeze = Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
+inline constexpr int max_num_bytes_to_squeeze =
+    Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
 inline constexpr int default_num_bytes_to_squeeze = max_num_bytes_to_squeeze / 2;
 static_assert(default_num_bytes_to_squeeze >= min_num_bytes_to_squeeze);
 static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
@@ -80,7 +81,8 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes)
 }
 
 /// Print the version information.
-void print_version()
+void
+print_version()
 {
     std::println("{} {}", program_invocation_short_name, program_version);
     std::println("License {}", program_license);
@@ -88,7 +90,8 @@ void print_version()
 }
 
 /// Print the help message.
-void print_usage()
+void
+print_usage()
 {
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
@@ -120,19 +123,19 @@ void print_usage()
 
     std::println("  --rounds=NUM_ROUNDS");
     std::println("        Specify the number of rounds to perform in the Castella permutation function.");
-    std::println("        (default={}) (minimum={}) (maximum={})",
-            default_num_rounds, Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
+    std::println("        (default={}) (minimum={}) (maximum={})", default_num_rounds,
+                 Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
     std::println("        Specify the output size (in bytes).");
     std::println("        Typical values are: 32, 48, or 64.");
     std::println("        (default={}) (minimum={}) (maximum={})",
-            default_num_bytes_to_squeeze, min_num_bytes_to_squeeze, max_num_bytes_to_squeeze);
+                 default_num_bytes_to_squeeze, min_num_bytes_to_squeeze,
+                 max_num_bytes_to_squeeze);
 
     std::println("  --suffix=BYTE");
     std::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
-    std::println("        (default={}) (minimum=0) (maximum=255)",
-            default_input_suffix);
+    std::println("        (default={}) (minimum=0) (maximum=255)", default_input_suffix);
 
     std::println("");
 
@@ -171,8 +174,7 @@ void process_options(int argc, char* argv[])
     using long_option = option;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
-    constexpr long_option long_options[] =
-    {
+    constexpr long_option long_options[] = {
         // const char*      , int                       , int*         , int
         {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
         {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
@@ -284,7 +286,6 @@ void process_options(int argc, char* argv[])
     }
 }
 
-
 // https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36
 // Gnulib uses 32768 for the buffer size
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -313,7 +314,6 @@ process_file_read_fd(int fd, auto& hash_obj)
 
     return num_bytes_read < 0;
 }
-
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define SYSERR_PATH(PATH) \
@@ -389,7 +389,6 @@ process_file(const std::string& path, auto& hash_obj)
     }
 }
 
-
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -425,8 +424,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         try
         {
-            Castella::Duplex hash_obj(capacity_blocks, num_rounds,
-                    input_suffix, function_name, customization_str);
+            Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                      function_name, customization_str);
 
             if (verbose)
             {

@@ -25,7 +25,8 @@ inline constexpr std::string_view program_version = "2026-06-05";
 
 // {{{ default values for options
 inline constexpr int default_digest_size_bytes = 32;
-static_assert(default_digest_size_bytes <= compress_castella_hash<>::get_max_digest_size_bytes());
+static_assert(default_digest_size_bytes <=
+              compress_castella_hash<>::get_max_digest_size_bytes());
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 // }}}
@@ -39,7 +40,8 @@ bool use_mmap = true;
 // }}}
 
 /// Print the version information.
-void print_version()
+void
+print_version()
 {
     std::println("{} {}", program_invocation_short_name, program_version);
     std::println("License {}", program_license);
@@ -47,7 +49,8 @@ void print_version()
 }
 
 /// Print the help message.
-void print_usage()
+void
+print_usage()
 {
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
@@ -68,9 +71,8 @@ void print_usage()
 
     std::println("  --mix-rate=RATE");
     std::println("        Specify the number of absorptions (full-block inputs) per state mix.");
-    std::println("        Valid range: [{}, {}].",
-            compress_castella_hash<>::MIX_RATE_MIN,
-            compress_castella_hash<>::MIX_RATE_MAX);
+    std::println("        Valid range: [{}, {}].", compress_castella_hash<>::MIX_RATE_MIN,
+                 compress_castella_hash<>::MIX_RATE_MAX);
     std::println("        Use 0 to disable periodic mixing.");
     std::println("        (default={})", default_mix_rate);
 
@@ -81,7 +83,7 @@ void print_usage()
     std::println("        Specify the output size (in bytes).");
     std::println("        Typical values are: 32, 48, or 64.");
     std::println("        SIZE is clamped to {} bytes.",
-            compress_castella_hash<>::get_max_digest_size_bytes());
+                 compress_castella_hash<>::get_max_digest_size_bytes());
     std::println("        (default={})", default_digest_size_bytes);
 
     std::println("");
@@ -124,8 +126,7 @@ void process_options(int argc, char* argv[])
     using long_option = option;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
-    constexpr long_option long_options[] =
-    {
+    constexpr long_option long_options[] = {
         // const char*      , int                       , int*         , int
         {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
         {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
@@ -196,7 +197,6 @@ void process_options(int argc, char* argv[])
     }
 }
 
-
 // https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36
 // Gnulib uses 32768 for the buffer size
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -225,7 +225,6 @@ process_file_read_fd(int fd, auto& hash_obj)
 
     return num_bytes_read < 0;
 }
-
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define SYSERR_PATH(PATH) \
@@ -300,7 +299,6 @@ process_file(const std::string& path, auto& hash_obj)
             throw SYSERR_PATH(path);
     }
 }
-
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])

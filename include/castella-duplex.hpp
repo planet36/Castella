@@ -163,7 +163,6 @@ struct alignas(block_t) Duplex final
     static_assert(R_MIN <= R_MAX);
 
 private:
-
     arr_blocks<B> state_{};
 
     std::mutex mtx_;
@@ -174,7 +173,6 @@ private:
     int32_t cur_input_byte_idx_ = 0;
 
 public:
-
     /// The size (in blocks) of the capacity
     // {{{
     /**
@@ -320,7 +318,6 @@ public:
     const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
-
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
     // {{{
     /**
@@ -505,7 +502,8 @@ private:
 #endif
 
             const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
-            const auto num_bytes_to_add = static_cast<int>(std::min<size_t>(available_space, len));
+            const auto num_bytes_to_add =
+                static_cast<int>(std::min<size_t>(available_space, len));
 
 #if defined(DEBUG)
             assert(available_space > 0);
@@ -710,7 +708,6 @@ private:
     }
 
 public:
-
     /// ctor
     // {{{
     /**
@@ -749,10 +746,10 @@ public:
                     const int input_suffix = 0,
                     const std::string_view function_name = "",
                     const std::string_view customization_str = "") :
-        C{narrow_cast<decltype(C)>(capacity_blocks)},
-        R{narrow_cast<decltype(R)>(B - C)},
-        NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
-        INPUT_SUFFIX{narrow_cast<decltype(INPUT_SUFFIX)>(input_suffix)}
+    C{narrow_cast<decltype(C)>(capacity_blocks)},
+    R{narrow_cast<decltype(R)>(B - C)},
+    NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
+    INPUT_SUFFIX{narrow_cast<decltype(INPUT_SUFFIX)>(input_suffix)}
     {
         // Must check constraints before allocating the input buffer.
         check_constraints_();
@@ -974,13 +971,22 @@ public:
     /**
     * The state size is fixed and does not depend on any user-provided parameters.
     */
-    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return static_cast<int>(sizeof(block_t)) * B; }
+    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept
+    {
+        return static_cast<int>(sizeof(block_t)) * B;
+    }
 
     /// Get the size (in bytes) of the capacity portion of the state.
-    [[nodiscard]] int get_capacity_size_bytes() const noexcept { return static_cast<int>(sizeof(block_t)) * C; }
+    [[nodiscard]] int get_capacity_size_bytes() const noexcept
+    {
+        return static_cast<int>(sizeof(block_t)) * C;
+    }
 
     /// Get the size (in bytes) of the rate (input buffer) portion of the state.
-    [[nodiscard]] int get_rate_size_bytes() const noexcept { return static_cast<int>(sizeof(block_t)) * R; }
+    [[nodiscard]] int get_rate_size_bytes() const noexcept
+    {
+        return static_cast<int>(sizeof(block_t)) * R;
+    }
 };
 
 } // namespace Castella

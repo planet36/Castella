@@ -84,15 +84,15 @@ calculate_metrics_num_rounds(const int num_samples)
         }
     }
 
-    std::println("Nr:" // number of rounds
-            "\tμ" // mean
-            "\tε" // absolute error
-            "\tdiff.%" // diffusion percentage
-            "\tσ²" // variance
-            "\tσ" // standard deviation
-            "\tγ₁" // skewness
-            "\tκ" // kurtosis
-            );
+    std::println("Nr:"      // number of rounds
+                 "\tμ"      // mean
+                 "\tε"      // absolute error
+                 "\tdiff.%" // diffusion percentage
+                 "\tσ²"     // variance
+                 "\tσ"      // standard deviation
+                 "\tγ₁"     // skewness
+                 "\tκ"      // kurtosis
+    );
 
     // number of bits in the state
     constexpr int bits = sizeof(T) * 8;

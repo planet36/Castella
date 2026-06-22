@@ -176,9 +176,7 @@ using func_t_param_t = void (&)(simd_arr_t<N>&);
 
 template <size_t N>
 void
-BM_test_f_param(benchmark::State& BM_state,
-                func_f_param_t<N>& fn,
-                const int aes_num_rounds)
+BM_test_f_param(benchmark::State& BM_state, func_f_param_t<N>& fn, const int aes_num_rounds)
 {
     // Perform setup here
 

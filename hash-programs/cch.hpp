@@ -37,7 +37,6 @@ requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
 struct compress_castella_hash
 {
 public:
-
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
 
@@ -49,7 +48,6 @@ public:
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
 
 private:
-
     state_t state_{};
     static_assert(sizeof(state_) <= 256); // constrained by padding bytes
 
@@ -188,11 +186,10 @@ private:
     }
 
 public:
-
     compress_castella_hash() = default;
 
     explicit compress_castella_hash(const int mix_rate) :
-        mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
+    mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {
         check_constraints_();
     }
@@ -288,10 +285,16 @@ public:
     }
 
     /// Get the size (in bytes) of the state.
-    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept { return static_cast<int>(sizeof(state_)); }
+    [[nodiscard]] constexpr static int get_state_size_bytes() noexcept
+    {
+        return static_cast<int>(sizeof(state_));
+    }
 
     /// Get the maximum number of digest bytes that can be returned.
-    [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept { return get_state_size_bytes() / 4; }
+    [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept
+    {
+        return get_state_size_bytes() / 4;
+    }
 
     /// Get the mix rate (i.e. the number of absorptions before the state is mixed).
     /**

@@ -22,8 +22,10 @@
 using func_compress_t = uint8x16_t (&)(const uint8x16_t, const uint8x16_t);
 
 void
-calculate_metrics_simd_compress(func_compress_t& fn, const int num_samples,
-        const int num_rounds, const bool vary_a)
+calculate_metrics_simd_compress(func_compress_t& fn,
+                                const int num_samples,
+                                const int num_rounds,
+                                const bool vary_a)
 {
     using T = uint8x16_t;
 
@@ -170,15 +172,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             std::println("## vary b");
         }
 
-        std::println("Nr:" // number of rounds
-                "\tμ" // mean
-                "\tε" // absolute error
-                "\tdiff.%" // diffusion percentage
-                "\tσ²" // variance
-                "\tσ" // standard deviation
-                "\tγ₁" // skewness
-                "\tκ" // kurtosis
-                );
+        std::println("Nr:"      // number of rounds
+                     "\tμ"      // mean
+                     "\tε"      // absolute error
+                     "\tdiff.%" // diffusion percentage
+                     "\tσ²"     // variance
+                     "\tσ"      // standard deviation
+                     "\tγ₁"     // skewness
+                     "\tκ"      // kurtosis
+        );
 
         calculate_metrics_simd_compress(simd_compress_aes_enc_r2, num_samples, 2, vary_a);
         calculate_metrics_simd_compress(simd_compress_aes_enc_r3, num_samples, 3, vary_a);

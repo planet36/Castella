@@ -87,7 +87,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ accuracy testing
 
     {
-        constexpr int num_samples = 1'000;
+        constexpr int num_samples = 1000;
 
         for (int i = 0; i < num_samples; ++i)
         {

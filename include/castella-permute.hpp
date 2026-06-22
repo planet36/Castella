@@ -53,15 +53,19 @@ inline constexpr int AES_NUM_ROUNDS = 3;
 */
 template <int N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)
-consteval int NUM_ROUNDS_MIN()
+consteval int
+NUM_ROUNDS_MIN()
 {
     switch (N)
     {
     case 2:
     case 4:
-    case 8: return 2;
-    case 16: return 3;
-    default: break;
+    case 8:
+        return 2;
+    case 16:
+        return 3;
+    default:
+        break;
     }
 }
 
@@ -94,7 +98,7 @@ create_round_constants() noexcept
 
     for (int i = 1; i < std::ssize(result); ++i)
     {
-        result[i] = aes_enc_0(result[i-1]);
+        result[i] = aes_enc_0(result[i - 1]);
     }
 
     return result;

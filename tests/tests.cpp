@@ -89,7 +89,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
             const std::string result = bytes_to_hex(digest_bytes);
 
-            std::println("{} {}: {}", quote_shell_always(function_name), quote_shell_always(customization_str), result);
+            std::println("{} {}: {}", quote_shell_always(function_name),
+                         quote_shell_always(customization_str), result);
 
             assert(result == expected_result);
         }

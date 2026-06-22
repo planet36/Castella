@@ -12,6 +12,7 @@
 #include "simd_types.hpp"
 
 #include <array>
+#include <bitset>
 #include <cstdint>
 
 [[nodiscard]] static inline uint8x16_t
@@ -51,6 +52,24 @@ separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
     hi = vgetq_lane_u64(tmp, 1);
 
 #endif
+}
+
+[[nodiscard]] static inline std::bitset<128>
+make_bitset(const uint64_t hi, const uint64_t lo) noexcept
+{
+    std::bitset<128> result(hi);
+    result <<= 64;
+    result |= lo;
+    return result;
+}
+
+[[nodiscard]] static inline std::bitset<128>
+make_bitset(const uint8x16_t v) noexcept
+{
+    uint64_t lo{};
+    uint64_t hi{};
+    separate(v, hi, lo);
+    return make_bitset(hi, lo);
 }
 
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)

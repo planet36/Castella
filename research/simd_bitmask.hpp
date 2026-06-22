@@ -14,35 +14,25 @@
 #include <array>
 #include <cstdint>
 
-#if defined(__x86_64__)
-
 [[nodiscard]] static inline uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 {
+#if defined(__x86_64__)
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
     return _mm_set_epi64x(hi, lo); // NOLINT(cppcoreguidelines-narrowing-conversions)
 #pragma GCC diagnostic pop
-}
 
 #elif defined(__aarch64__)
 
-/**
-* \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vcreate_u64
-* \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vcombine_u64
-* \sa https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u8_u64
-*/
-[[nodiscard]] static inline uint8x16_t
-combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
-{
+    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vcreate_u64
+    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vcombine_u64
+    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u8_u64
     return vreinterpretq_u8_u64(vcombine_u64(vcreate_u64(lo), vcreate_u64(hi)));
-}
-
-#else
-
-#error "Architecture not supported"
 
 #endif
+}
 
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 const simd_arr_t<128> simd_bitmask128_arr{

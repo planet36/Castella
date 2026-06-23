@@ -27,7 +27,7 @@ calculate_metrics_num_rounds(const int num_samples)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
-    using T = Castella::arr_blocks<N>;
+    using state_t = Castella::arr_blocks<N>;
 
     std::println("## N={}", N);
 
@@ -36,7 +36,7 @@ calculate_metrics_num_rounds(const int num_samples)
     // for each sample
     for (int i = 0; i < num_samples; ++i)
     {
-        T state;
+        state_t state;
         arc4random_buf(std::data(state), sizeof(state));
 
         // for each number of rounds
@@ -96,7 +96,7 @@ calculate_metrics_num_rounds(const int num_samples)
     );
 
     // number of bits in the state
-    constexpr int bits = sizeof(T) * 8;
+    constexpr int bits = sizeof(state_t) * 8;
 
     // expected number of bits changed
     constexpr int expected_mean = bits / 2;

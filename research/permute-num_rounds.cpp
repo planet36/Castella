@@ -31,7 +31,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
     std::println("## N={}", N);
 
-    std::map<int, running_stats<double>> num_rounds_to_rs_num_bits_changed;
+    std::map<int, running_stats<>> num_rounds_to_rs_num_bits_changed;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)

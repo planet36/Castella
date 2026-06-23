@@ -29,7 +29,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 {
     using T = uint8x16_t;
 
-    running_stats<double> rs_num_bits_changed;
+    running_stats<> rs_num_bits_changed;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)

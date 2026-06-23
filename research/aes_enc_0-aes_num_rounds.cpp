@@ -21,7 +21,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
 {
     using T = uint8x16_t;
 
-    running_stats<double> rs_num_bits_changed;
+    running_stats<> rs_num_bits_changed;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)

@@ -71,11 +71,11 @@ calculate_metrics_num_rounds(const int num_samples)
                         int num_bits_changed = 0;
 
                         // for each output row
-                        for (decltype(N) j = 0; j < N; ++j)
+                        for (decltype(N) out_row = 0; out_row < N; ++out_row)
                         {
                             // Hamming distance
                             num_bits_changed +=
-                                simd_popcount(permuted_state[j] ^ permuted_state_p[j]);
+                                simd_popcount(permuted_state[out_row] ^ permuted_state_p[out_row]);
                         }
 
                         num_rounds_to_rs_num_bits_changed[num_rounds].push(num_bits_changed);

@@ -32,6 +32,10 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
     // https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u8_u64
     return vreinterpretq_u8_u64(vcombine_u64(vcreate_u64(lo), vcreate_u64(hi)));
 
+#else
+
+#error "Architecture not supported"
+
 #endif
 }
 
@@ -50,6 +54,10 @@ separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
     // https://developer.arm.com/architectures/instruction-sets/intrinsics/vgetq_lane_u64
     lo = vgetq_lane_u64(tmp, 0);
     hi = vgetq_lane_u64(tmp, 1);
+
+#else
+
+#error "Architecture not supported"
 
 #endif
 }

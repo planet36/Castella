@@ -49,14 +49,14 @@ calculate_metrics_num_rounds(const int num_samples)
             assert(!simd_arr_equal(state, permuted_state));
 
             // for each input row
-            for (decltype(N) row = 0; row < N; ++row)
+            for (decltype(N) in_row = 0; in_row < N; ++in_row)
             {
                 // for each bitmask
                 for (const auto& bitmask : simd_bitmask128_arr)
                 {
                     auto state_p = state; // will have 1 bit changed
 
-                    state_p[row] ^= bitmask;
+                    state_p[in_row] ^= bitmask;
 
                     auto permuted_state_p = state_p;
 

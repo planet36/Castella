@@ -67,6 +67,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
                 assert(!simd_equal(result, result_p));
 
                 // count the number of bits changed
+                // Hamming distance
                 const int num_bits_changed = simd_popcount(result ^ result_p);
 
                 rs_num_bits_changed.push(num_bits_changed);
@@ -82,6 +83,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
                 assert(!simd_equal(result, result_p));
 
                 // count the number of bits changed
+                // Hamming distance
                 const int num_bits_changed = simd_popcount(result ^ result_p);
 
                 rs_num_bits_changed.push(num_bits_changed);

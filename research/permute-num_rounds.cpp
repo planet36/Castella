@@ -48,7 +48,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
             assert(!simd_arr_equal(state, permuted_state));
 
-            // for each row
+            // for each input row
             for (decltype(N) row = 0; row < N; ++row)
             {
                 // for each bitmask
@@ -70,9 +70,10 @@ calculate_metrics_num_rounds(const int num_samples)
                     {
                         int num_bits_changed = 0;
 
-                        // for each row
+                        // for each output row
                         for (decltype(N) j = 0; j < N; ++j)
                         {
+                            // Hamming distance
                             num_bits_changed +=
                                 simd_popcount(permuted_state[j] ^ permuted_state_p[j]);
                         }

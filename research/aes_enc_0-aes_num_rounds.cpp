@@ -52,6 +52,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
 
             {
                 // count the number of bits changed
+                // Hamming distance
                 const int num_bits_changed = simd_popcount(result ^ result_p);
 
                 rs_num_bits_changed.push(num_bits_changed);

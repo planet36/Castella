@@ -58,7 +58,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
         {
             if (vary_a)
             {
-                const auto a_p = a ^ bitmask; // will have 1 bit changed
+                const auto a_p = a ^ bitmask; // will have 1 bit flipped
 
                 assert(!simd_equal(a, a_p));
 
@@ -66,7 +66,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 assert(!simd_equal(result, result_p));
 
-                // count the number of bits changed
+                // count the number of bits flipped
                 // Hamming distance
                 const int num_flipped_bits = simd_popcount(result ^ result_p);
 
@@ -74,7 +74,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
             }
             else
             {
-                const auto b_p = b ^ bitmask; // will have 1 bit changed
+                const auto b_p = b ^ bitmask; // will have 1 bit flipped
 
                 assert(!simd_equal(b, b_p));
 
@@ -82,7 +82,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 assert(!simd_equal(result, result_p));
 
-                // count the number of bits changed
+                // count the number of bits flipped
                 // Hamming distance
                 const int num_flipped_bits = simd_popcount(result ^ result_p);
 
@@ -94,7 +94,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
     // number of bits in the block
     constexpr int state_size_bits = sizeof(T) * 8;
 
-    // expected number of bits changed
+    // expected number of bits flipped
     constexpr int expected_mean = state_size_bits / 2;
 
     const auto abs_err = std::abs(rs_num_flipped_bits.mean() - expected_mean);

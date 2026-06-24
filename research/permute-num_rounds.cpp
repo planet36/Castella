@@ -54,7 +54,7 @@ calculate_metrics_num_rounds(const int num_samples)
                 // for each bitmask
                 for (const auto& bitmask : simd_bitmask128_arr)
                 {
-                    auto state_p = state; // will have 1 bit changed
+                    auto state_p = state; // will have 1 bit flipped
 
                     state_p[in_row] ^= bitmask;
 
@@ -66,7 +66,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
                     assert(!simd_arr_equal(permuted_state, permuted_state_p));
 
-                    // count the number of bits changed
+                    // count the number of bits flipped
                     {
                         int num_flipped_bits = 0;
 
@@ -98,7 +98,7 @@ calculate_metrics_num_rounds(const int num_samples)
     // number of bits in the state
     constexpr int state_size_bits = sizeof(state_t) * 8;
 
-    // expected number of bits changed
+    // expected number of bits flipped
     constexpr int expected_mean = state_size_bits / 2;
 
     for (const auto& [num_rounds, rs_num_flipped_bits] : num_rounds_to_rs_num_flipped_bits)

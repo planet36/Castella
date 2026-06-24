@@ -40,7 +40,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
         // for each bitmask
         for (const auto& bitmask : simd_bitmask128_arr)
         {
-            const auto data_p = data ^ bitmask; // will have 1 bit changed
+            const auto data_p = data ^ bitmask; // will have 1 bit flipped
 
             auto result_p = data_p;
 
@@ -51,7 +51,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
             }
 
             {
-                // count the number of bits changed
+                // count the number of bits flipped
                 // Hamming distance
                 const int num_flipped_bits = simd_popcount(result ^ result_p);
 
@@ -63,7 +63,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
     // number of bits in the block
     constexpr int state_size_bits = sizeof(T) * 8;
 
-    // expected number of bits changed
+    // expected number of bits flipped
     constexpr int expected_mean = state_size_bits / 2;
 
     const auto abs_err = std::abs(rs_num_flipped_bits.mean() - expected_mean);

@@ -22,7 +22,7 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# For each state size, find the minimum num_rounds for Castella::permute to achieve full bit diffusion"
+echo "# Find the minimum num_rounds for Castella::permute to achieve full bit diffusion"
 echo
 ./permute-num_rounds -n 120 || exit
 echo "________________________________________________________________________________"

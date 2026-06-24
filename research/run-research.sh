@@ -28,6 +28,12 @@ echo
 echo "________________________________________________________________________________"
 echo
 
+echo "# Print statistics of the avalanche matrix of Castella::permute"
+echo
+./permute-num_rounds-avalanche_matrix -n 100 || exit
+echo "________________________________________________________________________________"
+echo
+
 echo "# Find the bit diffusion rate of simd_compress_aes_enc_r{2,3,4} when each param varies"
 echo
 ./simd_compress_aes_enc-num_rounds -n 250000 || exit

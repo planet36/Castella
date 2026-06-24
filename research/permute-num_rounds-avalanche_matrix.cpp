@@ -9,19 +9,77 @@
 #include "simd_bitmask.hpp"
 #include "simd_equal.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <cerrno>
+#include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <err.h>
+#include <filesystem>
+#include <format>
+#include <fstream>
 #include <map>
 #include <print>
 #include <string>
 #include <unistd.h>
+#include <vector>
+
+const std::string images_output_directory = "results";
+
+/// Save the avalanche matrix as a grayscale PGM image
+/**
+* Each pixel encodes \c |z| for one matrix cell: black (0) is \c z≈0 (ideal),
+* brightening toward white as \c |z| grows, clamped at \a z_clamp.
+* \note This is a diagnostic aid, not essential output: on any I/O error, a
+* warning is printed to stderr and the function returns without throwing.
+*/
+template <size_t state_size_bits>
+void
+save_avalanche_matrix_pgm(
+        const std::array<std::array<int, state_size_bits>, state_size_bits>& avalanche_matrix,
+        const double mean, const double std_dev, const std::string& path)
+{
+    // a bit past the largest max|z| typically observed
+    constexpr double z_clamp = 6.0;
+
+    std::ofstream ofs(path, std::ios::binary);
+
+    if (!ofs)
+    {
+        warn("could not open \"%s\"", path.c_str());
+        return;
+    }
+
+    ofs << "P5\n" << state_size_bits << ' ' << state_size_bits << "\n255\n";
+
+    std::vector<std::uint8_t> pixels(state_size_bits * state_size_bits);
+
+    size_t idx = 0;
+    for (const auto& row : avalanche_matrix)
+    {
+        for (const auto x : row)
+        {
+            const double z_score = (x - mean) / std_dev;
+            const double t = std::clamp(std::abs(z_score) / z_clamp, 0.0, 1.0);
+            pixels[idx++] = static_cast<std::uint8_t>(std::round(255.0 * t));
+        }
+    }
+
+    (void)ofs.write(reinterpret_cast<const char*>(pixels.data()),
+            static_cast<std::streamsize>(pixels.size()));
+
+    if (!ofs)
+    {
+        warnx("error writing \"%s\"", path.c_str());
+    }
+}
 
 template <size_t N>
 void
-calculate_metrics_avalanche_matrix(const int num_samples)
+calculate_metrics_avalanche_matrix(const int num_samples, const bool save_images, const std::string& timestamp)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -174,6 +232,14 @@ calculate_metrics_avalanche_matrix(const int num_samples)
                 , mean_abs_error
                 , outlier_pctg
                 );
+
+        if (save_images)
+        {
+            const auto path = std::format("{}/avalanche_matrix.N={}.Nr={}.{}.pgm",
+                    images_output_directory, N, num_rounds, timestamp);
+
+            save_avalanche_matrix_pgm(avalanche_matrix, mean, std_dev, path);
+        }
     }
     std::println("");
 }
@@ -186,14 +252,19 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // 100 samples comfortably exceeds the n*p >= 10 threshold for the normal
     // approximation to the binomial (p=0.5) used by calculate_metrics_avalanche_matrix.
     int num_samples = 100;
+    bool save_images = false;
 
     {
-        const char* short_options = "+n:";
+        const char* short_options = "+in:";
         int c = 0;
         while ((c = getopt(argc, argv, short_options)) != -1)
         {
             switch (c) // NOLINT(hicpp-multiway-paths-covered)
             {
+            case 'i':
+                save_images = true;
+                break;
+
             case 'n':
                 try
                 {
@@ -220,13 +291,37 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         num_samples = 1;
     }
 
+    std::string timestamp;
+
+    if (save_images)
+    {
+        std::error_code ec;
+
+        // create_directories returns false if the directory was not created,
+        // not if there was an error.
+        // Use error_code to detect an error.
+        (void)std::filesystem::create_directories(images_output_directory, ec);
+
+        if (ec)
+        {
+            warnx("Failed to create directory \"%s\": %s (%d)",
+                    images_output_directory.c_str(), ec.message().c_str(), ec.value());
+            save_images = false;
+        }
+        else
+        {
+            const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+            timestamp = std::format("{:%Y%m%dT%H%M%S}", now);
+        }
+    }
+
     std::println("## num_samples: {}", num_samples);
     std::println("");
 
-    calculate_metrics_avalanche_matrix<2>(num_samples);
-    calculate_metrics_avalanche_matrix<4>(num_samples);
-    calculate_metrics_avalanche_matrix<8>(num_samples);
-    calculate_metrics_avalanche_matrix<16>(num_samples);
+    calculate_metrics_avalanche_matrix<2>(num_samples, save_images, timestamp);
+    calculate_metrics_avalanche_matrix<4>(num_samples, save_images, timestamp);
+    calculate_metrics_avalanche_matrix<8>(num_samples, save_images, timestamp);
+    calculate_metrics_avalanche_matrix<16>(num_samples, save_images, timestamp);
 
     return 0;
 }

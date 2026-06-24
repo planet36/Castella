@@ -40,8 +40,10 @@ const std::string images_output_directory = "results";
 template <size_t state_size_bits>
 void
 save_avalanche_matrix_pgm(
-        const std::array<std::array<int, state_size_bits>, state_size_bits>& avalanche_matrix,
-        const double mean, const double std_dev, const std::string& path)
+    const std::array<std::array<int, state_size_bits>, state_size_bits>& avalanche_matrix,
+    const double mean,
+    const double std_dev,
+    const std::string& path)
 {
     // a bit past the largest max|z| typically observed
     constexpr double z_clamp = 6.0;
@@ -70,7 +72,7 @@ save_avalanche_matrix_pgm(
     }
 
     (void)ofs.write(reinterpret_cast<const char*>(pixels.data()),
-            static_cast<std::streamsize>(pixels.size()));
+                    static_cast<std::streamsize>(pixels.size()));
 
     if (!ofs)
     {
@@ -80,7 +82,9 @@ save_avalanche_matrix_pgm(
 
 template <size_t N>
 void
-calculate_metrics_avalanche_matrix(const int num_samples, const bool save_images, const std::string& timestamp)
+calculate_metrics_avalanche_matrix(const int num_samples,
+                                   const bool save_images,
+                                   const std::string& timestamp)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -306,12 +310,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         if (ec)
         {
             warnx("Failed to create directory \"%s\": %s (%d)",
-                    images_output_directory.c_str(), ec.message().c_str(), ec.value());
+                  images_output_directory.c_str(), ec.message().c_str(), ec.value());
             save_images = false;
         }
         else
         {
-            const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+            const auto now =
+                std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
             timestamp = std::format("{:%Y%m%dT%H%M%S}", now);
         }
     }

@@ -31,7 +31,7 @@ calculate_metrics_num_rounds(const int num_samples)
 
     std::println("## N={}", N);
 
-    std::map<int, running_stats<>> num_rounds_to_rs_num_bits_changed;
+    std::map<int, running_stats<>> num_rounds_to_rs_num_flipped_bits;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)
@@ -68,17 +68,17 @@ calculate_metrics_num_rounds(const int num_samples)
 
                     // count the number of bits changed
                     {
-                        int num_bits_changed = 0;
+                        int num_flipped_bits = 0;
 
                         // for each output row
                         for (decltype(N) out_row = 0; out_row < N; ++out_row)
                         {
                             // Hamming distance
-                            num_bits_changed +=
+                            num_flipped_bits +=
                                 simd_popcount(permuted_state[out_row] ^ permuted_state_p[out_row]);
                         }
 
-                        num_rounds_to_rs_num_bits_changed[num_rounds].push(num_bits_changed);
+                        num_rounds_to_rs_num_flipped_bits[num_rounds].push(num_flipped_bits);
                     }
                 }
             }
@@ -101,11 +101,11 @@ calculate_metrics_num_rounds(const int num_samples)
     // expected number of bits changed
     constexpr int expected_mean = state_size_bits / 2;
 
-    for (const auto& [num_rounds, rs_num_bits_changed] : num_rounds_to_rs_num_bits_changed)
+    for (const auto& [num_rounds, rs_num_flipped_bits] : num_rounds_to_rs_num_flipped_bits)
     {
-        const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
+        const auto abs_err = std::abs(rs_num_flipped_bits.mean() - expected_mean);
 
-        const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / state_size_bits;
+        const double diffusion_pctg = 100.0 * rs_num_flipped_bits.mean() / state_size_bits;
 
         std::println("{:2d}:"
                 "\t{:.3f}"
@@ -116,13 +116,13 @@ calculate_metrics_num_rounds(const int num_samples)
                 "\t{:.3f}"
                 "\t{:.3f}"
                 , num_rounds
-                , rs_num_bits_changed.mean()
+                , rs_num_flipped_bits.mean()
                 , abs_err
                 , diffusion_pctg
-                , rs_num_bits_changed.variance()
-                , rs_num_bits_changed.standard_deviation()
-                , rs_num_bits_changed.skewness()
-                , rs_num_bits_changed.kurtosis()
+                , rs_num_flipped_bits.variance()
+                , rs_num_flipped_bits.standard_deviation()
+                , rs_num_flipped_bits.skewness()
+                , rs_num_flipped_bits.kurtosis()
                 );
     }
     std::println("");

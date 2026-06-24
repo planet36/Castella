@@ -29,7 +29,7 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 {
     using T = uint8x16_t;
 
-    running_stats<> rs_num_bits_changed;
+    running_stats<> rs_num_flipped_bits;
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)
@@ -68,9 +68,9 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 // count the number of bits changed
                 // Hamming distance
-                const int num_bits_changed = simd_popcount(result ^ result_p);
+                const int num_flipped_bits = simd_popcount(result ^ result_p);
 
-                rs_num_bits_changed.push(num_bits_changed);
+                rs_num_flipped_bits.push(num_flipped_bits);
             }
             else
             {
@@ -84,9 +84,9 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 // count the number of bits changed
                 // Hamming distance
-                const int num_bits_changed = simd_popcount(result ^ result_p);
+                const int num_flipped_bits = simd_popcount(result ^ result_p);
 
-                rs_num_bits_changed.push(num_bits_changed);
+                rs_num_flipped_bits.push(num_flipped_bits);
             }
         }
     }
@@ -97,9 +97,9 @@ calculate_metrics_simd_compress(func_compress_t& fn,
     // expected number of bits changed
     constexpr int expected_mean = state_size_bits / 2;
 
-    const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
+    const auto abs_err = std::abs(rs_num_flipped_bits.mean() - expected_mean);
 
-    const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / state_size_bits;
+    const double diffusion_pctg = 100.0 * rs_num_flipped_bits.mean() / state_size_bits;
 
     std::println("{:2d}:"
             "\t{:.3f}"
@@ -110,13 +110,13 @@ calculate_metrics_simd_compress(func_compress_t& fn,
             "\t{:.3f}"
             "\t{:.3f}"
             , num_rounds
-            , rs_num_bits_changed.mean()
+            , rs_num_flipped_bits.mean()
             , abs_err
             , diffusion_pctg
-            , rs_num_bits_changed.variance()
-            , rs_num_bits_changed.standard_deviation()
-            , rs_num_bits_changed.skewness()
-            , rs_num_bits_changed.kurtosis()
+            , rs_num_flipped_bits.variance()
+            , rs_num_flipped_bits.standard_deviation()
+            , rs_num_flipped_bits.skewness()
+            , rs_num_flipped_bits.kurtosis()
             );
 }
 

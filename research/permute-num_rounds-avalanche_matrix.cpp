@@ -112,6 +112,12 @@ calculate_metrics_avalanche_matrix(const int num_samples)
     const auto variance = n * p * (1 - p);
     const auto std_dev = std::sqrt(variance);
 
+    // |z| beyond this is reported as an outlier (a two-sided tail probability
+    // under the normal approximation)
+    constexpr double z_outlier_threshold = 3.0;
+
+    constexpr int total_cells = state_size_bits * state_size_bits;
+
     // XXX: Not in Unicode yet: LATIN SUBSCRIPT SMALL LETTER Z
 
     std::println("Nr:"      // number of rounds
@@ -119,12 +125,15 @@ calculate_metrics_avalanche_matrix(const int num_samples)
                  "\tσz"     // standard deviation z (ideally equal to 1)
                  "\tmax|z|" // max absolute z value
                  "\tMAE"    // mean absolute error
+                 "\toutl%"  // percentage of cells with |z| > z_outlier_threshold
     );
 
     for (const auto& [num_rounds, avalanche_matrix] : num_rounds_to_avalanche_matrix)
     {
         running_stats<> rs_error;
         running_stats<> rs_z_scores;
+
+        int num_outliers = 0;
 
         for (int in_bit_idx = 0; in_bit_idx < state_size_bits; ++in_bit_idx)
         {
@@ -140,12 +149,20 @@ calculate_metrics_avalanche_matrix(const int num_samples)
                 rs_error.push(error);
 
                 rs_z_scores.push(z_score);
+
+                if (std::abs(z_score) > z_outlier_threshold)
+                {
+                    ++num_outliers;
+                }
             }
         }
 
-        const auto mean_abs_error = rs_error.sum_abs() / (state_size_bits * state_size_bits);
+        const auto mean_abs_error = rs_error.sum_abs() / total_cells;
+
+        const double outlier_pctg = 100.0 * num_outliers / total_cells;
 
         std::println("{:2d}:"
+                "\t{:.3f}"
                 "\t{:.3f}"
                 "\t{:.3f}"
                 "\t{:.3f}"
@@ -155,6 +172,7 @@ calculate_metrics_avalanche_matrix(const int num_samples)
                 , rs_z_scores.standard_deviation()
                 , rs_z_scores.max_abs()
                 , mean_abs_error
+                , outlier_pctg
                 );
     }
     std::println("");

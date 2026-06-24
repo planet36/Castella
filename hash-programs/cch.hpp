@@ -42,7 +42,7 @@ public:
 
     static constexpr int MIX_RATE_MIN = 1;
     static constexpr int MIX_RATE_MAX = 2048;
-    static constexpr int DEFAULT_MIX_RATE = 128;
+    static constexpr int DEFAULT_MIX_RATE = 256;
     static_assert(MIX_RATE_MIN <= MIX_RATE_MAX);
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);

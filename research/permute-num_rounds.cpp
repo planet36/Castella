@@ -96,16 +96,16 @@ calculate_metrics_num_rounds(const int num_samples)
     );
 
     // number of bits in the state
-    constexpr int bits = sizeof(state_t) * 8;
+    constexpr int state_size_bits = sizeof(state_t) * 8;
 
     // expected number of bits changed
-    constexpr int expected_mean = bits / 2;
+    constexpr int expected_mean = state_size_bits / 2;
 
     for (const auto& [num_rounds, rs_num_bits_changed] : num_rounds_to_rs_num_bits_changed)
     {
         const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
 
-        const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / bits;
+        const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / state_size_bits;
 
         std::println("{:2d}:"
                 "\t{:.3f}"

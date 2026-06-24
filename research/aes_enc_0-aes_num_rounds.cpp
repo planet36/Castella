@@ -61,14 +61,14 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
     }
 
     // number of bits in the block
-    constexpr int bits = sizeof(T) * 8;
+    constexpr int state_size_bits = sizeof(T) * 8;
 
     // expected number of bits changed
-    constexpr int expected_mean = bits / 2;
+    constexpr int expected_mean = state_size_bits / 2;
 
     const auto abs_err = std::abs(rs_num_bits_changed.mean() - expected_mean);
 
-    const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / bits;
+    const double diffusion_pctg = 100.0 * rs_num_bits_changed.mean() / state_size_bits;
 
     std::println("{:2d}:"
             "\t{:.3f}"

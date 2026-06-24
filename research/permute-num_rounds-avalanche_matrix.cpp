@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <vector>
 
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 const std::string images_output_directory = "results";
 
 /// Save the avalanche matrix as a grayscale PGM image

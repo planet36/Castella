@@ -51,9 +51,11 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
             }
 
             {
+                const auto avalanche_vector = result ^ result_p;
+
                 // count the number of bits flipped
                 // Hamming distance
-                const int num_flipped_bits = simd_popcount(result ^ result_p);
+                const int num_flipped_bits = simd_popcount(avalanche_vector);
 
                 rs_num_flipped_bits.push(num_flipped_bits);
             }

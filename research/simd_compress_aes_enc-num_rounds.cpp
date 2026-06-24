@@ -66,9 +66,11 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 assert(!simd_equal(result, result_p));
 
+                const auto avalanche_vector = result ^ result_p;
+
                 // count the number of bits flipped
                 // Hamming distance
-                const int num_flipped_bits = simd_popcount(result ^ result_p);
+                const int num_flipped_bits = simd_popcount(avalanche_vector);
 
                 rs_num_flipped_bits.push(num_flipped_bits);
             }
@@ -82,9 +84,11 @@ calculate_metrics_simd_compress(func_compress_t& fn,
 
                 assert(!simd_equal(result, result_p));
 
+                const auto avalanche_vector = result ^ result_p;
+
                 // count the number of bits flipped
                 // Hamming distance
-                const int num_flipped_bits = simd_popcount(result ^ result_p);
+                const int num_flipped_bits = simd_popcount(avalanche_vector);
 
                 rs_num_flipped_bits.push(num_flipped_bits);
             }

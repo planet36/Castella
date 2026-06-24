@@ -49,7 +49,8 @@ inline constexpr int AES_NUM_ROUNDS = 3;
 
 /// For state size \a N, get the minimum number of rounds for \c Castella::permute to achieve full bit diffusion
 /**
-* The values were obtained from research/permute-num_rounds.cpp
+* The values were obtained from research/permute-num_rounds.cpp and
+* corroborated by research/permute-num_rounds-avalanche_matrix.cpp
 */
 template <int N>
 requires (N == 2) || (N == 4) || (N == 8) || (N == 16)

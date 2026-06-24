@@ -160,7 +160,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    int num_samples = 1; // number of random samples to test
+    // 100 samples comfortably exceeds the n*p >= 10 threshold for the normal
+    // approximation to the binomial (p=0.5) used by calculate_metrics_avalanche_matrix.
+    int num_samples = 100;
 
     {
         const char* short_options = "+n:";

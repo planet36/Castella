@@ -166,19 +166,19 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test.txt | cut -w -f 1" \
-    a31db7ab4d9d5f9ed7463066e7c2f33e
+    78d7ff6d3d3efe4d63c522c76700c2e7
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test.txt | cut -w -f 1" \
-    a31db7ab4d9d5f9ed7463066e7c2f33e1ae4282ae9d68e790d8279cb63a36e89
+    78d7ff6d3d3efe4d63c522c76700c2e70e0ad3239eb266dfa7443132fd080653
 
 assert_eq_cmd_str \
     "./cch --size=48 /tmp/test.txt | cut -w -f 1" \
-    a31db7ab4d9d5f9ed7463066e7c2f33e1ae4282ae9d68e790d8279cb63a36e89f58a0fae2373d2fdeecae441cf3df4c0
+    78d7ff6d3d3efe4d63c522c76700c2e70e0ad3239eb266dfa7443132fd0806530da56ff302c4625eff6d433218a67b83
 
 assert_eq_cmd_str \
     "./cch --size=64 /tmp/test.txt | cut -w -f 1" \
-    a31db7ab4d9d5f9ed7463066e7c2f33e1ae4282ae9d68e790d8279cb63a36e89f58a0fae2373d2fdeecae441cf3df4c0ac5c58acde851ebf6244ffd4320584bc
+    78d7ff6d3d3efe4d63c522c76700c2e70e0ad3239eb266dfa7443132fd0806530da56ff302c4625eff6d433218a67b8361ac6c7399638cdac8790478bcb17897
 
 # Verify "--no-mmap" option produces the same output
 

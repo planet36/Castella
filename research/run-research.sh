@@ -16,15 +16,15 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# For each state size, find the minimum num_rounds for Castella::permute to achieve full bit diffusion"
-echo
-./permute-num_rounds -n 120 || exit
-echo "________________________________________________________________________________"
-echo
-
 echo "# Verify that Castella::permute_inv is the inverse of Castella::permute"
 echo
 ./permute_inv-verify -n 50000 || exit
+echo "________________________________________________________________________________"
+echo
+
+echo "# For each state size, find the minimum num_rounds for Castella::permute to achieve full bit diffusion"
+echo
+./permute-num_rounds -n 120 || exit
 echo "________________________________________________________________________________"
 echo
 

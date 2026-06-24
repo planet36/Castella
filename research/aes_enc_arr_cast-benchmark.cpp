@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
-#include <bit>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>

@@ -12,9 +12,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <err.h>
 #include <map>
 #include <print>

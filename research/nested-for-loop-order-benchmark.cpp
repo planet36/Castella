@@ -10,7 +10,6 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstdlib>
-#include <cstring>
 #include <string>
 #include <thread>
 

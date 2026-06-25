@@ -28,7 +28,7 @@ Run `--help` for full option descriptions.
 
 Benchmark results are saved in CSV format in a folder named `results`.
 
-Use `plot-results.py` to plot a benchmark CSV file.
+Use `plot-results.py` to plot a benchmark CSV file (except the result of `benchmark.all.bash`).
 
 ## Usage
 

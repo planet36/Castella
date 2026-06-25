@@ -188,7 +188,7 @@ calculate_metrics_avalanche_matrix(const int num_samples,
                  "\tσz"     // standard deviation z (ideally equal to 1)
                  "\tmax|z|" // max absolute z value
                  "\tMAE"    // mean absolute error
-                 "\toutl%"  // percentage of cells with |z| > z_outlier_threshold
+                 "\toutl.%" // percentage of cells with |z| > z_outlier_threshold
     );
 
     for (const auto& [num_rounds, avalanche_matrix] : num_rounds_to_avalanche_matrix)

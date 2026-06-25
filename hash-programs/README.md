@@ -21,14 +21,14 @@ Run `--help` for full option descriptions.
 
 | name | purpose |
 | ---- | ------- |
-| benchmark.all.bash | Benchmark `castella` and `cch` against many common hash programs |
+| benchmark.hash-programs.bash | Benchmark `castella` and `cch` against many common hash programs |
 | benchmark.castella.rounds.bash | Benchmark `castella` across different `--rounds` values |
 | benchmark.castella.size.bash | Benchmark `castella` across different `--size` values |
 | benchmark.cch.mix-rate.bash | Benchmark `cch` across different `--mix-rate` values |
 
 Benchmark results are saved in CSV format in a folder named `results`.
 
-Use `plot-results.py` to plot a benchmark CSV file (except the result of `benchmark.all.bash`).
+Use `plot-results.py` to plot a benchmark CSV file (except the result of `benchmark.hash-programs.bash`).
 
 ## Usage
 
@@ -36,7 +36,7 @@ Run these commands:
 
 * `make`
 * `bash test-correctness.bash`
-* `bash benchmark.all.bash`
+* `bash benchmark.hash-programs.bash`
 * `bash benchmark.castella.rounds.bash`
 * `bash benchmark.castella.size.bash`
 * `bash benchmark.cch.mix-rate.bash`

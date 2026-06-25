@@ -36,4 +36,10 @@ Run these commands:
 
 * `make`
 * `bash test-correctness.bash`
-* `bash benchmark.all.bash` (or any individual benchmark script)
+* `bash benchmark.all.bash`
+* `bash benchmark.castella.rounds.bash`
+* `bash benchmark.castella.size.bash`
+* `bash benchmark.cch.mix-rate.bash`
+* `python plot-results.py results/benchmark.castella.rounds.<TIMESTAMP>.csv`
+* `python plot-results.py results/benchmark.castella.size.<TIMESTAMP>.csv`
+* `python plot-results.py --xlog results/benchmark.cch.mix-rate.<TIMESTAMP>.csv`

@@ -159,7 +159,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants}.first(num_rounds))
     {
-        state[0] ^= rc;
+        state.front() ^= rc;
         aes_enc_0_arr<AES_NUM_ROUNDS>(state);
         simd_transpose(state);
     }
@@ -195,7 +195,7 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     {
         simd_transpose(state);
         aes_enc_0_inv_arr<AES_NUM_ROUNDS>(state);
-        state[0] ^= rc;
+        state.front() ^= rc;
     }
 }
 

@@ -41,7 +41,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-22";
+inline constexpr std::string_view program_version = "2026-06-29";
 
 inline constexpr std::string_view default_host = "localhost";
 inline constexpr int default_port = 8080;

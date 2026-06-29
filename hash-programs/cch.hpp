@@ -56,7 +56,7 @@ private:
     mutable std::mutex mtx_;
 
     /// The number of absorptions since the state was last mixed
-    int32_t absorbs_since_mix_ = 0;
+    int16_t absorbs_since_mix_ = 0;
 
     /// After this many absorptions, the state is mixed.
     const int16_t mix_rate_ = DEFAULT_MIX_RATE; // absorptions per mix

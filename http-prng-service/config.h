@@ -16,7 +16,7 @@
 /// Castella hash object parameters
 inline constexpr int capacity_blocks = 6;
 inline constexpr int num_rounds = 8;
-inline constexpr int input_suffix = 42;
+inline constexpr int input_suffix = 1;
 inline constexpr std::string_view customization_str = "HTTP PRNG service";
 
 /// High-quality entropy will be added to the Castella service after this

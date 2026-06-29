@@ -180,6 +180,30 @@ assert_eq_cmd_str \
     "./cch --size=64 /tmp/test.txt | cut -w -f 1" \
     78d7ff6d3d3efe4d63c522c76700c2e70e0ad3239eb266dfa7443132fd0806530da56ff302c4625eff6d433218a67b8361ac6c7399638cdac8790478bcb17897
 
+# Verify that different "--custom" values give distinct results.
+
+assert_neq_cmd_cmd \
+    './castella --custom="Bart" /tmp/test.txt | cut -w -f 1' \
+    './castella --custom="Lisa" /tmp/test.txt | cut -w -f 1'
+
+# Verify that different "--rounds" values give distinct results.
+
+assert_neq_cmd_cmd \
+    './castella --rounds=4 /tmp/test.txt | cut -w -f 1' \
+    './castella --rounds=8 /tmp/test.txt | cut -w -f 1'
+
+# Verify that different "--size" values give distinct results.
+
+assert_neq_cmd_cmd \
+    './castella --size=16 /tmp/test.txt | cut -w -f 1' \
+    './castella --size=32 /tmp/test.txt | cut -w -f 1'
+
+# Verify that different "--suffix" values give distinct results.
+
+assert_neq_cmd_cmd \
+    './castella --suffix=105 /tmp/test.txt | cut -w -f 1' \
+    './castella --suffix=184 /tmp/test.txt | cut -w -f 1'
+
 # Verify "--no-mmap" option produces the same output
 
 for SIZE in {1..64}

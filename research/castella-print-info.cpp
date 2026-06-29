@@ -34,5 +34,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::println("Castella::Duplex::R_MIN = {}", Castella::Duplex::R_MIN);
     std::println("Castella::Duplex::R_MAX = {}", Castella::Duplex::R_MAX);
 
+    std::println("Castella::Duplex::get_state_size_bytes() = {}", Castella::Duplex::get_state_size_bytes());
+
     return 0;
 }

@@ -246,6 +246,8 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 
 #if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202603L
         consec_bytes_sqzd = std::saturating_add(consec_bytes_sqzd, digest_size);
+#elif defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202311L
+        consec_bytes_sqzd = std::add_sat(consec_bytes_sqzd, digest_size);
 #else
         // Overflow is improbable.
         consec_bytes_sqzd += digest_size;

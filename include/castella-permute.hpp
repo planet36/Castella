@@ -14,7 +14,6 @@
 #include "simd_transpose.hpp"
 #include "simd_types.hpp"
 
-#include <array>
 #if defined(DEBUG)
 #include <cassert>
 #endif

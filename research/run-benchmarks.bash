@@ -19,6 +19,8 @@ DATETIME=$(date -u +'%Y%m%dT%H%M%S')
 
 mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
+shopt -s nullglob
+
 for PROGRAM in *-benchmark
 do
     test -x "$PROGRAM" || continue

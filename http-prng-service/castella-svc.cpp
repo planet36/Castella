@@ -323,8 +323,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     for (int i = optind; i < argc; ++i)
     {
-        const std::string arg = argv[i];
-        host = arg;
+        host = argv[i];
     }
 
     constexpr std::string_view function_name = "Castella";

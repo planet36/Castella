@@ -11,7 +11,6 @@
 #include "simd_popcount.hpp"
 
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <print>

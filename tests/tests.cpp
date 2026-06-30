@@ -10,8 +10,6 @@
 #include "quote_shell_always.hpp"
 
 #include <cassert>
-#include <cstddef>
-#include <cstdint>
 #include <print>
 #include <ranges>
 #include <stdexcept>

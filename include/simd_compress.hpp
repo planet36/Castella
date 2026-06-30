@@ -53,7 +53,6 @@
 
 #include "simd_types.hpp"
 
-#include <array>
 #include <cstddef>
 
 /// Compress (via 2 rounds of AES encryption) 2 128-bit SIMD registers into 1,

@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
 #include <string_view>
 
 /// Castella hash object parameters

@@ -11,7 +11,6 @@
 
 #include "simd_types.hpp"
 
-#include <array>
 #include <bitset>
 #include <cstdint>
 

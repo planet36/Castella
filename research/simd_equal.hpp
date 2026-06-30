@@ -12,7 +12,6 @@
 #include "simd_types.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 
 /// Test if two 128-bit SIMD values are equal

@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cerrno>
 #include <chrono>
 #include <cmath>
 #include <cstdint>

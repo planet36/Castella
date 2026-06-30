@@ -11,8 +11,6 @@
 
 #include "simd_types.hpp"
 
-#include <array>
-
 /// Perform 1 round of AES encryption with \a round_key on \a data
 [[nodiscard]] static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept

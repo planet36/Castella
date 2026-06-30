@@ -15,7 +15,6 @@
 #include <cassert>
 #include <concepts>
 #include <cstddef>
-#include <cstdint>
 #include <print>
 #include <string>
 #include <string_view>

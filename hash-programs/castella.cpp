@@ -380,6 +380,7 @@ process_file(const std::string& path, auto& hash_obj)
             throw SYSERR_PATH(path);
         }
 
+        // If add() throws (only possible on mutex failure), mmap_addr is leaked.
         hash_obj.add(mmap_addr, file_size);
 
         if (::munmap(mmap_addr, mmap_size) < 0)

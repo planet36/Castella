@@ -5,6 +5,11 @@
 # Usage: process-benchmark-result.sh <benchmark-result-file>
 # Extract median rows, sort by time, and format as a table.
 
+if [ -z "$1" ]; then
+    echo "Usage: $(basename "$0") <benchmark-result-file>" >&2
+    exit 1
+fi
+
 command grep median "$1" |
     sed -r -e 's|(/threads:[0-9]+)?_median||' |
     awk '{print $1, $4, $5}' |

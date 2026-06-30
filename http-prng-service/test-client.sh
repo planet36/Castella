@@ -2,6 +2,8 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
+# Note: castella-svc must be running
+
 BASE_URL='http://localhost'
 PORT=8080
 

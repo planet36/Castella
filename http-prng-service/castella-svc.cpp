@@ -216,7 +216,7 @@ void
 process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 {
     // https://www.iana.org/assignments/media-types/application/octet-stream
-    const std::string content_type{"application/octet-stream"};
+    static const std::string content_type{"application/octet-stream"};
 
     auto num_bytes_to_squeeze = get_default_num_bytes_to_squeeze();
 

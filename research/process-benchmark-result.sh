@@ -5,7 +5,8 @@
 # Usage: process-benchmark-result.sh <benchmark-result-file>
 # Extract median rows, sort by time, and format as a table.
 
-if [ -z "$1" ]; then
+if [ ! -f "$1" ]; then
+    echo "$(basename "$0"): file not found: \"$1\"" >&2
     echo "Usage: $(basename "$0") <benchmark-result-file>" >&2
     exit 1
 fi

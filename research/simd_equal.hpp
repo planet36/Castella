@@ -15,6 +15,12 @@
 #include <array>
 #include <cstddef>
 
+/// Test if two 128-bit SIMD values are equal
+/**
+* \param a the first 128-bit SIMD value
+* \param b the second 128-bit SIMD value
+* \return \c true if \a a and \a b are equal, \c false otherwise
+*/
 [[nodiscard]] static inline bool
 simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
@@ -26,6 +32,12 @@ simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 #endif
 }
 
+/// Test if two 256-bit SIMD values are equal
+/**
+* \param a the first 256-bit SIMD value
+* \param b the second 256-bit SIMD value
+* \return \c true if \a a and \a b are equal, \c false otherwise
+*/
 [[nodiscard]] static inline bool
 simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
@@ -39,19 +51,35 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 #endif
 }
 
+/// Test if two SIMD values are equal (128-bit overload)
+/**
+* \param a the first SIMD value
+* \param b the second SIMD value
+* \return \c true if \a a and \a b are equal, \c false otherwise
+*/
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
     return simd128_equal(a, b);
 }
 
+/// Test if two SIMD values are equal (256-bit overload)
+/**
+* \param a the first SIMD value
+* \param b the second SIMD value
+* \return \c true if \a a and \a b are equal, \c false otherwise
+*/
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
     return simd256_equal(a, b);
 }
 
+/// Test if two arrays of 128-bit SIMD values are equal
 /**
+* \param lhs the left-hand array
+* \param rhs the right-hand array
+* \return \c true if all corresponding elements are equal, \c false otherwise
 * \warning This function stops comparing at the first mismatch, making it vulnerable to a timing attack.
 */
 template <std::size_t N>

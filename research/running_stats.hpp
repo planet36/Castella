@@ -44,6 +44,7 @@ public:
     }
     */
 
+    /// Reset all statistics to their initial state
     void clear()
     {
         M1 = 0;
@@ -59,6 +60,7 @@ public:
         n = 0;
     }
 
+    /// Add a single value to the running statistics
     void push(const T x)
     {
         const auto n1 = n;
@@ -80,6 +82,7 @@ public:
         _max_abs = std::fmax(_max_abs, std::abs(x));
     }
 
+    /// Add a range of values to the running statistics
     template <std::forward_iterator It>
     void push(It first, It last)
     {
@@ -123,6 +126,7 @@ public:
     friend running_stats<T2> operator+(const running_stats<T2>& a,
                                        const running_stats<T2>& b);
 
+    /// Merge another \c running_stats into this one
     running_stats<T>& operator+=(const running_stats<T>& that)
     {
         const running_stats<T> combined = *this + that;
@@ -131,6 +135,7 @@ public:
     }
 };
 
+/// Merge two \c running_stats objects into one
 template <std::floating_point T>
 [[nodiscard]] running_stats<T>
 operator+(const running_stats<T>& a, const running_stats<T>& b)

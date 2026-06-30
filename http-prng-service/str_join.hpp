@@ -14,6 +14,12 @@
 #include <string>
 #include <string_view>
 
+/// Join a range of strings into a single string
+/**
+* \param range_strings the strings to join
+* \param joiner the separator inserted between consecutive strings
+* \return the concatenation of all strings in \a range_strings, separated by \a joiner
+*/
 template <std::ranges::input_range R>
 requires std::convertible_to<std::ranges::range_reference_t<R>, std::string_view>
 [[nodiscard]] static std::string

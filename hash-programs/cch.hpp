@@ -69,7 +69,9 @@ private:
     /// Check the value of \c mix_rate_
     // {{{
     /**
-    * \exception std::invalid_argument if \c mix_rate_ is invalid
+    * \note If \c mix_rate_ is 0, periodic mixing is disabled and no further checks are done.
+    * \exception std::invalid_argument if \c mix_rate_ is < \c MIX_RATE_MIN
+    * \exception std::invalid_argument if \c mix_rate_ is > \c MIX_RATE_MAX
     */
     // }}}
     void check_constraints_() const

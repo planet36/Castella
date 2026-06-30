@@ -15,6 +15,12 @@
 #include <bitset>
 #include <cstdint>
 
+/// Combine two 64-bit integers into a 128-bit SIMD value
+/**
+* \param hi the upper 64 bits
+* \param lo the lower 64 bits
+* \return a 128-bit SIMD value with \a hi in the upper half and \a lo in the lower half
+*/
 [[nodiscard]] static inline uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 {
@@ -39,6 +45,12 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 #endif
 }
 
+/// Split a 128-bit SIMD value into its high and low 64-bit halves
+/**
+* \param[in]  v  the 128-bit SIMD value to split
+* \param[out] hi the upper 64 bits of \a v
+* \param[out] lo the lower 64 bits of \a v
+*/
 static inline void
 separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
 {
@@ -62,6 +74,12 @@ separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
 #endif
 }
 
+/// Build a 128-bit \c std::bitset from two 64-bit integers
+/**
+* \param hi the upper 64 bits
+* \param lo the lower 64 bits
+* \return a \c std::bitset<128> with \a hi in the upper half and \a lo in the lower half
+*/
 [[nodiscard]] static inline std::bitset<128>
 make_bitset(const uint64_t hi, const uint64_t lo) noexcept
 {
@@ -71,6 +89,11 @@ make_bitset(const uint64_t hi, const uint64_t lo) noexcept
     return result;
 }
 
+/// Build a 128-bit \c std::bitset from a 128-bit SIMD value
+/**
+* \param v the 128-bit SIMD value
+* \return a \c std::bitset<128> with the same bit pattern as \a v
+*/
 [[nodiscard]] static inline std::bitset<128>
 make_bitset(const uint8x16_t v) noexcept
 {
@@ -80,6 +103,7 @@ make_bitset(const uint8x16_t v) noexcept
     return make_bitset(hi, lo);
 }
 
+/// One single-bit bitmask per bit position in a 128-bit SIMD register
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 const simd_arr_t<128> simd_bitmask128_arr{
     // hi, lo

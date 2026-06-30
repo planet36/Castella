@@ -25,7 +25,7 @@ function assert_eq_cmd_str
     then
         ((FAIL++))
         printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
-            "$FUNCNAME" "$CMD" "$EXIT_STATUS" 1>&2
+            "${FUNCNAME[0]}" "$CMD" "$EXIT_STATUS" 1>&2
         return 1
     fi
 
@@ -35,7 +35,7 @@ function assert_eq_cmd_str
     else
         ((FAIL++))
         printf '%s FAIL:\ncommand  = %s\nactual   = %s\nexpected = %s\n' \
-            "$FUNCNAME" "$CMD" "$ACTUAL" "$EXPECTED" 1>&2
+            "${FUNCNAME[0]}" "$CMD" "$ACTUAL" "$EXPECTED" 1>&2
         return 1
     fi
 }
@@ -55,7 +55,7 @@ function assert_eq_cmd_cmd
     then
         ((FAIL++))
         printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
-            "$FUNCNAME" "$CMD1" "$EXIT_STATUS" 1>&2
+            "${FUNCNAME[0]}" "$CMD1" "$EXIT_STATUS" 1>&2
         return 1
     fi
 
@@ -67,7 +67,7 @@ function assert_eq_cmd_cmd
     then
         ((FAIL++))
         printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
-            "$FUNCNAME" "$CMD2" "$EXIT_STATUS" 1>&2
+            "${FUNCNAME[0]}" "$CMD2" "$EXIT_STATUS" 1>&2
         return 1
     fi
 
@@ -77,7 +77,7 @@ function assert_eq_cmd_cmd
     else
         ((FAIL++))
         printf '%s FAIL:\ncommand 1 = %s\noutput 1  = %q\ncommand 2 = %s\noutput 2  = %q\n' \
-            "$FUNCNAME" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
+            "${FUNCNAME[0]}" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
         return 1
     fi
 }
@@ -97,7 +97,7 @@ function assert_neq_cmd_cmd
     then
         ((FAIL++))
         printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
-            "$FUNCNAME" "$CMD1" "$EXIT_STATUS" 1>&2
+            "${FUNCNAME[0]}" "$CMD1" "$EXIT_STATUS" 1>&2
         return 1
     fi
 
@@ -109,7 +109,7 @@ function assert_neq_cmd_cmd
     then
         ((FAIL++))
         printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
-            "$FUNCNAME" "$CMD2" "$EXIT_STATUS" 1>&2
+            "${FUNCNAME[0]}" "$CMD2" "$EXIT_STATUS" 1>&2
         return 1
     fi
 
@@ -119,7 +119,7 @@ function assert_neq_cmd_cmd
     else
         ((FAIL++))
         printf '%s FAIL:\ncommand 1 = %s\noutput 1  = %q\ncommand 2 = %s\noutput 2  = %q\n' \
-            "$FUNCNAME" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
+            "${FUNCNAME[0]}" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
         return 1
     fi
 }

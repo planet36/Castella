@@ -179,7 +179,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     {
         // Test an input size that is greater than the outer state.
-        // Ensure that when the input is split into chucks, it results in the
+        // Ensure that when the input is split into chunks, it results in the
         // same digest as if the data was added in one chunk.
         constexpr int capacity_blocks = 4;
         constexpr int num_rounds = 6;

@@ -42,7 +42,7 @@ inline constexpr int default_num_bytes_to_squeeze = max_num_bytes_to_squeeze / 2
 static_assert(default_num_bytes_to_squeeze >= min_num_bytes_to_squeeze);
 static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
 
-inline constexpr std::string default_customization_str = "hash";
+inline constexpr std::string_view default_customization_str = "hash";
 // }}}
 
 // {{{ options

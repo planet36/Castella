@@ -25,6 +25,7 @@
 #include <mutex>
 #include <span>
 #include <stdexcept>
+#include <string_view>
 #include <vector>
 
 /// A hash class that uses one-way compression and the Castella permutation function

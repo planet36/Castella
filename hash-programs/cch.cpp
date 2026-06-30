@@ -8,6 +8,7 @@
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 
+#include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
@@ -16,6 +17,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <sys/mman.h>
+#include <system_error>
 #include <unistd.h>
 #include <vector>
 

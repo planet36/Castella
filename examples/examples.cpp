@@ -5,6 +5,7 @@
 #undef NDEBUG
 
 #include "as_byte_span.hpp"
+#include "byte_width.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
 #include "fixed_vector.hpp"

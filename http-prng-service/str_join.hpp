@@ -13,6 +13,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
 
 /// Join a range of strings into a single string
 /**

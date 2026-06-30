@@ -15,6 +15,8 @@ function assert_eq_cmd_str
     local CMD="$1"
     local EXPECTED="$2"
 
+    local EXIT_STATUS
+
     local ACTUAL
     ACTUAL=$(eval "$CMD")
     EXIT_STATUS=$?
@@ -42,6 +44,8 @@ function assert_eq_cmd_cmd
 {
     local CMD1="$1"
     local CMD2="$2"
+
+    local EXIT_STATUS
 
     local ACTUAL1
     ACTUAL1=$(eval "$CMD1")
@@ -82,6 +86,8 @@ function assert_neq_cmd_cmd
 {
     local CMD1="$1"
     local CMD2="$2"
+
+    local EXIT_STATUS
 
     local ACTUAL1
     ACTUAL1=$(eval "$CMD1")

@@ -77,9 +77,10 @@ public:
         _sum += x;
         _min = std::fmin(_min, x);
         _max = std::fmax(_max, x);
-        _sum_abs += std::abs(x);
-        _min_abs = std::fmin(_min_abs, std::abs(x));
-        _max_abs = std::fmax(_max_abs, std::abs(x));
+        const auto abs_x = std::abs(x);
+        _sum_abs += abs_x;
+        _min_abs = std::fmin(_min_abs, abs_x);
+        _max_abs = std::fmax(_max_abs, abs_x);
     }
 
     /// Add a range of values to the running statistics

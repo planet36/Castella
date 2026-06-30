@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/sh
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 

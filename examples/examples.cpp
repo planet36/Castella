@@ -174,7 +174,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     * </blockquote>
     */
 
-    std::string_view K{
+    constexpr std::string_view K{
         "And I, for one, welcome our new insect overlords.  I'd like to remind "
         "them, that as a trusted TV personality, I can be helpful in rounding "
         "up others to toil in their underground sugar caves."};

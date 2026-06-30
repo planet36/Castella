@@ -193,7 +193,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         Castella::Duplex hash_obj2(capacity_blocks, num_rounds, input_suffix, function_name,
                                    customization_str);
 
-        std::string_view X{
+        constexpr std::string_view X{
             "Can you name the truck with four-wheel drive"
             "Smells like a steak and seats thirty five"
             "Canyonero!"

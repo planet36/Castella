@@ -92,9 +92,9 @@ public:
         }
     }
 
-    [[nodiscard]] auto num_data_values() const { return n; }
+    [[nodiscard]] constexpr auto num_data_values() const { return n; }
 
-    [[nodiscard]] auto mean() const { return M1; }
+    [[nodiscard]] constexpr auto mean() const { return M1; }
 
     [[nodiscard]] auto variance() const { return M2 / (n - 1); }
 
@@ -105,22 +105,22 @@ public:
     [[nodiscard]] auto kurtosis() const { return n * M4 / (M2 * M2) - 3; }
 
     /// get the sum of the values
-    [[nodiscard]] auto sum() const { return _sum; }
+    [[nodiscard]] constexpr auto sum() const { return _sum; }
 
     /// get the minimum value
-    [[nodiscard]] auto min() const { return _min; }
+    [[nodiscard]] constexpr auto min() const { return _min; }
 
     /// get the maximum value
-    [[nodiscard]] auto max() const { return _max; }
+    [[nodiscard]] constexpr auto max() const { return _max; }
 
     /// get the sum of the absolute values
-    [[nodiscard]] auto sum_abs() const { return _sum_abs; }
+    [[nodiscard]] constexpr auto sum_abs() const { return _sum_abs; }
 
     /// get the minimum absolute value
-    [[nodiscard]] auto min_abs() const { return _min_abs; }
+    [[nodiscard]] constexpr auto min_abs() const { return _min_abs; }
 
     /// get the maximum absolute value
-    [[nodiscard]] auto max_abs() const { return _max_abs; }
+    [[nodiscard]] constexpr auto max_abs() const { return _max_abs; }
 
     template <std::floating_point T2>
     friend running_stats<T2> operator+(const running_stats<T2>& a,

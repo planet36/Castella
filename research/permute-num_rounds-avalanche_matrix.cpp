@@ -20,7 +20,6 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <map>
 #include <print>
 #include <string>
 #include <unistd.h>
@@ -103,7 +102,8 @@ calculate_metrics_avalanche_matrix(const int num_samples,
     std::println("## N={}", N);
 
     // An avalanche matrix for each number of rounds
-    std::map<int, avalanche_matrix_t> num_rounds_to_avalanche_matrix;
+    // Index 0 is round 1, etc.
+    std::vector<avalanche_matrix_t> avalanche_matrices(Castella::NUM_ROUNDS_MAX);
 
     // for each sample
     for (int i = 0; i < num_samples; ++i)
@@ -154,7 +154,7 @@ calculate_metrics_avalanche_matrix(const int num_samples,
                         {
                             const int out_bit_idx = out_row * row_size_bits + out_bit;
 
-                            num_rounds_to_avalanche_matrix[num_rounds][in_bit_idx][out_bit_idx] += flipped_bits[out_bit];
+                            avalanche_matrices[num_rounds - 1][in_bit_idx][out_bit_idx] += flipped_bits[out_bit];
                         }
                     }
                 }
@@ -190,8 +190,9 @@ calculate_metrics_avalanche_matrix(const int num_samples,
                  "\toutl.%" // percentage of cells with |z| > z_outlier_threshold
     );
 
-    for (const auto& [num_rounds, avalanche_matrix] : num_rounds_to_avalanche_matrix)
+    for (int num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
+        const auto& avalanche_matrix = avalanche_matrices[num_rounds - 1];
         running_stats<> rs_error;
         running_stats<> rs_z_scores;
 

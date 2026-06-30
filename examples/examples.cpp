@@ -489,7 +489,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
+                                      .add(right_encode(0U))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -497,14 +497,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
+                .add(right_encode(0U))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "d6b96323db5350a25ff21e4513169c14f1aba668b929ae1f9dbad047e1000eb2";
+            "6f7e509830b1932a9955a946e136457ed3917c4dd572f6a37b3c4dbe0a27f44f";
         const std::string result = bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "6e258fd00c2fe9ef62bb2d80c32fdfcd5f900e42301c5e547c89ab546f4bc830";
+            "e7d7096b268885aa45a78496efefe931554177ae94157d2df4f0de93f8ba64d4";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -547,7 +547,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_encoded(X[0]) // encode_string
                                       .add_encoded(X[1]) // encode_string
-                                      .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
+                                      .add(right_encode(0U))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -555,14 +555,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_encoded(Y[0]) // encode_string
                 .add_encoded(Y[1]) // encode_string
-                .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
+                .add(right_encode(0U))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "0e8357b8be09857df2d9d7b3be48c0683c4046d5a551003fb23df997e0d311f68ac8b528efad16f7479be58e4936c3e0a581d0b87036cec9d95abbd1bf3d4c6d";
+            "b1a334e2540d6d66e2284184b481ed3530563a3d9fbe26bcb3bc447749d9a25010a460c527e95effb666a5bc924a78949c41667a0b62c24879ef15471a3c4f89";
         const std::string result = bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "c3b2753967c5958cf69c423038bcb0528e8745c1d3277823d58120c53d51f90dbd6529a8b234d4d6370ddb321461ed17cddac0a01f0e09578898e145bc910eb3";
+            "f294161c4caa887030e9161d92cb58a502348c2f546f172b1a48636883c8ab67266ee13731ca356a7c7457ef2e8828698964e786af54b94bf1c78806b270cfba";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),

@@ -40,6 +40,8 @@ args = parser.parse_args()
 with open(args.FILE, newline='', encoding='utf-8') as f:
     reader = csv.DictReader(f)
     rows = list(reader)
+    if not reader.fieldnames:
+        parser.error(f"{args.FILE}: empty or missing header row")
     x_axis_col = reader.fieldnames[-1] # The parameter that varied is the last column.
 
 y_axis_col = args.column

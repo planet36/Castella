@@ -50,24 +50,14 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 #endif
 }
 
-/// Test if two SIMD values are equal (128-bit overload)
-/**
-* \param a the first SIMD value
-* \param b the second SIMD value
-* \return \c true if \a a and \a b are equal, \c false otherwise
-*/
+/// \copydoc simd128_equal(const uint8x16_t, const uint8x16_t)
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
     return simd128_equal(a, b);
 }
 
-/// Test if two SIMD values are equal (256-bit overload)
-/**
-* \param a the first SIMD value
-* \param b the second SIMD value
-* \return \c true if \a a and \a b are equal, \c false otherwise
-*/
+/// \copydoc simd256_equal(const uint8x16x2_t, const uint8x16x2_t)
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {

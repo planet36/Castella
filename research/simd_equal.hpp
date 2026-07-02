@@ -85,3 +85,22 @@ simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 {
     return simd128_arr_equal(lhs, rhs);
 }
+
+/// Test if all bits are zero in the 128-bit SIMD value
+/**
+* \param v the 128-bit SIMD value
+* \return \c true if all bits are zero in \a v, \c false otherwise
+*/
+[[nodiscard]] static inline bool
+simd128_is_zero(const uint8x16_t v) noexcept
+{
+    // Returns 1 if (v & v) == 0
+    return _mm_testz_si128(v, v) == 1;
+}
+
+/// \copydoc simd128_is_zero(const uint8x16_t)
+[[nodiscard]] static inline bool
+simd_is_zero(const uint8x16_t v) noexcept
+{
+    return simd128_is_zero(v);
+}

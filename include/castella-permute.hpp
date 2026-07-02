@@ -119,6 +119,14 @@ lfsr_seed() noexcept
     constexpr std::string_view seed_str{"expand 16-byte c"};
     static_assert(seed_str.size() == sizeof(lfsr_state_t));
 
+    // The intermediate copy to seed_bytes cannot be skipped.
+    // std::bit_cast requires a trivially copyable source object of exactly
+    // sizeof(lfsr_state_t) bytes, and no such object is available directly:
+    // - The string literal is a const char[17] (trailing NUL), so its size
+    //   does not match.
+    // - seed_str is a pointer + length object; casting it would reinterpret
+    //   the pointer's bits, not the characters.
+    // - There is no constexpr memcpy.
     std::array<uint8_t, sizeof(lfsr_state_t)> seed_bytes{};
     for (int i = 0; i < std::ssize(seed_bytes); ++i)
     {

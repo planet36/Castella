@@ -700,6 +700,10 @@ private:
 
         left_encode_(to_unsigned(get_state_size_bytes()));
         left_encode_(to_unsigned(get_rate_size_bytes())); // cSHAKE does this.
+        // NUM_ROUNDS changes the permutation, so absorbing it isn't strictly
+        // necessary for domain separation.  It's done as cheap insurance
+        // against any relation between reduced-round and full-round instances.
+        left_encode_(to_unsigned(NUM_ROUNDS));
         encode_bytes_(function_name);
         encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)

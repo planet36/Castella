@@ -138,19 +138,19 @@ SUFFIX=0
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=16 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    31d2016d53cef074635ef674c622e748
+    9902af61a69059b0d7a9fcc4918101f3
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=32 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    90b40d67223233bab307a0614347ba402c22152fe94b3802acf51efa3d7b82a7
+    bbc594520f483591c6cf569fc45ec28b2e098bfcf94715c374d364bb11ad1914
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=48 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    7c5a01a486a37d9f0306ac08d5f36da58613a0e36350ff9ee8f7270375ef2221992a3b71c77e0893c7a284c29a000700
+    cf13281f46d9369d50b82db48eb5c6caf3693132228a24267818d1858494d09c1784cf3803ad2f385aab1c18947a0fa2
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=64 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    262a125f056fcf240e69de92146d1b7c0c5ac90978ea7d7ff0a104f68ca804d5ffc1372a9b09c35fb9342ee1f81f0e5ada66b177d941540c0bc6246ce260b071
+    52e5396cb8afa08aee1712241275af52047fe2229ae939196a32da41f9c99734eda70095d78c41f76412660df864f43905b71180cfba2232adf14f74cc82323e
 
 CUSTOM='¡Ay, caramba!'
 ROUNDS=16
@@ -158,35 +158,35 @@ SUFFIX=105
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=16 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    9bf0dafb400ccb462c2f62980d12b09e
+    c9a0904779dbc7fdbc1cabd42312fd9d
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    a45fa0f8ab177af65f8b19f43f94aaef6083011994f92ac270b3419b148eeae0
+    85a68149a88b464d3cbce5d8c9debe46b4cc5b90aee82868c94abccd643b44bc
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=48 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    c0fc92c46df4f4d38a22da05af8c5cf26bd7d61ce769aed81e67d8d279eaae8dc0870f2253198ab7f7a0ccba2e33e8bd
+    f6b6d39bc9a649f3e4063a073cca3d1a407048eaeb9654e98665b25a6cb4902e9485340e67c0436ea19f0286f29b2538
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=64 --suffix=$SUFFIX /tmp/test.txt | cut -w -f 1" \
-    065b492599820b3be63ffee453e70eece5349102e91c30dd4542eeb035912a0d922fe99f21f54ba66e2cedcac553bcee4b48a8bb4b7973a3e5e264ca64b49779
+    c64439c498e8c309522c6702047dadee850e170ee5a94d09f584cf8b077ea562d8de8b0fe5826b39f6e650763ddbf5af7824fd07068da97ba857ecdf5b498a0f
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test.txt | cut -w -f 1" \
-    372b084f892c991ded54d028d2ef6a04
+    611cb6e6521cf8cbc3d53c2c7438483f
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test.txt | cut -w -f 1" \
-    372b084f892c991ded54d028d2ef6a04b5bd0c58ab01659bc5912a105bcba154
+    611cb6e6521cf8cbc3d53c2c7438483fadac3afcbcfdf6f24cf57fb2fc374e0a
 
 assert_eq_cmd_str \
     "./cch --size=48 /tmp/test.txt | cut -w -f 1" \
-    372b084f892c991ded54d028d2ef6a04b5bd0c58ab01659bc5912a105bcba1540d834702ac00c5a2b2cf46a4804b6c12
+    611cb6e6521cf8cbc3d53c2c7438483fadac3afcbcfdf6f24cf57fb2fc374e0a9211465433f4b08c60f8c6079e3bc8f7
 
 assert_eq_cmd_str \
     "./cch --size=64 /tmp/test.txt | cut -w -f 1" \
-    372b084f892c991ded54d028d2ef6a04b5bd0c58ab01659bc5912a105bcba1540d834702ac00c5a2b2cf46a4804b6c1217344ddeab7984d55fed65d9d65c3ff9
+    611cb6e6521cf8cbc3d53c2c7438483fadac3afcbcfdf6f24cf57fb2fc374e0a9211465433f4b08c60f8c6079e3bc8f7e82d533458f1e27b27eb1809a88eb01f
 
 # Verify that different "--custom" values give distinct results.
 

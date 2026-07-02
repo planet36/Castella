@@ -169,10 +169,18 @@ inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>()
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
 *   1. Perform \c AES_NUM_ROUNDS rounds of AES encryption on each element of
-*      the state array, where element \c i in AES round \c aes_r uses
-*      \c round_constants[r][aes_r][i] as its AES round key.
+*      the state array, where element \c i in AES round \c aes_r of round
+*      \c r (0-based, of the rounds performed) uses
+*      \c round_constants[NUM_ROUNDS_MAX - num_rounds + r][aes_r][i] as its
+*      AES round key.
 *   2. Transpose the state, treating it as a _NxN_ matrix of _(128/N)-bit_
 *      integers.
+*
+* The \e last \a num_rounds round constants are used (as in Keccak-p) so that
+* a reduced-round permutation does not share a common prefix of rounds with
+* every longer one.  If the \e first \a num_rounds round constants were used,
+* then <code>permute(x, n2)</code> would equal a fixed public function of
+* <code>permute(x, n1)</code> for any <code>n1 < n2</code>.
 */
 // }}}
 template <size_t N>
@@ -182,10 +190,11 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
 #if defined(DEBUG)
+    assert(num_rounds >= 0);
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    for (const auto& rc : std::span{round_constants}.first(num_rounds))
+    for (const auto& rc : std::span{round_constants}.last(num_rounds))
     {
         aes_enc_arr<AES_NUM_ROUNDS>(state, rc);
         simd_transpose(state);
@@ -206,6 +215,8 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 *   2. Perform \c AES_NUM_ROUNDS inverse rounds of AES encryption on each
 *      element of the state array, applying the round constants (as AES round
 *      keys) in reverse order of \c permute.
+*
+* Like \c permute, the \e last \a num_rounds round constants are used.
 */
 // }}}
 template <size_t N>
@@ -215,10 +226,11 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
 #if defined(DEBUG)
+    assert(num_rounds >= 0);
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    for (const auto& rc : std::span{round_constants}.first(num_rounds) | std::views::reverse)
+    for (const auto& rc : std::span{round_constants}.last(num_rounds) | std::views::reverse)
     {
         simd_transpose(state);
         aes_enc_inv_arr<AES_NUM_ROUNDS>(state, rc);

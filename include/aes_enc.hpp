@@ -11,25 +11,28 @@
 
 #include "simd_types.hpp"
 
-/// Perform 1 round of AES encryption with \a round_key on \a data
+#include <array>
+#include <cstddef>
+
+/// Perform 1 round of AES encryption with \a aes_round_key on \a data
 [[nodiscard]] static inline uint8x16_t
-aes_enc(uint8x16_t data, const uint8x16_t round_key) noexcept
+aes_enc(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
-    return _mm_aesenc_si128(data, round_key);
+    return _mm_aesenc_si128(data, aes_round_key);
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
-    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ round_key;
+    return vaesmcq_u8(vaeseq_u8(data, uint8x16_t{})) ^ aes_round_key;
 #endif
 }
 
-/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+/// Perform the inverse of 1 round of AES encryption with \a aes_round_key on \a data
 [[nodiscard]] static inline uint8x16_t
-aes_enc_inv(uint8x16_t data, const uint8x16_t round_key) noexcept
+aes_enc_inv(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
-    return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ round_key), uint8x16_t{});
+    return _mm_aesdeclast_si128(_mm_aesimc_si128(data ^ aes_round_key), uint8x16_t{});
 #elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
-    return vaesdq_u8(vaesimcq_u8(data ^ round_key), uint8x16_t{});
+    return vaesdq_u8(vaesimcq_u8(data ^ aes_round_key), uint8x16_t{});
 #endif
 }
 
@@ -46,23 +49,23 @@ _mm256_aesimc_epi128(__m256i data) noexcept
     return _mm256_set_m128i(hi, lo);
 }
 
-/// Perform 1 round of AES encryption with \a round_key on \a data
+/// Perform 1 round of AES encryption with \a aes_round_key on \a data
 [[nodiscard]] static inline __m256i
-aes_enc(__m256i data, const __m256i round_key) noexcept
+aes_enc(__m256i data, const __m256i aes_round_key) noexcept
 {
-    return _mm256_aesenc_epi128(data, round_key);
+    return _mm256_aesenc_epi128(data, aes_round_key);
 }
 
-/// Perform the inverse of 1 round of AES encryption with \a round_key on \a data
+/// Perform the inverse of 1 round of AES encryption with \a aes_round_key on \a data
 [[nodiscard]] static inline __m256i
-aes_enc_inv(__m256i data, const __m256i round_key) noexcept
+aes_enc_inv(__m256i data, const __m256i aes_round_key) noexcept
 {
-    return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ round_key), __m256i{});
+    return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ aes_round_key), __m256i{});
 }
 
 #endif
 
-/// Perform 1 round of AES encryption with a zero round key on \a data
+/// Perform 1 round of AES encryption with a zero AES round key on \a data
 template <typename T>
 [[nodiscard]] static inline T
 aes_enc_0(T data) noexcept
@@ -70,7 +73,7 @@ aes_enc_0(T data) noexcept
     return aes_enc(data, T{});
 }
 
-/// Perform the inverse of 1 round of AES encryption with a zero round key on \a data
+/// Perform the inverse of 1 round of AES encryption with a zero AES round key on \a data
 template <typename T>
 [[nodiscard]] static inline T
 aes_enc_0_inv(T data) noexcept
@@ -80,20 +83,29 @@ aes_enc_0_inv(T data) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/**
+* In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its
+* AES round key.
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
+aes_enc_arr(simd_arr_t<N>& arr,
+            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
+    static_assert(M >= N);
+
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
         {
-            v = aes_enc_0(v);
+            const __m256i k = _mm256_loadu_si256(
+                reinterpret_cast<const __m256i*>(&aes_round_keys[aes_r][i]));
+            v = aes_enc(v, k);
         }
 
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
@@ -102,36 +114,47 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// \copydoc aes_enc_arr
+template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
+aes_enc_arr(simd_arr_t<N>& arr,
+            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
+    static_assert(M >= N);
+
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
         {
-            arr[i] = aes_enc_0(arr[i]);
+            arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
         }
     }
 }
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/**
+* The AES round keys are applied in reverse order of \c aes_enc_arr.
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
+aes_enc_inv_arr(simd_arr_t<N>& arr,
+                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
+    static_assert(M >= N);
+
     for (int i = 0; i < std::ssize(arr); i += 2)
     {
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = static_cast<int>(aes_num_rounds) - 1; aes_r >= 0; aes_r--)
         {
-            v = aes_enc_0_inv(v);
+            const __m256i k = _mm256_loadu_si256(
+                reinterpret_cast<const __m256i*>(&aes_round_keys[aes_r][i]));
+            v = aes_enc_inv(v, k);
         }
 
         _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
@@ -140,16 +163,19 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// \copydoc aes_enc_inv_arr
+template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
+aes_enc_inv_arr(simd_arr_t<N>& arr,
+                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
+    static_assert(M >= N);
+
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = static_cast<int>(aes_num_rounds) - 1; aes_r >= 0; aes_r--)
         {
-            arr[i] = aes_enc_0_inv(arr[i]);
+            arr[i] = aes_enc_inv(arr[i], aes_round_keys[aes_r][i]);
         }
     }
 }

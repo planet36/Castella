@@ -84,7 +84,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto digest_bytes = hash_obj.squeeze_bytes();
 
             const std::string expected_result =
-                "569aa17090bf95d31a3704abe8487f8af0b7e7fc60d0136738ed6ac250a5b4be";
+                "522a5ac6f587162f24099fbb884323a99edc2439cd03ad82f2a2a089cb702aa3";
             const std::string result = bytes_to_hex(digest_bytes);
 
             std::println("{} {}: {}", quote_shell_always(function_name),

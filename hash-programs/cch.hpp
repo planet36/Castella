@@ -131,6 +131,12 @@ private:
         input_bytes_.clear();
     }
 
+    /// Consume \a len bytes of \a data
+    /**
+    * Whole chunks (of \c sizeof(state_) bytes) are compressed directly from
+    * \a data; only a leading partial chunk (if the input buffer is not empty)
+    * and a trailing partial chunk pass through the input buffer.
+    */
     void add_(const void* data, size_t len)
     {
 #if defined(DEBUG)
@@ -139,17 +145,10 @@ private:
 
         const auto* src = static_cast<const std::byte*>(data);
 
-        while (len > 0)
+        // Top up a partially filled input buffer first.
+        if (!input_bytes_.is_empty())
         {
-#if defined(DEBUG)
-            assert(!input_bytes_.is_full());
-#endif
-
             const size_t num_bytes_to_add = std::min(input_bytes_.remaining_space(), len);
-
-#if defined(DEBUG)
-            assert(num_bytes_to_add > 0);
-#endif
 
             input_bytes_.append_range(std::span(src, num_bytes_to_add));
 
@@ -162,8 +161,46 @@ private:
             }
         }
 
+        // Compress whole chunks directly from the source buffer, bypassing
+        // the input buffer.  The state is kept in a local variable so that
+        // it may stay in registers across chunks.
+        if (len >= sizeof(state_))
+        {
+            state_t state = state_;
+            auto absorbs_since_mix = absorbs_since_mix_;
+
+            do
+            {
+                simd_compress_aes_enc_r3_arr(state, reinterpret_cast<const block_t*>(src));
+
+                src += sizeof(state_);
+                len -= sizeof(state_);
+
+                if (mix_rate_ > 0)
+                {
+                    // Periodically mix the state.
+
+                    ++absorbs_since_mix;
+
+                    if (absorbs_since_mix >= mix_rate_)
+                    {
+                        Castella::permute(state, Castella::NUM_ROUNDS_MIN<N>());
+                        absorbs_since_mix = 0;
+                    }
+                }
+            } while (len >= sizeof(state_));
+
+            state_ = state;
+            absorbs_since_mix_ = absorbs_since_mix;
+        }
+
+        // Buffer the trailing partial chunk.
+        if (len > 0)
+        {
+            input_bytes_.append_range(std::span(src, len));
+        }
+
 #if defined(DEBUG)
-        assert(len == 0);
         assert(!input_bytes_.is_full());
 #endif
     }

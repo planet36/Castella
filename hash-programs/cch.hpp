@@ -9,11 +9,13 @@
 
 #pragma once
 
+#include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
 #include "narrow_cast.hpp"
 #include "simd_compress.hpp"
+#include "to_unsigned.hpp"
 
 #include <algorithm>
 #if defined(DEBUG)
@@ -174,6 +176,41 @@ private:
         assert(len == 0);
         assert(!input_bytes_.is_full());
 #endif
+    }
+
+    /// Unambiguously encode the integer into the input buffer
+    void left_encode_(const std::unsigned_integral auto x) noexcept
+    {
+        const auto w = static_cast<uint8_t>(byte_width(x));
+
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
+#if defined(DEBUG)
+        assert(w >= 1);
+        assert(w <= 255);
+#endif
+
+        add_(&w, sizeof(w));
+        add_(&x, w);
+    }
+
+    /// Unambiguously encode the integer into the input buffer
+    /**
+    * \note Not currently used; retained to complement \c left_encode_().
+    */
+    void right_encode_(const std::unsigned_integral auto x) noexcept
+    {
+        const auto w = static_cast<uint8_t>(byte_width(x));
+
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
+#if defined(DEBUG)
+        assert(w >= 1);
+        assert(w <= 255);
+#endif
+
+        add_(&x, w);
+        add_(&w, sizeof(w));
     }
 
     /// Fill remaining space in the input buffer

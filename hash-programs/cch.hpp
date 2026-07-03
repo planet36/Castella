@@ -12,10 +12,12 @@
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
+#include "lfsr.hpp"
 #include "narrow_cast.hpp"
 #include "simd_compress.hpp"
 
 #include <algorithm>
+#include <bit>
 #if defined(DEBUG)
 #include <cassert>
 #endif
@@ -49,7 +51,55 @@ public:
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
 
 private:
-    state_t state_{};
+    /// Create the initial state
+    // {{{
+    /**
+    * The state lanes are initialized with distinct nonzero constants (rather
+    * than zeros) so that lanes given equal input blocks do not evolve
+    * identically.  With an all-zero initial state, an input whose 16-byte
+    * blocks repeat with a period that divides the chunk size (e.g. all-zero
+    * pages) would keep every lane identical until the first mix, collapsing
+    * the effective state to one lane during absorption.
+    *
+    * The constants are the continuation of the LFSR stream used to create
+    * \c Castella::round_constants, so they are distinct from every round
+    * constant of the permutation (all states within one period of the LFSR
+    * are distinct).
+    */
+    // }}}
+    [[nodiscard]] static consteval state_t
+    create_init_state_() noexcept
+    {
+        auto lfsr = lfsr_seed();
+
+        // Skip the LFSR states consumed by Castella::round_constants.
+        constexpr int num_used_constants =
+            Castella::NUM_ROUNDS_MAX * Castella::AES_NUM_ROUNDS * Castella::B_MAX;
+
+        for (int c = 0; c < num_used_constants; ++c)
+        {
+            for (int s = 0; s < LFSR_NUM_BITS; ++s)
+            {
+                lfsr = lfsr_step(lfsr);
+            }
+        }
+
+        state_t result{};
+
+        for (auto& lane : result)
+        {
+            lane = std::bit_cast<block_t>(lfsr);
+
+            for (int s = 0; s < LFSR_NUM_BITS; ++s)
+            {
+                lfsr = lfsr_step(lfsr);
+            }
+        }
+
+        return result;
+    }
+
+    state_t state_ = create_init_state_();
     static_assert(sizeof(state_) <= 256); // constrained by padding bytes
 
     fixed_vector<std::byte, sizeof(state_), alignof(block_t)> input_bytes_;

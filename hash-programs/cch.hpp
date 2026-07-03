@@ -94,6 +94,7 @@ private:
         }
     }
 
+    /// Zeroize the state, input buffer, and data members
     void zeroize_()
     {
         explicit_bzero(std::data(state_), sizeof(state_));
@@ -103,6 +104,7 @@ private:
         has_been_finalized_ = false;
     }
 
+    /// Absorb the input buffer into the state and perhaps apply the permutation function
     void absorb_()
     {
 #if defined(DEBUG)
@@ -131,6 +133,7 @@ private:
         input_bytes_.clear();
     }
 
+    /// Add \a data to the input buffer
     void add_(const void* data, size_t len)
     {
 #if defined(DEBUG)
@@ -173,7 +176,7 @@ private:
 #endif
     }
 
-    /// fill remaining space in the input buffer
+    /// Fill remaining space in the input buffer
     /**
     * Padding bytes are always added before the state is finalized.
     * They are sequential values from \c 0 to \c sizeof(state_)-1.

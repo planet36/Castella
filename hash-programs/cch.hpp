@@ -253,6 +253,7 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \pre \a data is not null if \a len > 0
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
@@ -263,6 +264,9 @@ public:
     {
         if (data == nullptr)
         {
+#if defined(DEBUG)
+            assert(len == 0);
+#endif
             return *this;
         }
 

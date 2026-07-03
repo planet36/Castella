@@ -233,6 +233,15 @@ private:
         absorb_();
     }
 
+    /// Initialize the state
+    void init_() noexcept
+    {
+        left_encode_(to_unsigned(get_state_size_bytes()));
+        left_encode_(to_unsigned(get_mix_rate()));
+
+        Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
+    }
+
 public:
     compress_castella_hash() = default;
 

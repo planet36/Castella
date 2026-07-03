@@ -174,19 +174,19 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test.txt | cut -w -f 1" \
-    9f4d3252b8346d8ae0910e9c1f69571b
+    aa5e5c8a4fc765312c398648eec01c9a
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test.txt | cut -w -f 1" \
-    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee0
+    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe
 
 assert_eq_cmd_str \
     "./cch --size=48 /tmp/test.txt | cut -w -f 1" \
-    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee03556a6bd2c84ba02198e0a059d6b5f75
+    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe8e79075f90ef7f1757b90cf5aa48131e
 
 assert_eq_cmd_str \
     "./cch --size=64 /tmp/test.txt | cut -w -f 1" \
-    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee03556a6bd2c84ba02198e0a059d6b5f75a3ad964b13363bc9fec9c5ba25386fc0
+    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe8e79075f90ef7f1757b90cf5aa48131e6b577c7b65c2b07eeaaa55b85c20017f
 
 # Verify that different "--custom" values give distinct results.
 

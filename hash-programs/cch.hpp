@@ -51,6 +51,16 @@ public:
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
 
+    /// The number of permutation rounds used at finalization
+    /**
+    * One more than the full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN.
+    * The finalizing permutation only needs to diffuse the last chunks across
+    * the lanes; \c Castella::NUM_ROUNDS_MAX rounds accounted for about half
+    * the cost of hashing a short input.
+    */
+    static constexpr int FINAL_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>() + 1;
+    static_assert(FINAL_NUM_ROUNDS <= Castella::NUM_ROUNDS_MAX);
+
 private:
     /// Create the initial state
     // {{{
@@ -396,7 +406,7 @@ public:
         if (!has_been_finalized_)
         {
             add_padding_bytes_();
-            Castella::permute(state_, Castella::NUM_ROUNDS_MAX);
+            Castella::permute(state_, FINAL_NUM_ROUNDS);
             has_been_finalized_ = true;
         }
 

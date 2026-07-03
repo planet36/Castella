@@ -134,6 +134,11 @@ private:
     void add_(const void* data, size_t len)
     {
 #if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
+#if defined(DEBUG)
         assert(!has_been_finalized_);
 #endif
 
@@ -216,6 +221,7 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
@@ -224,6 +230,11 @@ public:
     // }}}
     compress_castella_hash& add(const void* data, size_t len)
     {
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         if (data == nullptr)
         {
             return *this;

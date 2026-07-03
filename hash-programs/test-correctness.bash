@@ -125,7 +125,20 @@ function assert_neq_cmd_cmd
 }
 
 # Create the input data files.  The size of each file is in its name.
+#   0 B   : only padding is absorbed
+# 100 B   : smaller than one 256-byte chunk
+#   1 KiB : too small to trigger a mix at the default mix rate
+#  64 KiB : exactly 256 chunks (the default mix rate boundary)
+# 100 kB  : large enough to be memory-mapped; not a multiple of the chunk
+#           size (256), the read block size (32768), or the page size (4096)
+#   1 MiB : a multiple of the chunk size (256), the read block size (32768),
+#           and the page size (4096)
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+yes "$LINE" | head --bytes 0     > /tmp/test-0B.txt    || exit
+yes "$LINE" | head --bytes 100   > /tmp/test-100B.txt  || exit
+yes "$LINE" | head --bytes 1K    > /tmp/test-1KiB.txt  || exit
+yes "$LINE" | head --bytes 64K   > /tmp/test-64KiB.txt || exit
+yes "$LINE" | head --bytes 100kB > /tmp/test-100kB.txt || exit
 yes "$LINE" | head --bytes 1M    > /tmp/test-1MiB.txt  || exit
 
 # `yes | head` raises SIGPIPE

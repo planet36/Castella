@@ -124,8 +124,9 @@ function assert_neq_cmd_cmd
     fi
 }
 
-# Create the input data
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 1M > /tmp/test-1MiB.txt || exit
+# Create the input data files.  The size of each file is in its name.
+LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+yes "$LINE" | head --bytes 1M    > /tmp/test-1MiB.txt  || exit
 
 # `yes | head` raises SIGPIPE
 set -o pipefail

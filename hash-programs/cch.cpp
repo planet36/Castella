@@ -98,7 +98,7 @@ print_usage()
     std::println("CCH ALGORITHM DESCRIPTION");
     std::println("");
 
-    std::println("The internal state is initialized with distinct per-lane constants.");
+    std::println("The internal state is initialized with distinct per-lane constants, and the mix rate is folded into it (so different RATE values produce distinct digests).");
     std::println("Input data is absorbed into the internal state via a one-way compression function.");
     std::println("The internal state is mixed by the Castella permutation function every RATE absorptions, ensuring full state diffusion.");
     std::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");

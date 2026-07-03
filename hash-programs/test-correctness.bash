@@ -174,19 +174,19 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test.txt | cut -w -f 1" \
-    4399c246996286ee8d4cc7e57c78bd3d
+    9f4d3252b8346d8ae0910e9c1f69571b
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test.txt | cut -w -f 1" \
-    4399c246996286ee8d4cc7e57c78bd3d93e3b7ccce662d681bce01934ca4284e
+    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee0
 
 assert_eq_cmd_str \
     "./cch --size=48 /tmp/test.txt | cut -w -f 1" \
-    4399c246996286ee8d4cc7e57c78bd3d93e3b7ccce662d681bce01934ca4284e2b3a2ee9459740c98539967998fecab3
+    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee03556a6bd2c84ba02198e0a059d6b5f75
 
 assert_eq_cmd_str \
     "./cch --size=64 /tmp/test.txt | cut -w -f 1" \
-    4399c246996286ee8d4cc7e57c78bd3d93e3b7ccce662d681bce01934ca4284e2b3a2ee9459740c98539967998fecab31536768ecad9b1c73ef8c601fe93139f
+    9f4d3252b8346d8ae0910e9c1f69571b01cd34ec871431aaaac3c0e4d51e6ee03556a6bd2c84ba02198e0a059d6b5f75a3ad964b13363bc9fec9c5ba25386fc0
 
 # Verify that different "--custom" values give distinct results.
 
@@ -247,6 +247,19 @@ assert_neq_cmd_cmd \
 assert_neq_cmd_cmd \
     './cch --mix-rate=1 /tmp/test.txt | cut -w -f 1' \
     './cch --mix-rate=2 /tmp/test.txt | cut -w -f 1'
+
+# Verify that different "--mix-rate" values give distinct results even for
+# inputs too short to trigger a mix.
+
+head --bytes 1K /tmp/test.txt > /tmp/test-small.txt || exit
+
+assert_neq_cmd_cmd \
+    './cch --mix-rate=0    /tmp/test-small.txt | cut -w -f 1' \
+    './cch --mix-rate=256  /tmp/test-small.txt | cut -w -f 1'
+
+assert_neq_cmd_cmd \
+    './cch --mix-rate=256  /tmp/test-small.txt | cut -w -f 1' \
+    './cch --mix-rate=2048 /tmp/test-small.txt | cut -w -f 1'
 
 echo "$PASS passed, $FAIL failed"
 

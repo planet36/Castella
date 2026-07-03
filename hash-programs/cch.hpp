@@ -17,6 +17,7 @@
 #include "simd_compress.hpp"
 
 #include <algorithm>
+#include <array>
 #include <bit>
 #if defined(DEBUG)
 #include <cassert>
@@ -141,6 +142,30 @@ private:
         if (mix_rate_ > MIX_RATE_MAX)
         {
             throw std::invalid_argument("compress_castella_hash: mix_rate_ > MIX_RATE_MAX");
+        }
+    }
+
+    /// Fold the mix rate into the initial state
+    // {{{
+    /**
+    * The mix rate affects the state only when a mix is performed, so without
+    * this, different mix rates produce identical digests for any input
+    * shorter than <code>mix_rate_ * sizeof(state_)</code> bytes (no mix is
+    * ever triggered before finalization).
+    *
+    * XORing the mix rate into every lane preserves the distinctness of the
+    * initial lane values.
+    */
+    // }}}
+    void bind_mix_rate_() noexcept
+    {
+        std::array<uint16_t, sizeof(block_t) / sizeof(uint16_t)> arr{};
+        arr.fill(static_cast<uint16_t>(mix_rate_));
+        const auto mix_rate_block = std::bit_cast<block_t>(arr);
+
+        for (auto& lane : state_)
+        {
+            lane ^= mix_rate_block;
         }
     }
 
@@ -276,12 +301,16 @@ private:
     }
 
 public:
-    compress_castella_hash() = default;
+    compress_castella_hash()
+    {
+        bind_mix_rate_();
+    }
 
     explicit compress_castella_hash(const int mix_rate) :
     mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {
         check_constraints_();
+        bind_mix_rate_();
     }
 
     // Disable copying and moving

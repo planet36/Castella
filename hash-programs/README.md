@@ -17,6 +17,10 @@ Run `--help` for full option descriptions.
 
 `test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, and confirming that distinct `--mix-rate` values produce distinct digests.
 
+The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
+
+Reading from standard input (both piped and redirected) is verified to produce the same output as reading from a file.
+
 ## Benchmark scripts
 
 | name | purpose |

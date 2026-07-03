@@ -294,6 +294,27 @@ assert_eq_cmd_cmd \
     './cch           /tmp/test-100000B.txt | cut -w -f 1' \
     './cch --no-mmap /tmp/test-100000B.txt | cut -w -f 1'
 
+# Verify reading from standard input produces the same output as reading from
+# a file.  A pipe exercises the non-seekable path, where read may return
+# counts that are not a multiple of the chunk size; a redirected file
+# exercises the seekable (memory-mappable) standard input path.
+
+assert_eq_cmd_cmd \
+    'cat /tmp/test-100000B.txt | ./castella - | cut -w -f 1' \
+    './castella /tmp/test-100000B.txt | cut -w -f 1'
+
+assert_eq_cmd_cmd \
+    'cat /tmp/test-100000B.txt | ./cch - | cut -w -f 1' \
+    './cch /tmp/test-100000B.txt | cut -w -f 1'
+
+assert_eq_cmd_cmd \
+    './castella - < /tmp/test-100000B.txt | cut -w -f 1' \
+    './castella /tmp/test-100000B.txt | cut -w -f 1'
+
+assert_eq_cmd_cmd \
+    './cch - < /tmp/test-100000B.txt | cut -w -f 1' \
+    './cch /tmp/test-100000B.txt | cut -w -f 1'
+
 # Verify that sufficiently different "--mix-rate" values give distinct results.
 # The input file size must be at least 512 Bytes (twice the state size).
 

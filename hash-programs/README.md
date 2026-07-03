@@ -19,6 +19,8 @@ Run `--help` for full option descriptions.
 
 The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
 
+Reading from standard input (both piped and redirected) is verified to produce the same output as reading from a file.
+
 ## Benchmark scripts
 
 | name | purpose |

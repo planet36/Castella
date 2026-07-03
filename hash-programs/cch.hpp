@@ -341,7 +341,7 @@ public:
         if (!has_been_finalized_)
         {
             add_padding_bytes_();
-            Castella::permute(state_, Castella::NUM_ROUNDS_MAX);
+            Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
             has_been_finalized_ = true;
         }
 

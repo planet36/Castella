@@ -243,12 +243,17 @@ private:
     }
 
 public:
-    compress_castella_hash() = default;
+    compress_castella_hash()
+    {
+        init_();
+    }
 
     explicit compress_castella_hash(const int mix_rate) :
     mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {
         check_constraints_();
+
+        init_();
     }
 
     // Disable copying and moving

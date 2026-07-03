@@ -102,7 +102,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
+/// \copydoc aes_enc_0_arr
 template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
@@ -140,7 +140,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
+/// \copydoc aes_enc_0_inv_arr
 template <int aes_num_rounds, size_t N>
 static void
 aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept

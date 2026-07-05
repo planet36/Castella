@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <exception>
 #include <mutex>
 #include <span>
 #include <stdexcept>
@@ -103,9 +104,15 @@ namespace Castella
 * input produces unrelated digests (by design: the role prefix separates the
 * domains).
 *
-* Phase 1 (this file) computes everything sequentially on the calling
-* thread; NUM_THREADS is accepted and validated now so that the API and the
-* digests are already final when parallel leaf hashing is added.
+* ## Current parallelism (the one-shot path)
+*
+* When a single add() call supplies many whole chunks (e.g. a memory-mapped
+* file added in one call), the leaf chunks of that call are hashed by up to
+* NUM_THREADS transient worker threads, statically partitioned; see
+* \c flush_bulk_chunks_().  Inputs that arrive in small pieces (e.g. a
+* 32 KiB read loop) are hashed on the calling thread, chunk by chunk -- a
+* persistent worker pool with a bounded pipeline is planned for that case.
+* Either way the digest is identical; only the wall time differs.
 */
 // }}}
 struct DuplexTree final
@@ -151,6 +158,21 @@ struct DuplexTree final
     static constexpr int32_t NUM_THREADS_MAX = 1024;
 
 private:
+    /// The minimum number of leaf chunks each worker thread must have
+    // {{{
+    /**
+    * A rough break-even heuristic: spawning and joining a thread costs on
+    * the order of tens of microseconds, and hashing one default-size leaf
+    * chunk costs on the order of ten microseconds, so a worker given fewer
+    * chunks than this would spend a large fraction of its life on
+    * dispatch overhead.  Batches too small to give at least 2 workers this
+    * many chunks each are hashed on the calling thread instead.  Like
+    * NUM_THREADS, this value NEVER affects the digest -- only which thread
+    * computes each (pure-function) leaf CV.
+    */
+    // }}}
+    static constexpr int64_t MIN_LEAF_CHUNKS_PER_WORKER = 8;
+
     /// Role byte for the final node (the root of the tree)
     static constexpr uint8_t ROLE_FINAL_NODE = 0x00;
 
@@ -214,13 +236,12 @@ public:
     // }}}
     const int32_t CV_LEN; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
-    /// The number of worker threads to use
+    /// The maximum number of worker threads to use
     // {{{
     /**
     * Resolved at construction: 0 requests one thread per hardware thread.
     * The digest NEVER depends on this value; it only controls how many
-    * cores may compute leaf CVs concurrently.  (Unused in Phase 1: all
-    * hashing currently runs on the calling thread.)
+    * cores may compute leaf CVs concurrently.
     */
     // }}}
     const int32_t NUM_THREADS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
@@ -345,8 +366,9 @@ private:
     /**
     * Chunk 0 is absorbed directly by the final node.  Every later chunk is
     * hashed by a leaf, and its CV is absorbed by the final node.  Chunks
-    * must arrive in input order (Phase 1 trivially satisfies this; the
-    * parallel phase must absorb CVs in index order).
+    * must arrive in input order (the parallel bulk path preserves this by
+    * absorbing CVs in index order after joining its workers; see
+    * flush_bulk_chunks_()).
     */
     // }}}
     void flush_chunk_(const std::span<const std::byte> chunk)
@@ -364,6 +386,165 @@ private:
         ++num_chunks_flushed_;
     }
 
+    /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src
+    // {{{
+    /**
+    * This is the parallel heart of the class.  The batch's leaf chunks are
+    * statically partitioned across up to NUM_THREADS worker threads; each
+    * worker computes the CVs for a contiguous range of chunk indices and
+    * writes them into its own disjoint slice of one preallocated CV array,
+    * so the workers need no synchronization at all.  After the workers are
+    * joined, the calling thread absorbs the CVs into the final node in
+    * index order -- which is why the completion order of the workers (and
+    * hence the thread count) can never affect the digest.
+    *
+    * If the batch contains chunk 0, the calling thread absorbs it into the
+    * final node *while* the workers hash leaves: chunk 0 never goes through
+    * a leaf, so its (serial) absorption is overlapped with the (parallel)
+    * leaf work instead of preceding it.  This is safe because the workers
+    * touch nothing of the final node except its const parameter members
+    * (C, NUM_ROUNDS, INPUT_SUFFIX), which are written only at construction.
+    *
+    * Batches too small to pay for thread dispatch (see
+    * MIN_LEAF_CHUNKS_PER_WORKER), or NUM_THREADS == 1, fall back to the
+    * sequential chunk-by-chunk loop, which produces the identical digest.
+    *
+    * The worker threads are transient (spawned per batch): the intended
+    * caller adds an entire memory-mapped file in one call, so the spawn
+    * cost is paid once.  A persistent pool would only benefit the streaming
+    * (many small add() calls) case, which is future work.
+    *
+    * If a worker throws (realistically only std::bad_alloc), the first
+    * such exception is rethrown on the calling thread after all workers
+    * are joined, and this object is left in an unspecified (but
+    * destructible) state, as with any exception escaping mid-absorption.
+    *
+    * \pre \a num_chunks >= 1
+    * \pre at least one input byte follows the batch (the caller enforces
+    *      the more-input-follows rule)
+    */
+    // }}}
+    void flush_bulk_chunks_(const std::byte* src, const int64_t num_chunks)
+    {
+#if defined(DEBUG)
+        assert(num_chunks >= 1);
+        assert(chunk_buf_.empty());
+#endif
+
+        const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
+        const auto cv_len = static_cast<size_t>(CV_LEN);
+
+        const int64_t first_chunk_index = num_chunks_flushed_;
+
+        // Chunk 0, if present in this batch, is absorbed directly by the
+        // final node; every other chunk of the batch is a leaf.
+        const int64_t first_leaf_pos = (first_chunk_index == 0) ? 1 : 0;
+        const int64_t num_leaves = num_chunks - first_leaf_pos;
+
+        const int64_t num_workers =
+            std::min<int64_t>(NUM_THREADS, num_leaves / MIN_LEAF_CHUNKS_PER_WORKER);
+
+        if (num_workers < 2)
+        {
+            // Not enough leaf work to pay for thread dispatch: hash the
+            // batch on the calling thread.  Same digest, by construction.
+            for (int64_t pos = 0; pos < num_chunks; ++pos)
+            {
+                flush_chunk_(std::span{src + to_unsigned(pos) * chunk_size, chunk_size});
+            }
+            return;
+        }
+
+        // One flat allocation holds every CV of the batch, in leaf order.
+        // Worker w writes only its own disjoint slice.
+        std::vector<std::byte> cvs(to_unsigned(num_leaves) * cv_len);
+
+        // One slot per worker; a worker that throws parks its exception
+        // here for the calling thread to rethrow after the join.
+        std::vector<std::exception_ptr> worker_exceptions(to_unsigned(num_workers));
+
+        {
+            std::vector<std::jthread> workers;
+            workers.reserve(to_unsigned(num_workers));
+
+            // Static partition of the leaves [0, num_leaves) into
+            // contiguous ranges: the first (num_leaves % num_workers)
+            // workers take one extra leaf.
+            const int64_t leaves_per_worker = num_leaves / num_workers;
+            const int64_t num_extra_leaves = num_leaves % num_workers;
+
+            int64_t range_begin = 0;
+
+            for (int64_t w = 0; w < num_workers; ++w)
+            {
+                const int64_t range_end =
+                    range_begin + leaves_per_worker + ((w < num_extra_leaves) ? 1 : 0);
+
+                workers.emplace_back(
+                    // cvs and worker_exceptions are captured by reference;
+                    // they outlive the workers because the jthreads are
+                    // joined (by their destructors) at the end of this
+                    // scope, before those vectors are destroyed.
+                    [this, src, &cvs, &worker_exceptions, w, range_begin, range_end,
+                     first_leaf_pos, first_chunk_index, chunk_size, cv_len] {
+                        try
+                        {
+                            for (int64_t k = range_begin; k < range_end; ++k)
+                            {
+                                // k-th leaf = (first_leaf_pos + k)-th chunk
+                                // of the batch
+                                const int64_t pos = first_leaf_pos + k;
+                                const std::span chunk{
+                                    src + to_unsigned(pos) * chunk_size, chunk_size};
+
+                                const auto cv = compute_leaf_cv_(
+                                    chunk, to_unsigned(first_chunk_index + pos));
+
+                                std::ranges::copy(cv, &cvs[to_unsigned(k) * cv_len]);
+                            }
+                        }
+                        catch (...)
+                        {
+                            worker_exceptions[to_unsigned(w)] = std::current_exception();
+                        }
+                    });
+
+                range_begin = range_end;
+            }
+
+#if defined(DEBUG)
+            assert(range_begin == num_leaves); // every leaf was assigned
+#endif
+
+            // Overlap the final node's (serial) absorption of chunk 0 with
+            // the workers' (parallel) leaf hashing.
+            if (first_chunk_index == 0)
+            {
+                final_node_.add(std::span{src, chunk_size});
+            }
+
+            // The jthread destructors join every worker here.
+        }
+
+        for (const auto& ep : worker_exceptions)
+        {
+            if (ep)
+            {
+                std::rethrow_exception(ep);
+            }
+        }
+
+        // Absorb the CVs in index order.  This is the only ordering the
+        // digest can observe, and it is independent of which worker
+        // computed which CV.
+        for (int64_t k = 0; k < num_leaves; ++k)
+        {
+            final_node_.add(&cvs[to_unsigned(k) * cv_len], cv_len);
+        }
+
+        num_chunks_flushed_ += num_chunks;
+    }
+
     /// Consume \a len bytes of \a data
     // {{{
     /**
@@ -377,7 +558,9 @@ private:
     *
     * Whole chunks are hashed directly from \a data when possible (only a
     * leading partial chunk and the trailing bytes pass through the chunk
-    * buffer), the same bulk-bypass structure as compress_castella_hash.
+    * buffer), the same bulk-bypass structure as compress_castella_hash --
+    * and, when the batch is large enough, in parallel (see
+    * flush_bulk_chunks_()).
     */
     // }}}
     void add_(const void* data, size_t len)
@@ -399,16 +582,19 @@ private:
             }
 
             // Bulk path: hash whole chunks directly from the source buffer,
-            // skipping the copy into chunk_buf_.  Strictly "greater than"
-            // (not >=) keeps the more-input-follows guarantee.
-            if (chunk_buf_.empty())
+            // skipping the copy into chunk_buf_.  All but the last (possibly
+            // partial) chunk's worth of bytes may be flushed now; keeping
+            // the final bytes back preserves the more-input-follows rule
+            // ((len - 1) / chunk_size is 0 when len == chunk_size).
+            if (chunk_buf_.empty() && (len > chunk_size))
             {
-                while (len > chunk_size)
-                {
-                    flush_chunk_(std::span{src, chunk_size});
-                    src += chunk_size;
-                    len -= chunk_size;
-                }
+                const auto num_bulk = static_cast<int64_t>((len - 1) / chunk_size);
+
+                flush_bulk_chunks_(src, num_bulk);
+
+                const size_t num_bytes_flushed = to_unsigned(num_bulk) * chunk_size;
+                src += num_bytes_flushed;
+                len -= num_bytes_flushed;
             }
 
             // Buffer what remains of this call (or top up a partial chunk).

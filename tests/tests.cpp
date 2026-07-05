@@ -459,6 +459,44 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
+            // Test the parallel bulk path against the sequential reference.
+            // The input is large enough (64 full chunks + a partial one)
+            // that a one-shot add() with several threads statically
+            // partitions the leaves across workers; with num_threads=1 the
+            // identical input takes the sequential chunk-by-chunk path.
+            std::vector<std::byte> Y(64 * static_cast<size_t>(chunk_size) + 17);
+            for (size_t i = 0; i < Y.size(); ++i)
+            {
+                Y[i] = static_cast<std::byte>((i * 131 + 3) & 0xFF);
+            }
+            const std::span<const std::byte> Y_sp{Y};
+
+            // sequential reference
+            const auto expected = tree_digest(Y_sp, 1);
+
+            // parallel, with different worker counts (hence different
+            // static partitions of the leaves)
+            assert(tree_digest(Y_sp, 2) == expected);
+            assert(tree_digest(Y_sp, 4) == expected);
+            assert(tree_digest(Y_sp, 0) == expected); // 0 = auto
+
+            // Piecewise adds: 1000-byte pieces never reach the parallel
+            // threshold; 33000-byte pieces produce ~32-chunk batches that
+            // do.  Both must reproduce the one-shot digest.
+            for (const size_t piece_size : {size_t{1000}, size_t{33'000}})
+            {
+                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                          function_name, customization_str, chunk_size,
+                                          4);
+                for (size_t off = 0; off < Y_sp.size(); off += piece_size)
+                {
+                    tree.add(Y_sp.subspan(off, std::min(piece_size, Y_sp.size() - off)));
+                }
+                assert(tree.squeeze_bytes() == expected);
+            }
+        }
+
+        {
             // Verify that the output matches the expected result.  This
             // pins the tree digest format: the parallel implementation
             // (Phase 2) must reproduce this digest exactly.

@@ -24,11 +24,15 @@
 #if defined(DEBUG)
 #include <cassert>
 #endif
+#include <chrono>
 #include <concepts>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <exception>
+#include <future>
 #include <mutex>
 #include <span>
 #include <stdexcept>
@@ -104,15 +108,34 @@ namespace Castella
 * input produces unrelated digests (by design: the role prefix separates the
 * domains).
 *
-* ## Current parallelism (the one-shot path)
+* ## Parallelism: two complementary paths
 *
-* When a single add() call supplies many whole chunks (e.g. a memory-mapped
-* file added in one call), the leaf chunks of that call are hashed by up to
-* NUM_THREADS transient worker threads, statically partitioned; see
-* \c flush_bulk_chunks_().  Inputs that arrive in small pieces (e.g. a
-* 32 KiB read loop) are hashed on the calling thread, chunk by chunk -- a
-* persistent worker pool with a bounded pipeline is planned for that case.
-* Either way the digest is identical; only the wall time differs.
+* 1. **One-shot (batch) path.**  When a single add() call supplies many
+*    whole chunks (e.g. a memory-mapped file added in one call), the leaf
+*    chunks of that call are hashed by up to NUM_THREADS transient worker
+*    threads, statically partitioned, with zero copying; see
+*    \c flush_bulk_chunks_().
+*
+* 2. **Streaming (pipeline) path.**  When input arrives in pieces too small
+*    for the batch path (e.g. a 32 KiB read loop feeding 16 KiB chunks), a
+*    persistent pool of NUM_THREADS workers hashes leaves *while the
+*    calling thread goes back for more input*: each completed chunk becomes
+*    a job in a queue, and its future CV takes a slot in an order-preserving
+*    deque that is drained (front first, so always in index order) into the
+*    final node.  A bound on in-flight chunks provides backpressure; see
+*    \c dispatch_leaf_().
+*
+*    This path is ultimately *producer-bound*: the calling thread must
+*    copy or buffer each chunk once and run the pipeline bookkeeping
+*    (job, promise, and buffer setup), so streaming throughput plateaus
+*    after a few workers no matter how many more are available.  When the
+*    whole input is addressable, prefer one big add() (the batch path),
+*    which hashes the caller's memory in place and scales further.
+*
+* Both paths -- and the sequential fallback used for tiny inputs -- produce
+* the identical digest; only the wall time differs.  A drain of the pipeline
+* is forced before any code absorbs CVs into the final node by another
+* route, so CV absorption order is always chunk-index order.
 */
 // }}}
 struct DuplexTree final
@@ -173,6 +196,22 @@ private:
     // }}}
     static constexpr int64_t MIN_LEAF_CHUNKS_PER_WORKER = 8;
 
+    /// The number of chunks that must be seen before the worker pool starts
+    // {{{
+    /**
+    * Spinning up the pool costs NUM_THREADS thread spawns (roughly a
+    * hundred microseconds), which a short stream can never earn back, and
+    * a stream's total size is unknown in advance.  So the first few leaf
+    * chunks of a stream are hashed inline on the calling thread, and only
+    * once this many chunks have gone by -- evidence that the stream is
+    * long enough to care about -- does the pool start.  Like every
+    * threading knob in this class, this value NEVER affects the digest:
+    * inline and pipelined leaves compute the same CVs, absorbed in the
+    * same order.
+    */
+    // }}}
+    static constexpr int64_t MIN_CHUNKS_BEFORE_POOL_START = 4;
+
     /// Role byte for the final node (the root of the tree)
     static constexpr uint8_t ROLE_FINAL_NODE = 0x00;
 
@@ -220,6 +259,57 @@ private:
 
     /// Whether the trailing chunk and chunk count have been absorbed
     bool has_been_finalized_ = false;
+
+    // ---- Streaming-pipeline state (see "Parallelism" in the class doc) ----
+
+    /// One unit of pipeline work: hash one owned chunk to its CV
+    /**
+    * The job *owns* its chunk bytes (moved from \c chunk_buf_ when
+    * possible, copied from the caller's buffer otherwise), because the
+    * caller's buffer may be reused or freed as soon as add() returns,
+    * while the job outlives the add() call that created it.
+    */
+    struct LeafJob final
+    {
+        std::vector<std::byte> chunk;
+        uint64_t chunk_index = 0;
+        std::promise<std::vector<std::byte>> cv_promise;
+    };
+
+    /// Jobs awaiting a worker; guarded by \c pool_mtx_
+    /**
+    * Unbounded by itself; the bound comes from \c pending_cvs_ (the
+    * calling thread never lets more than a fixed number of jobs be
+    * outstanding, see \c dispatch_leaf_()).
+    */
+    std::deque<LeafJob> job_queue_;
+
+    /// Guards \c job_queue_ and \c pool_stop_ (nothing else)
+    std::mutex pool_mtx_;
+
+    /// Signals workers that a job was queued or that \c pool_stop_ was set
+    std::condition_variable pool_cv_;
+
+    /// Tells workers to exit; guarded by \c pool_mtx_
+    bool pool_stop_ = false;
+
+    /// The future CVs of dispatched chunks, in chunk-index order
+    /**
+    * Touched only by the (mtx_-holding) calling thread.  Futures are
+    * pushed in dispatch order and popped from the front only, so absorbing
+    * from the front absorbs CVs in exactly chunk-index order, no matter
+    * which worker finishes when.
+    */
+    std::deque<std::future<std::vector<std::byte>>> pending_cvs_;
+
+    /// The persistent worker threads; empty until \c start_pool_()
+    /**
+    * Declared *after* everything the workers touch, so that even if the
+    * jthread destructors were ever the ones to join the workers, the
+    * queue, mutex, and condition variable would still be alive.  (In
+    * practice \c stop_pool_() joins them first.)
+    */
+    std::vector<std::jthread> pool_workers_;
 
 public:
     /// The size (in bytes) of a full chunk
@@ -361,14 +451,235 @@ private:
         return leaf.squeeze_bytes(CV_LEN);
     }
 
-    /// Hand one complete chunk to the tree
+    [[nodiscard]] bool pool_is_active_() const noexcept
+    {
+        return !pool_workers_.empty();
+    }
+
+    /// Spawn the persistent worker pool
+    void start_pool_()
+    {
+#if defined(DEBUG)
+        assert(!pool_is_active_());
+        assert(NUM_THREADS >= 2);
+#endif
+
+        pool_workers_.reserve(to_unsigned(NUM_THREADS));
+
+        for (int32_t t = 0; t < NUM_THREADS; ++t)
+        {
+            pool_workers_.emplace_back([this] { pool_worker_loop_(); });
+        }
+    }
+
+    /// Start the pool once the stream has proven long enough to benefit
+    /**
+    * See \c MIN_CHUNKS_BEFORE_POOL_START for the rationale.  With
+    * NUM_THREADS == 1 the pool never starts and every leaf is hashed
+    * inline (same digest).
+    */
+    void maybe_start_pool_()
+    {
+        if (!pool_is_active_() && (NUM_THREADS >= 2) &&
+            (num_chunks_flushed_ >= MIN_CHUNKS_BEFORE_POOL_START))
+        {
+            start_pool_();
+        }
+    }
+
+    /// Wake, join, and discard the worker threads
+    // {{{
+    /**
+    * Called from \c finalize_() (the workers have nothing left to do) and
+    * from the destructor (which MUST call this: the workers block on
+    * \c pool_cv_ and would otherwise never observe a stop request, so the
+    * jthread destructors alone would deadlock on join).
+    *
+    * When called on an unfinalized object being destroyed, the queue may
+    * still hold jobs; they are abandoned (their promises die unfulfilled,
+    * which is harmless because only the also-dying \c pending_cvs_ futures
+    * reference them) after zeroizing their plaintext chunks.
+    */
+    // }}}
+    void stop_pool_()
+    {
+        if (!pool_is_active_())
+            return;
+
+        {
+            std::scoped_lock lock{pool_mtx_};
+            pool_stop_ = true;
+        }
+        pool_cv_.notify_all();
+
+        pool_workers_.clear(); // the jthread destructors join
+
+        pool_stop_ = false; // no lock needed: the workers are gone
+
+        for (auto& job : job_queue_)
+        {
+            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+        }
+        job_queue_.clear();
+    }
+
+    /// The body of each worker thread
+    // {{{
+    /**
+    * Take the oldest job, hash its chunk to a CV (a pure function -- see
+    * \c compute_leaf_cv_()), deliver the CV (or the exception) through the
+    * job's promise, and repeat until told to stop.
+    *
+    * The workers touch only: the job queue (under pool_mtx_), their own
+    * local Duplex, and this object's const parameter members.  They never
+    * touch mtx_, chunk_buf_, pending_cvs_, or the final node's state, so
+    * they can run while the calling thread does anything else.
+    */
+    // }}}
+    void pool_worker_loop_()
+    {
+        for (;;)
+        {
+            LeafJob job;
+
+            {
+                std::unique_lock lock{pool_mtx_};
+
+                pool_cv_.wait(lock, [this] { return pool_stop_ || !job_queue_.empty(); });
+
+                // A stop request abandons any remaining jobs; see stop_pool_().
+                if (pool_stop_)
+                    return;
+
+                job = std::move(job_queue_.front());
+                job_queue_.pop_front();
+            }
+
+            try
+            {
+                job.cv_promise.set_value(
+                    compute_leaf_cv_(job.chunk, job.chunk_index));
+            }
+            catch (...)
+            {
+                // Deliver the exception (realistically only std::bad_alloc)
+                // to whoever get()s the CV on the calling thread.
+                job.cv_promise.set_exception(std::current_exception());
+            }
+
+            // The job's chunk holds message plaintext; zeroize it before
+            // the vector is destroyed (same hygiene as chunk_buf_).
+            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+        }
+    }
+
+    /// Absorb the oldest pending CV into the final node
+    /**
+    * Blocks until that CV is ready.  get() rethrows a worker's exception
+    * on the calling thread, leaving this object in an unspecified (but
+    * destructible) state, as with any exception escaping mid-absorption.
+    */
+    void absorb_front_pending_cv_()
+    {
+#if defined(DEBUG)
+        assert(!pending_cvs_.empty());
+#endif
+
+        const auto cv = pending_cvs_.front().get();
+        pending_cvs_.pop_front();
+
+        final_node_.add(std::span<const std::byte>{cv});
+    }
+
+    /// Absorb every pending CV into the final node, in chunk-index order
+    /**
+    * Must be called before absorbing anything into the final node by any
+    * other route (a batch's CVs, the trailing chunk's CV, the chunk
+    * count), or CVs would be absorbed out of index order and the digest
+    * would depend on timing.
+    */
+    void drain_pending_cvs_()
+    {
+        while (!pending_cvs_.empty())
+        {
+            absorb_front_pending_cv_();
+        }
+    }
+
+    /// Queue one owned chunk for a pool worker, and apply backpressure
+    // {{{
+    /**
+    * The pipeline in one method.  Push the job (workers see it via
+    * pool_cv_), remember its future CV at the back of pending_cvs_, then:
+    *
+    *   - Backpressure: if more than 2 chunks per worker are in flight,
+    *     block on the *oldest* CV until the pipeline shrinks.  This bounds
+    *     memory (each in-flight job owns a CHUNK_SIZE buffer) no matter
+    *     how fast the producer is, while 2x keeps every worker fed (one
+    *     chunk hashing, one waiting) even while the calling thread is away
+    *     reading more input.
+    *
+    *   - Opportunistic drain: absorb any CVs that are already finished.
+    *     This spreads the final node's (serial) CV absorption across the
+    *     stream instead of bursting it all at finalization, and it keeps
+    *     pending_cvs_ short.
+    *
+    * \pre the pool is active
+    * \pre \a chunk is a whole chunk (CHUNK_SIZE bytes); only the trailing
+    *      chunk of the stream may be shorter, and it is never pipelined
+    */
+    // }}}
+    void dispatch_leaf_(std::vector<std::byte>&& chunk)
+    {
+#if defined(DEBUG)
+        assert(pool_is_active_());
+        assert(std::ssize(chunk) == CHUNK_SIZE);
+        assert(num_chunks_flushed_ >= 1); // chunk 0 is never a leaf
+#endif
+
+        std::promise<std::vector<std::byte>> cv_promise;
+        pending_cvs_.push_back(cv_promise.get_future());
+
+        {
+            std::scoped_lock lock{pool_mtx_};
+            job_queue_.push_back(LeafJob{std::move(chunk),
+                                         to_unsigned(num_chunks_flushed_),
+                                         std::move(cv_promise)});
+        }
+        pool_cv_.notify_one();
+
+        ++num_chunks_flushed_;
+
+        const auto max_pending = static_cast<size_t>(2 * NUM_THREADS);
+
+        while (pending_cvs_.size() > max_pending)
+        {
+            absorb_front_pending_cv_(); // blocks on the oldest CV
+        }
+
+        while (!pending_cvs_.empty() &&
+               (pending_cvs_.front().wait_for(std::chrono::seconds{0}) ==
+                std::future_status::ready))
+        {
+            absorb_front_pending_cv_(); // does not block
+        }
+    }
+
+    /// Hand one complete chunk to the tree (the per-chunk router)
     // {{{
     /**
     * Chunk 0 is absorbed directly by the final node.  Every later chunk is
-    * hashed by a leaf, and its CV is absorbed by the final node.  Chunks
-    * must arrive in input order (the parallel bulk path preserves this by
-    * absorbing CVs in index order after joining its workers; see
-    * flush_bulk_chunks_()).
+    * hashed by a leaf -- through the pipeline once the pool is running
+    * (the chunk must then be *copied* into the job, because this span
+    * points into memory the caller may reuse), inline on the calling
+    * thread otherwise.
+    *
+    * The inline branch absorbs its CV into the final node immediately,
+    * which is safe only because pending_cvs_ is empty whenever the pool is
+    * inactive: chunks are only ever dispatched to an active pool, the pool
+    * stays active until finalization, and finalization drains the pipeline
+    * before stopping it.  So the inline branch can never overtake a
+    * pipelined CV.
     */
     // }}}
     void flush_chunk_(const std::span<const std::byte> chunk)
@@ -376,14 +687,52 @@ private:
         if (num_chunks_flushed_ == 0)
         {
             final_node_.add(chunk);
+            ++num_chunks_flushed_;
+            return;
+        }
+
+        maybe_start_pool_();
+
+        if (pool_is_active_())
+        {
+            dispatch_leaf_(std::vector<std::byte>{chunk.begin(), chunk.end()});
         }
         else
         {
+#if defined(DEBUG)
+            assert(pending_cvs_.empty());
+#endif
             const auto cv = compute_leaf_cv_(chunk, to_unsigned(num_chunks_flushed_));
             final_node_.add(std::span<const std::byte>{cv});
+            ++num_chunks_flushed_;
         }
+    }
 
-        ++num_chunks_flushed_;
+    /// Hand the full chunk buffer to the tree, without copying if possible
+    /**
+    * Like \c flush_chunk_(chunk_buf_), except that when the chunk goes to
+    * the pipeline, the buffer itself is *moved* into the job (the buffered
+    * chunk is owned by this object, unlike the caller-owned spans the
+    * router copies), and a fresh buffer is set up for the next chunk.
+    */
+    void flush_buffered_chunk_()
+    {
+        maybe_start_pool_();
+
+        if ((num_chunks_flushed_ > 0) && pool_is_active_())
+        {
+            dispatch_leaf_(std::move(chunk_buf_));
+
+            // The moved-from vector is valid but unspecified; make it a
+            // fresh, empty, full-capacity chunk buffer again.
+            chunk_buf_.clear();
+            chunk_buf_.reserve(static_cast<size_t>(CHUNK_SIZE));
+        }
+        else
+        {
+            flush_chunk_(chunk_buf_);
+            chunk_buf_.clear();
+        }
     }
 
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src
@@ -405,9 +754,11 @@ private:
     * touch nothing of the final node except its const parameter members
     * (C, NUM_ROUNDS, INPUT_SUFFIX), which are written only at construction.
     *
-    * Batches too small to pay for thread dispatch (see
-    * MIN_LEAF_CHUNKS_PER_WORKER), or NUM_THREADS == 1, fall back to the
-    * sequential chunk-by-chunk loop, which produces the identical digest.
+    * Batches too small to pay for transient-thread dispatch (see
+    * MIN_LEAF_CHUNKS_PER_WORKER), or NUM_THREADS == 1, are routed chunk by
+    * chunk through flush_chunk_() instead -- into the streaming pipeline
+    * when the pool is running, inline otherwise -- producing the identical
+    * digest.
     *
     * The worker threads are transient (spawned per batch): the intended
     * caller adds an entire memory-mapped file in one call, so the spawn
@@ -446,8 +797,12 @@ private:
 
         if (num_workers < 2)
         {
-            // Not enough leaf work to pay for thread dispatch: hash the
-            // batch on the calling thread.  Same digest, by construction.
+            // Not enough leaf work to pay for transient-thread dispatch:
+            // route the batch through the per-chunk router instead, which
+            // sends the chunks to the streaming pipeline when the pool is
+            // running (this is how a read loop's 1-2-chunk batches reach
+            // the workers) and hashes them inline otherwise.  Same digest
+            // either way, by construction.
             for (int64_t pos = 0; pos < num_chunks; ++pos)
             {
                 flush_chunk_(std::span{src + to_unsigned(pos) * chunk_size, chunk_size});
@@ -516,11 +871,20 @@ private:
             assert(range_begin == num_leaves); // every leaf was assigned
 #endif
 
-            // Overlap the final node's (serial) absorption of chunk 0 with
-            // the workers' (parallel) leaf hashing.
+            // Overlap the final node's serial work with the workers'
+            // parallel leaf hashing.  The two cases are mutually
+            // exclusive: if this batch starts at chunk 0, nothing was ever
+            // pipelined (dispatching requires an earlier chunk), and
+            // otherwise chunk 0 is long gone but the streaming pipeline
+            // may hold CVs of earlier chunks, which must enter the final
+            // node before this batch's CVs.
             if (first_chunk_index == 0)
             {
                 final_node_.add(std::span{src, chunk_size});
+            }
+            else
+            {
+                drain_pending_cvs_();
             }
 
             // The jthread destructors join every worker here.
@@ -577,8 +941,7 @@ private:
             // More input follows a full buffer, so it is safe to flush.
             if (chunk_buf_.size() == chunk_size)
             {
-                flush_chunk_(chunk_buf_);
-                chunk_buf_.clear();
+                flush_buffered_chunk_();
             }
 
             // Bulk path: hash whole chunks directly from the source buffer,
@@ -632,8 +995,35 @@ private:
         assert((num_chunks_flushed_ == 0) || !chunk_buf_.empty());
 #endif
 
-        flush_chunk_(chunk_buf_);
+        // The trailing chunk is handled here directly instead of through
+        // flush_chunk_(): it is deliberately never pipelined (there is no
+        // later work to overlap it with, and routing it through
+        // maybe_start_pool_() could even spawn the pool for this one
+        // chunk), and its CV has the highest index, so every pipelined CV
+        // must enter the final node first.
+        if (num_chunks_flushed_ == 0)
+        {
+            // Nothing was ever flushed: the entire message (possibly
+            // empty) is chunk 0, and no pipeline exists to drain.
+            final_node_.add(std::span<const std::byte>{chunk_buf_});
+        }
+        else
+        {
+            // Compute the trailing CV *before* draining, so this thread
+            // hashes the last chunk while the workers finish theirs.
+            const auto cv =
+                compute_leaf_cv_(chunk_buf_, to_unsigned(num_chunks_flushed_));
+
+            drain_pending_cvs_();
+
+            final_node_.add(std::span<const std::byte>{cv});
+        }
+        ++num_chunks_flushed_;
         chunk_buf_.clear();
+
+        // The workers have nothing left to do; reclaim their threads now
+        // rather than at destruction.
+        stop_pool_();
 
         // Every chunk after chunk 0 contributed one CV.
         const auto num_cvs = to_unsigned(num_chunks_flushed_ - 1);
@@ -688,6 +1078,13 @@ public:
     /// dtor
     ~DuplexTree()
     {
+        // Destroying an unfinalized object may leave workers parked on the
+        // pool's condition variable; they must be woken and joined (and
+        // any abandoned jobs' plaintext zeroized) before their shared
+        // state is destroyed.  No-op when the pool never ran or was
+        // already stopped by finalize_().
+        stop_pool_();
+
         // The chunk buffer holds message plaintext.  Zeroize the whole
         // allocation: after clear(), bytes beyond size() may still hold
         // remnants of earlier chunks.  (Each Duplex zeroizes itself.)

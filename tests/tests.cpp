@@ -480,9 +480,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             assert(tree_digest(Y_sp, 4) == expected);
             assert(tree_digest(Y_sp, 0) == expected); // 0 = auto
 
-            // Piecewise adds: 1000-byte pieces never reach the parallel
-            // threshold; 33000-byte pieces produce ~32-chunk batches that
-            // do.  Both must reproduce the one-shot digest.
+            // Piecewise adds: 1000-byte pieces are too small for the batch
+            // path and flow through the streaming pipeline; 33000-byte
+            // pieces produce ~32-chunk batches for the transient-worker
+            // path.  Both must reproduce the one-shot digest.
             for (const size_t piece_size : {size_t{1000}, size_t{33'000}})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
@@ -493,6 +494,59 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                     tree.add(Y_sp.subspan(off, std::min(piece_size, Y_sp.size() - off)));
                 }
                 assert(tree.squeeze_bytes() == expected);
+            }
+        }
+
+        {
+            // Test the streaming pipeline: input fed in pieces no larger
+            // than a chunk never qualifies for the batch path, so with
+            // several threads the leaves are hashed by the persistent
+            // worker pool, in whatever order the workers finish -- and the
+            // digest must still equal the inline sequential reference.
+            std::vector<std::byte> Z(48 * static_cast<size_t>(chunk_size) + 5);
+            for (size_t i = 0; i < Z.size(); ++i)
+            {
+                Z[i] = static_cast<std::byte>((i * 37 + 11) & 0xFF);
+            }
+            const std::span<const std::byte> Z_sp{Z};
+
+            // inline sequential reference (NUM_THREADS == 1: no pool)
+            const auto expected = tree_digest(Z_sp, 1);
+
+            // 512: sub-chunk pieces (pure buffering, zero-copy move
+            //      handoff to the pipeline)
+            // 1024: exactly one chunk per call
+            // 2500: mixed 1-2-chunk batches (copied span handoff) plus
+            //       buffering
+            for (const size_t piece_size : {size_t{512}, size_t{1024}, size_t{2500}})
+            {
+                for (const int num_threads : {2, 4})
+                {
+                    Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                              function_name, customization_str,
+                                              chunk_size, num_threads);
+                    for (size_t off = 0; off < Z_sp.size(); off += piece_size)
+                    {
+                        tree.add(
+                            Z_sp.subspan(off, std::min(piece_size, Z_sp.size() - off)));
+                    }
+                    assert(tree.squeeze_bytes() == expected);
+                }
+            }
+
+            {
+                // Test that destroying an unfinalized tree whose pool is
+                // running (likely with jobs still in flight) neither hangs
+                // nor crashes: the destructor must wake, join, and discard
+                // the workers and the abandoned jobs.
+                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                          function_name, customization_str, chunk_size,
+                                          4);
+                for (size_t off = 0; off + 1024 <= Z_sp.size(); off += 1024)
+                {
+                    tree.add(Z_sp.subspan(off, 1024));
+                }
+                // no squeeze_bytes(): the destructor runs on a live pipeline
             }
         }
 

@@ -578,8 +578,6 @@ private:
     * unambiguously parsed from the end of the string by inserting the length of
     * the byte string after the byte string representation of 𝑥.
     * </blockquote>
-    *
-    * \note Not currently used; retained to complement \c left_encode_().
     */
     // }}}
     void right_encode_(const std::unsigned_integral auto x) noexcept
@@ -614,17 +612,34 @@ private:
     * </blockquote>
     */
     // }}}
-    void encode_bytes_(const void* data, size_t len) noexcept
+    void left_encode_bytes_(const void* data, size_t len) noexcept
     {
         left_encode_(len);
         add_(data, len);
     }
 
-    /// \copydoc encode_bytes_(const void*, size_t)
-    void encode_bytes_(const std::string_view s) noexcept
+    /// \copydoc left_encode_bytes_(const void*, size_t)
+    void left_encode_bytes_(const std::string_view s) noexcept
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        encode_bytes_(std::data(s), std::size(s));
+        left_encode_bytes_(std::data(s), std::size(s));
+    }
+
+    /// Unambiguously encode the byte string into the input buffer
+    // {{{
+    /**
+    * The right_encode counterpart of \c left_encode_bytes_(): the byte string
+    * 𝑆 is followed by its right-encoded length, so it may be parsed
+    * unambiguously from the end of the string.  This is useful when the
+    * length of 𝑆 is not known until the end of 𝑆 is reached.
+    *
+    * Return 𝑆 || right_encode(len(𝑆)).
+    */
+    // }}}
+    void right_encode_bytes_(const void* data, size_t len) noexcept
+    {
+        add_(data, len);
+        right_encode_(len);
     }
 
     /// Initialize the state
@@ -704,8 +719,8 @@ private:
         // necessary for domain separation.  It's done as cheap insurance
         // against any relation between reduced-round and full-round instances.
         left_encode_(to_unsigned(NUM_ROUNDS));
-        encode_bytes_(function_name);
-        encode_bytes_(customization_str);
+        left_encode_bytes_(function_name);
+        left_encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)
         // after the initial values.  Instead we apply the padding rule.
         apply_padding_rule_();
@@ -829,29 +844,64 @@ public:
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Duplex& add_encoded(const void* data, size_t len)
+    Duplex& add_left_encoded(const void* data, size_t len)
     {
         if (data == nullptr)
             return *this;
 
         std::scoped_lock lock{mtx_};
 
-        encode_bytes_(data, len);
+        left_encode_bytes_(data, len);
 
         return *this;
     }
 
-    /// \copydoc add_encoded(const void*, size_t)
-    Duplex& add_encoded(const std::span<const std::byte> byte_sp)
+    /// \copydoc add_left_encoded(const void*, size_t)
+    Duplex& add_left_encoded(const std::span<const std::byte> byte_sp)
     {
-        return add_encoded(std::data(byte_sp), std::size(byte_sp));
+        return add_left_encoded(std::data(byte_sp), std::size(byte_sp));
     }
 
-    /// \copydoc add_encoded(const void*, size_t)
-    Duplex& add_encoded(const std::string_view s)
+    /// \copydoc add_left_encoded(const void*, size_t)
+    Duplex& add_left_encoded(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_encoded(std::data(s), std::size(s));
+        return add_left_encoded(std::data(s), std::size(s));
+    }
+
+    /// Consume \a data then right-encoded \a len into the input buffer
+    // {{{
+    /**
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    */
+    // }}}
+    Duplex& add_right_encoded(const void* data, size_t len)
+    {
+        if (data == nullptr)
+            return *this;
+
+        std::scoped_lock lock{mtx_};
+
+        right_encode_bytes_(data, len);
+
+        return *this;
+    }
+
+    /// \copydoc add_right_encoded(const void*, size_t)
+    Duplex& add_right_encoded(const std::span<const std::byte> byte_sp)
+    {
+        return add_right_encoded(std::data(byte_sp), std::size(byte_sp));
+    }
+
+    /// \copydoc add_right_encoded(const void*, size_t)
+    Duplex& add_right_encoded(const std::string_view s)
+    {
+        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
+        return add_right_encoded(std::data(s), std::size(s));
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer

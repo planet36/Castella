@@ -129,8 +129,9 @@ function assert_neq_cmd_cmd
 #   100 B  : smaller than one 256-byte chunk
 #     1 KiB: too small to trigger a mix at the default mix rate
 #    64 KiB: exactly 256 chunks (the default mix rate boundary)
-# 100000 B : large enough to be memory-mapped; not a multiple of the chunk
-#            size (256), the read block size (32768), or the page size (4096)
+# 100000 B : large enough to be memory-mapped; not a multiple of the cch
+#            chunk size (256), castella's default tree chunk size (16384),
+#            the read block size (32768), or the page size (4096)
 #     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 yes "$LINE" | head --bytes 0      > /tmp/test-0B.txt      || exit
@@ -144,6 +145,10 @@ yes "$LINE" | head --bytes 1M     > /tmp/test-1MiB.txt    || exit
 set -o pipefail
 
 # Verify command output with known output
+#
+# NOTE: castella computes a chunked tree hash (Castella::DuplexTree) as of
+# 2026-07-05; the castella digests below were regenerated for the tree
+# format.
 
 CUSTOM='hash'
 ROUNDS=3
@@ -151,19 +156,19 @@ SUFFIX=0
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    9902af61a69059b0d7a9fcc4918101f3
+    53b87705bfec46e396eedacc06f3fc2a
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    bbc594520f483591c6cf569fc45ec28b2e098bfcf94715c374d364bb11ad1914
+    226c6d056c26f752d0fb521196669b6fcab63b60152eae22f54da94fab3d59ac
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    cf13281f46d9369d50b82db48eb5c6caf3693132228a24267818d1858494d09c1784cf3803ad2f385aab1c18947a0fa2
+    586dfedb64341e6dc36298a76e3d638ae9b0433cd44175b9b60cd2ccaa13757b130f2d3ae8716388bc7323e150e1b9fc
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    52e5396cb8afa08aee1712241275af52047fe2229ae939196a32da41f9c99734eda70095d78c41f76412660df864f43905b71180cfba2232adf14f74cc82323e
+    6a2215f0df50f0cff822368decc5babd44007e826e86a44373a73110ab7c9dee9997e22f5ba64cb9ca8ee7a253b25c570f75f37007e8180feed2fe47d4d02564
 
 CUSTOM='¡Ay, caramba!'
 ROUNDS=16
@@ -171,19 +176,19 @@ SUFFIX=105
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    c9a0904779dbc7fdbc1cabd42312fd9d
+    a1320ab593fff863b5e21bda60151741
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    85a68149a88b464d3cbce5d8c9debe46b4cc5b90aee82868c94abccd643b44bc
+    c51c9a24fa3e6d3f2752aed52f088008d8386e372484eeb5d5cae7526fff22d7
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    f6b6d39bc9a649f3e4063a073cca3d1a407048eaeb9654e98665b25a6cb4902e9485340e67c0436ea19f0286f29b2538
+    86e665faa88ac36318518ed1a1b8dea77eb79e054b0fab98f55b64adfbe720ea4b0602d9bc0374c100b53799e06d7bce
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    c64439c498e8c309522c6702047dadee850e170ee5a94d09f584cf8b077ea562d8de8b0fe5826b39f6e650763ddbf5af7824fd07068da97ba857ecdf5b498a0f
+    b9a113556e549bf89345f871686bf4fc66851a4692bec39d17e05a8a4951373b20627bf9abc54ad7d266f3058a6567f0ffa2960bdc8f93fb7b85ffc2c32ba6d1
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test-1MiB.txt | cut -w -f 1" \
@@ -211,15 +216,15 @@ SUFFIX=0
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-0B.txt | cut -w -f 1" \
-    f4cf1245e32cce28eef07c924980955603649d2f857deea1d5763378383da4cb
+    3f310987cf2e5725fd39e6281694c5b93878e17e92cb5863f2e8bdd25990727e
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100B.txt | cut -w -f 1" \
-    d8c55475876bc04fb7d604099bfbf9a91ee1f9da8b5bce3067e125b93362007e
+    6e5e8b4ff6c19b317290a060ece90419a74fb302890471b49df9c0271f82bad8
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100000B.txt | cut -w -f 1" \
-    354240c7b12344c621d3f592741217db909ef3de03862fb7ed07284359806050
+    82d2bd2d5b8ba4b80963655f7d97a27877a61a651cf42ef652c96278c3a4c6e0
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-0B.txt | cut -w -f 1" \
@@ -314,6 +319,53 @@ assert_eq_cmd_cmd \
 assert_eq_cmd_cmd \
     './cch - < /tmp/test-100000B.txt | cut -w -f 1' \
     './cch /tmp/test-100000B.txt | cut -w -f 1'
+
+# Verify that "--num-threads" NEVER affects the digest.  The digest is
+# defined by the hash tree alone (chunk boundaries fall at fixed byte
+# offsets, and chaining values are absorbed in chunk-index order), never by
+# which thread hashes which chunk, so every thread count must agree in every
+# I/O mode: memory-mapped (the one-shot batch path), --no-mmap (the
+# streaming pipeline), and piped standard input (non-seekable reads).
+# The 1 MiB file is a whole number of tree chunks; the 100000 B file ends in
+# a partial trailing chunk.
+
+for NT in 1 2 8
+do
+    assert_eq_cmd_cmd \
+        "./castella --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
+        './castella --num-threads=0 /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./castella --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
+        './castella /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "cat /tmp/test-1MiB.txt | ./castella --num-threads=$NT - | cut -w -f 1" \
+        './castella /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./castella --num-threads=$NT /tmp/test-100000B.txt | cut -w -f 1" \
+        './castella /tmp/test-100000B.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./castella --num-threads=$NT --no-mmap /tmp/test-100000B.txt | cut -w -f 1" \
+        './castella /tmp/test-100000B.txt | cut -w -f 1'
+done
+
+# Verify that different "--chunk-size" values give distinct results.
+# The chunk size, unlike the thread count, is part of the digest format.
+
+assert_neq_cmd_cmd \
+    './castella --chunk-size=16384 /tmp/test-1MiB.txt | cut -w -f 1' \
+    './castella --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
+
+# Verify that a non-default "--chunk-size" is also independent of the thread
+# count and the I/O mode.  4096 makes the 100000 B file span 24 full chunks
+# plus a partial one.
+
+assert_eq_cmd_cmd \
+    './castella --chunk-size=4096 --num-threads=8 /tmp/test-100000B.txt | cut -w -f 1' \
+    './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100000B.txt | cut -w -f 1'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
 # The input file size must be at least 512 Bytes (twice the state size).

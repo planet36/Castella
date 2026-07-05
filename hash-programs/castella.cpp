@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include "bytes_to_hex.hpp"
+#include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
@@ -24,7 +25,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-05-22";
+inline constexpr std::string_view program_version = "2026-07-05";
 
 inline constexpr std::string_view function_name = "Castella";
 
@@ -43,6 +44,14 @@ static_assert(default_num_bytes_to_squeeze >= min_num_bytes_to_squeeze);
 static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
 
 inline constexpr std::string_view default_customization_str = "hash";
+
+// The chunk size is part of the digest format (different chunk sizes give
+// different digests), unlike the thread count, which never affects the
+// digest.
+inline constexpr int default_chunk_size = Castella::DuplexTree::DEFAULT_CHUNK_SIZE;
+
+// 0 requests one worker thread per available hardware thread.
+inline constexpr int default_num_threads = 0;
 // }}}
 
 // {{{ options
@@ -56,6 +65,10 @@ auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
 
 // NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 auto customization_str = default_customization_str;
+
+auto chunk_size = default_chunk_size;
+
+auto num_threads = default_num_threads;
 
 bool use_mmap = true;
 // }}}
@@ -99,7 +112,7 @@ print_usage()
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
 
-    std::println("Compute the Castella duplex/sponge hash.");
+    std::println("Compute the Castella tree hash.");
     std::println("");
 
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
@@ -117,12 +130,26 @@ print_usage()
     std::println("  -v, --verbose");
     std::println("        Print diagnostics.");
 
+    std::println("  --chunk-size=BYTES");
+    std::println("        Specify the size of a tree chunk.");
+    std::println("        Different chunk sizes produce different digests.");
+    std::println("        (default={}) (minimum={}) (maximum={})", default_chunk_size,
+                 Castella::DuplexTree::CHUNK_SIZE_MIN,
+                 Castella::DuplexTree::CHUNK_SIZE_MAX);
+
     std::println("  --custom=STRING");
-    std::println("        Specify the customization string of the Castella Duplex object.");
+    std::println("        Specify the customization string of the Castella DuplexTree object.");
     std::println("        (default={})", quote_shell_always(default_customization_str));
 
     std::println("  --no-mmap");
     std::println("        Do not use memory mapping to read FILE.");
+
+    std::println("  --num-threads=NUM");
+    std::println("        Specify the maximum number of worker threads used to hash chunks.");
+    std::println("        0 means one thread per available hardware thread.");
+    std::println("        The digest does not depend on the number of threads.");
+    std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
+                 Castella::DuplexTree::NUM_THREADS_MAX);
 
     std::println("  --rounds=NUM_ROUNDS");
     std::println("        Specify the number of rounds to perform in the Castella permutation function.");
@@ -146,7 +173,12 @@ print_usage()
     std::println("    digest, spaces, quoted FILE");
     std::println("");
 
-    std::println("In this program, the capacity of the Castella Duplex object is about 2×SIZE.");
+    std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");
+    std::println("");
+
+    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
+    std::println("Memory-mapped files parallelize best; piped input is also multithreaded,");
+    std::println("but its throughput is limited by the reading thread.");
     std::println("");
 
     std::println("https://github.com/planet36/Castella");
@@ -165,29 +197,33 @@ void process_options(int argc, char* argv[])
 
     const char* short_options = "+Vh";
 
-    constexpr int OPTION_HASH_VERSION  = static_cast<int>(fnv1a_32("version" ));
-    constexpr int OPTION_HASH_HELP     = static_cast<int>(fnv1a_32("help"    ));
-    constexpr int OPTION_HASH_VERBOSE  = static_cast<int>(fnv1a_32("verbose" ));
-    constexpr int OPTION_HASH_CUSTOM   = static_cast<int>(fnv1a_32("custom"  ));
-    constexpr int OPTION_HASH_NO_MMAP  = static_cast<int>(fnv1a_32("no-mmap" ));
-    constexpr int OPTION_HASH_ROUNDS   = static_cast<int>(fnv1a_32("rounds"  ));
-    constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
-    constexpr int OPTION_HASH_SUFFIX   = static_cast<int>(fnv1a_32("suffix"  ));
+    constexpr int OPTION_HASH_VERSION     = static_cast<int>(fnv1a_32("version"    ));
+    constexpr int OPTION_HASH_HELP        = static_cast<int>(fnv1a_32("help"       ));
+    constexpr int OPTION_HASH_VERBOSE     = static_cast<int>(fnv1a_32("verbose"    ));
+    constexpr int OPTION_HASH_CHUNK_SIZE  = static_cast<int>(fnv1a_32("chunk-size" ));
+    constexpr int OPTION_HASH_CUSTOM      = static_cast<int>(fnv1a_32("custom"     ));
+    constexpr int OPTION_HASH_NO_MMAP     = static_cast<int>(fnv1a_32("no-mmap"    ));
+    constexpr int OPTION_HASH_NUM_THREADS = static_cast<int>(fnv1a_32("num-threads"));
+    constexpr int OPTION_HASH_ROUNDS      = static_cast<int>(fnv1a_32("rounds"     ));
+    constexpr int OPTION_HASH_SIZE        = static_cast<int>(fnv1a_32("size"       ));
+    constexpr int OPTION_HASH_SUFFIX      = static_cast<int>(fnv1a_32("suffix"     ));
 
     using long_option = option;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
     constexpr long_option long_options[] = {
         // const char*      , int                       , int*         , int
-        {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
-        {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
-        {.name="verbose"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERBOSE },
-        {.name="custom"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CUSTOM  },
-        {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP },
-        {.name="rounds"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_ROUNDS  },
-        {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE    },
-        {.name="suffix"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SUFFIX  },
-        {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                   },
+        {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION    },
+        {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP       },
+        {.name="verbose"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERBOSE    },
+        {.name="chunk-size" , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CHUNK_SIZE },
+        {.name="custom"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CUSTOM     },
+        {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP    },
+        {.name="num-threads", .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_NUM_THREADS},
+        {.name="rounds"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_ROUNDS     },
+        {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE       },
+        {.name="suffix"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SUFFIX     },
+        {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                      },
     };
 
     int c = 0;
@@ -212,12 +248,58 @@ void process_options(int argc, char* argv[])
             verbose = true;
             break;
 
+        case OPTION_HASH_CHUNK_SIZE:
+            try
+            {
+                chunk_size = std::stoi(optarg);
+
+                if (chunk_size < Castella::DuplexTree::CHUNK_SIZE_MIN ||
+                    chunk_size > Castella::DuplexTree::CHUNK_SIZE_MAX)
+                {
+                    throw std::invalid_argument("--chunk-size");
+                }
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
+            break;
+
         case OPTION_HASH_CUSTOM:
             customization_str = optarg;
             break;
 
         case OPTION_HASH_NO_MMAP:
             use_mmap = false;
+            break;
+
+        case OPTION_HASH_NUM_THREADS:
+            try
+            {
+                num_threads = std::stoi(optarg);
+
+                if (num_threads < 0 ||
+                    num_threads > Castella::DuplexTree::NUM_THREADS_MAX)
+                {
+                    throw std::invalid_argument("--num-threads");
+                }
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+            }
+            catch (const std::out_of_range& ex)
+            {
+                (void)std::fflush(stdout);
+                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+            }
             break;
 
         case OPTION_HASH_ROUNDS:
@@ -301,6 +383,9 @@ void process_options(int argc, char* argv[])
 /**
 * \retval true upon error
 * \retval false upon success
+* \note With a DuplexTree hash object, this read loop feeds the tree's
+* streaming pipeline: worker threads hash previously read chunks while this
+* thread is blocked in read().
 */
 [[nodiscard]] bool
 process_file_read_fd(int fd, auto& hash_obj)
@@ -380,7 +465,11 @@ process_file(const std::string& path, auto& hash_obj)
             throw SYSERR_PATH(path);
         }
 
-        // If add() throws (only possible on mutex failure), mmap_addr is leaked.
+        // The whole mapping is added in one call, which is what lets a
+        // DuplexTree hash object take its one-shot batch path: the file's
+        // chunks are hashed in place (no copying) by its worker threads.
+        // If add() throws (mutex failure, allocation failure, or a worker
+        // thread's exception), mmap_addr is leaked.
         hash_obj.add(mmap_addr, file_size);
 
         if (::munmap(mmap_addr, mmap_size) < 0)
@@ -410,6 +499,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println(stderr, "# input_suffix={}", input_suffix);
         std::println(stderr, "# function_name={}", quote_shell_always(function_name));
         std::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
+        std::println(stderr, "# chunk_size={}", chunk_size);
+        std::println(stderr, "# num_threads={}", num_threads);
     }
 
     std::vector<std::string> paths;
@@ -428,8 +519,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         try
         {
-            Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
-                                      function_name, customization_str);
+            // A DuplexTree (not a plain Duplex): FILE is hashed as a
+            // chunked tree so that the work can be spread across
+            // num_threads CPU cores.  The digest depends on chunk_size but
+            // NEVER on num_threads, so any thread count (and either I/O
+            // mode) produces the same output for the same input.
+            Castella::DuplexTree hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                          function_name, customization_str,
+                                          chunk_size, num_threads);
 
             if (verbose)
             {

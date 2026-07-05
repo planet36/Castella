@@ -2,10 +2,12 @@
 
 | name | purpose |
 | ---- | ------- |
-| castella.cpp | Compute the Castella duplex/sponge hash of each FILE |
+| castella.cpp | Compute the Castella tree hash of each FILE |
 | cch.cpp | Compute the Compress-Castella hash (CCH) of each FILE |
 
 Both programs read from standard input when FILE is absent or `-`.
+
+`castella` hashes each FILE as a chunked tree (`Castella::DuplexTree`), so the work can be spread across CPU cores with `--num-threads=NUM` (0, the default, means one thread per hardware thread).  The digest never depends on the thread count or the I/O mode; it does depend on `--chunk-size`, which is part of the digest format.  Memory-mapped files parallelize best; `--no-mmap` and piped input are also multithreaded, but their throughput is limited by the reading thread.
 
 The output format is a line for each FILE:
 
@@ -15,7 +17,7 @@ Run `--help` for full option descriptions.
 
 ## Test script
 
-`test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, and confirming that distinct `--mix-rate` values produce distinct digests.
+`test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, confirming that `--num-threads` never changes a digest (in every I/O mode), and confirming that distinct `--mix-rate` and `--chunk-size` values produce distinct digests.
 
 The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
 

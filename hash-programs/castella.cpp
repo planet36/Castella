@@ -468,9 +468,18 @@ process_file(const std::string& path, auto& hash_obj)
         // The whole mapping is added in one call, which is what lets a
         // DuplexTree hash object take its one-shot batch path: the file's
         // chunks are hashed in place (no copying) by its worker threads.
-        // If add() throws (mutex failure, allocation failure, or a worker
-        // thread's exception), mmap_addr is leaked.
-        hash_obj.add(mmap_addr, file_size);
+        // add() can throw (mutex failure, allocation failure, or a worker
+        // thread's exception propagating out of the tree), so the mapping
+        // is released on that path too before the exception propagates.
+        try
+        {
+            hash_obj.add(mmap_addr, file_size);
+        }
+        catch (...)
+        {
+            (void)::munmap(mmap_addr, mmap_size);
+            throw;
+        }
 
         if (::munmap(mmap_addr, mmap_size) < 0)
             throw SYSERR_PATH(path);
@@ -547,6 +556,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             break;
         }
         catch (const std::system_error& ex)
+        {
+            (void)std::fflush(stdout);
+            warnx("%s", ex.what());
+            exit_status = EXIT_FAILURE;
+        }
+        // The DuplexTree hash object allocates (per-chunk job copies, the
+        // per-batch CV array, up to a --chunk-size buffer, worker Duplex
+        // objects) and rethrows worker-thread exceptions out of add() and
+        // squeeze_bytes(), so std::bad_alloc and std::future_error are now
+        // reachable here.  Report and continue with the remaining files
+        // instead of letting them escape main() to std::terminate.
+        catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);
             warnx("%s", ex.what());

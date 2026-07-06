@@ -593,8 +593,15 @@ private:
         assert(!pending_cvs_.empty());
 #endif
 
-        const auto cv = pending_cvs_.front().get();
+        // Remove the future from the deque BEFORE calling get().  get()
+        // invalidates the future (valid() becomes false) and may rethrow a
+        // worker's exception; popping first ensures that on such a throw no
+        // invalid future is left at the front for a later drain to call
+        // get()/wait_for() on (which would be undefined behavior).
+        auto future = std::move(pending_cvs_.front());
         pending_cvs_.pop_front();
+
+        const auto cv = future.get();
 
         final_node_.add(std::span<const std::byte>{cv});
     }

@@ -285,7 +285,18 @@ private:
     */
     std::deque<LeafJob> job_queue_;
 
-    /// Guards \c job_queue_ and \c pool_stop_ (nothing else)
+    /// Recycled CHUNK_SIZE-capacity chunk buffers; guarded by \c pool_mtx_
+    /**
+    * Workers return their finished (already zeroized) chunk buffers here
+    * instead of freeing them, and the calling thread reuses them for the
+    * next chunk, so the streaming path does not allocate a fresh chunk
+    * buffer per chunk.  Bounded by \c 2*NUM_THREADS (the in-flight bound),
+    * so recycled buffers hold only zeroized bytes and the list cannot grow
+    * without limit.
+    */
+    std::vector<std::vector<std::byte>> free_buffers_;
+
+    /// Guards \c job_queue_, \c free_buffers_, and \c pool_stop_
     std::mutex pool_mtx_;
 
     /// Signals workers that a job was queued or that \c pool_stop_ was set
@@ -460,6 +471,46 @@ private:
         explicit_bzero(std::data(v), std::size(v));
     }
 
+    /// Obtain an empty chunk buffer with CHUNK_SIZE capacity
+    /**
+    * Reuses a recycled buffer from \c free_buffers_ when one is available
+    * (avoiding an allocation), otherwise allocates a fresh one.  The
+    * returned buffer is empty; a recycled one keeps its (zeroized) capacity.
+    */
+    [[nodiscard]] std::vector<std::byte> take_chunk_buffer_()
+    {
+        {
+            std::scoped_lock lock{pool_mtx_};
+            if (!free_buffers_.empty())
+            {
+                auto buf = std::move(free_buffers_.back());
+                free_buffers_.pop_back();
+                buf.clear(); // keep the CHUNK_SIZE capacity, drop the length
+                return buf;
+            }
+        }
+
+        std::vector<std::byte> buf;
+        buf.reserve(static_cast<size_t>(CHUNK_SIZE));
+        return buf;
+    }
+
+    /// Return a finished chunk buffer to \c free_buffers_ for reuse
+    /**
+    * \pre \a buf has already been zeroized (only zeroized buffers are
+    *      pooled, so the free list never holds plaintext)
+    */
+    void recycle_chunk_buffer_(std::vector<std::byte>&& buf)
+    {
+        std::scoped_lock lock{pool_mtx_};
+
+        // Cap at the in-flight bound; beyond that, let the buffer free.
+        if (std::ssize(free_buffers_) < 2 * NUM_THREADS)
+        {
+            free_buffers_.push_back(std::move(buf));
+        }
+    }
+
     [[nodiscard]] bool pool_is_active_() const noexcept
     {
         return !pool_workers_.empty();
@@ -530,6 +581,10 @@ private:
             zeroize_(job.chunk);
         }
         job_queue_.clear();
+
+        // The recycled buffers hold only zeroized bytes; drop them (the
+        // pool is idle now, and a later run would refill it as needed).
+        free_buffers_.clear();
     }
 
     /// The body of each worker thread
@@ -583,9 +638,12 @@ private:
                 job->cv_promise.set_exception(std::current_exception());
             }
 
-            // The job's chunk holds message plaintext; wipe it before the
-            // vector is destroyed (same hygiene as chunk_buf_).
+            // The job's chunk holds message plaintext; wipe it (same
+            // hygiene as chunk_buf_), then return the now-zeroized buffer to
+            // the free list for the calling thread to reuse instead of
+            // freeing it.
             zeroize_(job->chunk);
+            recycle_chunk_buffer_(std::move(job->chunk));
         }
     }
 
@@ -747,16 +805,18 @@ private:
     *        \a chunk that the pipeline may move (zero-copy) instead of
     *        copying \a chunk; used only when the chunk actually goes to the
     *        pipeline (not for chunk 0 or the inline path)
+    * \return true iff \a owned was moved into a pipeline job (so the caller
+    *         must replace it), false otherwise
     */
     // }}}
-    void flush_chunk_(const std::span<const std::byte> chunk,
+    bool flush_chunk_(const std::span<const std::byte> chunk,
                       std::vector<std::byte>* const owned = nullptr)
     {
         if (num_chunks_flushed_ == 0)
         {
             absorb_into_final_node_(chunk);
             ++num_chunks_flushed_;
-            return;
+            return false;
         }
 
         maybe_start_pool_();
@@ -765,17 +825,23 @@ private:
         {
             // Move the caller's owned buffer into the job when available;
             // otherwise copy the (caller-owned) span, which must not outlive
-            // this call.
-            dispatch_leaf_(owned != nullptr
-                               ? std::move(*owned)
-                               : std::vector<std::byte>{chunk.begin(), chunk.end()});
+            // this call, into a recycled buffer.
+            if (owned != nullptr)
+            {
+                dispatch_leaf_(std::move(*owned));
+                return true;
+            }
+
+            auto buf = take_chunk_buffer_();
+            buf.assign(chunk.begin(), chunk.end());
+            dispatch_leaf_(std::move(buf));
+            return false;
         }
-        else
-        {
-            const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
-            absorb_into_final_node_(std::span<const std::byte>{cv});
-            ++num_chunks_flushed_;
-        }
+
+        const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
+        absorb_into_final_node_(std::span<const std::byte>{cv});
+        ++num_chunks_flushed_;
+        return false;
     }
 
     /// Hand the full chunk buffer to the tree, moving it when possible
@@ -785,14 +851,18 @@ private:
     */
     void flush_buffered_chunk_()
     {
-        flush_chunk_(chunk_buf_, &chunk_buf_);
-
-        // chunk_buf_ was either read (chunk 0 / inline) or moved-from (the
-        // pipeline).  Either way, restore a fresh, empty, full-capacity
-        // buffer for the next chunk (reserve is a no-op when it was not
-        // moved).
-        chunk_buf_.clear();
-        chunk_buf_.reserve(static_cast<size_t>(CHUNK_SIZE));
+        if (flush_chunk_(chunk_buf_, &chunk_buf_))
+        {
+            // chunk_buf_ was moved into a pipeline job; take a recycled
+            // buffer for the next chunk instead of allocating a fresh one.
+            chunk_buf_ = take_chunk_buffer_();
+        }
+        else
+        {
+            // chunk_buf_ was read, not moved (chunk 0 / inline path); it is
+            // still a usable full-capacity buffer once cleared.
+            chunk_buf_.clear();
+        }
     }
 
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src

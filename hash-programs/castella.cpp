@@ -14,6 +14,7 @@
 #include <err.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits>
 #include <print>
 #include <stdexcept>
 #include <string>
@@ -185,6 +186,42 @@ print_usage()
     std::println("https://keccak.team/sponge_duplex.html");
 }
 
+/// Parse \a optarg as an int in <code>[min, max]</code>, or exit with an error.
+/**
+* \param optarg the option argument to parse
+* \param min the minimum allowed value (inclusive)
+* \param max the maximum allowed value (inclusive)
+* \param option_name the option name, used in the error message
+* \return the parsed value
+* \note On a malformed or out-of-range value this prints a diagnostic and
+*       exits (via \c errx); it does not return.
+*/
+int parse_bounded_int(const char* optarg, const int min, const int max,
+                      const char* option_name)
+{
+    try
+    {
+        const int value = std::stoi(optarg);
+
+        if (value < min || value > max)
+        {
+            throw std::invalid_argument(option_name);
+        }
+
+        return value;
+    }
+    catch (const std::invalid_argument& ex)
+    {
+        (void)std::fflush(stdout);
+        errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+    }
+    catch (const std::out_of_range& ex)
+    {
+        (void)std::fflush(stdout);
+        errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
+    }
+}
+
 /// Process the command line options.
 /**
 * \param argc the arg count
@@ -249,26 +286,9 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_CHUNK_SIZE:
-            try
-            {
-                chunk_size = std::stoi(optarg);
-
-                if (chunk_size < Castella::DuplexTree::CHUNK_SIZE_MIN ||
-                    chunk_size > Castella::DuplexTree::CHUNK_SIZE_MAX)
-                {
-                    throw std::invalid_argument("--chunk-size");
-                }
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            chunk_size = parse_bounded_int(optarg, Castella::DuplexTree::CHUNK_SIZE_MIN,
+                                           Castella::DuplexTree::CHUNK_SIZE_MAX,
+                                           "--chunk-size");
             break;
 
         case OPTION_HASH_CUSTOM:
@@ -280,89 +300,27 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_NUM_THREADS:
-            try
-            {
-                num_threads = std::stoi(optarg);
-
-                if (num_threads < 0 ||
-                    num_threads > Castella::DuplexTree::NUM_THREADS_MAX)
-                {
-                    throw std::invalid_argument("--num-threads");
-                }
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            num_threads = parse_bounded_int(optarg, 0,
+                                            Castella::DuplexTree::NUM_THREADS_MAX,
+                                            "--num-threads");
             break;
 
         case OPTION_HASH_ROUNDS:
-            try
-            {
-                num_rounds = std::stoi(optarg);
-
-                if (num_rounds < Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() ||
-                    num_rounds > Castella::NUM_ROUNDS_MAX)
-                {
-                    throw std::invalid_argument("--rounds");
-                }
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            num_rounds = parse_bounded_int(optarg,
+                                           Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
+                                           Castella::NUM_ROUNDS_MAX, "--rounds");
             break;
 
         case OPTION_HASH_SIZE:
-            try
-            {
-                num_bytes_to_squeeze = std::stoi(optarg);
-
-                if (num_bytes_to_squeeze < min_num_bytes_to_squeeze ||
-                    num_bytes_to_squeeze > max_num_bytes_to_squeeze)
-                {
-                    throw std::invalid_argument("--size");
-                }
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            num_bytes_to_squeeze = parse_bounded_int(optarg, min_num_bytes_to_squeeze,
+                                                     max_num_bytes_to_squeeze, "--size");
             break;
 
         case OPTION_HASH_SUFFIX:
-            try
-            {
-                input_suffix = std::stoi(optarg);
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            // No range check: an out-of-byte-range suffix is rejected later by
+            // the narrow_cast in the Duplex constructor (unchanged behavior).
+            input_suffix = parse_bounded_int(optarg, std::numeric_limits<int>::min(),
+                                             std::numeric_limits<int>::max(), "--suffix");
             break;
 
         default:

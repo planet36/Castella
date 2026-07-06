@@ -391,25 +391,29 @@ private:
         node.add_left_encoded(to_unsigned(CV_LEN));
     }
 
-    /// Hash one chunk to its chaining value
+    /// Hash one chunk to its chaining value, written into \a cv_dst
     // {{{
     /**
     * A pure function of (node parameters, chunk index, chunk bytes) -- this
-    * purity is what will let leaves run on any thread in any order without
-    * affecting the digest.
+    * purity is what lets leaves run on any thread in any order without
+    * affecting the digest.  The CV is squeezed straight into \a cv_dst, so
+    * a caller that already owns the destination (the batch path, which
+    * squeezes into its flat CV array) needs no intermediate vector.
     *
     * \param chunk the chunk bytes; never empty, at most \c CHUNK_SIZE
     * \param chunk_index the position of the chunk in the input; >= 1
     *        (chunk 0 is absorbed directly by the final node, not by a leaf)
+    * \param cv_dst the destination for the \c CV_LEN -byte chaining value
     */
     // }}}
-    [[nodiscard]] std::vector<std::byte>
-    compute_leaf_cv_(const std::span<const std::byte> chunk, const uint64_t chunk_index) const
+    void hash_leaf_into_(const std::span<const std::byte> chunk, const uint64_t chunk_index,
+                         const std::span<std::byte> cv_dst) const
     {
 #if defined(DEBUG)
         assert(chunk_index >= 1);
         assert(!chunk.empty());
         assert(chunk.size() <= static_cast<size_t>(CHUNK_SIZE));
+        assert(std::ssize(cv_dst) == CV_LEN);
 #endif
 
         Duplex leaf(final_node_.C, final_node_.NUM_ROUNDS, final_node_.INPUT_SUFFIX,
@@ -420,7 +424,21 @@ private:
 
         leaf.add(chunk);
 
-        return leaf.squeeze_bytes(CV_LEN);
+        leaf.squeeze_to(cv_dst);
+    }
+
+    /// Hash one chunk to its chaining value, returned as a vector
+    /**
+    * The vector-allocating convenience over \c hash_leaf_into_() for callers
+    * that need to own the CV (the pipeline's promise payload; the inline
+    * path).
+    */
+    [[nodiscard]] std::vector<std::byte>
+    compute_leaf_cv_(const std::span<const std::byte> chunk, const uint64_t chunk_index) const
+    {
+        std::vector<std::byte> cv(to_unsigned(CV_LEN));
+        hash_leaf_into_(chunk, chunk_index, cv);
+        return cv;
     }
 
     [[nodiscard]] bool pool_is_active_() const noexcept
@@ -860,10 +878,12 @@ private:
                                 const std::span chunk{
                                     src + to_unsigned(pos) * chunk_size, chunk_size};
 
-                                const auto cv = compute_leaf_cv_(
-                                    chunk, to_unsigned(first_chunk_index + pos));
-
-                                std::ranges::copy(cv, &cvs[to_unsigned(k) * cv_len]);
+                                // Squeeze the CV straight into its slice of
+                                // the flat cvs array -- no per-leaf CV vector
+                                // to allocate, copy, and free.
+                                hash_leaf_into_(
+                                    chunk, to_unsigned(first_chunk_index + pos),
+                                    std::span{&cvs[to_unsigned(k) * cv_len], cv_len});
                             }
                         }
                         catch (...)

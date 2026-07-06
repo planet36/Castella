@@ -485,6 +485,33 @@ private:
         absorb_();
     }
 
+    /// Finish a squeeze and copy the outer state into \a dst (no locking)
+    // {{{
+    /**
+    * The shared core of \c squeeze_bytes and \c squeeze_to: add the input
+    * suffix, apply the padding rule, then copy the first \c std::size(dst)
+    * bytes of the outer state into \a dst.
+    *
+    * \pre \c std::size(dst) <= \c get_rate_size_bytes()
+    */
+    // }}}
+    void squeeze_into_(std::span<std::byte> dst) noexcept
+    {
+        // Add the input suffix and apply the padding rule before every
+        // squeeze, even if dst is empty.
+        add_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
+        apply_padding_rule_();
+
+#if defined(DEBUG)
+        assert(cur_input_byte_idx_ == 0); // input buf is empty
+        assert(std::ssize(dst) <= get_rate_size_bytes());
+#endif
+
+        const auto byte_sp = std::as_bytes(std::span{state_}).first(std::size(dst));
+
+        (void)std::memcpy(std::data(dst), std::data(byte_sp), std::size(dst));
+    }
+
     /// Add \a data to the input buffer
     void add_(const void* data, size_t len) noexcept
     {
@@ -1034,22 +1061,34 @@ public:
 
         n = std::clamp(n, 0, get_rate_size_bytes());
 
-        std::vector<std::byte> result;
-        result.reserve(n);
+        std::vector<std::byte> result(to_unsigned(n));
 
-        // Add the input suffix and apply the padding rule before every
-        // squeeze, even if n is 0.
-        add_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
-        apply_padding_rule_();
+        squeeze_into_(result);
 
-#if defined(DEBUG)
-        assert(cur_input_byte_idx_ == 0); // input buf is empty
-#endif
-
-        const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
-
-        result.assign(std::begin(byte_sp), std::end(byte_sp));
         return result;
+    }
+
+    /// Squeeze bytes from the outer state into \a dst
+    // {{{
+    /**
+    * Like \c squeeze_bytes(int) but writes \c std::size(dst) bytes into the
+    * caller-provided buffer instead of allocating a vector.
+    *
+    * \param dst the destination buffer; its size must not exceed
+    *        \c get_rate_size_bytes()
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \note Like \c squeeze_bytes, the input suffix and padding are added
+    *       before squeezing, even if \a dst is empty.
+    */
+    // }}}
+    Duplex& squeeze_to(std::span<std::byte> dst)
+    {
+        std::scoped_lock lock{mtx_};
+
+        squeeze_into_(dst);
+
+        return *this;
     }
 
     /// \copydoc squeeze_bytes(int)

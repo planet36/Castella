@@ -519,7 +519,7 @@ private:
 
         for (auto& job : job_queue_)
         {
-            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+            explicit_bzero(std::data(job.chunk), std::size(job.chunk));
         }
         job_queue_.clear();
     }
@@ -576,8 +576,11 @@ private:
             }
 
             // The job's chunk holds message plaintext; zeroize it before
-            // the vector is destroyed (same hygiene as chunk_buf_).
-            explicit_bzero(std::data(job->chunk), job->chunk.capacity());
+            // the vector is destroyed (same hygiene as chunk_buf_).  A job
+            // always holds a whole chunk (size() == capacity()), so wiping
+            // [0, size()) covers the whole allocation and stays within the
+            // vector's object model.
+            explicit_bzero(std::data(job->chunk), std::size(job->chunk));
         }
     }
 
@@ -675,7 +678,7 @@ private:
         }
         catch (...)
         {
-            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+            explicit_bzero(std::data(job.chunk), std::size(job.chunk));
             throw;
         }
         pool_cv_.notify_one();
@@ -1119,10 +1122,17 @@ public:
         // already stopped by finalize_().
         stop_pool_();
 
-        // The chunk buffer holds message plaintext.  Zeroize the whole
-        // allocation: after clear(), bytes beyond size() may still hold
-        // remnants of earlier chunks.  (Each Duplex zeroizes itself.)
-        explicit_bzero(std::data(chunk_buf_), chunk_buf_.capacity());
+        // The chunk buffer holds message plaintext, and after a clear()
+        // bytes beyond size() may still hold remnants of earlier, larger
+        // chunks -- so the whole allocation must be wiped.  Writing into
+        // [size(), capacity()) through data() is outside the vector's
+        // object model, though (and trips AddressSanitizer's container
+        // overflow check), so grow size() to span the allocation first:
+        // resize() to the current capacity never reallocates and
+        // value-initializes the tail, leaving the wipe entirely within
+        // [0, size()).  (Each Duplex zeroizes itself.)
+        chunk_buf_.resize(chunk_buf_.capacity());
+        explicit_bzero(std::data(chunk_buf_), std::size(chunk_buf_));
     }
 
     /// Consume \a data into the tree

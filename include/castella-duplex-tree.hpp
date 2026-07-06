@@ -441,6 +441,25 @@ private:
         return cv;
     }
 
+    /// Securely wipe a byte vector's entire allocation
+    // {{{
+    /**
+    * Every buffer this class holds carries message plaintext, so it is
+    * wiped before release.  Growing size() to span the whole allocation
+    * first (resize() to the current capacity never reallocates and
+    * value-initializes any tail) clears plaintext an earlier, larger chunk
+    * may have left in [size(), capacity()) while keeping the wipe within
+    * [0, size()) -- inside the vector's object model (writing past size()
+    * trips AddressSanitizer's container-overflow check).  For a full chunk
+    * (size() == capacity()) the resize is a no-op.
+    */
+    // }}}
+    static void zeroize_(std::vector<std::byte>& v)
+    {
+        v.resize(v.capacity());
+        explicit_bzero(std::data(v), std::size(v));
+    }
+
     [[nodiscard]] bool pool_is_active_() const noexcept
     {
         return !pool_workers_.empty();
@@ -508,7 +527,7 @@ private:
 
         for (auto& job : job_queue_)
         {
-            explicit_bzero(std::data(job.chunk), std::size(job.chunk));
+            zeroize_(job.chunk);
         }
         job_queue_.clear();
     }
@@ -564,12 +583,9 @@ private:
                 job->cv_promise.set_exception(std::current_exception());
             }
 
-            // The job's chunk holds message plaintext; zeroize it before
-            // the vector is destroyed (same hygiene as chunk_buf_).  A job
-            // always holds a whole chunk (size() == capacity()), so wiping
-            // [0, size()) covers the whole allocation and stays within the
-            // vector's object model.
-            explicit_bzero(std::data(job->chunk), std::size(job->chunk));
+            // The job's chunk holds message plaintext; wipe it before the
+            // vector is destroyed (same hygiene as chunk_buf_).
+            zeroize_(job->chunk);
         }
     }
 
@@ -667,7 +683,7 @@ private:
         }
         catch (...)
         {
-            explicit_bzero(std::data(job.chunk), std::size(job.chunk));
+            zeroize_(job.chunk);
             throw;
         }
         pool_cv_.notify_one();
@@ -1115,17 +1131,10 @@ public:
         // already stopped by finalize_().
         stop_pool_();
 
-        // The chunk buffer holds message plaintext, and after a clear()
-        // bytes beyond size() may still hold remnants of earlier, larger
-        // chunks -- so the whole allocation must be wiped.  Writing into
-        // [size(), capacity()) through data() is outside the vector's
-        // object model, though (and trips AddressSanitizer's container
-        // overflow check), so grow size() to span the allocation first:
-        // resize() to the current capacity never reallocates and
-        // value-initializes the tail, leaving the wipe entirely within
-        // [0, size()).  (Each Duplex zeroizes itself.)
-        chunk_buf_.resize(chunk_buf_.capacity());
-        explicit_bzero(std::data(chunk_buf_), std::size(chunk_buf_));
+        // The chunk buffer holds message plaintext (including remnants of
+        // earlier, larger chunks beyond size()); wipe the whole allocation.
+        // (Each Duplex zeroizes itself.)
+        zeroize_(chunk_buf_);
     }
 
     /// Consume \a data into the tree

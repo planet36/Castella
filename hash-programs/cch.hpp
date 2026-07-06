@@ -106,15 +106,19 @@ private:
         has_been_finalized_ = false;
     }
 
-    /// Absorb the input buffer into the state and perhaps apply the permutation function
-    void absorb_()
+    /// Absorb the span of bytes into the state and perhaps apply the permutation function
+    /**
+    * \param byte_sp the span of bytes to absorb
+    * \pre the size of \a byte_sp is at least \c get_state_size_bytes()
+    */
+    void absorb_(const std::span<const std::byte> byte_sp)
     {
 #if defined(DEBUG)
-        assert(input_bytes_.is_full());
+        assert(std::ssize(byte_sp) >= get_state_size_bytes());
         assert(!has_been_finalized_);
 #endif
 
-        const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
+        const auto* input_blocks = reinterpret_cast<const block_t*>(std::data(byte_sp));
 
         simd_compress_aes_enc_r3_arr(state_, input_blocks);
 
@@ -130,6 +134,17 @@ private:
                 absorbs_since_mix_ = 0;
             }
         }
+    }
+
+    /// Absorb the input buffer into the state and perhaps apply the permutation function
+    void absorb_()
+    {
+#if defined(DEBUG)
+        assert(input_bytes_.is_full());
+        assert(!has_been_finalized_);
+#endif
+
+        absorb_(input_bytes_);
 
         // zeroizing the input buffer is unnecessary
         input_bytes_.clear();

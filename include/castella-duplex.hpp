@@ -44,7 +44,6 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
-#include <new>
 #include <span>
 #include <stdexcept>
 #include <string_view>
@@ -801,7 +800,15 @@ public:
         check_constraints_();
 
         // Must allocate the input buffer before calling zeroize_().
-        input_blocks_ = new (std::align_val_t{alignof(block_t)}) block_t[R]; // NOLINT(cppcoreguidelines-owning-memory)
+        // Plain new[] is used (not the over-aligned new): block_t's alignment
+        // does not exceed the default new alignment, so plain new[] already
+        // returns suitably aligned storage, and it pairs with the plain
+        // delete[] in the destructor.  The previous over-aligned new paired
+        // with a plain delete[] was a new/delete alignment mismatch (undefined
+        // behavior, caught by AddressSanitizer).
+        static_assert(alignof(block_t) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__,
+                      "block_t needs over-aligned new[]/delete[]");
+        input_blocks_ = new block_t[R]; // NOLINT(cppcoreguidelines-owning-memory)
 
         // Must zeroize the state and input buffer before calling init_().
         zeroize_();

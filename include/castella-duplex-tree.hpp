@@ -273,7 +273,7 @@ private:
     struct LeafJob final
     {
         std::vector<std::byte> chunk;
-        uint64_t chunk_index = 0;
+        int64_t chunk_index = 0;
         std::promise<std::vector<std::byte>> cv_promise;
     };
 
@@ -406,7 +406,7 @@ private:
     * \param cv_dst the destination for the \c CV_LEN -byte chaining value
     */
     // }}}
-    void hash_leaf_into_(const std::span<const std::byte> chunk, const uint64_t chunk_index,
+    void hash_leaf_into_(const std::span<const std::byte> chunk, const int64_t chunk_index,
                          const std::span<std::byte> cv_dst) const
     {
 #if defined(DEBUG)
@@ -420,7 +420,7 @@ private:
                     function_name_, customization_str_);
 
         absorb_role_prefix_(leaf, ROLE_LEAF);
-        leaf.add_left_encoded(chunk_index);
+        leaf.add_left_encoded(to_unsigned(chunk_index));
 
         leaf.add(chunk);
 
@@ -434,7 +434,7 @@ private:
     * path).
     */
     [[nodiscard]] std::vector<std::byte>
-    compute_leaf_cv_(const std::span<const std::byte> chunk, const uint64_t chunk_index) const
+    compute_leaf_cv_(const std::span<const std::byte> chunk, const int64_t chunk_index) const
     {
         std::vector<std::byte> cv(to_unsigned(CV_LEN));
         hash_leaf_into_(chunk, chunk_index, cv);
@@ -666,8 +666,7 @@ private:
         std::promise<std::vector<std::byte>> cv_promise;
         auto cv_future = cv_promise.get_future();
 
-        LeafJob job{std::move(chunk), to_unsigned(num_chunks_flushed_),
-                    std::move(cv_promise)};
+        LeafJob job{std::move(chunk), num_chunks_flushed_, std::move(cv_promise)};
 
         // Enqueue the job first, and record its future in pending_cvs_ only
         // after the enqueue succeeds.  Doing it in this order means a failed
@@ -744,7 +743,7 @@ private:
 #if defined(DEBUG)
             assert(pending_cvs_.empty());
 #endif
-            const auto cv = compute_leaf_cv_(chunk, to_unsigned(num_chunks_flushed_));
+            const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
             final_node_.add(std::span<const std::byte>{cv});
             ++num_chunks_flushed_;
         }
@@ -898,7 +897,7 @@ private:
                                 // the flat cvs array -- no per-leaf CV vector
                                 // to allocate, copy, and free.
                                 hash_leaf_into_(
-                                    chunk, to_unsigned(first_chunk_index + pos),
+                                    chunk, first_chunk_index + pos,
                                     std::span{&cvs[to_unsigned(k) * cv_len], cv_len});
                             }
                         }
@@ -1057,8 +1056,7 @@ private:
         {
             // Compute the trailing CV *before* draining, so this thread
             // hashes the last chunk while the workers finish theirs.
-            const auto cv =
-                compute_leaf_cv_(chunk_buf_, to_unsigned(num_chunks_flushed_));
+            const auto cv = compute_leaf_cv_(chunk_buf_, num_chunks_flushed_);
 
             drain_pending_cvs_();
 

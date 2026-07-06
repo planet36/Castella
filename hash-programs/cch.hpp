@@ -289,16 +289,16 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        if (data == nullptr)
-        {
-            return *this;
-        }
-
         std::scoped_lock lock{mtx_};
 
         if (has_been_finalized_)
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");
+        }
+
+        if (data == nullptr)
+        {
+            return *this;
         }
 
         add_(data, len);

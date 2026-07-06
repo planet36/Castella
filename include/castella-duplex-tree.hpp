@@ -937,11 +937,13 @@ private:
 
         // Absorb the CVs in index order.  This is the only ordering the
         // digest can observe, and it is independent of which worker
-        // computed which CV.
-        for (int64_t k = 0; k < num_leaves; ++k)
-        {
-            final_node_.add(&cvs[to_unsigned(k) * cv_len], cv_len);
-        }
+        // computed which CV.  The CVs are already contiguous in cvs, in
+        // index order, so one add() of the whole buffer absorbs the same
+        // byte stream -- with the same permutations at the same offsets --
+        // as a per-CV loop would (Duplex::add is a pure byte-stream
+        // absorber, insensitive to call boundaries), taking Duplex's mutex
+        // once instead of once per CV.
+        final_node_.add(std::span<const std::byte>{cvs});
 
         num_chunks_flushed_ += num_chunks;
     }

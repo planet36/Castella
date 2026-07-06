@@ -645,16 +645,35 @@ private:
         assert(num_chunks_flushed_ >= 1); // chunk 0 is never a leaf
 #endif
 
+        // Construct the promise (and take its future) before moving the
+        // plaintext chunk into the job, so a failed promise allocation
+        // cannot strand plaintext in a half-built job.
         std::promise<std::vector<std::byte>> cv_promise;
-        pending_cvs_.push_back(cv_promise.get_future());
+        auto cv_future = cv_promise.get_future();
 
+        LeafJob job{std::move(chunk), to_unsigned(num_chunks_flushed_),
+                    std::move(cv_promise)};
+
+        // Enqueue the job first, and record its future in pending_cvs_ only
+        // after the enqueue succeeds.  Doing it in this order means a failed
+        // enqueue can never leave a broken-promise future poisoning the
+        // front of the pipeline; deque::push_back gives the strong guarantee,
+        // so on throw the job (and its plaintext chunk) is untouched and can
+        // be zeroized -- matching the hygiene every other exit path applies
+        // -- before the exception propagates.
+        try
         {
             std::scoped_lock lock{pool_mtx_};
-            job_queue_.push_back(LeafJob{std::move(chunk),
-                                         to_unsigned(num_chunks_flushed_),
-                                         std::move(cv_promise)});
+            job_queue_.push_back(std::move(job));
+        }
+        catch (...)
+        {
+            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+            throw;
         }
         pool_cv_.notify_one();
+
+        pending_cvs_.push_back(std::move(cv_future));
 
         ++num_chunks_flushed_;
 

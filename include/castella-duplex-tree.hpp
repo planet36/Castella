@@ -34,6 +34,7 @@
 #include <exception>
 #include <future>
 #include <mutex>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -540,7 +541,14 @@ private:
     {
         for (;;)
         {
-            LeafJob job;
+            // An empty optional holds no LeafJob and therefore allocates no
+            // promise shared state.  A bare `LeafJob job;` would instead
+            // default-construct a std::promise (which eagerly allocates)
+            // right here, outside the try below -- and an exception escaping
+            // this jthread's callable calls std::terminate.  Dequeuing via
+            // emplace only move-constructs the already-built job, which
+            // allocates nothing, so the whole critical section is noexcept.
+            std::optional<LeafJob> job;
 
             {
                 std::unique_lock lock{pool_mtx_};
@@ -551,25 +559,25 @@ private:
                 if (pool_stop_)
                     return;
 
-                job = std::move(job_queue_.front());
+                job.emplace(std::move(job_queue_.front()));
                 job_queue_.pop_front();
             }
 
             try
             {
-                job.cv_promise.set_value(
-                    compute_leaf_cv_(job.chunk, job.chunk_index));
+                job->cv_promise.set_value(
+                    compute_leaf_cv_(job->chunk, job->chunk_index));
             }
             catch (...)
             {
                 // Deliver the exception (realistically only std::bad_alloc)
                 // to whoever get()s the CV on the calling thread.
-                job.cv_promise.set_exception(std::current_exception());
+                job->cv_promise.set_exception(std::current_exception());
             }
 
             // The job's chunk holds message plaintext; zeroize it before
             // the vector is destroyed (same hygiene as chunk_buf_).
-            explicit_bzero(std::data(job.chunk), job.chunk.capacity());
+            explicit_bzero(std::data(job->chunk), job->chunk.capacity());
         }
     }
 

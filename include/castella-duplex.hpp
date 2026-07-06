@@ -506,9 +506,15 @@ private:
         assert(std::ssize(dst) <= get_rate_size_bytes());
 #endif
 
-        const auto byte_sp = std::as_bytes(std::span{state_}).first(std::size(dst));
+        // Guard the memcpy: on a mute squeeze (empty dst, e.g. squeeze_bytes(0))
+        // std::data(dst) may be null, and memcpy(null, ..., 0) is undefined
+        // behavior (its pointer arguments are declared never-null).
+        if (!std::empty(dst))
+        {
+            const auto byte_sp = std::as_bytes(std::span{state_}).first(std::size(dst));
 
-        (void)std::memcpy(std::data(dst), std::data(byte_sp), std::size(dst));
+            (void)std::memcpy(std::data(dst), std::data(byte_sp), std::size(dst));
+        }
     }
 
     /// Add \a data to the input buffer

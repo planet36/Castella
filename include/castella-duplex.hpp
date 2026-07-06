@@ -904,6 +904,48 @@ public:
         return add_right_encoded(std::data(s), std::size(s));
     }
 
+    /// Consume the left-encoding of the unsigned integer \a x
+    // {{{
+    /**
+    * Absorbs the byte width of \a x followed by its low bytes (the
+    * left_encode of SP 800-185), parseable from the beginning of the
+    * stream.  The integer counterpart of \c add_left_encoded(byte string).
+    *
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    */
+    // }}}
+    Duplex& add_left_encoded(const std::unsigned_integral auto x)
+    {
+        std::scoped_lock lock{mtx_};
+
+        left_encode_(x);
+
+        return *this;
+    }
+
+    /// Consume the right-encoding of the unsigned integer \a x
+    // {{{
+    /**
+    * Absorbs the low bytes of \a x followed by its byte width (the
+    * right_encode of SP 800-185), parseable from the end of the stream.
+    * The integer counterpart of \c add_right_encoded(byte string).
+    *
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    */
+    // }}}
+    Duplex& add_right_encoded(const std::unsigned_integral auto x)
+    {
+        std::scoped_lock lock{mtx_};
+
+        right_encode_(x);
+
+        return *this;
+    }
+
     /// Apply the "pad10*1" padding rule to the input buffer
     // {{{
     /**

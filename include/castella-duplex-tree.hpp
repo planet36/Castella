@@ -375,35 +375,6 @@ private:
         return static_cast<int32_t>(num_threads);
     }
 
-    /// Absorb left_encode(x) into \a node via its public interface
-    // {{{
-    /**
-    * Byte-for-byte identical to what Duplex's private \c left_encode_()
-    * absorbs: the byte width of \a x, then the low \c w bytes of \a x in
-    * native byte order (the same native-order convention Duplex itself
-    * uses).  Replicated here because the integer form of the encoder is
-    * private to Duplex.
-    */
-    // }}}
-    static void add_left_encoded_uint_(Duplex& node, const std::unsigned_integral auto x)
-    {
-        const auto w = static_cast<uint8_t>(byte_width(x));
-        node.add(&w, sizeof(w));
-        node.add(&x, w);
-    }
-
-    /// Absorb right_encode(x) into \a node via its public interface
-    /**
-    * As \c add_left_encoded_uint_(), but with the width byte last, so the
-    * value is parseable from the end of the stream.
-    */
-    static void add_right_encoded_uint_(Duplex& node, const std::unsigned_integral auto x)
-    {
-        const auto w = static_cast<uint8_t>(byte_width(x));
-        node.add(&x, w);
-        node.add(&w, sizeof(w));
-    }
-
     /// Absorb the tree-role prefix into \a node
     // {{{
     /**
@@ -416,8 +387,8 @@ private:
     void absorb_role_prefix_(Duplex& node, const uint8_t role) const
     {
         node.add(&role, sizeof(role));
-        add_left_encoded_uint_(node, to_unsigned(CHUNK_SIZE));
-        add_left_encoded_uint_(node, to_unsigned(CV_LEN));
+        node.add_left_encoded(to_unsigned(CHUNK_SIZE));
+        node.add_left_encoded(to_unsigned(CV_LEN));
     }
 
     /// Hash one chunk to its chaining value
@@ -445,7 +416,7 @@ private:
                     function_name_, customization_str_);
 
         absorb_role_prefix_(leaf, ROLE_LEAF);
-        add_left_encoded_uint_(leaf, chunk_index);
+        leaf.add_left_encoded(chunk_index);
 
         leaf.add(chunk);
 
@@ -1066,7 +1037,7 @@ private:
 
         // Every chunk after chunk 0 contributed one CV.
         const auto num_cvs = to_unsigned(num_chunks_flushed_ - 1);
-        add_right_encoded_uint_(final_node_, num_cvs);
+        final_node_.add_right_encoded(num_cvs);
 
         has_been_finalized_ = true;
     }

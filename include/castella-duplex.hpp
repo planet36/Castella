@@ -798,10 +798,10 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
+        std::scoped_lock lock{mtx_};
+
         if (data == nullptr)
             return *this;
-
-        std::scoped_lock lock{mtx_};
 
         add_(data, len);
 
@@ -833,10 +833,10 @@ public:
     // }}}
     Duplex& add_encoded(const void* data, size_t len)
     {
+        std::scoped_lock lock{mtx_};
+
         if (data == nullptr)
             return *this;
-
-        std::scoped_lock lock{mtx_};
 
         encode_bytes_(data, len);
 

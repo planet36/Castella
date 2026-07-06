@@ -629,6 +629,26 @@ private:
         }
     }
 
+    /// Absorb \a bytes into the final node, after draining any pending CVs
+    // {{{
+    /**
+    * The single choke point for feeding the final node any chunk data or
+    * chaining value: it drains the streaming pipeline first (a no-op when
+    * there is nothing pending), so pipelined CVs always enter the final
+    * node in chunk-index order, ahead of whatever is absorbed here.  Every
+    * such absorption goes through this method, so the ordering invariant is
+    * structural rather than something each call site must remember to
+    * uphold.  (flush_bulk_chunks_ additionally drains early, before joining
+    * its workers, to overlap the drain with their hashing; that leaves this
+    * drain a no-op but is a deliberate optimization.)
+    */
+    // }}}
+    void absorb_into_final_node_(const std::span<const std::byte> bytes)
+    {
+        drain_pending_cvs_();
+        final_node_.add(bytes);
+    }
+
     /// Queue one owned chunk for a pool worker, and apply backpressure
     // {{{
     /**
@@ -734,7 +754,7 @@ private:
     {
         if (num_chunks_flushed_ == 0)
         {
-            final_node_.add(chunk);
+            absorb_into_final_node_(chunk);
             ++num_chunks_flushed_;
             return;
         }
@@ -752,11 +772,8 @@ private:
         }
         else
         {
-#if defined(DEBUG)
-            assert(pending_cvs_.empty());
-#endif
             const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
-            final_node_.add(std::span<const std::byte>{cv});
+            absorb_into_final_node_(std::span<const std::byte>{cv});
             ++num_chunks_flushed_;
         }
     }
@@ -925,10 +942,13 @@ private:
             // node before this batch's CVs.
             if (first_chunk_index == 0)
             {
-                final_node_.add(std::span{src, chunk_size});
+                absorb_into_final_node_(std::span{src, chunk_size});
             }
             else
             {
+                // Drain early, before the join, to overlap it with the
+                // workers still hashing (the choke point at the CV absorb
+                // below then finds nothing left to drain).
                 drain_pending_cvs_();
             }
 
@@ -951,7 +971,7 @@ private:
         // as a per-CV loop would (Duplex::add is a pure byte-stream
         // absorber, insensitive to call boundaries), taking Duplex's mutex
         // once instead of once per CV.
-        final_node_.add(std::span<const std::byte>{cvs});
+        absorb_into_final_node_(std::span<const std::byte>{cvs});
 
         num_chunks_flushed_ += num_chunks;
     }
@@ -1052,17 +1072,17 @@ private:
         {
             // Nothing was ever flushed: the entire message (possibly
             // empty) is chunk 0, and no pipeline exists to drain.
-            final_node_.add(std::span<const std::byte>{chunk_buf_});
+            absorb_into_final_node_(std::span<const std::byte>{chunk_buf_});
         }
         else
         {
-            // Compute the trailing CV *before* draining, so this thread
-            // hashes the last chunk while the workers finish theirs.
+            // Compute the trailing CV *before* absorbing, so this thread
+            // hashes the last chunk while the workers finish theirs;
+            // absorb_into_final_node_ then drains the pipeline so the
+            // highest-index (trailing) CV enters the final node last.
             const auto cv = compute_leaf_cv_(chunk_buf_, num_chunks_flushed_);
 
-            drain_pending_cvs_();
-
-            final_node_.add(std::span<const std::byte>{cv});
+            absorb_into_final_node_(std::span<const std::byte>{cv});
         }
         ++num_chunks_flushed_;
         chunk_buf_.clear();

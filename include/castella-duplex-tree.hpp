@@ -721,9 +721,16 @@ private:
     * stays active until finalization, and finalization drains the pipeline
     * before stopping it.  So the inline branch can never overtake a
     * pipelined CV.
+    *
+    * \param chunk a view of the whole chunk to hand to the tree
+    * \param owned if non-null, an owned buffer holding the same bytes as
+    *        \a chunk that the pipeline may move (zero-copy) instead of
+    *        copying \a chunk; used only when the chunk actually goes to the
+    *        pipeline (not for chunk 0 or the inline path)
     */
     // }}}
-    void flush_chunk_(const std::span<const std::byte> chunk)
+    void flush_chunk_(const std::span<const std::byte> chunk,
+                      std::vector<std::byte>* const owned = nullptr)
     {
         if (num_chunks_flushed_ == 0)
         {
@@ -736,7 +743,12 @@ private:
 
         if (pool_is_active_())
         {
-            dispatch_leaf_(std::vector<std::byte>{chunk.begin(), chunk.end()});
+            // Move the caller's owned buffer into the job when available;
+            // otherwise copy the (caller-owned) span, which must not outlive
+            // this call.
+            dispatch_leaf_(owned != nullptr
+                               ? std::move(*owned)
+                               : std::vector<std::byte>{chunk.begin(), chunk.end()});
         }
         else
         {
@@ -749,31 +761,21 @@ private:
         }
     }
 
-    /// Hand the full chunk buffer to the tree, without copying if possible
+    /// Hand the full chunk buffer to the tree, moving it when possible
     /**
-    * Like \c flush_chunk_(chunk_buf_), except that when the chunk goes to
-    * the pipeline, the buffer itself is *moved* into the job (the buffered
-    * chunk is owned by this object, unlike the caller-owned spans the
-    * router copies), and a fresh buffer is set up for the next chunk.
+    * Delegates the routing to \c flush_chunk_, passing \c chunk_buf_ as the
+    * movable owned buffer so a pipelined chunk is moved rather than copied.
     */
     void flush_buffered_chunk_()
     {
-        maybe_start_pool_();
+        flush_chunk_(chunk_buf_, &chunk_buf_);
 
-        if ((num_chunks_flushed_ > 0) && pool_is_active_())
-        {
-            dispatch_leaf_(std::move(chunk_buf_));
-
-            // The moved-from vector is valid but unspecified; make it a
-            // fresh, empty, full-capacity chunk buffer again.
-            chunk_buf_.clear();
-            chunk_buf_.reserve(static_cast<size_t>(CHUNK_SIZE));
-        }
-        else
-        {
-            flush_chunk_(chunk_buf_);
-            chunk_buf_.clear();
-        }
+        // chunk_buf_ was either read (chunk 0 / inline) or moved-from (the
+        // pipeline).  Either way, restore a fresh, empty, full-capacity
+        // buffer for the next chunk (reserve is a no-op when it was not
+        // moved).
+        chunk_buf_.clear();
+        chunk_buf_.reserve(static_cast<size_t>(CHUNK_SIZE));
     }
 
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src

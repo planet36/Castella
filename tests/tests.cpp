@@ -392,6 +392,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             {
                 std::println("std::logic_error: {}", ex.what());
             }
+
+            // A null/empty add after finalization must throw too, not
+            // silently no-op (the finalized check precedes the null-data
+            // short-circuit).
+            try
+            {
+                tree.add(std::span<const std::byte>{});
+
+                return 1; // unreachable
+            }
+            catch (const std::logic_error& ex)
+            {
+                std::println("std::logic_error: {}", ex.what());
+            }
         }
 
         {

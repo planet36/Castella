@@ -1148,16 +1148,20 @@ public:
     // }}}
     DuplexTree& add(const void* data, size_t len)
     {
-        if (data == nullptr)
-            return *this;
-
         std::scoped_lock lock{mtx_};
 
         // Unlike Duplex, adding after a squeeze is an error: the final node
         // has already absorbed the trailing chunk count, so later chunks
-        // could not be integrated into the tree.
+        // could not be integrated into the tree.  This check precedes the
+        // null-data short-circuit so the documented std::logic_error is
+        // thrown unconditionally once finalized -- including for a null or
+        // default-constructed span/string_view, which would otherwise
+        // silently no-op and disagree with add("").
         if (has_been_finalized_)
             throw std::logic_error("Castella::DuplexTree::add: tree has been finalized");
+
+        if (data == nullptr)
+            return *this;
 
         add_(data, len);
 

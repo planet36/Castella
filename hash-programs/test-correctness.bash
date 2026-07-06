@@ -357,6 +357,15 @@ assert_eq_cmd_str \
     './cch --mix-rate=258 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
     baf0ae2074dc3a1c9a4ac824408afaaf2552c807ea2883064e8f5f0b69705f1b
 
+# Remove the input data files.
+rm -f -- \
+/tmp/test-0B.txt    \
+/tmp/test-100B.txt  \
+/tmp/test-1KiB.txt  \
+/tmp/test-64KiB.txt \
+/tmp/test-100kB.txt \
+/tmp/test-1MiB.txt
+
 echo "$PASS passed, $FAIL failed"
 
 (( FAIL == 0 ))

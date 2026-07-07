@@ -106,9 +106,9 @@ private:
         has_been_finalized_ = false;
     }
 
-    /// Absorb the span of bytes into the state and perhaps apply the permutation function
+    /// Absorb the byte span into the state and perhaps apply the permutation function
     /**
-    * \param byte_sp the span of bytes to absorb
+    * \param byte_sp the bytes to absorb
     * \pre the size of \a byte_sp is at least \c get_state_size_bytes()
     */
     void absorb_(const std::span<const std::byte> byte_sp)

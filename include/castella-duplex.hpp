@@ -755,7 +755,7 @@ public:
         check_constraints_();
 
         // Must allocate the input buffer before calling zeroize_().
-        input_blocks_ = new (std::align_val_t{alignof(block_t)}) block_t[R]; // NOLINT(cppcoreguidelines-owning-memory)
+        input_blocks_ = new block_t[R];
 
         // Must zeroize the state and input buffer before calling init_().
         zeroize_();

@@ -14,11 +14,9 @@
 #include <cstring>
 
 /// Load 16 bytes from \a src into a \c uint8x16_t
-// {{{
 /**
 * \pre \a src points to at least 16 bytes of data
 */
-// }}}
 [[nodiscard]] static inline uint8x16_t
 simd_load16(const void* src) noexcept
 {

@@ -218,7 +218,7 @@ right_encode_5(const std::unsigned_integral auto x)
 
 /// Unambiguously encode the byte string
 [[nodiscard]] std::vector<std::byte>
-encode_bytes(const std::span<const std::byte> byte_sp)
+left_encode_bytes(const std::span<const std::byte> byte_sp)
 {
     std::vector<std::byte> result;
 
@@ -230,10 +230,10 @@ encode_bytes(const std::span<const std::byte> byte_sp)
 
 /// Unambiguously encode the byte string
 [[nodiscard]] std::vector<std::byte>
-encode_bytes(const std::string_view s)
+left_encode_bytes(const std::string_view s)
 {
     static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-    return encode_bytes(std::as_bytes(std::span{s}));
+    return left_encode_bytes(std::as_bytes(std::span{s}));
 }
 
 template <std::unsigned_integral T>

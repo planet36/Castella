@@ -11,7 +11,9 @@
 
 #include "simd_types.hpp"
 
+#include <cstddef>
 #include <cstring>
+#include <span>
 
 /// Load 16 bytes from \a src into a \c uint8x16_t
 /**
@@ -22,5 +24,17 @@ simd_load16(const void* src) noexcept
 {
     uint8x16_t dst{};
     (void)std::memcpy(&dst, src, sizeof(dst));
+    return dst;
+}
+
+/// Load 16 bytes from \a byte_sp into a \c uint8x16_t
+/**
+* \pre the size of \a byte_sp is at least 16
+*/
+[[nodiscard]] static inline uint8x16_t
+simd_load16(const std::span<const std::byte> byte_sp) noexcept
+{
+    uint8x16_t dst{};
+    (void)std::memcpy(&dst, std::data(byte_sp), sizeof(dst));
     return dst;
 }

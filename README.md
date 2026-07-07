@@ -52,7 +52,7 @@ The number of rounds determines the safety margin.  The capacity size determines
 Input data may be given in the form of raw data (i.e., a `const void*`, `size_t` pair) or a byte span (i.e., `const std::span<const std::byte>`) with these member functions:
 * `add`
     * Add the given data to the input buffer.
-* `add_encoded`
+* `add_left_encoded`
     * Add the left-encoded length of the given data, followed by the data itself, to the input buffer.
 
 When the input buffer is full, it is absorbed (via XOR) into the outer part of the state.

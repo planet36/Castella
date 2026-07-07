@@ -831,7 +831,7 @@ public:
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Duplex& add_encoded(const void* data, size_t len)
+    Duplex& add_left_encoded(const void* data, size_t len)
     {
         std::scoped_lock lock{mtx_};
 
@@ -843,17 +843,17 @@ public:
         return *this;
     }
 
-    /// \copydoc add_encoded(const void*, size_t)
-    Duplex& add_encoded(const std::span<const std::byte> byte_sp)
+    /// \copydoc add_left_encoded(const void*, size_t)
+    Duplex& add_left_encoded(const std::span<const std::byte> byte_sp)
     {
-        return add_encoded(std::data(byte_sp), std::size(byte_sp));
+        return add_left_encoded(std::data(byte_sp), std::size(byte_sp));
     }
 
-    /// \copydoc add_encoded(const void*, size_t)
-    Duplex& add_encoded(const std::string_view s)
+    /// \copydoc add_left_encoded(const void*, size_t)
+    Duplex& add_left_encoded(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_encoded(std::data(s), std::size(s));
+        return add_left_encoded(std::data(s), std::size(s));
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer

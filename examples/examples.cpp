@@ -199,7 +199,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
@@ -238,7 +238,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
@@ -277,7 +277,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(0U))
@@ -316,7 +316,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(0U))
@@ -371,16 +371,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(X[0]) // encode_string
-                                      .add_encoded(X[1]) // encode_string
+                                      .add_left_encoded(X[0]) // encode_string
+                                      .add_left_encoded(X[1]) // encode_string
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
             Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
                              customization_str)
-                .add_encoded(Y[0]) // encode_string
-                .add_encoded(Y[1]) // encode_string
+                .add_left_encoded(Y[0]) // encode_string
+                .add_left_encoded(Y[1]) // encode_string
                 .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -429,16 +429,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(X[0]) // encode_string
-                                      .add_encoded(X[1]) // encode_string
+                                      .add_left_encoded(X[0]) // encode_string
+                                      .add_left_encoded(X[1]) // encode_string
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
             Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
                              customization_str)
-                .add_encoded(Y[0]) // encode_string
-                .add_encoded(Y[1]) // encode_string
+                .add_left_encoded(Y[0]) // encode_string
+                .add_left_encoded(Y[1]) // encode_string
                 .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -487,16 +487,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(X[0]) // encode_string
-                                      .add_encoded(X[1]) // encode_string
+                                      .add_left_encoded(X[0]) // encode_string
+                                      .add_left_encoded(X[1]) // encode_string
                                       .add(right_encode(0U))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
             Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
                              customization_str)
-                .add_encoded(Y[0]) // encode_string
-                .add_encoded(Y[1]) // encode_string
+                .add_left_encoded(Y[0]) // encode_string
+                .add_left_encoded(Y[1]) // encode_string
                 .add(right_encode(0U))
                 .squeeze_bytes(num_bytes_to_squeeze);
 
@@ -545,16 +545,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_encoded(X[0]) // encode_string
-                                      .add_encoded(X[1]) // encode_string
+                                      .add_left_encoded(X[0]) // encode_string
+                                      .add_left_encoded(X[1]) // encode_string
                                       .add(right_encode(0U))
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
             Castella::Duplex(capacity_blocks, num_rounds, input_suffix, function_name,
                              customization_str)
-                .add_encoded(Y[0]) // encode_string
-                .add_encoded(Y[1]) // encode_string
+                .add_left_encoded(Y[0]) // encode_string
+                .add_left_encoded(Y[1]) // encode_string
                 .add(right_encode(0U))
                 .squeeze_bytes(num_bytes_to_squeeze);
 

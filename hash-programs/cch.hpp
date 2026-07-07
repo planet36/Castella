@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
@@ -54,6 +55,10 @@ private:
     state_t state_{};
     static_assert(sizeof(state_) <= 256); // constrained by padding bytes
 
+    /**
+    * Input data that's too small to be directly absorbed passes through this buffer.
+    * The padding bytes are added to this buffer before finalization.
+    */
     fixed_vector<std::byte, sizeof(state_), alignof(block_t)> input_bytes_;
 
     mutable std::mutex mtx_;
@@ -150,36 +155,29 @@ private:
         input_bytes_.clear();
     }
 
-    /// Add \a data to the input buffer
-    void add_(const void* data, size_t len)
+    /// Consume the bytes
+    /**
+    * Whole chunks (of \c get_state_size_bytes() bytes) are compressed directly
+    * from \a byte_sp.
+    * Only a leading partial chunk (if the input buffer is not empty)
+    * and a trailing partial chunk pass through the input buffer.
+    * \param byte_sp the bytes to consume
+    */
+    void add_(std::span<const std::byte> byte_sp)
     {
-#if defined(DEBUG)
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
-#endif
-
 #if defined(DEBUG)
         assert(!has_been_finalized_);
 #endif
 
-        const auto* src = static_cast<const std::byte*>(data);
-
-        while (len > 0)
+        // First, add to the partially filled input buffer.
+        if (!input_bytes_.is_empty())
         {
-#if defined(DEBUG)
-            assert(!input_bytes_.is_full());
-#endif
+            const size_t num_bytes_to_add = std::min(input_bytes_.remaining_space(),
+                                                     std::size(byte_sp));
 
-            const size_t num_bytes_to_add = std::min(input_bytes_.remaining_space(), len);
+            input_bytes_.append_range(byte_sp.subspan(0, num_bytes_to_add));
 
-#if defined(DEBUG)
-            assert(num_bytes_to_add > 0);
-#endif
-
-            input_bytes_.append_range(std::span(src, num_bytes_to_add));
-
-            len -= num_bytes_to_add;
-            src += num_bytes_to_add;
+            byte_sp = byte_sp.subspan(num_bytes_to_add);
 
             if (input_bytes_.is_full())
             {
@@ -187,8 +185,20 @@ private:
             }
         }
 
+        // Then, process whole chunks directly from the source, bypassing the input buffer.
+        while (std::size(byte_sp) >= get_state_size_bytes())
+        {
+            absorb_(byte_sp);
+            byte_sp = byte_sp.subspan(get_state_size_bytes());
+        }
+
+        // Finally, store the remaining partial chunk.
+        if (!std::empty(byte_sp))
+        {
+            input_bytes_.append_range(byte_sp);
+        }
+
 #if defined(DEBUG)
-        assert(len == 0);
         assert(!input_bytes_.is_full());
 #endif
     }
@@ -205,8 +215,8 @@ private:
         assert(w <= 255);
 #endif
 
-        add_(&w, sizeof(w));
-        add_(&x, w);
+        add_(as_byte_span(w));
+        add_(as_byte_span(x).subspan(0, w));
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -224,8 +234,8 @@ private:
         assert(w <= 255);
 #endif
 
-        add_(&x, w);
-        add_(&w, sizeof(w));
+        add_(as_byte_span(x).subspan(0, w));
+        add_(as_byte_span(w));
     }
 
     /// Fill remaining space in the input buffer
@@ -285,25 +295,18 @@ public:
         zeroize_();
     }
 
-    /// Consume \a data into the input buffer
+    /// Consume the bytes
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \param byte_sp the bytes to consume
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    compress_castella_hash& add(const void* data, size_t len)
+    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
     {
-#if defined(DEBUG)
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
-#endif
-
         std::scoped_lock lock{mtx_};
 
         if (has_been_finalized_)
@@ -311,27 +314,40 @@ public:
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
 
+        add_(byte_sp);
+
+        return *this;
+    }
+
+    /// \copydoc add(const std::span<const std::byte>)
+    /**
+    * \pre \a len is 0 if \a data is null
+    */
+    compress_castella_hash& add(const void* data, size_t len)
+    {
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         if (data == nullptr)
         {
             return *this;
         }
 
-        add_(data, len);
+        const auto byte_sp = std::span{static_cast<const std::byte*>(data), len};
 
-        return *this;
+        return add(byte_sp);
     }
 
-    /// \copydoc add(const void*, size_t)
-    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
-    {
-        return add(std::data(byte_sp), std::size(byte_sp));
-    }
-
-    /// \copydoc add(const void*, size_t)
+    /// \copydoc add(const std::span<const std::byte>)
     compress_castella_hash& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(std::data(s), std::size(s));
+
+        const auto byte_sp = std::as_bytes(std::span{s});
+
+        return add(byte_sp);
     }
 
     /// Get the final digest bytes

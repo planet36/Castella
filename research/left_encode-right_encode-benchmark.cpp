@@ -216,26 +216,6 @@ right_encode_5(const std::unsigned_integral auto x)
     return result;
 }
 
-/// Unambiguously encode the byte string
-[[nodiscard]] std::vector<std::byte>
-left_encode_bytes(const std::span<const std::byte> byte_sp)
-{
-    std::vector<std::byte> result;
-
-    result.append_range(left_encode_1(std::size(byte_sp)));
-    result.append_range(byte_sp);
-
-    return result;
-}
-
-/// Unambiguously encode the byte string
-[[nodiscard]] std::vector<std::byte>
-left_encode_bytes(const std::string_view s)
-{
-    static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-    return left_encode_bytes(std::as_bytes(std::span{s}));
-}
-
 template <std::unsigned_integral T>
 using func_vec_bytes_t = std::vector<std::byte> (&)(const T);
 

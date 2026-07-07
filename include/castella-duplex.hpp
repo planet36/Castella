@@ -614,17 +614,17 @@ private:
     * </blockquote>
     */
     // }}}
-    void encode_bytes_(const void* data, size_t len) noexcept
+    void left_encode_bytes_(const void* data, size_t len) noexcept
     {
         left_encode_(len);
         add_(data, len);
     }
 
-    /// \copydoc encode_bytes_(const void*, size_t)
-    void encode_bytes_(const std::string_view s) noexcept
+    /// \copydoc left_encode_bytes_(const void*, size_t)
+    void left_encode_bytes_(const std::string_view s) noexcept
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        encode_bytes_(std::data(s), std::size(s));
+        left_encode_bytes_(std::data(s), std::size(s));
     }
 
     /// Initialize the state
@@ -700,8 +700,8 @@ private:
 
         left_encode_(to_unsigned(get_state_size_bytes()));
         left_encode_(to_unsigned(get_rate_size_bytes())); // cSHAKE does this.
-        encode_bytes_(function_name);
-        encode_bytes_(customization_str);
+        left_encode_bytes_(function_name);
+        left_encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)
         // after the initial values.  Instead we apply the padding rule.
         apply_padding_rule_();
@@ -838,7 +838,7 @@ public:
         if (data == nullptr)
             return *this;
 
-        encode_bytes_(data, len);
+        left_encode_bytes_(data, len);
 
         return *this;
     }

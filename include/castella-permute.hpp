@@ -138,6 +138,7 @@ inline const auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
 * \pre \a N ∈ {2, 4, 8, 16}
+* \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
 *   1. Apply (via XOR) the round constant to the first element of the state array.
@@ -154,6 +155,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
 #if defined(DEBUG)
+    assert(num_rounds >= 0);
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
@@ -171,6 +173,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
 * \pre \a N ∈ {2, 4, 8, 16}
+* \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Rounds are performed in reverse order, and each round consists of the following
 * steps (in reverse order of \c permute):
@@ -188,6 +191,7 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
 #if defined(DEBUG)
+    assert(num_rounds >= 0);
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 

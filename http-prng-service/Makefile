@@ -35,7 +35,7 @@ lint: httplib.h
 	-clang-tidy --quiet --exclude-header-filter=httplib.h $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
-.PHONY: all clean lint
+.PHONY: all clean distclean lint
 
 # https://www.gnu.org/software/make/manual/html_node/Special-Targets.html#index-removing-targets-on-failure
 .DELETE_ON_ERROR:

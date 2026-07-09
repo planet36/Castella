@@ -6,6 +6,7 @@
 #include "castella-duplex.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
+#include "parse_bounded_int.hpp"
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 
@@ -184,42 +185,6 @@ print_usage()
 
     std::println("https://github.com/planet36/Castella");
     std::println("https://keccak.team/sponge_duplex.html");
-}
-
-/// Parse \a optarg as an int in <code>[min, max]</code>, or exit with an error.
-/**
-* \param optarg the option argument to parse
-* \param min the minimum allowed value (inclusive)
-* \param max the maximum allowed value (inclusive)
-* \param option_name the option name, used in the error message
-* \return the parsed value
-* \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits (via \c errx); it does not return.
-*/
-int parse_bounded_int(const char* optarg, const int min, const int max,
-                      const char* option_name)
-{
-    try
-    {
-        const int value = std::stoi(optarg);
-
-        if (value < min || value > max)
-        {
-            throw std::invalid_argument(option_name);
-        }
-
-        return value;
-    }
-    catch (const std::invalid_argument& ex)
-    {
-        (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-    }
-    catch (const std::out_of_range& ex)
-    {
-        (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-    }
 }
 
 /// Process the command line options.
@@ -519,12 +484,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
         }
-        // The DuplexTree hash object allocates (per-chunk job copies, the
-        // per-batch CV array, up to a --chunk-size buffer, worker Duplex
+        // The DuplexTree hash object allocates (per-batch CV arrays, the
+        // pipeline's slot ring, up to a --chunk-size buffer, worker Duplex
         // objects) and rethrows worker-thread exceptions out of add() and
-        // squeeze_bytes(), so std::bad_alloc and std::future_error are now
-        // reachable here.  Report and continue with the remaining files
-        // instead of letting them escape main() to std::terminate.
+        // squeeze_bytes(), so std::bad_alloc is now reachable here.
+        // Report and continue with the remaining files instead of letting
+        // it escape main() to std::terminate.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

@@ -129,17 +129,17 @@ function assert_neq_cmd_cmd
 #   100 B  : smaller than one 256-byte chunk
 #     1 KiB: too small to trigger a mix at the default mix rate
 #    64 KiB: exactly 256 chunks (the default mix rate boundary)
-# 100000 B : large enough to be memory-mapped; not a multiple of the cch
+#   100 KB : large enough to be memory-mapped; not a multiple of the cch
 #            chunk size (256), castella's default tree chunk size (16384),
 #            the read block size (32768), or the page size (4096)
 #     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-yes "$LINE" | head --bytes 0      > /tmp/test-0B.txt      || exit
-yes "$LINE" | head --bytes 100    > /tmp/test-100B.txt    || exit
-yes "$LINE" | head --bytes 1K     > /tmp/test-1KiB.txt    || exit
-yes "$LINE" | head --bytes 64K    > /tmp/test-64KiB.txt   || exit
-yes "$LINE" | head --bytes 100000 > /tmp/test-100000B.txt || exit
-yes "$LINE" | head --bytes 1M     > /tmp/test-1MiB.txt    || exit
+yes "$LINE" | head --bytes 0     > /tmp/test-0B.txt    || exit
+yes "$LINE" | head --bytes 100   > /tmp/test-100B.txt  || exit
+yes "$LINE" | head --bytes 1K    > /tmp/test-1KiB.txt  || exit
+yes "$LINE" | head --bytes 64K   > /tmp/test-64KiB.txt || exit
+yes "$LINE" | head --bytes 100KB > /tmp/test-100KB.txt || exit
+yes "$LINE" | head --bytes 1M    > /tmp/test-1MiB.txt  || exit
 
 # `yes | head` raises SIGPIPE
 set -o pipefail
@@ -223,7 +223,7 @@ assert_eq_cmd_str \
     6e5e8b4ff6c19b317290a060ece90419a74fb302890471b49df9c0271f82bad8
 
 assert_eq_cmd_str \
-    "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100000B.txt | cut -w -f 1" \
+    "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100KB.txt | cut -w -f 1" \
     82d2bd2d5b8ba4b80963655f7d97a27877a61a651cf42ef652c96278c3a4c6e0
 
 assert_eq_cmd_str \
@@ -235,7 +235,7 @@ assert_eq_cmd_str \
     1fb1c59af086a1943c103495589dcea493309866ca2775a87b98ac14e6d22ec4
 
 assert_eq_cmd_str \
-    "./cch --size=32 /tmp/test-100000B.txt | cut -w -f 1" \
+    "./cch --size=32 /tmp/test-100KB.txt | cut -w -f 1" \
     cc52ffb3430cbd01792342f3f03580a348f6575ba04867daa4db805209251f72
 
 # Verify that different "--custom" values give distinct results.
@@ -292,12 +292,12 @@ done
 # (Inputs smaller than the read block size never take the mmap path.)
 
 assert_eq_cmd_cmd \
-    './castella           /tmp/test-100000B.txt | cut -w -f 1' \
-    './castella --no-mmap /tmp/test-100000B.txt | cut -w -f 1'
+    './castella           /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    './cch           /tmp/test-100000B.txt | cut -w -f 1' \
-    './cch --no-mmap /tmp/test-100000B.txt | cut -w -f 1'
+    './cch           /tmp/test-100KB.txt | cut -w -f 1' \
+    './cch --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify reading from standard input produces the same output as reading from
 # a file.  A pipe exercises the non-seekable path, where read may return
@@ -305,20 +305,20 @@ assert_eq_cmd_cmd \
 # exercises the seekable (memory-mappable) standard input path.
 
 assert_eq_cmd_cmd \
-    'cat /tmp/test-100000B.txt | ./castella - | cut -w -f 1' \
-    './castella /tmp/test-100000B.txt | cut -w -f 1'
+    'cat /tmp/test-100KB.txt | ./castella - | cut -w -f 1' \
+    './castella /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    'cat /tmp/test-100000B.txt | ./cch - | cut -w -f 1' \
-    './cch /tmp/test-100000B.txt | cut -w -f 1'
+    'cat /tmp/test-100KB.txt | ./cch - | cut -w -f 1' \
+    './cch /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    './castella - < /tmp/test-100000B.txt | cut -w -f 1' \
-    './castella /tmp/test-100000B.txt | cut -w -f 1'
+    './castella - < /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    './cch - < /tmp/test-100000B.txt | cut -w -f 1' \
-    './cch /tmp/test-100000B.txt | cut -w -f 1'
+    './cch - < /tmp/test-100KB.txt | cut -w -f 1' \
+    './cch /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify that "--num-threads" NEVER affects the digest.  The digest is
 # defined by the hash tree alone (chunk boundaries fall at fixed byte
@@ -326,7 +326,7 @@ assert_eq_cmd_cmd \
 # which thread hashes which chunk, so every thread count must agree in every
 # I/O mode: memory-mapped (the one-shot batch path), --no-mmap (the
 # streaming pipeline), and piped standard input (non-seekable reads).
-# The 1 MiB file is a whole number of tree chunks; the 100000 B file ends in
+# The 1 MiB file is a whole number of tree chunks; the 100 KB file ends in
 # a partial trailing chunk.
 
 for NT in 1 2 8
@@ -344,12 +344,12 @@ do
         './castella /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
-        "./castella --num-threads=$NT /tmp/test-100000B.txt | cut -w -f 1" \
-        './castella /tmp/test-100000B.txt | cut -w -f 1'
+        "./castella --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
+        './castella /tmp/test-100KB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
-        "./castella --num-threads=$NT --no-mmap /tmp/test-100000B.txt | cut -w -f 1" \
-        './castella /tmp/test-100000B.txt | cut -w -f 1'
+        "./castella --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
+        './castella /tmp/test-100KB.txt | cut -w -f 1'
 done
 
 # Verify that different "--chunk-size" values give distinct results.
@@ -360,12 +360,12 @@ assert_neq_cmd_cmd \
     './castella --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
 
 # Verify that a non-default "--chunk-size" is also independent of the thread
-# count and the I/O mode.  4096 makes the 100000 B file span 24 full chunks
+# count and the I/O mode.  4096 makes the 100 KB file span 24 full chunks
 # plus a partial one.
 
 assert_eq_cmd_cmd \
-    './castella --chunk-size=4096 --num-threads=8 /tmp/test-100000B.txt | cut -w -f 1' \
-    './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100000B.txt | cut -w -f 1'
+    './castella --chunk-size=4096 --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
 # The input file size must be at least 512 Bytes (twice the state size).
@@ -409,5 +409,14 @@ assert_eq_cmd_str \
     b8bbfb7a29d955db645ac5f4578a61460f5ec6b79bdcab2fcd4ef8d124e278d1
 
 echo "$PASS passed, $FAIL failed"
+
+# Remove the input data files.
+rm -f -- \
+/tmp/test-0B.txt    \
+/tmp/test-100B.txt  \
+/tmp/test-1KiB.txt  \
+/tmp/test-64KiB.txt \
+/tmp/test-100KB.txt \
+/tmp/test-1MiB.txt
 
 (( FAIL == 0 ))

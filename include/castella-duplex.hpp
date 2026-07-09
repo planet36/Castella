@@ -844,6 +844,7 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
@@ -851,10 +852,15 @@ public:
     // }}}
     Duplex& add(const void* data, size_t len)
     {
-        if (data == nullptr)
-            return *this;
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
 
         std::scoped_lock lock{mtx_};
+
+        if (data == nullptr)
+            return *this;
 
         add_(data, len);
 
@@ -886,10 +892,10 @@ public:
     // }}}
     Duplex& add_left_encoded(const void* data, size_t len)
     {
+        std::scoped_lock lock{mtx_};
+
         if (data == nullptr)
             return *this;
-
-        std::scoped_lock lock{mtx_};
 
         left_encode_bytes_(data, len);
 

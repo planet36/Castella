@@ -24,17 +24,13 @@
 #if defined(DEBUG)
 #include <cassert>
 #endif
-#include <chrono>
 #include <concepts>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <deque>
 #include <exception>
-#include <future>
 #include <mutex>
-#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -120,15 +116,16 @@ namespace Castella
 * 2. **Streaming (pipeline) path.**  When input arrives in pieces too small
 *    for the batch path (e.g. a 32 KiB read loop feeding 16 KiB chunks), a
 *    persistent pool of NUM_THREADS workers hashes leaves *while the
-*    calling thread goes back for more input*: each completed chunk becomes
-*    a job in a queue, and its future CV takes a slot in an order-preserving
-*    deque that is drained (front first, so always in index order) into the
-*    final node.  A bound on in-flight chunks provides backpressure; see
-*    \c dispatch_leaf_().
+*    calling thread goes back for more input*: each completed chunk is
+*    placed in the next slot of a fixed ring of preallocated slots, a
+*    worker hashes the slot's chunk to its CV in place, and the calling
+*    thread drains the ring oldest-slot-first (so always in index order)
+*    into the final node.  The fixed ring size is itself the bound on
+*    in-flight chunks (backpressure); see \c dispatch_leaf_().
 *
 *    This path is ultimately *producer-bound*: the calling thread must
-*    copy or buffer each chunk once and run the pipeline bookkeeping
-*    (job, promise, and buffer setup), so streaming throughput plateaus
+*    still copy or buffer each chunk once (plus the -- now allocation-free
+*    -- slot handoff), so streaming throughput plateaus
 *    after a few workers no matter how many more are available.  When the
 *    whole input is addressable, prefer one big add() (the batch path),
 *    which hashes the caller's memory in place and scales further.
@@ -263,62 +260,95 @@ private:
 
     // ---- Streaming-pipeline state (see "Parallelism" in the class doc) ----
 
-    /// One unit of pipeline work: hash one owned chunk to its CV
+    /// One slot of the pipeline ring: one chunk, hashed in place to its CV
+    // {{{
     /**
-    * The job *owns* its chunk bytes (moved from \c chunk_buf_ when
+    * The slot *owns* its chunk bytes (swapped with \c chunk_buf_ when
     * possible, copied from the caller's buffer otherwise), because the
     * caller's buffer may be reused or freed as soon as add() returns,
-    * while the job outlives the add() call that created it.
+    * while the slot's work outlives the add() call that created it.
+    *
+    * Both buffers are preallocated once (at pool start) and reused for
+    * the slot's whole life, and the worker squeezes the CV into \c cv in
+    * place, so the pipeline's steady state allocates nothing per chunk:
+    * no chunk buffer, no CV vector, and no promise shared state (the
+    * roles a job queue, a free-buffer list, and std::promise/std::future
+    * pairs used to play here).
+    *
+    * Ownership handoff: the calling thread fills a free slot and
+    * publishes it by advancing \c ring_tail_ under \c pool_mtx_; exactly
+    * one worker claims it by advancing \c ring_next_job_; the worker
+    * hands it back by setting \c done under \c pool_mtx_.  Between those
+    * lock-protected transitions, whichever thread currently owns the
+    * slot accesses its contents without locking (the mutex
+    * acquire/release pairs order the accesses).
     */
-    struct LeafJob final
+    // }}}
+    struct Slot final
     {
+        /// The chunk to hash; plaintext, zeroized by the worker after hashing
         std::vector<std::byte> chunk;
+
+        /// The CV_LEN-byte chaining value, squeezed in place by the worker
+        std::vector<std::byte> cv;
+
+        /// A worker's parked exception, rethrown when the slot is drained
+        std::exception_ptr error;
+
         int64_t chunk_index = 0;
-        std::promise<std::vector<std::byte>> cv_promise;
+
+        /// Set when \c cv (or \c error) is ready; guarded by \c pool_mtx_
+        bool done = false;
     };
 
-    /// Jobs awaiting a worker; guarded by \c pool_mtx_
+    /// The pipeline ring; sized \c 2*NUM_THREADS slots at pool start
     /**
-    * Unbounded by itself; the bound comes from \c pending_cvs_ (the
-    * calling thread never lets more than a fixed number of jobs be
-    * outstanding, see \c dispatch_leaf_()).
+    * 2 slots per worker keep every worker fed (one chunk hashing, one
+    * waiting) even while the calling thread is away reading more input,
+    * and the fixed size is itself the in-flight bound (backpressure): a
+    * chunk can only be dispatched into a free slot.
     */
-    std::deque<LeafJob> job_queue_;
+    std::vector<Slot> ring_;
 
-    /// Recycled CHUNK_SIZE-capacity chunk buffers; guarded by \c pool_mtx_
+    /// The number of chunks dispatched into the ring; guarded by \c pool_mtx_
     /**
-    * Workers return their finished (already zeroized) chunk buffers here
-    * instead of freeing them, and the calling thread reuses them for the
-    * next chunk, so the streaming path does not allocate a fresh chunk
-    * buffer per chunk.  Bounded by \c 2*NUM_THREADS (the in-flight bound),
-    * so recycled buffers hold only zeroized bytes and the list cannot grow
-    * without limit.
+    * Monotonic (a position's slot is \c ring_slot_()).  Written only by
+    * the (mtx_-holding) calling thread; the workers read it to find work.
     */
-    std::vector<std::vector<std::byte>> free_buffers_;
+    int64_t ring_tail_ = 0;
 
-    /// Guards \c job_queue_, \c free_buffers_, and \c pool_stop_
+    /// The number of dispatched chunks claimed by workers; guarded by \c pool_mtx_
+    /**
+    * Monotonic.  Positions in [ring_next_job_, ring_tail_) are queued;
+    * each is claimed by exactly one worker, in dispatch order.
+    */
+    int64_t ring_next_job_ = 0;
+
+    /// The number of pipelined CVs absorbed into the final node
+    /**
+    * Monotonic; touched only by the (mtx_-holding) calling thread, which
+    * drains slots in this order -- dispatch order, i.e. chunk-index order
+    * -- no matter which worker finishes when.
+    */
+    int64_t ring_head_ = 0;
+
+    /// Guards the ring counters, every slot's \c done flag, and \c pool_stop_
     std::mutex pool_mtx_;
 
-    /// Signals workers that a job was queued or that \c pool_stop_ was set
+    /// Signals workers that a chunk was dispatched or that \c pool_stop_ was set
     std::condition_variable pool_cv_;
+
+    /// Signals the calling thread that a slot's \c done flag was set
+    std::condition_variable done_cv_;
 
     /// Tells workers to exit; guarded by \c pool_mtx_
     bool pool_stop_ = false;
-
-    /// The future CVs of dispatched chunks, in chunk-index order
-    /**
-    * Touched only by the (mtx_-holding) calling thread.  Futures are
-    * pushed in dispatch order and popped from the front only, so absorbing
-    * from the front absorbs CVs in exactly chunk-index order, no matter
-    * which worker finishes when.
-    */
-    std::deque<std::future<std::vector<std::byte>>> pending_cvs_;
 
     /// The persistent worker threads; empty until \c start_pool_()
     /**
     * Declared *after* everything the workers touch, so that even if the
     * jthread destructors were ever the ones to join the workers, the
-    * queue, mutex, and condition variable would still be alive.  (In
+    * ring, mutex, and condition variables would still be alive.  (In
     * practice \c stop_pool_() joins them first.)
     */
     std::vector<std::jthread> pool_workers_;
@@ -440,9 +470,10 @@ private:
 
     /// Hash one chunk to its chaining value, returned as a vector
     /**
-    * The vector-allocating convenience over \c hash_leaf_into_() for callers
-    * that need to own the CV (the pipeline's promise payload; the inline
-    * path).
+    * The vector-allocating convenience over \c hash_leaf_into_() for
+    * callers without a preallocated destination (the inline path; the
+    * trailing chunk).  The pipeline's workers instead squeeze straight
+    * into their slot's preallocated \c cv buffer.
     */
     [[nodiscard]] std::vector<std::byte>
     compute_leaf_cv_(const std::span<const std::byte> chunk, const int64_t chunk_index) const
@@ -471,44 +502,16 @@ private:
         explicit_bzero(std::data(v), std::size(v));
     }
 
-    /// Obtain an empty chunk buffer with CHUNK_SIZE capacity
-    /**
-    * Reuses a recycled buffer from \c free_buffers_ when one is available
-    * (avoiding an allocation), otherwise allocates a fresh one.  The
-    * returned buffer is empty; a recycled one keeps its (zeroized) capacity.
-    */
-    [[nodiscard]] std::vector<std::byte> take_chunk_buffer_()
+    /// The number of slots in the pipeline ring
+    [[nodiscard]] int64_t ring_capacity_() const noexcept
     {
-        {
-            std::scoped_lock lock{pool_mtx_};
-            if (!free_buffers_.empty())
-            {
-                auto buf = std::move(free_buffers_.back());
-                free_buffers_.pop_back();
-                buf.clear(); // keep the CHUNK_SIZE capacity, drop the length
-                return buf;
-            }
-        }
-
-        std::vector<std::byte> buf;
-        buf.reserve(static_cast<size_t>(CHUNK_SIZE));
-        return buf;
+        return 2 * static_cast<int64_t>(NUM_THREADS);
     }
 
-    /// Return a finished chunk buffer to \c free_buffers_ for reuse
-    /**
-    * \pre \a buf has already been zeroized (only zeroized buffers are
-    *      pooled, so the free list never holds plaintext)
-    */
-    void recycle_chunk_buffer_(std::vector<std::byte>&& buf)
+    /// The ring slot for monotonic position \a pos
+    [[nodiscard]] Slot& ring_slot_(const int64_t pos) noexcept
     {
-        std::scoped_lock lock{pool_mtx_};
-
-        // Cap at the in-flight bound; beyond that, let the buffer free.
-        if (std::ssize(free_buffers_) < 2 * NUM_THREADS)
-        {
-            free_buffers_.push_back(std::move(buf));
-        }
+        return ring_[to_unsigned(pos % ring_capacity_())];
     }
 
     [[nodiscard]] bool pool_is_active_() const noexcept
@@ -516,13 +519,25 @@ private:
         return !pool_workers_.empty();
     }
 
-    /// Spawn the persistent worker pool
+    /// Build the slot ring and spawn the persistent worker pool
     void start_pool_()
     {
 #if defined(DEBUG)
         assert(!pool_is_active_());
         assert(NUM_THREADS >= 2);
 #endif
+
+        // Build the ring before any worker exists.  Preallocating every
+        // slot's buffers here is what makes the pipeline's steady state
+        // allocation-free, and giving each chunk buffer CHUNK_SIZE
+        // capacity up front preserves the constructor's no-reallocation
+        // invariant for chunk_buf_, which swaps with these buffers.
+        ring_ = std::vector<Slot>(to_unsigned(ring_capacity_()));
+        for (auto& slot : ring_)
+        {
+            slot.chunk.reserve(static_cast<size_t>(CHUNK_SIZE));
+            slot.cv.resize(to_unsigned(CV_LEN));
+        }
 
         pool_workers_.reserve(to_unsigned(NUM_THREADS));
 
@@ -555,10 +570,11 @@ private:
     * \c pool_cv_ and would otherwise never observe a stop request, so the
     * jthread destructors alone would deadlock on join).
     *
-    * When called on an unfinalized object being destroyed, the queue may
-    * still hold jobs; they are abandoned (their promises die unfulfilled,
-    * which is harmless because only the also-dying \c pending_cvs_ futures
-    * reference them) after zeroizing their plaintext chunks.
+    * When called on an unfinalized object being destroyed, the ring may
+    * still hold undrained slots; they are abandoned after zeroizing the
+    * plaintext chunks of any the workers never claimed.  (A claimed
+    * slot's chunk was zeroized by its worker before that worker exited,
+    * and a drained slot's before that.)
     */
     // }}}
     void stop_pool_()
@@ -576,100 +592,138 @@ private:
 
         pool_stop_ = false; // no lock needed: the workers are gone
 
-        for (auto& job : job_queue_)
+        for (int64_t pos = ring_next_job_; pos < ring_tail_; ++pos)
         {
-            zeroize_(job.chunk);
+            zeroize_(ring_slot_(pos).chunk);
         }
-        job_queue_.clear();
 
-        // The recycled buffers hold only zeroized bytes; drop them (the
-        // pool is idle now, and a later run would refill it as needed).
-        free_buffers_.clear();
+        // Every slot's chunk is zeroized now; drop the ring and rewind
+        // the counters (the pool is idle, and nothing restarts it after
+        // finalization).
+        ring_.clear();
+        ring_tail_ = 0;
+        ring_next_job_ = 0;
+        ring_head_ = 0;
     }
 
     /// The body of each worker thread
     // {{{
     /**
-    * Take the oldest job, hash its chunk to a CV (a pure function -- see
-    * \c compute_leaf_cv_()), deliver the CV (or the exception) through the
-    * job's promise, and repeat until told to stop.
+    * Claim the oldest queued slot, hash its chunk to its CV in place (a
+    * pure function -- see \c hash_leaf_into_()), mark the slot done, and
+    * repeat until told to stop.
     *
-    * The workers touch only: the job queue (under pool_mtx_), their own
-    * local Duplex, and this object's const parameter members.  They never
-    * touch mtx_, chunk_buf_, pending_cvs_, or the final node's state, so
-    * they can run while the calling thread does anything else.
+    * The workers touch only: the ring counters and done flags (under
+    * pool_mtx_), the claimed slot's contents (exclusively theirs between
+    * the claim and the done flag), their own local Duplex, and this
+    * object's const parameter members.  They never touch mtx_,
+    * chunk_buf_, or the final node's state, so they can run while the
+    * calling thread does anything else.
+    *
+    * The critical sections advance a counter and flip a flag -- they
+    * allocate nothing and cannot throw, so no exception can escape this
+    * jthread's callable (which would call std::terminate); a hashing
+    * exception is parked in the slot for the calling thread to rethrow.
     */
     // }}}
     void pool_worker_loop_()
     {
         for (;;)
         {
-            // An empty optional holds no LeafJob and therefore allocates no
-            // promise shared state.  A bare `LeafJob job;` would instead
-            // default-construct a std::promise (which eagerly allocates)
-            // right here, outside the try below -- and an exception escaping
-            // this jthread's callable calls std::terminate.  Dequeuing via
-            // emplace only move-constructs the already-built job, which
-            // allocates nothing, so the whole critical section is noexcept.
-            std::optional<LeafJob> job;
+            Slot* slot = nullptr;
 
             {
                 std::unique_lock lock{pool_mtx_};
 
-                pool_cv_.wait(lock, [this] { return pool_stop_ || !job_queue_.empty(); });
+                pool_cv_.wait(lock,
+                              [this] { return pool_stop_ || (ring_next_job_ < ring_tail_); });
 
-                // A stop request abandons any remaining jobs; see stop_pool_().
+                // A stop request abandons any queued slots; see stop_pool_().
                 if (pool_stop_)
                     return;
 
-                job.emplace(std::move(job_queue_.front()));
-                job_queue_.pop_front();
+                slot = &ring_slot_(ring_next_job_);
+                ++ring_next_job_;
             }
 
             try
             {
-                job->cv_promise.set_value(
-                    compute_leaf_cv_(job->chunk, job->chunk_index));
+                // Squeeze the CV into the slot's preallocated buffer; the
+                // calling thread will neither read it nor reuse the slot
+                // until the done flag below is set.
+                hash_leaf_into_(slot->chunk, slot->chunk_index, slot->cv);
             }
             catch (...)
             {
-                // Deliver the exception (realistically only std::bad_alloc)
-                // to whoever get()s the CV on the calling thread.
-                job->cv_promise.set_exception(std::current_exception());
+                // Park the exception (realistically only std::bad_alloc)
+                // for the calling thread to rethrow when it drains this
+                // slot.
+                slot->error = std::current_exception();
             }
 
-            // The job's chunk holds message plaintext; wipe it (same
-            // hygiene as chunk_buf_), then return the now-zeroized buffer to
-            // the free list for the calling thread to reuse instead of
-            // freeing it.
-            zeroize_(job->chunk);
-            recycle_chunk_buffer_(std::move(job->chunk));
+            // The slot's chunk holds message plaintext; wipe it (same
+            // hygiene as chunk_buf_) before the slot is handed back for
+            // reuse.
+            zeroize_(slot->chunk);
+
+            {
+                std::scoped_lock lock{pool_mtx_};
+                slot->done = true;
+            }
+            // Only the (single) calling thread ever waits on done_cv_.
+            done_cv_.notify_one();
         }
     }
 
-    /// Absorb the oldest pending CV into the final node
+    /// Absorb the oldest in-flight CV into the final node, freeing its slot
     /**
-    * Blocks until that CV is ready.  get() rethrows a worker's exception
-    * on the calling thread, leaving this object in an unspecified (but
-    * destructible) state, as with any exception escaping mid-absorption.
+    * Blocks until that slot's worker has finished.  A worker's parked
+    * exception is rethrown here on the calling thread, leaving this
+    * object in an unspecified (but destructible) state, as with any
+    * exception escaping mid-absorption.
     */
     void absorb_front_pending_cv_()
     {
 #if defined(DEBUG)
-        assert(!pending_cvs_.empty());
+        assert(ring_head_ < ring_tail_);
 #endif
 
-        // Remove the future from the deque BEFORE calling get().  get()
-        // invalidates the future (valid() becomes false) and may rethrow a
-        // worker's exception; popping first ensures that on such a throw no
-        // invalid future is left at the front for a later drain to call
-        // get()/wait_for() on (which would be undefined behavior).
-        auto future = std::move(pending_cvs_.front());
-        pending_cvs_.pop_front();
+        Slot& slot = ring_slot_(ring_head_);
 
-        const auto cv = future.get();
+        {
+            std::unique_lock lock{pool_mtx_};
+            done_cv_.wait(lock, [&slot] { return slot.done; });
+            slot.done = false; // reset for the slot's next use
+        }
+        // From here until it is dispatched again, the slot belongs
+        // exclusively to the calling thread (workers only touch slots the
+        // calling thread has published by advancing ring_tail_).
 
-        final_node_.add(std::span<const std::byte>{cv});
+        // Advance past the slot BEFORE a potential rethrow (the same
+        // ordering the former promise/future pipeline needed, pop before
+        // get): on a throw, no later drain may wait on this
+        // already-consumed slot again.
+        ++ring_head_;
+
+        if (slot.error)
+        {
+            const auto error = slot.error;
+            slot.error = nullptr;
+            std::rethrow_exception(error);
+        }
+
+        final_node_.add(std::span<const std::byte>{slot.cv});
+    }
+
+    /// Whether the oldest in-flight slot's CV is ready (does not block)
+    [[nodiscard]] bool front_slot_is_done_()
+    {
+#if defined(DEBUG)
+        assert(ring_head_ < ring_tail_);
+#endif
+
+        std::scoped_lock lock{pool_mtx_};
+        return ring_slot_(ring_head_).done;
     }
 
     /// Absorb every pending CV into the final node, in chunk-index order
@@ -681,7 +735,7 @@ private:
     */
     void drain_pending_cvs_()
     {
-        while (!pending_cvs_.empty())
+        while (ring_head_ < ring_tail_)
         {
             absorb_front_pending_cv_();
         }
@@ -707,30 +761,42 @@ private:
         final_node_.add(bytes);
     }
 
-    /// Queue one owned chunk for a pool worker, and apply backpressure
+    /// Dispatch one chunk into the next ring slot for a pool worker
     // {{{
     /**
-    * The pipeline in one method.  Push the job (workers see it via
-    * pool_cv_), remember its future CV at the back of pending_cvs_, then:
+    * The pipeline in one method:
     *
-    *   - Backpressure: if more than 2 chunks per worker are in flight,
-    *     block on the *oldest* CV until the pipeline shrinks.  This bounds
-    *     memory (each in-flight job owns a CHUNK_SIZE buffer) no matter
-    *     how fast the producer is, while 2x keeps every worker fed (one
-    *     chunk hashing, one waiting) even while the calling thread is away
-    *     reading more input.
+    *   - Backpressure: if every slot is in flight, block on the *oldest*
+    *     slot's CV until it frees up.  The fixed ring size bounds memory
+    *     (each slot owns one CHUNK_SIZE buffer) no matter how fast the
+    *     producer is, while 2 slots per worker keep every worker fed (one
+    *     chunk hashing, one waiting) even while the calling thread is
+    *     away reading more input.
+    *
+    *   - Fill the freed slot: swap the caller's owned buffer in
+    *     (zero-copy; the caller receives the slot's previous, zeroized
+    *     buffer in exchange), or copy the span into the slot's recycled
+    *     buffer.  Neither path allocates, and neither can throw after the
+    *     plaintext enters the slot, so no exit path can strand
+    *     unzeroized plaintext.
+    *
+    *   - Publish the slot to the workers by advancing ring_tail_.
     *
     *   - Opportunistic drain: absorb any CVs that are already finished.
     *     This spreads the final node's (serial) CV absorption across the
     *     stream instead of bursting it all at finalization, and it keeps
-    *     pending_cvs_ short.
+    *     slots free for the chunks that follow.
     *
+    * \param chunk a view of the whole chunk (CHUNK_SIZE bytes; only the
+    *        trailing chunk of the stream may be shorter, and it is never
+    *        pipelined)
+    * \param owned if non-null, an owned buffer holding the same bytes as
+    *        \a chunk, swapped into the slot instead of copying \a chunk
     * \pre the pool is active
-    * \pre \a chunk is a whole chunk (CHUNK_SIZE bytes); only the trailing
-    *      chunk of the stream may be shorter, and it is never pipelined
     */
     // }}}
-    void dispatch_leaf_(std::vector<std::byte>&& chunk)
+    void dispatch_leaf_(const std::span<const std::byte> chunk,
+                        std::vector<std::byte>* const owned)
     {
 #if defined(DEBUG)
         assert(pool_is_active_());
@@ -738,63 +804,60 @@ private:
         assert(num_chunks_flushed_ >= 1); // chunk 0 is never a leaf
 #endif
 
-        // Construct the promise (and take its future) before moving the
-        // plaintext chunk into the job, so a failed promise allocation
-        // cannot strand plaintext in a half-built job.
-        std::promise<std::vector<std::byte>> cv_promise;
-        auto cv_future = cv_promise.get_future();
-
-        LeafJob job{std::move(chunk), num_chunks_flushed_, std::move(cv_promise)};
-
-        // Enqueue the job first, and record its future in pending_cvs_ only
-        // after the enqueue succeeds.  Doing it in this order means a failed
-        // enqueue can never leave a broken-promise future poisoning the
-        // front of the pipeline; deque::push_back gives the strong guarantee,
-        // so on throw the job (and its plaintext chunk) is untouched and can
-        // be zeroized -- matching the hygiene every other exit path applies
-        // -- before the exception propagates.
-        try
-        {
-            std::scoped_lock lock{pool_mtx_};
-            job_queue_.push_back(std::move(job));
-        }
-        catch (...)
-        {
-            zeroize_(job.chunk);
-            throw;
-        }
-        pool_cv_.notify_one();
-
-        pending_cvs_.push_back(std::move(cv_future));
-
-        ++num_chunks_flushed_;
-
-        const auto max_pending = static_cast<size_t>(2 * NUM_THREADS);
-
-        while (pending_cvs_.size() > max_pending)
+        // Backpressure: make sure a slot is free.
+        while ((ring_tail_ - ring_head_) >= ring_capacity_())
         {
             absorb_front_pending_cv_(); // blocks on the oldest CV
         }
 
-        while (!pending_cvs_.empty() &&
-               (pending_cvs_.front().wait_for(std::chrono::seconds{0}) ==
-                std::future_status::ready))
+        // The slot at ring_tail_ is free (already drained, its done flag
+        // reset) and invisible to the workers until ring_tail_ advances
+        // below, so it is filled without holding pool_mtx_.
+        Slot& slot = ring_slot_(ring_tail_);
+
+        if (owned != nullptr)
         {
-            absorb_front_pending_cv_(); // does not block
+            // Zero-copy: the plaintext buffer moves into the slot, and the
+            // slot's previous (zeroized, CHUNK_SIZE-capacity) buffer moves
+            // out to become the caller's next chunk buffer.
+            std::swap(*owned, slot.chunk);
+        }
+        else
+        {
+            // The caller's span must not outlive this call; copy it into
+            // the slot's recycled buffer (capacity already CHUNK_SIZE, so
+            // this cannot allocate or throw).
+            slot.chunk.assign(chunk.begin(), chunk.end());
+        }
+
+        slot.chunk_index = num_chunks_flushed_;
+
+        {
+            std::scoped_lock lock{pool_mtx_};
+            ++ring_tail_; // publish the slot (and everything written above)
+        }
+        pool_cv_.notify_one();
+
+        ++num_chunks_flushed_;
+
+        // Opportunistic drain (does not block).
+        while ((ring_head_ < ring_tail_) && front_slot_is_done_())
+        {
+            absorb_front_pending_cv_();
         }
     }
 
     /// Hand one complete chunk to the tree (the per-chunk router)
     // {{{
     /**
-    * Chunk 0 is absorbed directly by the final node.  Every later chunk is
-    * hashed by a leaf -- through the pipeline once the pool is running
-    * (the chunk must then be *copied* into the job, because this span
-    * points into memory the caller may reuse), inline on the calling
-    * thread otherwise.
+    * Chunk 0 is absorbed directly by the final node.  Every later chunk
+    * is hashed by a leaf -- through the pipeline once the pool is running
+    * (an owned buffer is swapped into the ring slot, a bare span copied
+    * into it, because the span points into memory the caller may reuse),
+    * inline on the calling thread otherwise.
     *
     * The inline branch absorbs its CV into the final node immediately,
-    * which is safe only because pending_cvs_ is empty whenever the pool is
+    * which is safe only because the ring is empty whenever the pool is
     * inactive: chunks are only ever dispatched to an active pool, the pool
     * stays active until finalization, and finalization drains the pipeline
     * before stopping it.  So the inline branch can never overtake a
@@ -802,67 +865,53 @@ private:
     *
     * \param chunk a view of the whole chunk to hand to the tree
     * \param owned if non-null, an owned buffer holding the same bytes as
-    *        \a chunk that the pipeline may move (zero-copy) instead of
-    *        copying \a chunk; used only when the chunk actually goes to the
-    *        pipeline (not for chunk 0 or the inline path)
-    * \return true iff \a owned was moved into a pipeline job (so the caller
-    *         must replace it), false otherwise
+    *        \a chunk that the pipeline may swap into a ring slot
+    *        (zero-copy) instead of copying \a chunk; used only when the
+    *        chunk actually goes to the pipeline (not for chunk 0 or the
+    *        inline path).  After a swap, the caller's buffer holds the
+    *        slot's previous (zeroized, CHUNK_SIZE-capacity) buffer, so it
+    *        remains a valid buffer on every path.
     */
     // }}}
-    bool flush_chunk_(const std::span<const std::byte> chunk,
+    void flush_chunk_(const std::span<const std::byte> chunk,
                       std::vector<std::byte>* const owned = nullptr)
     {
         if (num_chunks_flushed_ == 0)
         {
             absorb_into_final_node_(chunk);
             ++num_chunks_flushed_;
-            return false;
+            return;
         }
 
         maybe_start_pool_();
 
         if (pool_is_active_())
         {
-            // Move the caller's owned buffer into the job when available;
-            // otherwise copy the (caller-owned) span, which must not outlive
-            // this call, into a recycled buffer.
-            if (owned != nullptr)
-            {
-                dispatch_leaf_(std::move(*owned));
-                return true;
-            }
-
-            auto buf = take_chunk_buffer_();
-            buf.assign(chunk.begin(), chunk.end());
-            dispatch_leaf_(std::move(buf));
-            return false;
+            dispatch_leaf_(chunk, owned);
+            return;
         }
 
         const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
         absorb_into_final_node_(std::span<const std::byte>{cv});
         ++num_chunks_flushed_;
-        return false;
     }
 
-    /// Hand the full chunk buffer to the tree, moving it when possible
+    /// Hand the full chunk buffer to the tree, swapping it when possible
     /**
-    * Delegates the routing to \c flush_chunk_, passing \c chunk_buf_ as the
-    * movable owned buffer so a pipelined chunk is moved rather than copied.
+    * Delegates the routing to \c flush_chunk_, passing \c chunk_buf_ as
+    * the swappable owned buffer so a pipelined chunk is swapped into its
+    * ring slot (zero-copy) rather than copied.
     */
     void flush_buffered_chunk_()
     {
-        if (flush_chunk_(chunk_buf_, &chunk_buf_))
-        {
-            // chunk_buf_ was moved into a pipeline job; take a recycled
-            // buffer for the next chunk instead of allocating a fresh one.
-            chunk_buf_ = take_chunk_buffer_();
-        }
-        else
-        {
-            // chunk_buf_ was read, not moved (chunk 0 / inline path); it is
-            // still a usable full-capacity buffer once cleared.
-            chunk_buf_.clear();
-        }
+        flush_chunk_(chunk_buf_, &chunk_buf_);
+
+        // Whether chunk_buf_ was read in place (chunk 0 / inline path) or
+        // swapped into a ring slot (pipeline path, which hands back the
+        // slot's previous zeroized buffer in exchange), it is a valid
+        // CHUNK_SIZE-capacity buffer here; clearing readies it for the
+        // next chunk.
+        chunk_buf_.clear();
     }
 
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src
@@ -895,7 +944,7 @@ private:
     * the class doc): the intended caller adds an entire memory-mapped file
     * in one call, so the one-time spawn cost is already amortized over the
     * whole file, and statically partitioning zero-copy spans needs no
-    * queue, promises, or condition variable.  The persistent pool exists
+    * slot ring or condition variables.  The persistent pool exists
     * instead for the many-small-add() streaming case, where a thread spawn
     * per call would dominate.
     *

@@ -890,10 +890,14 @@ private:
     * when the pool is running, inline otherwise -- producing the identical
     * digest.
     *
-    * The worker threads are transient (spawned per batch): the intended
-    * caller adds an entire memory-mapped file in one call, so the spawn
-    * cost is paid once.  A persistent pool would only benefit the streaming
-    * (many small add() calls) case, which is future work.
+    * The worker threads here are transient (spawned per batch) rather than
+    * the persistent pool used by the streaming path (see "Parallelism" in
+    * the class doc): the intended caller adds an entire memory-mapped file
+    * in one call, so the one-time spawn cost is already amortized over the
+    * whole file, and statically partitioning zero-copy spans needs no
+    * queue, promises, or condition variable.  The persistent pool exists
+    * instead for the many-small-add() streaming case, where a thread spawn
+    * per call would dominate.
     *
     * If a worker throws (realistically only std::bad_alloc), the first
     * such exception is rethrown on the calling thread after all workers

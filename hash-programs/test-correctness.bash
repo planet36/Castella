@@ -130,8 +130,9 @@ function assert_neq_cmd_cmd
 #     1 KiB: too small to trigger a mix at the default mix rate
 #    64 KiB: exactly 256 chunks (the default mix rate boundary)
 #   100 KB : large enough to be memory-mapped; not a multiple of the cch
-#            chunk size (256), castella's default tree chunk size (16384),
-#            the read block size (32768), or the page size (4096)
+#            compression block size (256), castella's default tree chunk
+#            size (16384), cch's default tree chunk size (65536), the read
+#            block size (32768), or the page size (4096)
 #     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 yes "$LINE" | head --bytes 0     > /tmp/test-0B.txt    || exit
@@ -192,19 +193,19 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test-1MiB.txt | cut -w -f 1" \
-    aa5e5c8a4fc765312c398648eec01c9a
+    3bfc271b111cc49f0ef7f1670a8a82e0
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-1MiB.txt | cut -w -f 1" \
-    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe
+    3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f
 
 assert_eq_cmd_str \
     "./cch --size=48 /tmp/test-1MiB.txt | cut -w -f 1" \
-    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe8e79075f90ef7f1757b90cf5aa48131e
+    3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e2
 
 assert_eq_cmd_str \
     "./cch --size=64 /tmp/test-1MiB.txt | cut -w -f 1" \
-    aa5e5c8a4fc765312c398648eec01c9af44b27fc3e55a1b56f02484f451fbfbe8e79075f90ef7f1757b90cf5aa48131e6b577c7b65c2b07eeaaa55b85c20017f
+    3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e22a32d96452965e8add103afae3cdfd11
 
 # Verify known output for input sizes that exercise boundary conditions.
 # (1 MiB is a multiple of every internal block size, so it cannot detect
@@ -228,15 +229,15 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-0B.txt | cut -w -f 1" \
-    5fc10b59be424d33a0684b219d801cbc21e577cf7aa3a5887cf51b95f7c465a1
+    7e4d0aa073e24b82d722a96dc60688a7fd09d91c7ced878390dd3966a67ee720
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-100B.txt | cut -w -f 1" \
-    1fb1c59af086a1943c103495589dcea493309866ca2775a87b98ac14e6d22ec4
+    d587cc3a946df1f14f0e018a05cf35f0712d4ed97dcf0394ec7f69683d95fda6
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-100KB.txt | cut -w -f 1" \
-    cc52ffb3430cbd01792342f3f03580a348f6575ba04867daa4db805209251f72
+    d3fd974b1067998f82a7f70039a99d141271b42eb6753f434eaee044ead8b543
 
 # Verify that different "--custom" values give distinct results.
 
@@ -320,14 +321,14 @@ assert_eq_cmd_cmd \
     './cch - < /tmp/test-100KB.txt | cut -w -f 1' \
     './cch /tmp/test-100KB.txt | cut -w -f 1'
 
-# Verify that "--num-threads" NEVER affects the digest.  The digest is
-# defined by the hash tree alone (chunk boundaries fall at fixed byte
-# offsets, and chaining values are absorbed in chunk-index order), never by
-# which thread hashes which chunk, so every thread count must agree in every
-# I/O mode: memory-mapped (the one-shot batch path), --no-mmap (the
-# streaming pipeline), and piped standard input (non-seekable reads).
-# The 1 MiB file is a whole number of tree chunks; the 100 KB file ends in
-# a partial trailing chunk.
+# Verify that "--num-threads" NEVER affects the digest, in both programs.
+# The digest is defined by the hash tree alone (chunk boundaries fall at
+# fixed byte offsets, and chaining values are absorbed in chunk-index
+# order), never by which thread hashes which chunk, so every thread count
+# must agree in every I/O mode: memory-mapped (the one-shot batch path),
+# --no-mmap (the streaming path), and piped standard input (non-seekable
+# reads).  The 1 MiB file is a whole number of tree chunks for both
+# programs; the 100 KB file ends in a partial trailing chunk.
 
 for NT in 1 2 8
 do
@@ -350,6 +351,26 @@ do
     assert_eq_cmd_cmd \
         "./castella --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
         './castella /tmp/test-100KB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./cch --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
+        './cch --num-threads=0 /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./cch --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
+        './cch /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "cat /tmp/test-1MiB.txt | ./cch --num-threads=$NT - | cut -w -f 1" \
+        './cch /tmp/test-1MiB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./cch --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
+        './cch /tmp/test-100KB.txt | cut -w -f 1'
+
+    assert_eq_cmd_cmd \
+        "./cch --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
+        './cch /tmp/test-100KB.txt | cut -w -f 1'
 done
 
 # Verify that different "--chunk-size" values give distinct results.
@@ -359,6 +380,10 @@ assert_neq_cmd_cmd \
     './castella --chunk-size=16384 /tmp/test-1MiB.txt | cut -w -f 1' \
     './castella --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
 
+assert_neq_cmd_cmd \
+    './cch --chunk-size=16384 /tmp/test-1MiB.txt | cut -w -f 1' \
+    './cch --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
+
 # Verify that a non-default "--chunk-size" is also independent of the thread
 # count and the I/O mode.  4096 makes the 100 KB file span 24 full chunks
 # plus a partial one.
@@ -366,6 +391,10 @@ assert_neq_cmd_cmd \
 assert_eq_cmd_cmd \
     './castella --chunk-size=4096 --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+
+assert_eq_cmd_cmd \
+    './cch --chunk-size=4096 --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './cch --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
 # The input file size must be at least 512 Bytes (twice the state size).
@@ -390,23 +419,25 @@ assert_neq_cmd_cmd \
     './cch --mix-rate=2048 /tmp/test-1KiB.txt | cut -w -f 1'
 
 # Verify known output around the first-mix boundary.
-# /tmp/test-64KiB.txt is exactly 256 chunks, absorbed as 256 data chunks plus
-# 1 padding chunk (257 absorptions):
-# --mix-rate=256 mixes after the last data chunk.
-# --mix-rate=257 mixes after the padding chunk.
+# /tmp/test-64KiB.txt is exactly one tree chunk (chunk 0, absorbed directly
+# by the final node).  The final node's input stream -- 7-byte role prefix +
+# 65536 file bytes + 2-byte trailing CV count = 65545 bytes -- is absorbed
+# as 256 full compression blocks plus 1 padding block (257 absorptions):
+# --mix-rate=256 mixes after the last full block.
+# --mix-rate=257 mixes after the padding block.
 # --mix-rate=258 never mixes.
 
 assert_eq_cmd_str \
     './cch --mix-rate=256 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
-    b35a46905446d52ae38cba005f68fa9f39969f372406378149845628468a5a65
+    1b65963b62d9fd9baadae6c2f746e03a1a705e56217cb1c552a1d8c706638cc7
 
 assert_eq_cmd_str \
     './cch --mix-rate=257 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
-    924ee139e5013a626f5e839b5b4056ce8e12dc28062d195900383343ca280ed3
+    c6b83550110ae90160637d71613ca6d797d7964c2658d80356eb60e4d887ccad
 
 assert_eq_cmd_str \
     './cch --mix-rate=258 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
-    b8bbfb7a29d955db645ac5f4578a61460f5ec6b79bdcab2fcd4ef8d124e278d1
+    a1bb08ddfb736a5e10ad5a75488876556905dbaf6e41b762d16ddb24ceaa8ff1
 
 echo "$PASS passed, $FAIL failed"
 

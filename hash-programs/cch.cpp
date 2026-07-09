@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #include "bytes_to_hex.hpp"
+#include "cch-tree.hpp"
 #include "cch.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
+#include "parse_bounded_int.hpp"
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 
@@ -13,6 +15,7 @@
 #include <err.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <limits>
 #include <print>
 #include <stdexcept>
 #include <string>
@@ -24,7 +27,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-06-05";
+inline constexpr std::string_view program_version = "2026-07-09";
 
 // {{{ default values for options
 inline constexpr int default_digest_size_bytes = 32;
@@ -32,12 +35,24 @@ static_assert(default_digest_size_bytes <=
               compress_castella_hash<>::get_max_digest_size_bytes());
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
+
+// The chunk size is part of the digest format (different chunk sizes give
+// different digests), unlike the thread count, which never affects the
+// digest.
+inline constexpr int default_chunk_size = compress_castella_tree::DEFAULT_CHUNK_SIZE;
+
+// 0 requests one worker thread per available hardware thread.
+inline constexpr int default_num_threads = 0;
 // }}}
 
 // {{{ options
 auto digest_size_bytes = default_digest_size_bytes;
 
 auto mix_rate = default_mix_rate;
+
+auto chunk_size = default_chunk_size;
+
+auto num_threads = default_num_threads;
 
 bool use_mmap = true;
 // }}}
@@ -58,7 +73,7 @@ print_usage()
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
 
-    std::println("Compute the Compress-Castella hash (CCH).");
+    std::println("Compute the Compress-Castella tree hash (CCH).");
 
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
@@ -72,6 +87,13 @@ print_usage()
     std::println("  -h, --help");
     std::println("        Print this message, then exit.");
 
+    std::println("  --chunk-size=BYTES");
+    std::println("        Specify the size of a tree chunk.");
+    std::println("        Different chunk sizes produce different digests.");
+    std::println("        (default={}) (minimum={}) (maximum={})", default_chunk_size,
+                 compress_castella_tree::CHUNK_SIZE_MIN,
+                 compress_castella_tree::CHUNK_SIZE_MAX);
+
     std::println("  --mix-rate=RATE");
     std::println("        Specify the number of absorptions (full-block inputs) per state mix.");
     std::println("        Valid range: [{}, {}].", compress_castella_hash<>::MIX_RATE_MIN,
@@ -81,6 +103,13 @@ print_usage()
 
     std::println("  --no-mmap");
     std::println("        Do not use memory mapping to read FILE.");
+
+    std::println("  --num-threads=NUM");
+    std::println("        Specify the maximum number of worker threads used to hash chunks.");
+    std::println("        0 means one thread per available hardware thread.");
+    std::println("        The digest does not depend on the number of threads.");
+    std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
+                 compress_castella_tree::NUM_THREADS_MAX);
 
     std::println("  --size=SIZE");
     std::println("        Specify the output size (in bytes).");
@@ -98,6 +127,11 @@ print_usage()
     std::println("CCH ALGORITHM DESCRIPTION");
     std::println("");
 
+    std::println("FILE is hashed as a chunked tree: each chunk is hashed to a chaining value by an independent CCH node, and a final CCH node hashes the chaining values, so multiple CPU cores can share the work.");
+    std::println("Memory-mapped files parallelize; piped input is hashed on the calling thread (a CCH node outruns handing chunks to other cores).");
+    std::println("");
+
+    std::println("Within each node:");
     std::println("The internal state is initialized with distinct per-lane constants, and the mix rate is folded into it (so different RATE values produce distinct digests).");
     std::println("Input data is absorbed into the internal state via a one-way compression function.");
     std::println("The internal state is mixed by the Castella permutation function every RATE absorptions, ensuring full state diffusion.");
@@ -121,23 +155,27 @@ void process_options(int argc, char* argv[])
 
     const char* short_options = "+Vh";
 
-    constexpr int OPTION_HASH_VERSION  = static_cast<int>(fnv1a_32("version" ));
-    constexpr int OPTION_HASH_HELP     = static_cast<int>(fnv1a_32("help"    ));
-    constexpr int OPTION_HASH_MIX_RATE = static_cast<int>(fnv1a_32("mix-rate"));
-    constexpr int OPTION_HASH_NO_MMAP  = static_cast<int>(fnv1a_32("no-mmap" ));
-    constexpr int OPTION_HASH_SIZE     = static_cast<int>(fnv1a_32("size"    ));
+    constexpr int OPTION_HASH_VERSION     = static_cast<int>(fnv1a_32("version"    ));
+    constexpr int OPTION_HASH_HELP        = static_cast<int>(fnv1a_32("help"       ));
+    constexpr int OPTION_HASH_CHUNK_SIZE  = static_cast<int>(fnv1a_32("chunk-size" ));
+    constexpr int OPTION_HASH_MIX_RATE    = static_cast<int>(fnv1a_32("mix-rate"   ));
+    constexpr int OPTION_HASH_NO_MMAP     = static_cast<int>(fnv1a_32("no-mmap"    ));
+    constexpr int OPTION_HASH_NUM_THREADS = static_cast<int>(fnv1a_32("num-threads"));
+    constexpr int OPTION_HASH_SIZE        = static_cast<int>(fnv1a_32("size"       ));
 
     using long_option = option;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
     constexpr long_option long_options[] = {
         // const char*      , int                       , int*         , int
-        {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION },
-        {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP    },
-        {.name="mix-rate"   , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_MIX_RATE},
-        {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP },
-        {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE    },
-        {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                   },
+        {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION    },
+        {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP       },
+        {.name="chunk-size" , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CHUNK_SIZE },
+        {.name="mix-rate"   , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_MIX_RATE   },
+        {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP    },
+        {.name="num-threads", .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_NUM_THREADS},
+        {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE       },
+        {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                      },
     };
 
     int c = 0;
@@ -157,42 +195,35 @@ void process_options(int argc, char* argv[])
             std::exit(EXIT_SUCCESS);
             break;
 
+        case OPTION_HASH_CHUNK_SIZE:
+            chunk_size = parse_bounded_int(optarg, compress_castella_tree::CHUNK_SIZE_MIN,
+                                           compress_castella_tree::CHUNK_SIZE_MAX,
+                                           "--chunk-size");
+            break;
+
         case OPTION_HASH_MIX_RATE:
-            try
-            {
-                mix_rate = std::stoi(optarg);
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            // 0 (disable periodic mixing) or [MIX_RATE_MIN, MIX_RATE_MAX];
+            // MIX_RATE_MIN is 1, so the valid values are contiguous.
+            mix_rate = parse_bounded_int(optarg, 0,
+                                         compress_castella_hash<>::MIX_RATE_MAX,
+                                         "--mix-rate");
             break;
 
         case OPTION_HASH_NO_MMAP:
             use_mmap = false;
             break;
 
+        case OPTION_HASH_NUM_THREADS:
+            num_threads = parse_bounded_int(optarg, 0,
+                                            compress_castella_tree::NUM_THREADS_MAX,
+                                            "--num-threads");
+            break;
+
         case OPTION_HASH_SIZE:
-            try
-            {
-                digest_size_bytes = std::stoi(optarg);
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-            }
-            catch (const std::out_of_range& ex)
-            {
-                (void)std::fflush(stdout);
-                errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-            }
+            // No range check: SIZE is clamped by final_digest_bytes
+            // (unchanged behavior).
+            digest_size_bytes = parse_bounded_int(optarg, std::numeric_limits<int>::min(),
+                                                  std::numeric_limits<int>::max(), "--size");
             break;
 
         default:
@@ -213,6 +244,10 @@ void process_options(int argc, char* argv[])
 /**
 * \retval true upon error
 * \retval false upon success
+* \note With a compress_castella_tree hash object, the chunks fed by this
+* read loop are hashed inline on the calling thread: a CCH node hashes a
+* chunk faster than it could be handed to another core (see
+* USE_STREAMING_POOL), so only memory-mapped input parallelizes.
 */
 [[nodiscard]] bool
 process_file_read_fd(int fd, auto& hash_obj)
@@ -292,8 +327,22 @@ process_file(const std::string& path, auto& hash_obj)
             throw SYSERR_PATH(path);
         }
 
-        // If add() throws (only possible on mutex failure), mmap_addr is leaked.
-        hash_obj.add(mmap_addr, file_size);
+        // The whole mapping is added in one call, which is what lets a
+        // compress_castella_tree hash object take its one-shot batch path:
+        // the file's chunks are hashed in place (no copying) by its worker
+        // threads.  add() can throw (mutex failure, allocation failure, or
+        // a worker thread's exception propagating out of the tree), so the
+        // mapping is released on that path too before the exception
+        // propagates.
+        try
+        {
+            hash_obj.add(mmap_addr, file_size);
+        }
+        catch (...)
+        {
+            (void)::munmap(mmap_addr, mmap_size);
+            throw;
+        }
 
         if (::munmap(mmap_addr, mmap_size) < 0)
             throw SYSERR_PATH(path);
@@ -328,7 +377,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         try
         {
-            compress_castella_hash<> hash_obj{mix_rate};
+            // A compress_castella_tree (not a plain compress_castella_hash):
+            // FILE is hashed as a chunked tree so that the work can be
+            // spread across num_threads CPU cores.  The digest depends on
+            // chunk_size but NEVER on num_threads, so any thread count (and
+            // either I/O mode) produces the same output for the same input.
+            compress_castella_tree hash_obj{mix_rate, chunk_size, num_threads};
 
             process_file(path, hash_obj);
 
@@ -343,14 +397,19 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             exit_status = EXIT_FAILURE;
             break;
         }
-        catch (const std::range_error& ex)
+        catch (const std::system_error& ex)
         {
             (void)std::fflush(stdout);
-            warnx("range error: %s", ex.what());
+            warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
-            break;
         }
-        catch (const std::system_error& ex)
+        // The tree hash object allocates (per-batch CV arrays, up to a
+        // --chunk-size buffer, worker node objects) and rethrows
+        // worker-thread exceptions out of add() and final_digest_bytes(),
+        // so std::bad_alloc is now reachable here.  Report and continue
+        // with the remaining files instead of letting it escape main() to
+        // std::terminate.
+        catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);
             warnx("%s", ex.what());

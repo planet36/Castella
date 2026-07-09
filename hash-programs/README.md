@@ -3,11 +3,13 @@
 | name | purpose |
 | ---- | ------- |
 | castella.cpp | Compute the Castella tree hash of each FILE |
-| cch.cpp | Compute the Compress-Castella hash (CCH) of each FILE |
+| cch.cpp | Compute the Compress-Castella tree hash (CCH) of each FILE |
 
 Both programs read from standard input when FILE is absent or `-`.
 
-`castella` hashes each FILE as a chunked tree (`Castella::DuplexTree`), so the work can be spread across CPU cores with `--num-threads=NUM` (0, the default, means one thread per hardware thread).  The digest never depends on the thread count or the I/O mode; it does depend on `--chunk-size`, which is part of the digest format.  Memory-mapped files parallelize best; `--no-mmap` and piped input are also multithreaded, but their throughput is limited by the reading thread.
+Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `compress_castella_tree`, two instantiations of the same `Castella::HashTree` layer), so the work can be spread across CPU cores with `--num-threads=NUM` (0, the default, means one thread per hardware thread).  The digest never depends on the thread count or the I/O mode; it does depend on `--chunk-size`, which is part of the digest format (the defaults differ: 16 KiB for `castella`, 64 KiB for `cch`).
+
+Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but their throughput is limited by the reading thread.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread: a CCH node hashes a chunk faster than the chunk could be handed to another core.
 
 The output format is a line for each FILE:
 

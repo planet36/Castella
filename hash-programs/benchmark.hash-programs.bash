@@ -111,19 +111,6 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 'xxhsum -H1 /tmp/test.txt' \
 'xxhsum -H2 /tmp/test.txt' \
 'xxhsum -H3 /tmp/test.txt' \
-'keccak-224sum  /tmp/test.txt' \
-'keccak-256sum  /tmp/test.txt' \
-'keccak-384sum  /tmp/test.txt' \
-'keccak-512sum  /tmp/test.txt' \
-'keccaksum      /tmp/test.txt' \
-'rawshake128sum /tmp/test.txt' \
-'rawshake256sum /tmp/test.txt' \
-'sha3sum -a 224 /tmp/test.txt' \
-'sha3sum -a 256 /tmp/test.txt' \
-'sha3sum -a 384 /tmp/test.txt' \
-'sha3sum -a 512 /tmp/test.txt' \
-'shake128sum    /tmp/test.txt' \
-'shake256sum    /tmp/test.txt' \
 
 
 # Output

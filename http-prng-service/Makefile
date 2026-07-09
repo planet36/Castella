@@ -19,7 +19,7 @@ $(BINS): httplib.h
 
 # https://github.com/yhirose/cpp-httplib
 httplib.h:
-	curl -O https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h
+	curl --fail -O https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h
 
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp

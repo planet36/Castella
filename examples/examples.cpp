@@ -12,13 +12,16 @@
 #include "quote_shell_always.hpp"
 #include "to_unsigned.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <print>
+#include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 // right_encode is only here for compatibility with NIST algorithms
 
@@ -37,6 +40,82 @@ right_encode(const std::unsigned_integral auto x)
     result.unchecked_push_back(static_cast<std::byte>(w));
 
     return result;
+}
+
+/// ParallelHash-like construction over \c Castella::Duplex (SP 800-185 Section 6)
+/**
+* The step comments below use the SP 800-185 step numbering.
+*
+* Each block of \a X is hashed to a fixed-length chaining value (CV) by an
+* independent leaf duplex -- a pure function of (parameters, block bytes) --
+* so the leaves could run on any thread in any order; only the order in which
+* the CVs are absorbed below matters.  This example transcribes the SP
+* 800-185 structure sequentially, for clarity.  For an actual multicore tree
+* hash, use \c Castella::DuplexTree, which differs in structure (chunk 0 is
+* absorbed directly by the final node, every node absorbs a role prefix, and
+* leaves bind their chunk index).
+*
+* \param X the input data
+* \param B the block size (in bytes); the last block may be shorter
+* \param num_bytes_to_squeeze the requested output length (in bytes)
+* \param capacity_blocks the capacity (in blocks) of every node
+* \param function_name the function name string (N) of the final node
+* \param customization_str the customization string (S) of the final node
+* \param xof if true, absorb right_encode(0) in place of the output length
+*        (the XOF variants), so outputs of different lengths are prefixes of
+*        one another instead of unrelated digests
+*/
+[[nodiscard]] std::vector<std::byte>
+parallel_hash_like(const std::string_view X,
+                   const size_t B,
+                   const int num_bytes_to_squeeze,
+                   const int capacity_blocks,
+                   const std::string_view function_name,
+                   const std::string_view customization_str,
+                   const bool xof)
+{
+    // the same parameters as the other SP 800-185 examples
+    constexpr int num_rounds = 6;
+    constexpr int input_suffix = 0;
+
+    // 5. (the outer function) cSHAKE(z, L, "ParallelHash", S)
+    Castella::Duplex final_node(capacity_blocks, num_rounds, input_suffix, function_name,
+                                customization_str);
+
+    // The chaining value length is the capacity size (twice the security
+    // strength), as in ParallelHash, whose leaves squeeze twice the security
+    // strength (256 or 512 bits) -- and the same rule as
+    // Castella::DuplexTree::CV_LEN.
+    const int cv_len = final_node.get_capacity_size_bytes();
+
+    // 2. z = left_encode(B).
+    final_node.add_left_encoded(B);
+
+    // 1. n = ceil(len(X) / B).
+    // 3. for i = 0 to n-1:
+    //        z = z || cSHAKE(X_i, 2*security_strength, "", "").
+    // The leaf is a plain (empty N and S) duplex, as in ParallelHash, whose
+    // leaves are cSHAKE with empty N and S (i.e. SHAKE).  A leaf does not
+    // absorb its block index; each CV is bound to its position by the
+    // fixed-length concatenation order alone.
+    size_t n = 0;
+    for (size_t off = 0; off < X.size(); off += B, ++n)
+    {
+        const auto cv = Castella::Duplex(capacity_blocks, num_rounds, input_suffix, "", "")
+                            .add(X.substr(off, B))
+                            .squeeze_bytes(cv_len);
+
+        final_node.add(std::span<const std::byte>{cv});
+    }
+
+    // 4. z = z || right_encode(n) || right_encode(L).
+    final_node.add_right_encoded(n);
+    if (xof)
+        final_node.add_right_encoded(0U);
+    else
+        final_node.add_right_encoded(to_unsigned(num_bytes_to_squeeze));
+
+    return final_node.squeeze_bytes(num_bytes_to_squeeze);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -578,13 +657,228 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
-    // TODO: ParallelHash128
+    /*
+    * <blockquote>
+    * The ParallelHash function is designed to support the efficient hashing
+    * of very long strings, by taking advantage of the parallelism available
+    * in modern processors.
+    * </blockquote>
+    *
+    * See the parallel_hash_like() helper above for the structure (and for a
+    * pointer to Castella::DuplexTree, the native multicore tree hash).
+    */
 
-    // TODO: ParallelHash256
+    {
+        /*
+        * ParallelHash128(X, B, L, S):
+        *
+        * 1. n = ceil(len(X) / B).
+        * 2. z = left_encode(B).
+        * 3. for i = 0 to n-1:
+        *        z = z || cSHAKE128(X_i, 256, "", "").
+        * 4. newX = z || right_encode(n) || right_encode(L).
+        * 5. return cSHAKE128(newX, L, "ParallelHash", S).
+        */
 
-    // TODO: ParallelHashXOF128
+        constexpr int L = 256; // bits
+        constexpr std::string_view X{"Don't make me run.  I'm full of chocolate!"};
+        constexpr size_t B = 8;    // bytes; the last block is partial
+        constexpr size_t B_2 = 12; // a different block size
 
-    // TODO: ParallelHashXOF256
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr std::string_view function_name = "Castella-Parallel-Hash";
+        constexpr std::string_view customization_str = "example like ParallelHash128";
+        constexpr int num_bytes_to_squeeze = L / 8;
+
+        const auto digest_bytes = parallel_hash_like(X, B, num_bytes_to_squeeze,
+                                                     capacity_blocks, function_name,
+                                                     customization_str, false);
+
+        // The block size is bound into the hash (left_encode(B) and the
+        // block boundaries themselves), so the same input hashed with a
+        // different block size gives an unrelated digest.
+        const auto digest_bytes_2 = parallel_hash_like(X, B_2, num_bytes_to_squeeze,
+                                                       capacity_blocks, function_name,
+                                                       customization_str, false);
+
+        const std::string expected_result =
+            "6c236c030c575192ad492fbb8ce39db093b5dafdc401a035c2ab65ed269ba80f";
+        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string expected_result_2 =
+            "0cfa8e20cbd2618d8a3435725efbf1ef383199d35827f80c8d4f40b44647e4e4";
+        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result_2);
+
+        if (validate)
+        {
+            assert(result == expected_result);
+            assert(result_2 == expected_result_2);
+            assert(digest_bytes != digest_bytes_2);
+        }
+    }
+
+    {
+        /*
+        * ParallelHash256(X, B, L, S):
+        *
+        * 1. n = ceil(len(X) / B).
+        * 2. z = left_encode(B).
+        * 3. for i = 0 to n-1:
+        *        z = z || cSHAKE256(X_i, 512, "", "").
+        * 4. newX = z || right_encode(n) || right_encode(L).
+        * 5. return cSHAKE256(newX, L, "ParallelHash", S).
+        */
+
+        constexpr int L = 512; // bits
+        constexpr std::string_view X{"Stupid sexy Flanders!"};
+        constexpr size_t B = 8;    // bytes; the last block is partial
+        constexpr size_t B_2 = 12; // a different block size
+
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr std::string_view function_name = "Castella-Parallel-Hash";
+        constexpr std::string_view customization_str = "example like ParallelHash256";
+        constexpr int num_bytes_to_squeeze = L / 8;
+
+        const auto digest_bytes = parallel_hash_like(X, B, num_bytes_to_squeeze,
+                                                     capacity_blocks, function_name,
+                                                     customization_str, false);
+
+        // The block size is bound into the hash (left_encode(B) and the
+        // block boundaries themselves), so the same input hashed with a
+        // different block size gives an unrelated digest.
+        const auto digest_bytes_2 = parallel_hash_like(X, B_2, num_bytes_to_squeeze,
+                                                       capacity_blocks, function_name,
+                                                       customization_str, false);
+
+        const std::string expected_result =
+            "376ad47dcdf4a3af34853f4273ad4457fc54a5b681dc2e974e599afa41388a3318856b3479d08b75978fa4b6a03ae1296af487eb46c309868835af334299fe83";
+        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string expected_result_2 =
+            "0ff85c6bddabb064933e4f642190829f0a9a236e882723d3d28f64c1b81950f627413d4217a55af9b8e16a90cec399d48cbd8df7c70f96c16b17b773b6a711fe";
+        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result_2);
+
+        if (validate)
+        {
+            assert(result == expected_result);
+            assert(result_2 == expected_result_2);
+            assert(digest_bytes != digest_bytes_2);
+        }
+    }
+
+    {
+        /*
+        * ParallelHashXOF128(X, B, L, S):
+        *
+        * 1. n = ceil(len(X) / B).
+        * 2. z = left_encode(B).
+        * 3. for i = 0 to n-1:
+        *        z = z || cSHAKE128(X_i, 256, "", "").
+        * 4. newX = z || right_encode(n) || right_encode(0).
+        * 5. return cSHAKE128(newX, L, "ParallelHash", S).
+        */
+
+        constexpr int L = 256; // bits
+        constexpr std::string_view X{"You don't win friends with salad."};
+        constexpr size_t B = 8; // bytes; the last block is partial
+
+        constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
+        constexpr std::string_view function_name = "Castella-Parallel-Hash";
+        constexpr std::string_view customization_str = "example like ParallelHashXOF128";
+        constexpr int num_bytes_to_squeeze = L / 8;
+
+        const auto digest_bytes = parallel_hash_like(X, B, num_bytes_to_squeeze,
+                                                     capacity_blocks, function_name,
+                                                     customization_str, true);
+
+        // Unlike ParallelHash, the output length is not bound into the hash
+        // (right_encode(0) is absorbed in its place), so a shorter output is
+        // a prefix of a longer one.
+        const auto digest_bytes_2 = parallel_hash_like(X, B, num_bytes_to_squeeze / 2,
+                                                       capacity_blocks, function_name,
+                                                       customization_str, true);
+
+        const std::string expected_result =
+            "136cd27d8a09852be1a166966cafeeb6d3aa20475c7264a86bc8d989e1667030";
+        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string expected_result_2 =
+            "136cd27d8a09852be1a166966cafeeb6";
+        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result_2);
+
+        if (validate)
+        {
+            assert(result == expected_result);
+            assert(result_2 == expected_result_2);
+            assert(std::ranges::equal(
+                digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))));
+        }
+    }
+
+    {
+        /*
+        * ParallelHashXOF256(X, B, L, S):
+        *
+        * 1. n = ceil(len(X) / B).
+        * 2. z = left_encode(B).
+        * 3. for i = 0 to n-1:
+        *        z = z || cSHAKE256(X_i, 512, "", "").
+        * 4. newX = z || right_encode(n) || right_encode(0).
+        * 5. return cSHAKE256(newX, L, "ParallelHash", S).
+        */
+
+        constexpr int L = 512; // bits
+        constexpr std::string_view X{"My eyes!  The goggles do nothing!"};
+        constexpr size_t B = 8; // bytes; the last block is partial
+
+        constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
+        constexpr std::string_view function_name = "Castella-Parallel-Hash";
+        constexpr std::string_view customization_str = "example like ParallelHashXOF256";
+        constexpr int num_bytes_to_squeeze = L / 8;
+
+        const auto digest_bytes = parallel_hash_like(X, B, num_bytes_to_squeeze,
+                                                     capacity_blocks, function_name,
+                                                     customization_str, true);
+
+        // Unlike ParallelHash, the output length is not bound into the hash
+        // (right_encode(0) is absorbed in its place), so a shorter output is
+        // a prefix of a longer one.
+        const auto digest_bytes_2 = parallel_hash_like(X, B, num_bytes_to_squeeze / 2,
+                                                       capacity_blocks, function_name,
+                                                       customization_str, true);
+
+        const std::string expected_result =
+            "e49315e5b4e6fac05ce2dcd1336871dcd49f8cf6f628cf7f0f13d8c0d12c895af198c22d16f9481954d85c4c9235fab0b543f5b63db19fb838add63a4f306765";
+        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string expected_result_2 =
+            "e49315e5b4e6fac05ce2dcd1336871dcd49f8cf6f628cf7f0f13d8c0d12c895a";
+        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result);
+        std::println("{} {}: {}", quote_shell_always(function_name),
+                     quote_shell_always(customization_str), result_2);
+
+        if (validate)
+        {
+            assert(result == expected_result);
+            assert(result_2 == expected_result_2);
+            assert(std::ranges::equal(
+                digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))));
+        }
+    }
 
     return 0;
 }

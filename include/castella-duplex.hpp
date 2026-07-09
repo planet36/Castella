@@ -927,10 +927,10 @@ public:
     // }}}
     Duplex& add_right_encoded(const void* data, size_t len)
     {
+        std::scoped_lock lock{mtx_};
+
         if (data == nullptr)
             return *this;
-
-        std::scoped_lock lock{mtx_};
 
         right_encode_bytes_(data, len);
 

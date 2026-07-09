@@ -342,7 +342,7 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \pre \a data is not null if \a len > 0
+    * \pre \a len is 0 if \a data is null
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
@@ -351,20 +351,25 @@ public:
     // }}}
     compress_castella_hash& add(const void* data, size_t len)
     {
-        if (data == nullptr)
-        {
 #if defined(DEBUG)
-            assert(len == 0);
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
-            return *this;
-        }
 
         std::scoped_lock lock{mtx_};
 
+        // The finalized check precedes the null-data short-circuit so the
+        // documented std::logic_error is thrown unconditionally once
+        // finalized -- including for a null or default-constructed
+        // span/string_view, which would otherwise silently no-op and
+        // disagree with add("").
         if (has_been_finalized_)
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
+
+        if (data == nullptr)
+            return *this;
 
         add_(data, len);
 

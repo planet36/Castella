@@ -1236,6 +1236,7 @@ public:
     /**
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
@@ -1244,6 +1245,11 @@ public:
     // }}}
     DuplexTree& add(const void* data, size_t len)
     {
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         std::scoped_lock lock{mtx_};
 
         // Unlike Duplex, adding after a squeeze is an error: the final node

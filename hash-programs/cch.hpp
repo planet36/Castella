@@ -310,6 +310,38 @@ private:
         absorb_();
     }
 
+    /// Finalize (on the first call) and copy the digest prefix into \a dst (no locking)
+    // {{{
+    /**
+    * The shared core of \c final_digest_bytes and \c final_digest_to: add
+    * the padding bytes and apply the finalizing permutation (once), then
+    * copy the first \c std::size(dst) bytes of the state into \a dst.
+    *
+    * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
+    */
+    // }}}
+    void final_digest_into_(const std::span<std::byte> dst)
+    {
+#if defined(DEBUG)
+        assert(std::ssize(dst) <= get_max_digest_size_bytes());
+#endif
+
+        if (!has_been_finalized_)
+        {
+            add_padding_bytes_();
+            Castella::permute(state_, FINAL_NUM_ROUNDS);
+            has_been_finalized_ = true;
+        }
+
+        // Guard the memcpy: on an empty dst, std::data(dst) may be null,
+        // and memcpy(null, ..., 0) is undefined behavior (its pointer
+        // arguments are declared never-null).
+        if (!std::empty(dst))
+        {
+            (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
+        }
+    }
+
 public:
     compress_castella_hash()
     {
@@ -405,21 +437,33 @@ public:
 
         n = std::clamp(n, 0, get_max_digest_size_bytes());
 
-        std::vector<std::byte> result;
-        result.reserve(n);
+        std::vector<std::byte> result(static_cast<size_t>(n));
 
-        if (!has_been_finalized_)
-        {
-            add_padding_bytes_();
-            Castella::permute(state_, FINAL_NUM_ROUNDS);
-            has_been_finalized_ = true;
-        }
-
-        const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
-
-        result.assign(std::begin(byte_sp), std::end(byte_sp));
+        final_digest_into_(result);
 
         return result;
+    }
+
+    /// Get the final digest bytes, written into \a dst
+    // {{{
+    /**
+    * Like \c final_digest_bytes(int) but writes the first
+    * \c std::size(dst) bytes of the finalized state into the
+    * caller-provided buffer instead of allocating a vector.
+    *
+    * \param dst the destination buffer; its size must not exceed
+    *        \c get_max_digest_size_bytes()
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    */
+    // }}}
+    compress_castella_hash& final_digest_to(const std::span<std::byte> dst)
+    {
+        std::scoped_lock lock{mtx_};
+
+        final_digest_into_(dst);
+
+        return *this;
     }
 
     /// Get the size (in bytes) of the state.

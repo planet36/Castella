@@ -1,5 +1,24 @@
 ## Tests
 
+| name | purpose |
+| ---- | ------- |
+| tests.cpp | Fixed correctness tests and the pinned KATs (below) |
+| kat.cpp | Verify (or regenerate) the machine-readable KAT file |
+| equivalence-tests.cpp | Randomized digest-equivalence tests for the tree hashes |
+
+### `kat` and KAT.txt
+
+[KAT.txt](KAT.txt) is a machine-readable known-answer-test file pinning the digest formats of `Castella::Duplex`, `Castella::DuplexTree`, and `compress_castella_tree` across parameter and message-length sweeps (chunk/rate/compression-block boundaries, the leaf-index 255/256 `left_encode` byte-width boundary).  Each line is self-describing; the message is the deterministic pattern `msg[i] = i mod 256`, so external implementations can consume the file directly.
+
+* `./kat` verifies every line against the current implementation (nonzero exit status on any mismatch).
+* `./kat --generate > KAT.txt` regenerates the file — only to be done when a digest format deliberately changes.
+
+### `equivalence-tests`
+
+The digest of a tree hash is a function of the node parameters, tree geometry, and input bytes only — never the `add()` granularity, thread count, or parallel path.  `equivalence-tests` hammers that contract with randomized inputs at adversarial sizes (chunk boundaries, the streaming-pool start threshold, the paired-leaf index-width fallback, plus random lengths): for each size, the single-threaded one-shot digest is the reference, and every combination of {one-shot, randomly split adds} × {thread counts} must reproduce it.  The seed is printed (and can be passed as an argument) so failures reproduce.
+
+### `tests`
+
 See [tests.cpp](tests.cpp).
 
 ### `Castella::Duplex`

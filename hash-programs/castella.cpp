@@ -1,22 +1,29 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+#include "as_byte_span.hpp"
+#include "byte_width.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"
 #include "fd-utils.h"
+#include "fixed_vector.hpp"
 #include "fnv.hpp"
 #include "parse_bounded_int.hpp"
 #include "quote_shell_always.hpp"
+#include "to_unsigned.hpp"
 #include "unique_fd.hpp"
 
+#include <algorithm>
+#include <concepts>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
 #include <format>
+#include <fstream>
 #include <getopt.h>
 #include <limits>
 #include <print>
@@ -34,6 +41,18 @@ inline constexpr std::string_view program_license = "MPL-2.0";
 inline constexpr std::string_view program_version = "2026-07-10";
 
 inline constexpr std::string_view function_name = "Castella";
+
+/// The function name of keyed (--key-file) hashing; domain-separates MACs
+/// from unkeyed digests
+inline constexpr std::string_view mac_function_name = "Castella-MAC";
+
+/// The absolute maximum key size (in bytes)
+/**
+* The key must also fit in one tree chunk together with its bytepad
+* framing (see \c compute_file_digest); with the minimum chunk size that
+* allows 1014 bytes, far beyond any real key.
+*/
+inline constexpr int key_size_max = 4096;
 
 // {{{ default values for options
 inline constexpr int default_input_suffix = 1;
@@ -83,6 +102,15 @@ bool tag_output = false;
 bool check_mode = false;
 
 bool quiet = false;
+
+/// The --key-file path; empty means unkeyed
+std::string key_file_path;
+
+/// The key bytes read from --key-file; empty means unkeyed
+/**
+* Secret; zeroized before the program exits.
+*/
+std::vector<std::byte> key_bytes;
 // }}}
 
 /// Given the number of bytes to squeeze (D), get the necessary capacity (C) in blocks
@@ -148,6 +176,8 @@ print_usage()
     std::println("        digest-relevant options itself; for a default-format line, --chunk-size,");
     std::println("        --custom, --rounds, and --suffix must be given the same values that");
     std::println("        produced it.  The output size is inferred from the digest length.");
+    std::println("        Keyed digests verify only with the same --key-file (digest lines never");
+    std::println("        contain the key).");
     std::println("        Empty lines and lines starting with '#' are ignored.");
     std::println("        (A FILE whose name contains a newline cannot be verified.)");
 
@@ -161,6 +191,15 @@ print_usage()
     std::println("  --custom=STRING");
     std::println("        Specify the customization string of the Castella DuplexTree object.");
     std::println("        (default={})", quote_shell_always(default_customization_str));
+
+    std::println("  --key-file=FILE");
+    std::println("        Compute a keyed hash (a MAC).  The key is the exact bytes of FILE");
+    std::println("        (at least 1 byte; at most the smaller of {} bytes and the chunk", key_size_max);
+    std::println("        size minus 10).  The KMAC structure is followed at tree scale: the");
+    std::println("        function name becomes {}, the encoded key (bytepad to one", quote_shell_always(mac_function_name));
+    std::println("        tree chunk) is absorbed ahead of FILE, and the right-encoded output");
+    std::println("        size is absorbed last, so MACs of different sizes are unrelated.");
+    std::println("        The key never appears in the output; see --check.");
 
     std::println("  --no-mmap");
     std::println("        Do not use memory mapping to read FILE.");
@@ -232,6 +271,7 @@ void process_options(int argc, char* argv[])
     constexpr int OPTION_HASH_CHECK       = static_cast<int>(fnv1a_32("check"      ));
     constexpr int OPTION_HASH_CHUNK_SIZE  = static_cast<int>(fnv1a_32("chunk-size" ));
     constexpr int OPTION_HASH_CUSTOM      = static_cast<int>(fnv1a_32("custom"     ));
+    constexpr int OPTION_HASH_KEY_FILE    = static_cast<int>(fnv1a_32("key-file"   ));
     constexpr int OPTION_HASH_NO_MMAP     = static_cast<int>(fnv1a_32("no-mmap"    ));
     constexpr int OPTION_HASH_NUM_THREADS = static_cast<int>(fnv1a_32("num-threads"));
     constexpr int OPTION_HASH_QUIET       = static_cast<int>(fnv1a_32("quiet"      ));
@@ -251,6 +291,7 @@ void process_options(int argc, char* argv[])
         {.name="check"      , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_CHECK      },
         {.name="chunk-size" , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CHUNK_SIZE },
         {.name="custom"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CUSTOM     },
+        {.name="key-file"   , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_KEY_FILE   },
         {.name="no-mmap"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_NO_MMAP    },
         {.name="num-threads", .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_NUM_THREADS},
         {.name="quiet"      , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_QUIET      },
@@ -304,6 +345,10 @@ void process_options(int argc, char* argv[])
 
         case OPTION_HASH_CUSTOM:
             customization_str = optarg;
+            break;
+
+        case OPTION_HASH_KEY_FILE:
+            key_file_path = optarg;
             break;
 
         case OPTION_HASH_NO_MMAP:
@@ -466,6 +511,94 @@ process_file(const std::string& path, auto& hash_obj)
     }
 }
 
+/// The left encoding of the unsigned integer \a x, as bytes
+/**
+* The byte width of \a x followed by its low bytes in native byte order --
+* the identical encoding \c Duplex and \c HashTree absorb (the
+* left_encode of SP 800-185, in native byte order).
+*/
+[[nodiscard]] auto
+left_encode(const std::unsigned_integral auto x)
+{
+    fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
+
+    const auto w = byte_width(x);
+
+    result.unchecked_push_back(static_cast<std::byte>(w));
+
+    // the least significant w bytes
+    result.append_range(as_byte_span(x).subspan(0, w));
+
+    return result;
+}
+
+/// The right encoding of the unsigned integer \a x, as bytes
+/**
+* The low bytes of \a x in native byte order followed by its byte width
+* (the right_encode of SP 800-185, in native byte order).
+*/
+[[nodiscard]] auto
+right_encode(const std::unsigned_integral auto x)
+{
+    fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
+
+    const auto w = byte_width(x);
+
+    // the least significant w bytes
+    result.append_range(as_byte_span(x).subspan(0, w));
+
+    result.unchecked_push_back(static_cast<std::byte>(w));
+
+    return result;
+}
+
+/// The maximum key size (in bytes) for the given chunk size
+/**
+* The key and its bytepad framing -- left_encode(chunk size) and
+* left_encode(key size), at most 5 bytes each -- must fit in one tree
+* chunk (see \c compute_file_digest).
+*/
+[[nodiscard]] constexpr int
+max_key_size_bytes(const int chunk_size_bytes) noexcept
+{
+    return std::min(key_size_max, chunk_size_bytes - 10);
+}
+
+/// Read the key from the file at \a path, or exit with an error
+/**
+* The key is the file's exact bytes.  Read byte by byte (never seek), so
+* pipes and process substitution work, e.g. --key-file=<(pass show x).
+*/
+[[nodiscard]] std::vector<std::byte>
+read_key_file(const std::string& path, const int max_size_bytes)
+{
+    std::ifstream file(path, std::ios::binary);
+
+    if (!file.is_open())
+        errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
+
+    std::vector<std::byte> key;
+    key.reserve(64);
+
+    char c = 0;
+    while (file.get(c))
+    {
+        if (std::ssize(key) >= max_size_bytes)
+            errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)",
+                 path.c_str(), max_size_bytes);
+
+        key.push_back(static_cast<std::byte>(c));
+    }
+
+    if (!file.eof())
+        errx(EXIT_FAILURE, "%s: could not read key file", path.c_str());
+
+    if (std::empty(key))
+        errx(EXIT_FAILURE, "%s: key file is empty", path.c_str());
+
+    return key;
+}
+
 /// Hash the contents of the file at \a path and return the digest
 /**
 * The construction+hash+squeeze shared by the normal and --check modes.
@@ -473,25 +606,72 @@ process_file(const std::string& path, auto& hash_obj)
 * carries its own values); the ones that are not (\c num_threads,
 * \c use_mmap via \c process_file) are taken from the globals.
 *
+* When \a key is nonempty, the KMAC structure (SP 800-185 Section 4) is
+* followed at tree scale:
+*
+*     newX = bytepad(encode_string(K), CHUNK_SIZE) || X || right_encode(L)
+*
+* with the function name \c mac_function_name instead of \c function_name.
+* The bytepad width is the tree chunk size (KMAC uses the rate), so the
+* key block is exactly chunk 0 -- absorbed directly by the (now keyed)
+* final node -- and FILE's bytes keep their chunk alignment.  The trailing
+* right_encode(L) makes MACs of different output sizes unrelated (an
+* unkeyed digest of a smaller size is a truncation; a MAC must not be).
+*
 * \exception std::system_error on I/O error
-* \exception std::invalid_argument if a parameter is invalid
+* \exception std::invalid_argument if a parameter is invalid, or if the
+*            key does not fit in one chunk of \a chunk_size_bytes
 */
 [[nodiscard]] std::vector<std::byte>
 compute_file_digest(const std::string& path, const int digest_size_bytes,
                     const int rounds, const int suffix,
-                    const std::string_view custom, const int chunk_size_bytes)
+                    const std::string_view custom, const int chunk_size_bytes,
+                    const std::span<const std::byte> key)
 {
     const int capacity_blocks = num_digest_bytes_to_capacity_blocks(digest_size_bytes);
+
+    const bool keyed = !std::empty(key);
 
     // A DuplexTree (not a plain Duplex): FILE is hashed as a chunked tree
     // so that the work can be spread across num_threads CPU cores.  The
     // digest depends on chunk_size but NEVER on num_threads, so any thread
     // count (and either I/O mode) produces the same output for the same
     // input.
-    Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix, function_name,
+    Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix,
+                                  keyed ? mac_function_name : function_name,
                                   custom, chunk_size_bytes, num_threads);
 
+    if (keyed)
+    {
+        // bytepad(encode_string(K), CHUNK_SIZE): left_encode(CHUNK_SIZE) ||
+        // left_encode(len(K)) || K || zeros to a whole chunk.
+        const auto encoded_w = left_encode(to_unsigned(chunk_size_bytes));
+        const auto encoded_key_len = left_encode(std::size(key));
+
+        const auto framing_size =
+            std::size(encoded_w) + std::size(encoded_key_len) + std::size(key);
+
+        // Normal mode bounds the key size at startup, but a --check --tag
+        // line may carry a smaller chunk size than the check command line.
+        if (framing_size > to_unsigned(chunk_size_bytes))
+            throw std::invalid_argument(
+                "the key does not fit in one chunk of the given chunk size");
+
+        (void)hash_obj.add(encoded_w.span());
+        (void)hash_obj.add(encoded_key_len.span());
+        (void)hash_obj.add(key);
+
+        const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
+        (void)hash_obj.add(std::span<const std::byte>{zeros});
+    }
+
     process_file(path, hash_obj);
+
+    if (keyed)
+    {
+        // right_encode(L), as in KMAC
+        (void)hash_obj.add(right_encode(to_unsigned(digest_size_bytes)).span());
+    }
 
     return hash_obj.squeeze_bytes(digest_size_bytes);
 }
@@ -647,7 +827,7 @@ verify_check_line(const std::string_view line, check_totals& totals)
         digest_bytes = compute_file_digest(parsed.path,
                                            static_cast<int>(std::ssize(parsed.expected_digest)),
                                            parsed.rounds, parsed.suffix, parsed.custom,
-                                           parsed.chunk_size_bytes);
+                                           parsed.chunk_size_bytes, key_bytes);
     }
     catch (const std::exception& ex)
     {
@@ -681,6 +861,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     process_options(argc, argv);
 
+    if (!key_file_path.empty())
+    {
+        key_bytes = read_key_file(key_file_path, max_key_size_bytes(chunk_size));
+    }
+
     const int capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
 
     if (verbose)
@@ -711,7 +896,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         // The paths are checkfiles (lines of digests to verify), not files
         // to hash.
-        return run_check_files(paths, verify_check_line);
+        exit_status = run_check_files(paths, verify_check_line);
+
+        if (!key_bytes.empty())
+            explicit_bzero(std::data(key_bytes), std::size(key_bytes));
+
+        return exit_status;
     }
 
     for (const auto& path : paths)
@@ -725,7 +915,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes =
                 compute_file_digest(path, num_bytes_to_squeeze, num_rounds, input_suffix,
-                                    customization_str, chunk_size);
+                                    customization_str, chunk_size, key_bytes);
 
             if (tag_output)
             {
@@ -765,6 +955,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             exit_status = EXIT_FAILURE;
         }
     }
+
+    if (!key_bytes.empty())
+        explicit_bzero(std::data(key_bytes), std::size(key_bytes));
 
     return exit_status;
 }

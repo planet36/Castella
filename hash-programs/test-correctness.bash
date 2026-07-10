@@ -534,6 +534,61 @@ assert_eq_cmd_str_status \
     '' \
     1
 
+# Verify the "--key-file" keyed (MAC) mode of castella.
+
+printf 'Squishee' > /tmp/test-key1.bin || exit
+printf 'Duff'     > /tmp/test-key2.bin || exit
+
+# Known answer (pins the MAC format: bytepad'd encode_string of the key as
+# chunk 0, function name "Castella-MAC", trailing right_encode of the size).
+
+assert_eq_cmd_str \
+    './castella --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | cut -w -f 1' \
+    7fa10db569fb361d394e05f27dd812a50b462989feda874130d15ed386129d85
+
+# A keyed digest differs from the unkeyed digest, and differs per key.
+
+assert_neq_cmd_cmd \
+    './castella /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | cut -w -f 1'
+
+assert_neq_cmd_cmd \
+    './castella --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key2.bin /tmp/test-100KB.txt | cut -w -f 1'
+
+# The thread count and the I/O mode still never affect a keyed digest.
+
+assert_eq_cmd_cmd \
+    './castella --key-file=/tmp/test-key1.bin --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key1.bin --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+
+# A 16-byte MAC is not a truncation of the 32-byte MAC (the trailing
+# right_encode of the output size makes different sizes unrelated).
+
+assert_neq_cmd_cmd \
+    './castella --key-file=/tmp/test-key1.bin --size=16 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | cut -w -f 1 | head -c 32'
+
+# A keyed digest verifies only with the same key: --check with the right
+# key succeeds, and with the wrong key or no key it must FAIL (the key is
+# never in the digest line).
+
+assert_eq_cmd_str \
+    './castella --tag --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | ./castella --check --key-file=/tmp/test-key1.bin -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str_status \
+    './castella --tag --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | ./castella --check --key-file=/tmp/test-key2.bin - 2>/dev/null' \
+    "'/tmp/test-100KB.txt': FAILED" \
+    1
+
+assert_eq_cmd_str_status \
+    './castella --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | ./castella --check - 2>/dev/null' \
+    "'/tmp/test-100KB.txt': FAILED" \
+    1
+
+rm -f -- /tmp/test-key1.bin /tmp/test-key2.bin
+
 echo "$PASS passed, $FAIL failed"
 
 # Remove the input data files.

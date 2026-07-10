@@ -124,6 +124,29 @@ function assert_neq_cmd_cmd
     fi
 }
 
+function assert_eq_cmd_str_status
+{
+    local CMD="$1"
+    local EXPECTED="$2"
+    local EXPECTED_STATUS="$3"
+
+    local EXIT_STATUS
+
+    local ACTUAL
+    ACTUAL=$(eval "$CMD")
+    EXIT_STATUS=$?
+
+    if [[ "$ACTUAL" == "$EXPECTED" ]] && ((EXIT_STATUS == EXPECTED_STATUS))
+    then
+        ((PASS++))
+    else
+        ((FAIL++))
+        printf '%s FAIL:\ncommand = %s\nactual   = %s (exit status %d)\nexpected = %s (exit status %d)\n' \
+            "${FUNCNAME[0]}" "$CMD" "$ACTUAL" "$EXIT_STATUS" "$EXPECTED" "$EXPECTED_STATUS" 1>&2
+        return 1
+    fi
+}
+
 # Create the input data files.  The size of each file is in its name.
 #     0 B  : only padding is absorbed
 #   100 B  : smaller than one 256-byte chunk
@@ -438,6 +461,78 @@ assert_eq_cmd_str \
 assert_eq_cmd_str \
     './cch --mix-rate=258 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
     a1bb08ddfb736a5e10ad5a75488876556905dbaf6e41b762d16ddb24ceaa8ff1
+
+# Verify the "--check" and "--tag" modes: digests produced by each program
+# must verify with the same program, in both output formats.
+
+# Default-format round trip (the checkfile is read from standard input).
+# For default-format lines, the digest-relevant options are taken from the
+# check command line (the defaults, here).
+
+assert_eq_cmd_str \
+    './castella /tmp/test-100KB.txt | ./castella --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch /tmp/test-100KB.txt | ./cch --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+# Default-format round trip with non-default digest-relevant options, which
+# must be repeated at check time.  (--size is inferred from the digest
+# length, so it is not repeated.)
+
+assert_eq_cmd_str \
+    "./castella --custom='¡Ay, caramba!' --rounds=16 --size=48 --suffix=105 /tmp/test-100KB.txt | ./castella --check --custom='¡Ay, caramba!' --rounds=16 --suffix=105 -" \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --chunk-size=4096 --mix-rate=3 --size=64 /tmp/test-100KB.txt | ./cch --check --chunk-size=4096 --mix-rate=3 -' \
+    "'/tmp/test-100KB.txt': OK"
+
+# A --tag line carries the digest-relevant options itself, so the check
+# command line needs none of them.
+
+assert_eq_cmd_str \
+    "./castella --tag --custom='¡Ay, caramba!' --rounds=16 --size=48 --suffix=105 /tmp/test-100KB.txt | ./castella --check -" \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --tag --chunk-size=4096 --mix-rate=3 --size=64 /tmp/test-100KB.txt | ./cch --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+# --quiet suppresses the OK lines (the exit status still reports success).
+
+assert_eq_cmd_str \
+    './castella --tag /tmp/test-100KB.txt | ./castella --check --quiet -' \
+    ''
+
+# A digest of the wrong file must FAIL with a nonzero exit status.  (The
+# checkfile's digest of the 100 B file is relabeled as the empty file.)
+
+assert_eq_cmd_str_status \
+    './castella --tag /tmp/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./castella --check - 2>/dev/null' \
+    "'/tmp/test-0B.txt': FAILED" \
+    1
+
+assert_eq_cmd_str_status \
+    './cch /tmp/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./cch --check - 2>/dev/null' \
+    "'/tmp/test-0B.txt': FAILED" \
+    1
+
+# A checkfile without a single properly formatted line must fail.
+
+assert_eq_cmd_str_status \
+    'echo "not a checksum line" | ./castella --check - 2>/dev/null' \
+    '' \
+    1
+
+# One program's --tag lines are not another's (the program name is part of
+# the format).
+
+assert_eq_cmd_str_status \
+    './cch --tag /tmp/test-100B.txt | ./castella --check - 2>/dev/null' \
+    '' \
+    1
 
 echo "$PASS passed, $FAIL failed"
 

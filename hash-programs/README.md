@@ -13,15 +13,22 @@ Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped inp
 
 On x86-64 with VAES, both programs additionally hash leaf chunks two at a time per thread — `castella` by packing two duplex states into the two 128-bit lanes of ymm registers, `cch` by interleaving two nodes' compression chains in one loop (a cch node alone is latency-bound) — and every single-state Castella permutation runs register-resident in a folded ymm representation.  Like the thread count, none of these ever affects the digest.
 
-The output format is a line for each FILE:
+The default output format is a line for each FILE:
 
     digest  "quoted FILE"
+
+With `--tag`, each line instead embeds the digest-relevant options (BSD style; `--size` is inferred from the digest length):
+
+    castella (chunk-size=16384,custom='hash',rounds=6,suffix=1) 'FILE' = digest
+    cch (chunk-size=65536,mix-rate=256) 'FILE' = digest
+
+Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A `--tag` line carries its own parameters; a default-format line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time (`--custom` may be a secret key), and the accounting, warnings, and exit status follow the `md5sum --check` conventions.
 
 Run `--help` for full option descriptions.
 
 ## Test script
 
-`test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, confirming that `--num-threads` never changes a digest (in every I/O mode), and confirming that distinct `--mix-rate` and `--chunk-size` values produce distinct digests.
+`test-correctness.bash` verifies that `castella` and `cch` produce correct output by checking digests against hardcoded expected values, confirming that `--no-mmap` produces identical output to the default mmap mode, confirming that `--num-threads` never changes a digest (in every I/O mode), confirming that distinct `--mix-rate` and `--chunk-size` values produce distinct digests, and confirming that `--check` verifies both output formats (and fails corrupted or malformed lines with a nonzero exit status).
 
 The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
 

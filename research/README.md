@@ -7,6 +7,7 @@
 | permute\_inv-verify.cpp | Verify that `Castella::permute_inv` is the inverse of `Castella::permute` |
 | permute\_x2-verify.cpp | Verify that the lane-paired `Castella::permute_x2` matches two separate `Castella::permute` calls |
 | duplex\_x2-verify.cpp | Verify that the lockstep `Castella::DuplexX2` squeezes the same bytes as two separate `Castella::Duplex` objects |
+| cch\_x2-verify.cpp | Verify that the interleaved `compress_castella_hash_x2` produces the same digests as two separate `compress_castella_hash` objects |
 | permute-num\_rounds.cpp | Find the minimum `num_rounds` for `Castella::permute` to achieve full bit diffusion |
 | permute-num\_rounds-avalanche\_matrix.cpp | Print statistics of the avalanche matrix of `Castella::permute` |
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
@@ -55,7 +56,7 @@ Raw benchmark results are saved in a folder named `results`.
 
 Interpretation: one cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency ≈ 15 cycles) exceeds the throughput cost (24 `vaesenc` ÷ 2 per cycle = 12 cycles) — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count and makes the loop throughput-bound.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize and its state already stays register/store-forwarding friendly.)
 
-Conclusion: a paired cch leaf node (`HAS_PAIRED_LEAF` for the cch tree policy) is worth ~1.25–1.4× per core.
+Conclusion: a paired cch leaf node (`HAS_PAIRED_LEAF` for the cch tree policy) is worth ~1.25–1.4× per core.  (Implemented as `compress_castella_hash_x2` in `hash-programs/cch-x2.hpp`; verified by `cch_x2-verify.cpp`.)
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

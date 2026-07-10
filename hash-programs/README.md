@@ -11,7 +11,7 @@ Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `comp
 
 Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but their throughput is limited by the reading thread.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread: a CCH node hashes a chunk faster than the chunk could be handed to another core.
 
-On x86-64 with VAES, `castella` additionally hashes memory-mapped leaf chunks two at a time per thread (two duplex states in the two 128-bit lanes of ymm registers), and every single-state permutation runs register-resident in a folded ymm representation.  Like the thread count, neither ever affects the digest.
+On x86-64 with VAES, both programs additionally hash leaf chunks two at a time per thread — `castella` by packing two duplex states into the two 128-bit lanes of ymm registers, `cch` by interleaving two nodes' compression chains in one loop (a cch node alone is latency-bound) — and every single-state Castella permutation runs register-resident in a folded ymm representation.  Like the thread count, none of these ever affects the digest.
 
 The output format is a line for each FILE:
 

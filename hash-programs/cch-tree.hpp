@@ -12,6 +12,7 @@
 
 #include "castella-hash-tree.hpp"
 #include "cch.hpp"
+#include "cch-x2.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -56,6 +57,36 @@ struct compress_castella_tree_node_policy final
     {
         (void)node.final_digest_to(cv_dst);
     }
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+
+    /// The interleaved node-pair type enabling paired leaf hashing
+    /**
+    * Opts the tree into leaf pairing (see \c HashTree's
+    * \c HAS_PAIRED_LEAF): adjacent full leaf chunks are hashed two at a
+    * time on one thread by interleaving the two nodes' compression chains
+    * in one bulk loop (see \c compress_castella_hash_x2 for why that
+    * pays; measured 1.23-1.37x by
+    * research/simd_compress-two-state-benchmark.cpp).  Guarded by the
+    * VAES flags because that is the configuration the probe measured.
+    * Execution-level only; NEVER affects the digest.
+    */
+    using node_x2_type = compress_castella_hash_x2<>;
+
+    /// Construct a fresh interleaved node pair (same mix rate as \c make_node)
+    [[nodiscard]] node_x2_type make_node_x2() const
+    {
+        return node_x2_type{mix_rate};
+    }
+
+    /// Write both nodes' final digests into their destinations
+    static void extract_cv_x2(node_x2_type& pair, const std::span<std::byte> cv_dst_a,
+                              const std::span<std::byte> cv_dst_b)
+    {
+        pair.final_digest_pair_to(cv_dst_a, cv_dst_b);
+    }
+
+#endif
 };
 
 /// A tree-hashing wrapper around \c compress_castella_hash

@@ -31,6 +31,9 @@
 #include <string_view>
 #include <vector>
 
+template <size_t N>
+struct compress_castella_hash_x2;
+
 /// A hash class that uses one-way compression and the Castella permutation function
 /**
 * \tparam N The size (in blocks) of the state
@@ -43,6 +46,10 @@ struct compress_castella_hash
 public:
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
+
+    /// The interleaved-pair class (cch-x2.hpp) drives two nodes' absorb
+    /// machinery in one loop, so it reaches the private members.
+    friend struct compress_castella_hash_x2<N>;
 
     static constexpr int MIX_RATE_MIN = 1;
     static constexpr int MIX_RATE_MAX = 2048;

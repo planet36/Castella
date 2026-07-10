@@ -2,12 +2,15 @@ aes_enc_0-aes_num_rounds
 aes_enc_0-aes_num_rounds-benchmark
 aes_enc_arr_cast-benchmark
 castella-print-info
+duplex_x2-verify
 left_encode-right_encode-benchmark
 nested-for-loop-order-benchmark
 permute-num_rounds
 permute-num_rounds-avalanche_matrix
 permute-num_rounds-benchmark
 permute_inv-verify
+permute_x2-benchmark
+permute_x2-verify
 results/
 simd_compress_aes_enc-num_rounds
 simd_compress_aes_enc-num_rounds-benchmark

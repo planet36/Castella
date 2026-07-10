@@ -170,7 +170,11 @@ concept tree_node_policy =
 *    worker hashes the slot's chunk to its CV in place, and the calling
 *    thread drains the ring oldest-slot-first (so always in index order)
 *    into the final node.  The fixed ring size is itself the bound on
-*    in-flight chunks (backpressure); see \c dispatch_leaf_().
+*    in-flight chunks (backpressure); see \c dispatch_leaf_().  When the
+*    node policy supports lane-paired leaf hashing (see
+*    \c HAS_PAIRED_LEAF), a worker claims up to TWO adjacent slots at once
+*    and hashes both chunks with one paired node (pipelined chunks are
+*    always full, so lockstep always holds); see \c pool_worker_loop_().
 *
 *    This path is ultimately *producer-bound*: the calling thread must
 *    still copy or buffer each chunk once (plus the -- allocation-free --
@@ -384,12 +388,14 @@ private:
         bool done = false;
     };
 
-    /// The pipeline ring; sized \c 2*NUM_THREADS slots at pool start
+    /// The pipeline ring; sized \c ring_capacity_() slots at pool start
     /**
-    * 2 slots per worker keep every worker fed (one chunk hashing, one
+    * 2 claims per worker keep every worker fed (one claim hashing, one
     * waiting) even while the calling thread is away reading more input,
     * and the fixed size is itself the in-flight bound (backpressure): a
-    * chunk can only be dispatched into a free slot.
+    * chunk can only be dispatched into a free slot.  A claim is one chunk
+    * -- or, with a paired-leaf policy, up to two adjacent chunks -- so the
+    * ring is 2 or 4 slots per worker (see \c ring_capacity_()).
     */
     std::vector<Slot> ring_;
 
@@ -702,9 +708,15 @@ private:
     }
 
     /// The number of slots in the pipeline ring
+    /**
+    * 2 claims per worker (one hashing, one waiting); a claim is up to 2
+    * adjacent slots when the policy supports paired leaves, so the ring
+    * doubles then.  Memory stays modest: each slot owns one CHUNK_SIZE
+    * chunk buffer.
+    */
     [[nodiscard]] int64_t ring_capacity_() const noexcept
     {
-        return 2 * static_cast<int64_t>(NUM_THREADS);
+        return (HAS_PAIRED_LEAF ? 4 : 2) * static_cast<int64_t>(NUM_THREADS);
     }
 
     /// The ring slot for monotonic position \a pos
@@ -817,21 +829,35 @@ private:
     /// The body of each worker thread
     // {{{
     /**
-    * Claim the oldest queued slot, hash its chunk to its CV in place (a
-    * pure function -- see \c hash_leaf_into_()), mark the slot done, and
-    * repeat until told to stop.
+    * Claim the oldest queued slot -- and, with a paired-leaf policy, the
+    * next one too when it is already queued -- hash the chunk(s) to their
+    * CVs in place (pure functions -- see \c hash_leaf_into_() and
+    * \c hash_leaf_pair_into_()), mark the slot(s) done, and repeat until
+    * told to stop.
+    *
+    * The pair claim is opportunistic, never waiting for a second chunk to
+    * arrive: at the end of a stream no second chunk may ever come, and the
+    * claimed one must not be held hostage.  Pipelined chunks are always
+    * full (only the trailing chunk of a stream may be short, and it is
+    * never pipelined) and are dispatched in index order, so a claimed pair
+    * always satisfies the paired hash's lockstep precondition;
+    * \c hash_leaf_pair_into_() itself falls back to two single hashes at
+    * the index byte-width boundary.  Like every execution-level choice,
+    * how the queue happens to be divided into claims NEVER affects the
+    * digest: the CVs land in their slots and are drained in index order
+    * regardless.
     *
     * The workers touch only: the ring counters and done flags (under
-    * pool_mtx_), the claimed slot's contents (exclusively theirs between
-    * the claim and the done flag), their own local node, and this
+    * pool_mtx_), the claimed slots' contents (exclusively theirs between
+    * the claim and the done flags), their own local node, and this
     * object's const parameter members.  They never touch mtx_,
     * chunk_buf_, or the final node's state, so they can run while the
     * calling thread does anything else.
     *
-    * The critical sections advance a counter and flip a flag -- they
+    * The critical sections advance a counter and flip flags -- they
     * allocate nothing and cannot throw, so no exception can escape this
     * jthread's callable (which would call std::terminate); a hashing
-    * exception is parked in the slot for the calling thread to rethrow.
+    * exception is parked in the slot(s) for the calling thread to rethrow.
     */
     // }}}
     void pool_worker_loop_()
@@ -839,6 +865,7 @@ private:
         for (;;)
         {
             Slot* slot = nullptr;
+            Slot* slot2 = nullptr; // the optional second slot of a pair claim
 
             {
                 std::unique_lock lock{pool_mtx_};
@@ -852,33 +879,72 @@ private:
 
                 slot = &ring_slot_(ring_next_job_);
                 ++ring_next_job_;
+
+                if constexpr (HAS_PAIRED_LEAF)
+                {
+                    if (ring_next_job_ < ring_tail_)
+                    {
+                        slot2 = &ring_slot_(ring_next_job_);
+                        ++ring_next_job_;
+                    }
+                }
             }
 
             try
             {
-                // Write the CV into the slot's preallocated buffer; the
-                // calling thread will neither read it nor reuse the slot
-                // until the done flag below is set.
-                hash_leaf_into_(slot->chunk, slot->chunk_index, slot->cv);
+                // Write the CV(s) into the slots' preallocated buffers; the
+                // calling thread will neither read them nor reuse the slots
+                // until the done flags below are set.
+                if constexpr (HAS_PAIRED_LEAF)
+                {
+                    if (slot2 != nullptr)
+                    {
+#if defined(DEBUG)
+                        assert(slot2->chunk_index == slot->chunk_index + 1);
+#endif
+                        hash_leaf_pair_into_(slot->chunk, slot2->chunk, slot->chunk_index,
+                                             slot->cv, slot2->cv);
+                    }
+                    else
+                    {
+                        hash_leaf_into_(slot->chunk, slot->chunk_index, slot->cv);
+                    }
+                }
+                else
+                {
+                    hash_leaf_into_(slot->chunk, slot->chunk_index, slot->cv);
+                }
             }
             catch (...)
             {
                 // Park the exception (realistically only std::bad_alloc)
-                // for the calling thread to rethrow when it drains this
-                // slot.
+                // for the calling thread to rethrow when it drains the
+                // slot(s).  On a pair claim, neither CV can be trusted, so
+                // both slots park it.
                 slot->error = std::current_exception();
+
+                if (slot2 != nullptr)
+                    slot2->error = std::current_exception();
             }
 
-            // The slot's chunk holds message plaintext; wipe it (same
-            // hygiene as chunk_buf_) before the slot is handed back for
+            // The slots' chunks hold message plaintext; wipe them (same
+            // hygiene as chunk_buf_) before the slots are handed back for
             // reuse.
             zeroize_(slot->chunk);
+
+            if (slot2 != nullptr)
+                zeroize_(slot2->chunk);
 
             {
                 std::scoped_lock lock{pool_mtx_};
                 slot->done = true;
+
+                if (slot2 != nullptr)
+                    slot2->done = true;
             }
-            // Only the (single) calling thread ever waits on done_cv_.
+            // Only the (single) calling thread ever waits on done_cv_, and
+            // only for the oldest undrained slot, so one notify suffices
+            // even for a pair.
             done_cv_.notify_one();
         }
     }
@@ -975,9 +1041,9 @@ private:
     *   - Backpressure: if every slot is in flight, block on the *oldest*
     *     slot's CV until it frees up.  The fixed ring size bounds memory
     *     (each slot owns one CHUNK_SIZE buffer) no matter how fast the
-    *     producer is, while 2 slots per worker keep every worker fed (one
-    *     chunk hashing, one waiting) even while the calling thread is
-    *     away reading more input.
+    *     producer is, while 2 claims per worker (see \c ring_capacity_())
+    *     keep every worker fed (one claim hashing, one waiting) even
+    *     while the calling thread is away reading more input.
     *
     *   - Fill the freed slot: swap the caller's owned buffer in
     *     (zero-copy; the caller receives the slot's previous, zeroized

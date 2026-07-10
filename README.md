@@ -80,6 +80,16 @@ The `squeeze_bytes` member function performs the following:
     * Typical values of _n_ are 32, 48, or 64.
     * The default value of _n_ is `get_capacity_size_bytes() / 2`.
 
+## Tree Hashing
+
+A byte-stream hash is inherently sequential, so a single duplex can never use more than one CPU core.  The generic [tree-hash layer](include/castella-hash-tree.hpp) (`Castella::HashTree`) restores parallelism with a [KangarooTwelve](https://keccak.team/files/KangarooTwelve.pdf)-style two-level tree: the input is split into fixed-size chunks, each chunk after the first is hashed to a fixed-size chaining value by an independent leaf node, and the chaining values are absorbed by a final node in chunk order.  The digest depends only on the tree geometry, the node parameters, and the input bytes — never on the thread count or how the input was split across `add()` calls.
+
+[`Castella::DuplexTree`](include/castella-duplex-tree.hpp) is the tree instantiated with `Castella::Duplex` nodes.  (The [`cch` hash program](hash-programs/cch.cpp) uses a second instantiation over a faster non-cryptographic compression node.)
+
+### VAES Leaf Batching
+
+On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), `DuplexTree` hashes adjacent leaf chunks **two at a time on one thread**: two duplex states are packed into the two 128-bit lanes of ymm registers ([`Castella::DuplexX2`](include/castella-duplex-x2.hpp)), where VAES applies an independent AES round per lane and the AVX2 unpack network transposes both 16×16 byte matrices at once without mixing the lanes ([`Castella::permute_x2`](include/castella-permute.hpp)).  One paired permutation measures ~2.5× faster than two sequential permutations, roughly doubling per-core tree throughput.  Like the thread count, pairing never affects the digest.
+
 ## Dependencies
 
 ### To build and use Castella
@@ -109,7 +119,7 @@ I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum.  And [Compress-Castella hash](hash-programs/cch.cpp) is often as fast as [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
+But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp) — a tree over a faster non-cryptographic node — beats fully-multithreaded `b3sum` by about 2× on the same files, and is often as fast as [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 
@@ -132,8 +142,8 @@ If the unit of the capacity was _bytes_ instead of blocks, the value would have 
 
 | directory | contents |
 |-----------|----------|
-| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`) and supporting headers |
-| `examples/` | Usage examples: cSHAKE-like, KMAC-like, and TupleHash-like operations |
+| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`, `castella-hash-tree.hpp`, `castella-duplex-tree.hpp`, `castella-duplex-x2.hpp`) and supporting headers |
+| `examples/` | Usage examples: cSHAKE-like, KMAC-like, TupleHash-like, and ParallelHash-like operations |
 | `tests/` | Correctness tests |
 | `research/` | Programs for empirically determining optimal parameters; benchmarks |
 | `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |

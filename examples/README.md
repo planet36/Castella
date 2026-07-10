@@ -22,10 +22,9 @@ These examples use Castella as the underlying primitive and do not produce outpu
 * TupleHash256
 * TupleHashXOF128
 * TupleHashXOF256
-
-### No analogous examples demonstrated
-
 * ParallelHash128
 * ParallelHash256
 * ParallelHashXOF128
 * ParallelHashXOF256
+
+The ParallelHash-like examples follow the SP 800-185 Section 6 structure literally (leaf duplexes over fixed-size blocks, an outer duplex absorbing the leaf digests).  For hashing large inputs across CPU cores, use `Castella::DuplexTree` instead.

@@ -26,7 +26,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
-| simd\_compress-two-state-benchmark.cpp | Probe whether advancing two `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question) |
+| simd\_compress-two-state-benchmark.cpp | Probe whether advancing 2, 3, or 4 `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question, and whether a wider group would pay) |
 | squeeze\_bytes-benchmark.cpp | Benchmark alternative implementations of `squeeze_bytes` |
 
 ## Usage
@@ -57,6 +57,28 @@ Raw benchmark results are saved in a folder named `results`.
 Interpretation: one cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency ≈ 15 cycles) exceeds the throughput cost (24 `vaesenc` ÷ 2 per cycle = 12 cycles) — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count and makes the loop throughput-bound.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize and its state already stays register/store-forwarding friendly.)
 
 Conclusion: a paired cch leaf node (`HAS_PAIRED_LEAF` for the cch tree policy) is worth ~1.25–1.4× per core.  (Implemented as `compress_castella_hash_x2` in `hash-programs/cch-x2.hpp`; verified by `cch_x2-verify.cpp`.)
+
+## Findings: 3 and 4 interleaved cch states do NOT clearly beat 2 (2026-07-10)
+
+The benchmark was extended to N ∈ {2, 3, 4} states to ask whether a node group wider than the pair would pay.  One run, pinned with `taskset -c 0` — unpinned runs on this machine wander enough across cores to invert small differences, so compare only within this table, not against the older one above:
+
+| per-buffer size (regime) | N | sequential | interleaved | speedup | vs. 2-state interleaved |
+|--------------------------|--:|-----------:|------------:|--------:|------------------------:|
+| 16 KiB (L1)   | 2 | 56.2 GiB/s | 65.7 GiB/s | 1.17× | — |
+| 16 KiB (L1)   | 3 | 53.0 GiB/s | 63.1 GiB/s | 1.19× | 0.96× |
+| 16 KiB (L1)   | 4 | 53.6 GiB/s | 60.8 GiB/s | 1.13× | 0.93× |
+| 512 KiB (L2)  | 2 | 57.4 GiB/s | 59.2 GiB/s | 1.03× | — |
+| 512 KiB (L2)  | 3 | 55.0 GiB/s | 60.3 GiB/s | 1.10× | 1.02× |
+| 512 KiB (L2)  | 4 | 52.1 GiB/s | 58.0 GiB/s | 1.11× | 0.98× |
+| 128 MiB (DRAM)| 2 | 19.3 GiB/s | 22.6 GiB/s | 1.17× | — |
+| 128 MiB (DRAM)| 3 | 18.9 GiB/s | 25.2 GiB/s | 1.33× | 1.12× |
+| 128 MiB (DRAM)| 4 | 19.9 GiB/s | 27.3 GiB/s | 1.38× | 1.21× |
+
+(The 8 MiB rows are omitted: at N = 3 and 4 the working set outgrows L3, so cross-N comparisons there mix regimes.)
+
+Interpretation: one cch state is 8 ymm registers, so two states already fill the 16-register file, and a third and fourth must spill between chunks.  In the compute-bound (cache-resident) regimes the extra states add no instruction-level parallelism the pair did not already provide — per-byte throughput tapers mildly *down* with width (the spills) — and only in the DRAM regime does wider interleaving keep winning (~1.2× over the pair at N = 4): more concurrent read streams keep more memory bandwidth in flight, and the AES units are no longer the constraint.
+
+Conclusion: keep the pair.  A `compress_castella_hash_x4` would add a second lockstep class, wider tree machinery, and wider verify programs to buy ~20% more hashing throughput only in the single-threaded DRAM regime (multi-threaded cch is already DRAM-bound, and hashing is only part of single-threaded wall time).  Revisit if a use case hashes huge cache-cold files strictly single-threaded.
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

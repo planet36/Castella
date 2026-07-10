@@ -1,30 +1,31 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Probe whether pairing two compress_castella_hash states on one thread pays
+/// Probe whether interleaving 2..4 compress_castella_hash states on one thread pays
 /**
 * \file
 * \author Steven Ward
 *
-* Design probe for "cch leaf pairing": would a lane-paired
-* compress_castella_hash node (two states advanced in lockstep on one
-* thread, as \c Castella::DuplexX2 does for \c Duplex) beat two sequential
-* nodes?
+* Design probe for "cch leaf pairing" (and beyond): would an interleaved
+* compress_castella_hash node group (N states advanced in lockstep on one
+* thread) beat N sequential nodes?  The N=2 result motivated
+* compress_castella_hash_x2 (hash-programs/cch-x2.hpp); N=3 and N=4 ask
+* whether a wider group is worth building.
 *
-* Each benchmark hashes TWO equal-size buffers with TWO independent states
+* Each benchmark hashes N equal-size buffers with N independent states
 * using the cch absorb loop (simd_compress_aes_enc_r3_arr per 256-byte
 * chunk, plus the periodic mix permute at the default mix rate):
 *
-*   - sequential: buffer A start to finish with state A, then buffer B
-*     with state B (what two single-leaf hashes do today)
-*   - interleaved: one loop advancing both states chunk by chunk (the
-*     instruction-level overlap a paired node could achieve, without the
-*     register pressure of a real lane-paired implementation)
+*   - sequential: buffer 0 start to finish with state 0, then buffer 1
+*     with state 1, ... (what N single-leaf hashes do today)
+*   - interleaved: one loop advancing all N states chunk by chunk (the
+*     instruction-level overlap an interleaved node group achieves)
 *
-* If interleaved does not clearly beat sequential, a paired cch node has no
-* headroom: the single state's 8 independent 3-deep VAES chains already
-* saturate the AES units (or the memory system is the bound), and pairing
-* could only add register pressure.  Buffer sizes span L1 to DRAM to
+* If interleaved does not clearly beat sequential, a wider node group has
+* no headroom: the states' independent 3-deep VAES chains already saturate
+* the AES units (or the memory system, or -- at larger N -- the register
+* file: one state is 8 ymm registers, so 2 states already fill all 16 and
+* 3-4 states must spill between chunks).  Buffer sizes span L1 to DRAM to
 * separate the compute-bound and memory-bound regimes.
 */
 
@@ -34,12 +35,14 @@
 #include "simd_compress.hpp"
 #include "simd_equal.hpp"
 
+#include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <format>
 #include <string>
+#include <utility>
 #include <vector>
 
 using state_t = Castella::arr_blocks<16>;
@@ -73,57 +76,58 @@ hash_buffer(state_t& state, const std::byte* src, const size_t len,
     }
 }
 
+/// The shared setup of both benchmark bodies: N random buffers and N random states
+template <size_t N>
+struct bench_data final
+{
+    std::array<std::vector<std::byte>, N> bufs;
+    std::array<state_t, N> states;
+    std::array<int, N> absorbs{};
+
+    explicit bench_data(const size_t buf_size)
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            bufs[i].resize(buf_size);
+            arc4random_buf(std::data(bufs[i]), std::size(bufs[i]));
+            arc4random_buf(&states[i], sizeof(state_t));
+        }
+    }
+};
+
+template <size_t N>
 void
-BM_two_states_sequential(benchmark::State& BM_state, const size_t buf_size)
+BM_states_sequential(benchmark::State& BM_state, const size_t buf_size)
 {
     // Perform setup here
 
-    std::vector<std::byte> buf_a(buf_size);
-    std::vector<std::byte> buf_b(buf_size);
-    arc4random_buf(std::data(buf_a), std::size(buf_a));
-    arc4random_buf(std::data(buf_b), std::size(buf_b));
-
-    state_t state_a;
-    state_t state_b;
-    arc4random_buf(&state_a, sizeof(state_a));
-    arc4random_buf(&state_b, sizeof(state_b));
-
-    int absorbs_a = 0;
-    int absorbs_b = 0;
+    bench_data<N> data(buf_size);
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
     {
         // This code gets timed
 
-        hash_buffer(state_a, std::data(buf_a), buf_size, absorbs_a);
-        hash_buffer(state_b, std::data(buf_b), buf_size, absorbs_b);
+        for (size_t i = 0; i < N; ++i)
+        {
+            hash_buffer(data.states[i], std::data(data.bufs[i]), buf_size,
+                        data.absorbs[i]);
+        }
     }
 
     BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(2 * buf_size));
+                               static_cast<int64_t>(N * buf_size));
 
     // This is to prevent the compiler from eliding the work above.
-    benchmark::DoNotOptimize(state_a);
-    benchmark::DoNotOptimize(state_b);
+    benchmark::DoNotOptimize(data.states);
 }
 
+template <size_t N>
 void
-BM_two_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
+BM_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
 {
     // Perform setup here
 
-    std::vector<std::byte> buf_a(buf_size);
-    std::vector<std::byte> buf_b(buf_size);
-    arc4random_buf(std::data(buf_a), std::size(buf_a));
-    arc4random_buf(std::data(buf_b), std::size(buf_b));
-
-    state_t state_a;
-    state_t state_b;
-    arc4random_buf(&state_a, sizeof(state_a));
-    arc4random_buf(&state_b, sizeof(state_b));
-
-    int absorbs_a = 0;
-    int absorbs_b = 0;
+    bench_data<N> data(buf_size);
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
     {
@@ -131,52 +135,54 @@ BM_two_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
 
         for (size_t off = 0; off + sizeof(state_t) <= buf_size; off += sizeof(state_t))
         {
-            absorb_chunk(state_a, std::data(buf_a) + off, absorbs_a);
-            absorb_chunk(state_b, std::data(buf_b) + off, absorbs_b);
+            // The compile-time loop keeps the N absorbs a straight-line
+            // instruction sequence, as a real interleaved node group's
+            // bulk loop would be.
+            [&]<size_t... I>(std::index_sequence<I...>) {
+                (absorb_chunk(data.states[I], std::data(data.bufs[I]) + off,
+                              data.absorbs[I]),
+                 ...);
+            }(std::make_index_sequence<N>{});
         }
     }
 
     BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(2 * buf_size));
+                               static_cast<int64_t>(N * buf_size));
 
     // This is to prevent the compiler from eliding the work above.
-    benchmark::DoNotOptimize(state_a);
-    benchmark::DoNotOptimize(state_b);
+    benchmark::DoNotOptimize(data.states);
 }
 
 /// Verify that the interleaved loop computes exactly the sequential states
+template <size_t N>
 static void
 self_check()
 {
     constexpr size_t buf_size = 96 * sizeof(state_t);
 
-    std::vector<std::byte> buf_a(buf_size);
-    std::vector<std::byte> buf_b(buf_size);
-    arc4random_buf(std::data(buf_a), std::size(buf_a));
-    arc4random_buf(std::data(buf_b), std::size(buf_b));
+    bench_data<N> seq(buf_size);
+    bench_data<N> inter(buf_size);
+    inter.bufs = seq.bufs;
+    inter.states = seq.states;
 
-    state_t seq_a;
-    state_t seq_b;
-    arc4random_buf(&seq_a, sizeof(seq_a));
-    arc4random_buf(&seq_b, sizeof(seq_b));
-    state_t inter_a = seq_a;
-    state_t inter_b = seq_b;
-
-    int absorbs = 0;
-    hash_buffer(seq_a, std::data(buf_a), buf_size, absorbs);
-    absorbs = 0;
-    hash_buffer(seq_b, std::data(buf_b), buf_size, absorbs);
-
-    int absorbs_a = 0;
-    int absorbs_b = 0;
-    for (size_t off = 0; off + sizeof(state_t) <= buf_size; off += sizeof(state_t))
+    for (size_t i = 0; i < N; ++i)
     {
-        absorb_chunk(inter_a, std::data(buf_a) + off, absorbs_a);
-        absorb_chunk(inter_b, std::data(buf_b) + off, absorbs_b);
+        hash_buffer(seq.states[i], std::data(seq.bufs[i]), buf_size, seq.absorbs[i]);
     }
 
-    assert(simd_arr_equal(seq_a, inter_a));
-    assert(simd_arr_equal(seq_b, inter_b));
+    for (size_t off = 0; off + sizeof(state_t) <= buf_size; off += sizeof(state_t))
+    {
+        [&]<size_t... I>(std::index_sequence<I...>) {
+            (absorb_chunk(inter.states[I], std::data(inter.bufs[I]) + off,
+                          inter.absorbs[I]),
+             ...);
+        }(std::make_index_sequence<N>{});
+    }
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        assert(simd_arr_equal(seq.states[i], inter.states[i]));
+    }
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -189,20 +195,28 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     if (benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
 
-    self_check();
+    self_check<2>();
+    self_check<3>();
+    self_check<4>();
 
     // Per-buffer sizes chosen to land the 2-buffer working set in L1
     // (2x16 KiB), L2 (2x512 KiB), L3 (2x8 MiB), and DRAM (2x128 MiB).
+    // (The 3- and 4-state working sets are proportionally larger.)
     constexpr size_t sizes[] = {16UL << 10, 512UL << 10, 8UL << 20, 128UL << 20};
 
     for (const auto buf_size : sizes)
     {
-        const std::string suffix = std::format("(2 x {} KiB)", buf_size >> 10);
-
-        benchmark::RegisterBenchmark("two-states-sequential" + suffix,
-                                     BM_two_states_sequential, buf_size);
-        benchmark::RegisterBenchmark("two-states-interleaved" + suffix,
-                                     BM_two_states_interleaved, buf_size);
+        [&]<size_t... N>(std::index_sequence<N...>) {
+            ((benchmark::RegisterBenchmark(
+                  std::format("{}-states-sequential({} x {} KiB)", N + 2, N + 2,
+                              buf_size >> 10),
+                  BM_states_sequential<N + 2>, buf_size),
+              benchmark::RegisterBenchmark(
+                  std::format("{}-states-interleaved({} x {} KiB)", N + 2, N + 2,
+                              buf_size >> 10),
+                  BM_states_interleaved<N + 2>, buf_size)),
+             ...);
+        }(std::make_index_sequence<3>{});
     }
 
     benchmark::RunSpecifiedBenchmarks();

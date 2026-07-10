@@ -171,6 +171,51 @@ create_round_constants() noexcept
 // }}}
 inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+
+/// The round constants for a single Castella round, folded for the register-resident 16-block permutation
+/**
+* \c round_constants_folded_t[aes_r][j] is the 256-bit AES round key for
+* folded state element \c j (which holds blocks \c j and \c j+8) in AES
+* round \c aes_r: \c round_constants[aes_r][j] in the low 128-bit lane and
+* \c round_constants[aes_r][j+8] in the high lane.
+*/
+using round_constants_folded_t = std::array<simd_arr_x2_t<B_MAX / 2>, AES_NUM_ROUNDS>;
+
+/// Create the folded round constants (see \c round_constants_folded_t)
+/**
+* Derived from \c round_constants (never regenerated), so the two tables
+* can never disagree.
+*/
+template <size_t N>
+[[nodiscard]] static consteval auto
+create_round_constants_folded() noexcept
+{
+    static_assert(N <= NUM_ROUNDS_MAX);
+
+    std::array<round_constants_folded_t, N> result{};
+
+    for (size_t r = 0; r < N; ++r)
+    {
+        for (size_t aes_r = 0; aes_r < AES_NUM_ROUNDS; ++aes_r)
+        {
+            for (size_t j = 0; j < B_MAX / 2; ++j)
+            {
+                result[r][aes_r][j] = std::bit_cast<block_x2_t>(
+                    std::array{round_constants[r][aes_r][j],
+                               round_constants[r][aes_r][j + B_MAX / 2]});
+            }
+        }
+    }
+
+    return result;
+}
+
+/// The Castella round constants, folded (identical values to \c round_constants)
+inline constexpr auto round_constants_folded = create_round_constants_folded<NUM_ROUNDS_MAX>();
+
+#endif
+
 /// The Castella permutation function
 // {{{
 /**
@@ -192,6 +237,12 @@ inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>()
 * every longer one.  If the \e first \a num_rounds round constants were used,
 * then <code>permute(x, n2)</code> would equal a fixed public function of
 * <code>permute(x, n1)</code> for any <code>n1 < n2</code>.
+*
+* On x86-64 with VAES, the 16-block permutation runs bit-identically in a
+* folded representation that stays in 8 ymm registers for all rounds (see
+* below): the generic path's state bounces through memory between the AES
+* rounds' 256-bit accesses and the transpose's 128-bit accesses (a 256-bit
+* load spanning two 128-bit stores defeats store-to-load forwarding).
 */
 // }}}
 template <size_t N>
@@ -203,6 +254,36 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 #if defined(DEBUG)
     assert(num_rounds >= 0);
     assert(num_rounds <= NUM_ROUNDS_MAX);
+#endif
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+    if constexpr (N == 16)
+    {
+        // Fold the state into 8 ymm registers: element j = [block j |
+        // block j+8].  This layout is preserved by simd_transpose_folded,
+        // so the whole permutation runs register-resident; the state
+        // touches memory only here and at the unfold below.
+        simd_arr_x2_t<N / 2> state_folded;
+
+        for (size_t j = 0; j < N / 2; ++j)
+        {
+            state_folded[j] = _mm256_set_m128i(state[j + N / 2], state[j]);
+        }
+
+        for (const auto& rc : std::span{round_constants_folded}.last(num_rounds))
+        {
+            aes_enc_arr<AES_NUM_ROUNDS>(state_folded, rc);
+            simd_transpose_folded(state_folded);
+        }
+
+        for (size_t j = 0; j < N / 2; ++j)
+        {
+            state[j] = _mm256_castsi256_si128(state_folded[j]);
+            state[j + N / 2] = _mm256_extracti128_si256(state_folded[j], 1);
+        }
+
+        return;
+    }
 #endif
 
     for (const auto& rc : std::span{round_constants}.last(num_rounds))

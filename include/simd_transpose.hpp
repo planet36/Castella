@@ -241,6 +241,80 @@ simd_transpose(std::array<__m256i, 16>& x) noexcept
     x[0xf] = _mm256_unpackhi_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_f
 }
 
+/// Transpose one 16x16 matrix of \c uint8_t stored in the folded (row j, row j+8) layout using AVX2 intrinsics
+/**
+* The matrix is held in 8 ymm registers with x[j] = [row j | row j+8]
+* (rows 0-7, named A-H, in the low 128-bit lanes; rows 8-15, named I-P, in
+* the high lanes), and the result is produced in the same layout -- which
+* is what lets consecutive transposes chain in registers without ever
+* spilling the state to memory.
+*
+* The first three unpack levels are the standard byte-matrix network run
+* per lane: the low lanes transpose the top 8x16 submatrix (rows A-H) and
+* the high lanes the bottom (rows I-P), leaving each lane of the level-4
+* outputs holding two 8-byte column vectors [col c | col c+8] of its
+* submatrix.  A final qword permute ([q0 q1 | q2 q3] -> [q0 q2 | q1 q3])
+* rejoins the top and bottom halves of each column, restoring the folded
+* layout.  Total: 32 in-lane unpacks + 8 cross-lane permutes (the plain
+* 16-register network needs 64 unpacks).
+*/
+static void
+simd_transpose_folded(std::array<__m256i, 8>& x) noexcept
+{
+    // Low lanes: rows A-H; high lanes: rows I-P (same network per lane).
+    const __m256i AB_07 = _mm256_unpacklo_epi8(x[0], x[1]);
+    const __m256i AB_8f = _mm256_unpackhi_epi8(x[0], x[1]);
+    const __m256i CD_07 = _mm256_unpacklo_epi8(x[2], x[3]);
+    const __m256i CD_8f = _mm256_unpackhi_epi8(x[2], x[3]);
+    const __m256i EF_07 = _mm256_unpacklo_epi8(x[4], x[5]);
+    const __m256i EF_8f = _mm256_unpackhi_epi8(x[4], x[5]);
+    const __m256i GH_07 = _mm256_unpacklo_epi8(x[6], x[7]);
+    const __m256i GH_8f = _mm256_unpackhi_epi8(x[6], x[7]);
+
+    const __m256i ABCD_03 = _mm256_unpacklo_epi16(AB_07, CD_07);
+    const __m256i ABCD_47 = _mm256_unpackhi_epi16(AB_07, CD_07);
+    const __m256i ABCD_8b = _mm256_unpacklo_epi16(AB_8f, CD_8f);
+    const __m256i ABCD_cf = _mm256_unpackhi_epi16(AB_8f, CD_8f);
+    const __m256i EFGH_03 = _mm256_unpacklo_epi16(EF_07, GH_07);
+    const __m256i EFGH_47 = _mm256_unpackhi_epi16(EF_07, GH_07);
+    const __m256i EFGH_8b = _mm256_unpacklo_epi16(EF_8f, GH_8f);
+    const __m256i EFGH_cf = _mm256_unpackhi_epi16(EF_8f, GH_8f);
+
+    // Per lane: two full 8-byte columns of the lane's 8x16 submatrix.
+    const __m256i ABCDEFGH_01 = _mm256_unpacklo_epi32(ABCD_03, EFGH_03);
+    const __m256i ABCDEFGH_23 = _mm256_unpackhi_epi32(ABCD_03, EFGH_03);
+    const __m256i ABCDEFGH_45 = _mm256_unpacklo_epi32(ABCD_47, EFGH_47);
+    const __m256i ABCDEFGH_67 = _mm256_unpackhi_epi32(ABCD_47, EFGH_47);
+    const __m256i ABCDEFGH_89 = _mm256_unpacklo_epi32(ABCD_8b, EFGH_8b);
+    const __m256i ABCDEFGH_ab = _mm256_unpackhi_epi32(ABCD_8b, EFGH_8b);
+    const __m256i ABCDEFGH_cd = _mm256_unpacklo_epi32(ABCD_cf, EFGH_cf);
+    const __m256i ABCDEFGH_ef = _mm256_unpackhi_epi32(ABCD_cf, EFGH_cf);
+
+    // Pair column c with column c+8 within each lane: per lane, COL_c8 =
+    // [col c (8 bytes) | col c+8 (8 bytes)] of that lane's submatrix.
+    const __m256i COL_08 = _mm256_unpacklo_epi64(ABCDEFGH_01, ABCDEFGH_89);
+    const __m256i COL_19 = _mm256_unpackhi_epi64(ABCDEFGH_01, ABCDEFGH_89);
+    const __m256i COL_2a = _mm256_unpacklo_epi64(ABCDEFGH_23, ABCDEFGH_ab);
+    const __m256i COL_3b = _mm256_unpackhi_epi64(ABCDEFGH_23, ABCDEFGH_ab);
+    const __m256i COL_4c = _mm256_unpacklo_epi64(ABCDEFGH_45, ABCDEFGH_cd);
+    const __m256i COL_5d = _mm256_unpackhi_epi64(ABCDEFGH_45, ABCDEFGH_cd);
+    const __m256i COL_6e = _mm256_unpacklo_epi64(ABCDEFGH_67, ABCDEFGH_ef);
+    const __m256i COL_7f = _mm256_unpackhi_epi64(ABCDEFGH_67, ABCDEFGH_ef);
+
+    // COL_c8 qwords are [c(top) c+8(top) | c(bottom) c+8(bottom)]; swapping
+    // the middle qwords joins each column's halves: [col c | col c+8] =
+    // [output row c | output row c+8], the folded layout again.
+    constexpr int q0_q2_q1_q3 = 0b11'01'10'00;
+    x[0] = _mm256_permute4x64_epi64(COL_08, q0_q2_q1_q3);
+    x[1] = _mm256_permute4x64_epi64(COL_19, q0_q2_q1_q3);
+    x[2] = _mm256_permute4x64_epi64(COL_2a, q0_q2_q1_q3);
+    x[3] = _mm256_permute4x64_epi64(COL_3b, q0_q2_q1_q3);
+    x[4] = _mm256_permute4x64_epi64(COL_4c, q0_q2_q1_q3);
+    x[5] = _mm256_permute4x64_epi64(COL_5d, q0_q2_q1_q3);
+    x[6] = _mm256_permute4x64_epi64(COL_6e, q0_q2_q1_q3);
+    x[7] = _mm256_permute4x64_epi64(COL_7f, q0_q2_q1_q3);
+}
+
 #endif
 
 #pragma GCC diagnostic pop

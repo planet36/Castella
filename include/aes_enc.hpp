@@ -138,6 +138,31 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
     }
 }
 
+/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr with 256-bit round keys
+/**
+* Unlike the overload above (which broadcasts one 128-bit key to both
+* lanes), each element's key here is a full 256-bit value, so the two
+* lanes of an element may use different 128-bit round keys.  Used by the
+* register-resident single-state \c Castella::permute, whose folded state
+* pairs blocks \c i and \c i+8 in one element (with correspondingly folded
+* round constants).
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
+static void
+aes_enc_arr(simd_arr_x2_t<N>& arr,
+            const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+{
+    static_assert(M >= N);
+
+    for (int i = 0; i < std::ssize(arr); ++i)
+    {
+        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        {
+            arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
+        }
+    }
+}
+
 #endif
 
 #endif

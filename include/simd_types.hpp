@@ -39,4 +39,11 @@ using uint8x16x2_t = __m256i;
 template <size_t N>
 using simd_arr_t = std::array<uint8x16_t, N>;
 
+#if defined(__x86_64__) && defined(__AVX__)
+
+template <size_t N>
+using simd_arr_x2_t = std::array<uint8x16x2_t, N>;
+
+#endif
+
 #pragma GCC diagnostic pop

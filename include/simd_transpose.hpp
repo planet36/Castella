@@ -158,6 +158,91 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
     x[0xf] = _mm_unpackhi_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_f
 }
 
+#if defined(__AVX2__)
+
+/// Transpose each 128-bit lane of \a x (treating it as two independent 16x16 matrices of \c uint8_t) using AVX2 intrinsics
+/**
+* The AVX2 integer unpack instructions operate within each 128-bit lane
+* independently, so this is the 16x16 SSE2 network above lifted verbatim to
+* ymm registers: the low lanes of x[0x0..0xf] are transposed as one 16x16
+* byte matrix and the high lanes as another, with no cross-lane movement.
+* This is what lets two independent Castella states be permuted in lockstep,
+* one state per lane (see \c Castella::permute_x2).
+*/
+static void
+simd_transpose(std::array<__m256i, 16>& x) noexcept
+{
+    const __m256i AB_07 = _mm256_unpacklo_epi8(x[0x0], x[0x1]);
+    const __m256i AB_8f = _mm256_unpackhi_epi8(x[0x0], x[0x1]);
+    const __m256i CD_07 = _mm256_unpacklo_epi8(x[0x2], x[0x3]);
+    const __m256i CD_8f = _mm256_unpackhi_epi8(x[0x2], x[0x3]);
+    const __m256i EF_07 = _mm256_unpacklo_epi8(x[0x4], x[0x5]);
+    const __m256i EF_8f = _mm256_unpackhi_epi8(x[0x4], x[0x5]);
+    const __m256i GH_07 = _mm256_unpacklo_epi8(x[0x6], x[0x7]);
+    const __m256i GH_8f = _mm256_unpackhi_epi8(x[0x6], x[0x7]);
+    const __m256i IJ_07 = _mm256_unpacklo_epi8(x[0x8], x[0x9]);
+    const __m256i IJ_8f = _mm256_unpackhi_epi8(x[0x8], x[0x9]);
+    const __m256i KL_07 = _mm256_unpacklo_epi8(x[0xa], x[0xb]);
+    const __m256i KL_8f = _mm256_unpackhi_epi8(x[0xa], x[0xb]);
+    const __m256i MN_07 = _mm256_unpacklo_epi8(x[0xc], x[0xd]);
+    const __m256i MN_8f = _mm256_unpackhi_epi8(x[0xc], x[0xd]);
+    const __m256i OP_07 = _mm256_unpacklo_epi8(x[0xe], x[0xf]);
+    const __m256i OP_8f = _mm256_unpackhi_epi8(x[0xe], x[0xf]);
+
+    const __m256i ABCD_03 = _mm256_unpacklo_epi16(AB_07, CD_07);
+    const __m256i ABCD_47 = _mm256_unpackhi_epi16(AB_07, CD_07);
+    const __m256i ABCD_8b = _mm256_unpacklo_epi16(AB_8f, CD_8f);
+    const __m256i ABCD_cf = _mm256_unpackhi_epi16(AB_8f, CD_8f);
+    const __m256i EFGH_03 = _mm256_unpacklo_epi16(EF_07, GH_07);
+    const __m256i EFGH_47 = _mm256_unpackhi_epi16(EF_07, GH_07);
+    const __m256i EFGH_8b = _mm256_unpacklo_epi16(EF_8f, GH_8f);
+    const __m256i EFGH_cf = _mm256_unpackhi_epi16(EF_8f, GH_8f);
+    const __m256i IJKL_03 = _mm256_unpacklo_epi16(IJ_07, KL_07);
+    const __m256i IJKL_47 = _mm256_unpackhi_epi16(IJ_07, KL_07);
+    const __m256i IJKL_8b = _mm256_unpacklo_epi16(IJ_8f, KL_8f);
+    const __m256i IJKL_cf = _mm256_unpackhi_epi16(IJ_8f, KL_8f);
+    const __m256i MNOP_03 = _mm256_unpacklo_epi16(MN_07, OP_07);
+    const __m256i MNOP_47 = _mm256_unpackhi_epi16(MN_07, OP_07);
+    const __m256i MNOP_8b = _mm256_unpacklo_epi16(MN_8f, OP_8f);
+    const __m256i MNOP_cf = _mm256_unpackhi_epi16(MN_8f, OP_8f);
+
+    const __m256i ABCDEFGH_01 = _mm256_unpacklo_epi32(ABCD_03, EFGH_03);
+    const __m256i ABCDEFGH_23 = _mm256_unpackhi_epi32(ABCD_03, EFGH_03);
+    const __m256i ABCDEFGH_45 = _mm256_unpacklo_epi32(ABCD_47, EFGH_47);
+    const __m256i ABCDEFGH_67 = _mm256_unpackhi_epi32(ABCD_47, EFGH_47);
+    const __m256i ABCDEFGH_89 = _mm256_unpacklo_epi32(ABCD_8b, EFGH_8b);
+    const __m256i ABCDEFGH_ab = _mm256_unpackhi_epi32(ABCD_8b, EFGH_8b);
+    const __m256i ABCDEFGH_cd = _mm256_unpacklo_epi32(ABCD_cf, EFGH_cf);
+    const __m256i ABCDEFGH_ef = _mm256_unpackhi_epi32(ABCD_cf, EFGH_cf);
+    const __m256i IJKLMNOP_01 = _mm256_unpacklo_epi32(IJKL_03, MNOP_03);
+    const __m256i IJKLMNOP_23 = _mm256_unpackhi_epi32(IJKL_03, MNOP_03);
+    const __m256i IJKLMNOP_45 = _mm256_unpacklo_epi32(IJKL_47, MNOP_47);
+    const __m256i IJKLMNOP_67 = _mm256_unpackhi_epi32(IJKL_47, MNOP_47);
+    const __m256i IJKLMNOP_89 = _mm256_unpacklo_epi32(IJKL_8b, MNOP_8b);
+    const __m256i IJKLMNOP_ab = _mm256_unpackhi_epi32(IJKL_8b, MNOP_8b);
+    const __m256i IJKLMNOP_cd = _mm256_unpacklo_epi32(IJKL_cf, MNOP_cf);
+    const __m256i IJKLMNOP_ef = _mm256_unpackhi_epi32(IJKL_cf, MNOP_cf);
+
+    x[0x0] = _mm256_unpacklo_epi64(ABCDEFGH_01, IJKLMNOP_01); // ABCDEFGHIJKLMNOP_0
+    x[0x1] = _mm256_unpackhi_epi64(ABCDEFGH_01, IJKLMNOP_01); // ABCDEFGHIJKLMNOP_1
+    x[0x2] = _mm256_unpacklo_epi64(ABCDEFGH_23, IJKLMNOP_23); // ABCDEFGHIJKLMNOP_2
+    x[0x3] = _mm256_unpackhi_epi64(ABCDEFGH_23, IJKLMNOP_23); // ABCDEFGHIJKLMNOP_3
+    x[0x4] = _mm256_unpacklo_epi64(ABCDEFGH_45, IJKLMNOP_45); // ABCDEFGHIJKLMNOP_4
+    x[0x5] = _mm256_unpackhi_epi64(ABCDEFGH_45, IJKLMNOP_45); // ABCDEFGHIJKLMNOP_5
+    x[0x6] = _mm256_unpacklo_epi64(ABCDEFGH_67, IJKLMNOP_67); // ABCDEFGHIJKLMNOP_6
+    x[0x7] = _mm256_unpackhi_epi64(ABCDEFGH_67, IJKLMNOP_67); // ABCDEFGHIJKLMNOP_7
+    x[0x8] = _mm256_unpacklo_epi64(ABCDEFGH_89, IJKLMNOP_89); // ABCDEFGHIJKLMNOP_8
+    x[0x9] = _mm256_unpackhi_epi64(ABCDEFGH_89, IJKLMNOP_89); // ABCDEFGHIJKLMNOP_9
+    x[0xa] = _mm256_unpacklo_epi64(ABCDEFGH_ab, IJKLMNOP_ab); // ABCDEFGHIJKLMNOP_a
+    x[0xb] = _mm256_unpackhi_epi64(ABCDEFGH_ab, IJKLMNOP_ab); // ABCDEFGHIJKLMNOP_b
+    x[0xc] = _mm256_unpacklo_epi64(ABCDEFGH_cd, IJKLMNOP_cd); // ABCDEFGHIJKLMNOP_c
+    x[0xd] = _mm256_unpackhi_epi64(ABCDEFGH_cd, IJKLMNOP_cd); // ABCDEFGHIJKLMNOP_d
+    x[0xe] = _mm256_unpacklo_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_e
+    x[0xf] = _mm256_unpackhi_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_f
+}
+
+#endif
+
 #pragma GCC diagnostic pop
 
 #elif defined(__aarch64__) && defined(__ARM_NEON)

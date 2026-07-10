@@ -112,6 +112,34 @@ aes_enc_arr(simd_arr_t<N>& arr,
     }
 }
 
+#if defined(__AVX2__)
+
+/// Perform \a aes_num_rounds rounds of AES encryption on each element of the lane-paired \a arr
+/**
+* The lane-paired counterpart of \c aes_enc_arr: element \c i of \a arr
+* holds block \c i of two independent states, one state per 128-bit lane,
+* and both lanes use the same \c aes_round_keys[aes_r][i] (broadcast to both
+* lanes) as their AES round key in AES round \c aes_r.
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
+static void
+aes_enc_arr(simd_arr_x2_t<N>& arr,
+            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+{
+    static_assert(M >= N);
+
+    for (int i = 0; i < std::ssize(arr); ++i)
+    {
+        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        {
+            const __m256i k = _mm256_broadcastsi128_si256(aes_round_keys[aes_r][i]);
+            arr[i] = aes_enc(arr[i], k);
+        }
+    }
+}
+
+#endif
+
 #endif
 
 /// \copydoc aes_enc_arr

@@ -31,6 +31,17 @@ using block_t = uint8x16_t;
 template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+
+/// A lane-paired block: block \c i of two independent states, one per 128-bit lane
+using block_x2_t = uint8x16x2_t;
+
+/// A lane-paired state: two independent states, state A in the low lanes and state B in the high lanes
+template <size_t N>
+using arr_blocks_x2 = simd_arr_x2_t<N>;
+
+#endif
+
 /// The minimum number of rounds for \c aes_enc_0 to achieve full bit diffusion
 /**
 * The value was obtained from research/aes_enc_0-aes_num_rounds.cpp
@@ -200,6 +211,80 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
         simd_transpose(state);
     }
 }
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+
+/// Pack two states into a lane-paired state
+/**
+* Element \c i of the result holds <code>state_a[i]</code> in its low
+* 128-bit lane and <code>state_b[i]</code> in its high 128-bit lane.
+*/
+template <size_t N>
+[[nodiscard]] static arr_blocks_x2<N>
+pack_states(const arr_blocks<N>& state_a, const arr_blocks<N>& state_b) noexcept
+{
+    arr_blocks_x2<N> state_x2;
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        state_x2[i] = _mm256_set_m128i(state_b[i], state_a[i]);
+    }
+
+    return state_x2;
+}
+
+/// Unpack a lane-paired state into its two states (the inverse of \c pack_states)
+template <size_t N>
+static void
+unpack_states(const arr_blocks_x2<N>& state_x2,
+              arr_blocks<N>& state_a,
+              arr_blocks<N>& state_b) noexcept
+{
+    for (size_t i = 0; i < N; ++i)
+    {
+        state_a[i] = _mm256_castsi256_si128(state_x2[i]);
+        state_b[i] = _mm256_extracti128_si256(state_x2[i], 1);
+    }
+}
+
+/// The Castella permutation function applied to two independent states in lockstep
+// {{{
+/**
+* \param state_x2 the lane-paired state to permute (see \c arr_blocks_x2)
+* \param num_rounds the number of rounds to perform
+* \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
+*
+* Equivalent to calling \c permute on each state separately: the VAES
+* instructions apply an independent AES round per 128-bit lane (both lanes
+* using the same round constants -- see the lane-paired \c aes_enc_arr), and
+* the AVX2 unpack instructions of the lane-paired \c simd_transpose are
+* lane-local, so the two states never mix.  The point is throughput: one
+* transpose network serves both states, and two chunks' worth of permutation
+* work is in flight on one core (see \c Castella::DuplexTree leaf batching).
+*
+* Only the 16-block state is supported: the lane-paired transpose exists
+* only for the 16x16 byte matrix (the geometry \c Castella::Duplex uses).
+*/
+// }}}
+template <size_t N>
+static void
+permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
+{
+    static_assert(N == 16, "only the 16-block state has a lane-paired transpose");
+
+#if defined(DEBUG)
+    assert(num_rounds >= 0);
+    assert(num_rounds <= NUM_ROUNDS_MAX);
+#endif
+
+    for (const auto& rc : std::span{round_constants}.last(num_rounds))
+    {
+        aes_enc_arr<AES_NUM_ROUNDS>(state_x2, rc);
+        simd_transpose(state_x2);
+    }
+}
+
+#endif
 
 /// The inverse Castella permutation function
 // {{{

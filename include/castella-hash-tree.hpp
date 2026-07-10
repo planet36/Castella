@@ -158,7 +158,9 @@ concept tree_node_policy =
 *    whole chunks (e.g. a memory-mapped file added in one call), the leaf
 *    chunks of that call are hashed by up to NUM_THREADS transient worker
 *    threads, statically partitioned, with zero copying; see
-*    \c flush_bulk_chunks_().
+*    \c flush_bulk_chunks_().  When the node policy supports lane-paired
+*    leaf hashing (see \c HAS_PAIRED_LEAF), each thread additionally hashes
+*    its adjacent leaf chunks two at a time.
 *
 * 2. **Streaming (pipeline) path.**  When input arrives in pieces too small
 *    for the batch path (e.g. a 32 KiB read loop feeding 16 KiB chunks), a
@@ -275,6 +277,28 @@ private:
 
     /// Role byte for a leaf node (hashes one chunk to a CV)
     static constexpr uint8_t ROLE_LEAF = 0x01;
+
+    /// Whether the node policy also supports lane-paired leaf hashing
+    // {{{
+    /**
+    * Detected, not required: a policy opts in by additionally providing a
+    * \c node_x2_type that advances two same-parameter nodes in lockstep
+    * (see \c Castella::DuplexX2), a \c make_node_x2() factory, and an
+    * \c extract_cv_x2().  Adjacent full leaf chunks are then hashed two at
+    * a time on one thread (two states in the two 128-bit lanes of ymm
+    * registers, via VAES); see \c hash_leaf_pair_into_().  Like every
+    * execution-level knob, this NEVER affects the digest: a paired leaf
+    * computes bit-identical CVs (the lockstep contract; verified for
+    * \c DuplexX2 by research/duplex_x2-verify.cpp).
+    */
+    // }}}
+    static constexpr bool HAS_PAIRED_LEAF =
+        requires(const NodePolicy p, typename NodePolicy::node_x2_type& pair,
+                 const std::span<std::byte> cv_dst, const void* data, const size_t len) {
+            { p.make_node_x2() } -> std::same_as<typename NodePolicy::node_x2_type>;
+            pair.add(data, data, len);
+            p.extract_cv_x2(pair, cv_dst, cv_dst);
+        };
 
     /// The node parameters, kept to construct leaves on demand
     /**
@@ -557,6 +581,90 @@ private:
         leaf.add(chunk);
 
         policy_.extract_cv(leaf, cv_dst);
+    }
+
+    /// Absorb the same left-encoded integer into both lanes of \a pair
+    /**
+    * The lane-paired counterpart of \c absorb_left_encoded_ for a value
+    * that is identical in both lanes.
+    */
+    static void absorb_left_encoded_x2_(auto& pair, const std::unsigned_integral auto x)
+    {
+        const auto w = static_cast<uint8_t>(byte_width(x));
+
+#if defined(DEBUG)
+        assert(w >= 1);
+#endif
+
+        pair.add(&w, &w, sizeof(w));
+        pair.add(&x, &x, w);
+    }
+
+    /// Hash two adjacent chunks to their chaining values with one lane-paired node
+    // {{{
+    /**
+    * The lane-paired counterpart of \c hash_leaf_into_ (available only
+    * when \c HAS_PAIRED_LEAF): the chunks at \a chunk_index and
+    * \a chunk_index + 1 are hashed in lockstep by one \c node_x2_type,
+    * producing CVs bit-identical to two \c hash_leaf_into_ calls -- so,
+    * like the thread count, pairing can never affect the digest.
+    *
+    * Lockstep requires every absorbed piece to have the same length in
+    * both lanes.  The chunks are both full (only the trailing chunk of a
+    * stream may be short, and it is never paired), and the role prefix is
+    * identical in both lanes, so only the left-encoded chunk index can
+    * differ -- and only in WIDTH, at a byte-width boundary (e.g. indices
+    * 255 and 256).  Such a pair falls back to two single-leaf hashes.
+    *
+    * \param chunk_a the chunk at \a chunk_index; exactly \c CHUNK_SIZE bytes
+    * \param chunk_b the chunk at \a chunk_index + 1; exactly \c CHUNK_SIZE bytes
+    * \param chunk_index the position of \a chunk_a in the input; >= 1
+    * \param cv_dst_a the destination for \a chunk_a 's \c CV_LEN -byte CV
+    * \param cv_dst_b the destination for \a chunk_b 's \c CV_LEN -byte CV
+    */
+    // }}}
+    void hash_leaf_pair_into_(const std::span<const std::byte> chunk_a,
+                              const std::span<const std::byte> chunk_b,
+                              const int64_t chunk_index,
+                              const std::span<std::byte> cv_dst_a,
+                              const std::span<std::byte> cv_dst_b) const
+    {
+#if defined(DEBUG)
+        assert(chunk_index >= 1);
+        assert(std::ssize(chunk_a) == CHUNK_SIZE); // only full chunks are paired
+        assert(std::ssize(chunk_b) == CHUNK_SIZE);
+        assert(std::ssize(cv_dst_a) == CV_LEN);
+        assert(std::ssize(cv_dst_b) == CV_LEN);
+#endif
+
+        const auto index_a = to_unsigned(chunk_index);
+        const auto index_b = to_unsigned(chunk_index + 1);
+
+        const auto w = static_cast<uint8_t>(byte_width(index_a));
+
+        if (w != static_cast<uint8_t>(byte_width(index_b)))
+        {
+            // The lanes would absorb different-length index encodings;
+            // lockstep is impossible for this pair.
+            hash_leaf_into_(chunk_a, chunk_index, cv_dst_a);
+            hash_leaf_into_(chunk_b, chunk_index + 1, cv_dst_b);
+            return;
+        }
+
+        auto pair = policy_.make_node_x2();
+
+        // The role prefix (identical in both lanes); see absorb_role_prefix_.
+        pair.add(&ROLE_LEAF, &ROLE_LEAF, sizeof(ROLE_LEAF));
+        absorb_left_encoded_x2_(pair, to_unsigned(CHUNK_SIZE));
+        absorb_left_encoded_x2_(pair, to_unsigned(CV_LEN));
+
+        // The chunk indices (equal width, checked above).
+        pair.add(&w, &w, sizeof(w));
+        pair.add(&index_a, &index_b, w);
+
+        pair.add(std::data(chunk_a), std::data(chunk_b), std::size(chunk_a));
+
+        policy_.extract_cv_x2(pair, cv_dst_a, cv_dst_b);
     }
 
     /// Hash one chunk to its chaining value, returned as a vector
@@ -1012,6 +1120,70 @@ private:
         chunk_buf_.clear();
     }
 
+    /// Hash a batch's chunks on the calling thread, pairing adjacent leaves
+    // {{{
+    /**
+    * The no-worker counterpart of the batch path's paired leaf hashing,
+    * used when the streaming pool can never run (a single-threaded tree,
+    * or a policy with \c USE_STREAMING_POOL false): chunk 0 (if present)
+    * is absorbed directly by the final node, adjacent full leaf chunks are
+    * hashed two at a time by one lane-paired node (see
+    * \c hash_leaf_pair_into_()), and a leftover leaf is hashed singly.
+    * Each CV enters the final node in index order, immediately after it is
+    * computed.  Identical digest to every other path, by construction.
+    *
+    * \pre \c HAS_PAIRED_LEAF
+    * \pre the streaming pipeline is idle (the pool never started)
+    */
+    // }}}
+    void flush_paired_chunks_inline_(const std::byte* src, const int64_t num_chunks)
+    {
+#if defined(DEBUG)
+        assert(!pool_is_active_());
+        assert(num_chunks >= 1);
+#endif
+
+        const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
+        const auto cv_len = static_cast<size_t>(CV_LEN);
+
+        const int64_t first_chunk_index = num_chunks_flushed_;
+
+        int64_t pos = 0;
+
+        if (first_chunk_index == 0)
+        {
+            absorb_into_final_node_(std::span{src, chunk_size});
+            pos = 1;
+        }
+
+        // One buffer holds a pair's two CVs, contiguous and in index order,
+        // so one add() absorbs both (same byte stream as two adds).
+        std::vector<std::byte> cvs(2 * cv_len);
+        const std::span cv_a{std::data(cvs), cv_len};
+        const std::span cv_b{std::data(cvs) + cv_len, cv_len};
+
+        for (; pos + 1 < num_chunks; pos += 2)
+        {
+            const std::span chunk_a{src + to_unsigned(pos) * chunk_size, chunk_size};
+            const std::span chunk_b{src + to_unsigned(pos + 1) * chunk_size, chunk_size};
+
+            hash_leaf_pair_into_(chunk_a, chunk_b, first_chunk_index + pos, cv_a, cv_b);
+
+            absorb_into_final_node_(std::span<const std::byte>{cvs});
+        }
+
+        if (pos < num_chunks)
+        {
+            const std::span chunk{src + to_unsigned(pos) * chunk_size, chunk_size};
+
+            hash_leaf_into_(chunk, first_chunk_index + pos, cv_a);
+
+            absorb_into_final_node_(cv_a);
+        }
+
+        num_chunks_flushed_ += num_chunks;
+    }
+
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src
     // {{{
     /**
@@ -1078,6 +1250,19 @@ private:
 
         if (num_workers < 2)
         {
+            if constexpr (HAS_PAIRED_LEAF)
+            {
+                // When the streaming pool can never run (a single-threaded
+                // tree, or a policy that opted out of the pool), the whole
+                // batch is this thread's work anyway, so hash it here with
+                // adjacent leaves paired (roughly halving the work).
+                if (!NodePolicy::USE_STREAMING_POOL || (NUM_THREADS < 2))
+                {
+                    flush_paired_chunks_inline_(src, num_chunks);
+                    return;
+                }
+            }
+
             // Not enough leaf work to pay for transient-thread dispatch:
             // route the batch through the per-chunk router instead, which
             // sends the chunks to the streaming pipeline when the pool is
@@ -1125,7 +1310,32 @@ private:
                      first_leaf_pos, first_chunk_index, chunk_size, cv_len] {
                         try
                         {
-                            for (int64_t k = range_begin; k < range_end; ++k)
+                            int64_t k = range_begin;
+
+                            if constexpr (HAS_PAIRED_LEAF)
+                            {
+                                // Adjacent leaves of this worker's range are
+                                // hashed two at a time by one lane-paired
+                                // node; a leftover leaf falls through to the
+                                // single-leaf loop below.
+                                for (; k + 1 < range_end; k += 2)
+                                {
+                                    const int64_t pos = first_leaf_pos + k;
+                                    const std::span chunk_a{
+                                        src + to_unsigned(pos) * chunk_size, chunk_size};
+                                    const std::span chunk_b{
+                                        src + to_unsigned(pos + 1) * chunk_size,
+                                        chunk_size};
+
+                                    hash_leaf_pair_into_(
+                                        chunk_a, chunk_b, first_chunk_index + pos,
+                                        std::span{&cvs[to_unsigned(k) * cv_len], cv_len},
+                                        std::span{&cvs[to_unsigned(k + 1) * cv_len],
+                                                  cv_len});
+                                }
+                            }
+
+                            for (; k < range_end; ++k)
                             {
                                 // k-th leaf = (first_leaf_pos + k)-th chunk
                                 // of the batch

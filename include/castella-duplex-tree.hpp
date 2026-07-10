@@ -14,6 +14,7 @@
 #pragma once
 
 #include "castella-duplex.hpp"
+#include "castella-duplex-x2.hpp"
 #include "castella-hash-tree.hpp"
 
 #include <cstdint>
@@ -72,6 +73,33 @@ struct DuplexTreeNodePolicy final
     {
         (void)node.squeeze_to(cv_dst);
     }
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+
+    /// The lockstep node-pair type enabling lane-paired leaf hashing
+    /**
+    * Opts the tree into VAES leaf batching (see \c HashTree's
+    * \c HAS_PAIRED_LEAF): adjacent full leaf chunks are hashed two at a
+    * time on one thread, one \c Duplex per 128-bit lane.  Execution-level
+    * only; NEVER affects the digest.
+    */
+    using node_x2_type = DuplexX2;
+
+    /// Construct a fresh lockstep node pair (same parameters as \c make_node)
+    [[nodiscard]] node_x2_type make_node_x2() const
+    {
+        return node_x2_type{capacity_blocks, num_rounds, input_suffix, function_name,
+                            customization_str};
+    }
+
+    /// Write both nodes' chaining values into their destinations
+    static void extract_cv_x2(node_x2_type& pair, const std::span<std::byte> cv_dst_a,
+                              const std::span<std::byte> cv_dst_b)
+    {
+        pair.squeeze_pair_to(cv_dst_a, cv_dst_b);
+    }
+
+#endif
 };
 
 /// A tree-hashing wrapper around \c Castella::Duplex

@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
+#include <memory>
 #include <mutex>
 #include <numeric>
 #include <print>
@@ -46,7 +47,14 @@ inline constexpr std::string_view default_host = "localhost";
 inline constexpr int default_port = 8080;
 const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
-Castella::Duplex* hash_obj = nullptr;
+/// The Castella service's hash object
+/**
+* Owned by a unique_ptr (it cannot be a plain global: the constructor
+* parameters are validated at run time and may throw).  Its destructor --
+* which zeroizes the state -- runs during normal static destruction, on
+* return from main and on std::exit (e.g. errx).
+*/
+std::unique_ptr<Castella::Duplex> hash_obj;
 
 std::mutex cv_mtx;
 
@@ -62,12 +70,6 @@ std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initializatio
 * When `consec_bytes_sqzd ≥ max_consec_bytes_sqzd`, \c cv will awaken to get entropy.
 */
 std::remove_const_t<decltype(max_consec_bytes_sqzd)> consec_bytes_sqzd = 0;
-
-void
-cleanup()
-{
-    delete hash_obj;
-}
 
 /// Get the default number of bytes to squeeze
 [[nodiscard]] int
@@ -264,9 +266,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    if (std::atexit(cleanup) != 0)
-        errx(EXIT_FAILURE, "std::atexit(cleanup) failed");
-
     // Do not create core dump files.
     if (constexpr rlimit rlim{.rlim_cur = 0, .rlim_max = 0};
         setrlimit(RLIMIT_CORE, &rlim) == -1)
@@ -330,8 +329,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     try
     {
-        hash_obj = new Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
-                                        function_name, customization_str);
+        hash_obj = std::make_unique<Castella::Duplex>(capacity_blocks, num_rounds,
+                                                      input_suffix, function_name,
+                                                      customization_str);
     }
     catch (const std::invalid_argument& ex)
     {

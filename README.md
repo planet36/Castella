@@ -30,6 +30,8 @@ An instance of a duplex can be used as a hash object or a pseudo-random number g
 
 The source code is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
+A standalone specification — the permutation, round constants, duplex, tree mode, MAC construction, and Compress-Castella, readable without the C++ — is in [SPEC.md](SPEC.md).  Its completeness is proven by [research/spec-conformance.py](research/spec-conformance.py), an independent pure-Python implementation written from the specification alone that reproduces every digest in [tests/KAT.txt](tests/KAT.txt).
+
 ### Capacity and Rate
 
 The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.

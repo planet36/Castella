@@ -166,7 +166,12 @@ private:
 
     std::mutex mtx_;
 
-    block_t* input_blocks_ = nullptr; // size will be R
+    /// The input buffer
+    /**
+    * Sized for the largest possible rate (no per-object allocation, same as
+    * \c DuplexX2); only the first \c R blocks are used.
+    */
+    arr_blocks<R_MAX> input_blocks_{};
 
     /// The current index of the input buffer
     int32_t cur_input_byte_idx_ = 0;
@@ -353,16 +358,11 @@ private:
     }
 
     /// Zeroize the state and input buffer
-    // {{{
-    /**
-    * \pre the input buffer has been allocated
-    */
-    // }}}
     void zeroize_() noexcept
     {
         explicit_bzero(std::data(state_), sizeof(state_));
 
-        explicit_bzero(input_blocks_, get_rate_size_bytes());
+        explicit_bzero(std::data(input_blocks_), sizeof(input_blocks_));
 
         cur_input_byte_idx_ = 0;
     }
@@ -405,7 +405,7 @@ private:
     /// Get a pointer to the input buffer
     [[nodiscard]] std::byte* get_input_bytes_() noexcept
     {
-        return reinterpret_cast<std::byte*>(input_blocks_);
+        return reinterpret_cast<std::byte*>(std::data(input_blocks_));
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer
@@ -802,23 +802,9 @@ public:
     NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
     INPUT_SUFFIX{narrow_cast<decltype(INPUT_SUFFIX)>(input_suffix)}
     {
-        // Must check constraints before allocating the input buffer.
         check_constraints_();
 
-        // Must allocate the input buffer before calling zeroize_().
-        // Plain new[] is used (not the over-aligned new): block_t's alignment
-        // does not exceed the default new alignment, so plain new[] already
-        // returns suitably aligned storage, and it pairs with the plain
-        // delete[] in the destructor.  The previous over-aligned new paired
-        // with a plain delete[] was a new/delete alignment mismatch (undefined
-        // behavior, caught by AddressSanitizer).
-        static_assert(alignof(block_t) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__,
-                      "block_t needs over-aligned new[]/delete[]");
-        input_blocks_ = new block_t[R]; // NOLINT(cppcoreguidelines-owning-memory)
-
-        // Must zeroize the state and input buffer before calling init_().
-        zeroize_();
-
+        // The members are zero-initialized; init_ requires it.
         init_(function_name, customization_str);
     }
 
@@ -833,10 +819,7 @@ public:
     /// dtor
     ~Duplex()
     {
-        // Must zeroize before deallocating the input buffer.
         zeroize_();
-
-        delete[] input_blocks_;
     }
 
     /// Consume \a data into the input buffer

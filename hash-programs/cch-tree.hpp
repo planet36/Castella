@@ -67,9 +67,16 @@ struct compress_castella_tree_node_policy final
     * time on one thread by interleaving the two nodes' compression chains
     * in one bulk loop (see \c compress_castella_hash_x2 for why that
     * pays; measured 1.23-1.37x by
-    * research/simd_compress-two-state-benchmark.cpp).  Guarded by the
-    * VAES flags because that is the configuration the probe measured.
-    * Execution-level only; NEVER affects the digest.
+    * research/simd_compress-two-state-benchmark.cpp).
+    *
+    * Guarded by the VAES flags even though the pair class itself is
+    * portable, because the win exists only under VAES codegen: 256-bit
+    * aesenc gives one state just 8 independent 3-deep chains (latency
+    * left to fill), while 128-bit codegen already runs 16 chains per
+    * state and the pair measures 0.86-1.15x in the compute-bound regimes
+    * -- a wash at best, a real loss at worst (see the non-VAES findings
+    * in research/README.md).  Execution-level only; NEVER affects the
+    * digest.
     */
     using node_x2_type = compress_castella_hash_x2<>;
 

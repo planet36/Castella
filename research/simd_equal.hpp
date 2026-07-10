@@ -31,6 +31,10 @@ simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 #endif
 }
 
+// uint8x16x2_t exists on x86-64 only when AVX is enabled (see simd_types.hpp)
+#if (defined(__x86_64__) && defined(__AVX2__)) || \
+    (defined(__aarch64__) && defined(__ARM_NEON))
+
 /// Test if two 256-bit SIMD values are equal
 /**
 * \param a the first 256-bit SIMD value
@@ -50,6 +54,8 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 #endif
 }
 
+#endif
+
 /// \copydoc simd128_equal(const uint8x16_t, const uint8x16_t)
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
@@ -57,12 +63,17 @@ simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
     return simd128_equal(a, b);
 }
 
+#if (defined(__x86_64__) && defined(__AVX2__)) || \
+    (defined(__aarch64__) && defined(__ARM_NEON))
+
 /// \copydoc simd256_equal(const uint8x16x2_t, const uint8x16x2_t)
 [[nodiscard]] static inline bool
 simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
     return simd256_equal(a, b);
 }
+
+#endif
 
 /// Test if two arrays of 128-bit SIMD values are equal
 /**
@@ -94,8 +105,12 @@ simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 [[nodiscard]] static inline bool
 simd128_is_zero(const uint8x16_t v) noexcept
 {
+#if defined(__x86_64__)
     // Returns 1 if (v & v) == 0
     return _mm_testz_si128(v, v) == 1;
+#elif defined(__aarch64__) && defined(__ARM_NEON)
+    return vmaxvq_u8(v) == 0;
+#endif
 }
 
 /// \copydoc simd128_is_zero(const uint8x16_t)

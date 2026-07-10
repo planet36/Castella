@@ -80,6 +80,21 @@ Interpretation: one cch state is 8 ymm registers, so two states already fill the
 
 Conclusion: keep the pair.  A `compress_castella_hash_x4` would add a second lockstep class, wider tree machinery, and wider verify programs to buy ~20% more hashing throughput only in the single-threaded DRAM regime (multi-threaded cch is already DRAM-bound, and hashing is only part of single-threaded wall time).  Revisit if a use case hashes huge cache-cold files strictly single-threaded.
 
+## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
+
+`compress_castella_hash_x2` contains no VAES-specific code, so its VAES guard (the cch tree policy's pairing opt-in in `hash-programs/cch-tree.hpp`) looked like it might be an accident of what was measured.  It is not.  The benchmark builds for any AES-capable target (its guard was widened accordingly), and the pair rows, pinned, compare across code generation (ratios are interleaved ÷ sequential per byte):
+
+| regime | `x86-64-v2 -maes` (SSE) | `x86-64-v3 -maes` (AVX2, no VAES) | `raptorlake` (VAES) |
+|--------|------------------------:|----------------------------------:|--------------------:|
+| 16 KiB (L1)    | 1.15× | 0.98× | 1.12× |
+| 512 KiB (L2)   | 0.99× | 0.86× | 1.03× |
+| 8 MiB (L3)     | 0.94× | 0.89× | 1.02× |
+| 128 MiB (DRAM) | 1.28× | 1.28× | 1.17× |
+
+Interpretation: the pairing win exists because **VAES halves the chain count**.  With 256-bit `vaesenc`, one cch state runs only 8 independent 3-deep chains per 256-byte chunk, leaving the AES units latency-starved — the gap the second state fills.  With 128-bit `aesenc` codegen, one state already runs 16 independent chains, which saturates the AES units on its own; the second state's registers just spill (the AVX2-no-VAES column, whose 16 ymm registers hold the two 8-register states with nothing to spare, loses outright in L2/L3).  The DRAM-regime ~1.28× appears in every column because it is memory-level parallelism (two concurrent read streams), not an AES effect — and in the tree, adjacent leaf chunks are contiguous memory, so the prefetcher already gets much of that.
+
+Conclusion: the VAES guard on the cch pairing opt-in is correct and stays.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark directly to check their machine.
+
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 
 `permute-min-active-sboxes.py` computes the minimum number of differentially active AES S-boxes over _r_ rounds of `Castella::permute`, using PuLP 3.3.2 with the bundled CBC solver.  Notation: _N_ = number of state blocks, _r_ = Castella rounds, _a_ = AES rounds per Castella round (`Castella::AES_NUM_ROUNDS`).

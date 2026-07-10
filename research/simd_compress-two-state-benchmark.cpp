@@ -27,9 +27,18 @@
 * file: one state is 8 ymm registers, so 2 states already fill all 16 and
 * 3-4 states must spill between chunks).  Buffer sizes span L1 to DRAM to
 * separate the compute-bound and memory-bound regimes.
+*
+* The benchmark itself is portable to any AES-capable target (the absorb
+* loop and permutation have non-VAES and ARM fallbacks), so the question
+* can be measured on hardware without VAES -- where the answer differs:
+* with 128-bit aesenc codegen one state already runs 16 independent
+* chains (VAES halves that to 8, which is what leaves latency to fill),
+* and measured compute-regime ratios drop to ~1.0.  That is why the cch
+* tree policy's pairing opt-in stays behind the VAES flags.
 */
 
-#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+#if (defined(__x86_64__) && defined(__AES__)) || \
+    (defined(__aarch64__) && defined(__ARM_FEATURE_AES))
 
 #include "castella-permute.hpp"
 #include "simd_compress.hpp"
@@ -231,7 +240,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 int main()
 {
-    (void)std::puts("skipped: requires x86-64 with VAES and AVX2");
+    (void)std::puts("skipped: requires x86-64 or ARM64 with AES instructions");
     return 0;
 }
 

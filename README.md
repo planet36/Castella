@@ -86,9 +86,12 @@ A byte-stream hash is inherently sequential, so a single duplex can never use mo
 
 [`Castella::DuplexTree`](include/castella-duplex-tree.hpp) is the tree instantiated with `Castella::Duplex` nodes.  (The [`cch` hash program](hash-programs/cch.cpp) uses a second instantiation over a faster non-cryptographic compression node.)
 
-### VAES Leaf Batching
+### VAES Optimizations
 
-On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), `DuplexTree` hashes adjacent leaf chunks **two at a time on one thread**: two duplex states are packed into the two 128-bit lanes of ymm registers ([`Castella::DuplexX2`](include/castella-duplex-x2.hpp)), where VAES applies an independent AES round per lane and the AVX2 unpack network transposes both 16×16 byte matrices at once without mixing the lanes ([`Castella::permute_x2`](include/castella-permute.hpp)).  One paired permutation measures ~2.5× faster than two sequential permutations, roughly doubling per-core tree throughput.  Like the thread count, pairing never affects the digest.
+On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), two execution-level optimizations apply (neither ever affects a digest):
+
+* **Register-resident permutation.**  The 16-block permutation runs in a folded representation that stays in 8 ymm registers for all rounds (element _j_ holds blocks _j_ and _j_+8, one per 128-bit lane), instead of bouncing the state through memory between the AES rounds' 256-bit accesses and the transpose's 128-bit accesses — a pattern that defeats store-to-load forwarding.  Measured ~1.7× faster (a plain duplex absorbs at ~2.8 GiB/s per core instead of ~1.6).
+* **Leaf batching.**  `DuplexTree` hashes adjacent leaf chunks **two at a time on one thread**: two duplex states are packed into the two 128-bit lanes of ymm registers ([`Castella::DuplexX2`](include/castella-duplex-x2.hpp)), where VAES applies an independent AES round per lane and the AVX2 unpack network transposes both 16×16 byte matrices at once without mixing the lanes ([`Castella::permute_x2`](include/castella-permute.hpp)).  One paired permutation measures ~1.7× faster than two sequential (register-resident) permutations.
 
 ## Dependencies
 

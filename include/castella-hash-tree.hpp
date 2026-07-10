@@ -64,7 +64,7 @@ namespace Castella
 *     buffered by the calling thread, so a pool worker must pull each
 *     freshly written (producer-cache-resident) chunk across cores; that
 *     transfer only pays off when hashing a chunk costs clearly more than
-*     shipping it (true for \c Duplex at ~1.5 GiB/s per core, false for
+*     shipping it (true for \c Duplex at ~2.8 GiB/s per core, false for
 *     \c compress_castella_hash at ~15 GiB/s per core, where the pool
 *     measured *slower* than hashing inline).  When false, streamed
 *     chunks are hashed inline and only the one-shot batch path -- whose

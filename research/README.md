@@ -25,6 +25,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
+| simd\_compress-two-state-benchmark.cpp | Probe whether advancing two `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question) |
 | squeeze\_bytes-benchmark.cpp | Benchmark alternative implementations of `squeeze_bytes` |
 
 ## Usage
@@ -40,6 +41,21 @@ The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) 
 * `python3 permute-min-active-sboxes.py --help`
 
 Raw benchmark results are saved in a folder named `results`.
+
+## Findings: two interleaved cch states beat two sequential ones (2026-07-10)
+
+`simd_compress-two-state-benchmark.cpp` hashes two equal-size buffers with two independent `compress_castella_hash` states, either sequentially (buffer A start to finish, then buffer B — what two single-leaf hashes do) or interleaved chunk by chunk (what a paired cch leaf node would do).  Medians of 5 on an i9-13980HX (GCC, `-march=raptorlake`):
+
+| per-buffer size (regime) | sequential | interleaved | speedup |
+|--------------------------|-----------:|------------:|--------:|
+| 16 KiB (L1) | 31.2 GiB/s | 38.4 GiB/s | 1.23× |
+| 512 KiB (L2) | 27.6 GiB/s | 38.0 GiB/s | 1.37× |
+| 8 MiB (L3) | 25.9 GiB/s | 33.0 GiB/s | 1.28× |
+| 128 MiB (DRAM) | 17.2 GiB/s | 21.9 GiB/s | 1.28× |
+
+Interpretation: one cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency ≈ 15 cycles) exceeds the throughput cost (24 `vaesenc` ÷ 2 per cycle = 12 cycles) — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count and makes the loop throughput-bound.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize and its state already stays register/store-forwarding friendly.)
+
+Conclusion: a paired cch leaf node (`HAS_PAIRED_LEAF` for the cch tree policy) is worth ~1.25–1.4× per core.
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

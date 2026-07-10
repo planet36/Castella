@@ -5,13 +5,14 @@ castella-print-info
 duplex_x2-verify
 left_encode-right_encode-benchmark
 nested-for-loop-order-benchmark
+permute_inv-verify
 permute-num_rounds
 permute-num_rounds-avalanche_matrix
 permute-num_rounds-benchmark
-permute_inv-verify
 permute_x2-benchmark
 permute_x2-verify
 results/
 simd_compress_aes_enc-num_rounds
 simd_compress_aes_enc-num_rounds-benchmark
+simd_compress-two-state-benchmark
 squeeze_bytes-benchmark

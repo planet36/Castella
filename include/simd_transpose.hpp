@@ -160,6 +160,80 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
 
 #if defined(__AVX2__)
 
+/// Transpose each 128-bit lane of \a x (treating it as two independent 2x2 matrices of \c uint64_t) using AVX2 intrinsics
+/**
+* The AVX2 integer unpack instructions operate within each 128-bit lane
+* independently, so this is the 2x2 SSE2 network above lifted verbatim to
+* ymm registers: the low lanes of x[0..1] are transposed as one 2x2 matrix
+* and the high lanes as another, with no cross-lane movement.  This is what
+* lets two independent Castella states be permuted in lockstep, one state
+* per lane (see \c Castella::permute_x2).
+*/
+static void
+simd_transpose(std::array<__m256i, 2>& x) noexcept
+{
+    const __m256i AB_0 = _mm256_unpacklo_epi64(x[0], x[1]);
+    const __m256i AB_1 = _mm256_unpackhi_epi64(x[0], x[1]);
+
+    x[0] = AB_0;
+    x[1] = AB_1;
+}
+
+/// Transpose each 128-bit lane of \a x (treating it as two independent 4x4 matrices of \c uint32_t) using AVX2 intrinsics
+/**
+* The 4x4 SSE2 network above lifted verbatim to ymm registers (the AVX2
+* integer unpacks are lane-local); see the 2x2 overload for the rationale.
+*/
+static void
+simd_transpose(std::array<__m256i, 4>& x) noexcept
+{
+    const __m256i AB_01 = _mm256_unpacklo_epi32(x[0], x[1]);
+    const __m256i AB_23 = _mm256_unpackhi_epi32(x[0], x[1]);
+    const __m256i CD_01 = _mm256_unpacklo_epi32(x[2], x[3]);
+    const __m256i CD_23 = _mm256_unpackhi_epi32(x[2], x[3]);
+
+    x[0] = _mm256_unpacklo_epi64(AB_01, CD_01); // ABCD_0
+    x[1] = _mm256_unpackhi_epi64(AB_01, CD_01); // ABCD_1
+    x[2] = _mm256_unpacklo_epi64(AB_23, CD_23); // ABCD_2
+    x[3] = _mm256_unpackhi_epi64(AB_23, CD_23); // ABCD_3
+}
+
+/// Transpose each 128-bit lane of \a x (treating it as two independent 8x8 matrices of \c uint16_t) using AVX2 intrinsics
+/**
+* The 8x8 SSE2 network above lifted verbatim to ymm registers (the AVX2
+* integer unpacks are lane-local); see the 2x2 overload for the rationale.
+*/
+static void
+simd_transpose(std::array<__m256i, 8>& x) noexcept
+{
+    const __m256i AB_03 = _mm256_unpacklo_epi16(x[0], x[1]);
+    const __m256i AB_47 = _mm256_unpackhi_epi16(x[0], x[1]);
+    const __m256i CD_03 = _mm256_unpacklo_epi16(x[2], x[3]);
+    const __m256i CD_47 = _mm256_unpackhi_epi16(x[2], x[3]);
+    const __m256i EF_03 = _mm256_unpacklo_epi16(x[4], x[5]);
+    const __m256i EF_47 = _mm256_unpackhi_epi16(x[4], x[5]);
+    const __m256i GH_03 = _mm256_unpacklo_epi16(x[6], x[7]);
+    const __m256i GH_47 = _mm256_unpackhi_epi16(x[6], x[7]);
+
+    const __m256i ABCD_01 = _mm256_unpacklo_epi32(AB_03, CD_03);
+    const __m256i ABCD_23 = _mm256_unpackhi_epi32(AB_03, CD_03);
+    const __m256i ABCD_45 = _mm256_unpacklo_epi32(AB_47, CD_47);
+    const __m256i ABCD_67 = _mm256_unpackhi_epi32(AB_47, CD_47);
+    const __m256i EFGH_01 = _mm256_unpacklo_epi32(EF_03, GH_03);
+    const __m256i EFGH_23 = _mm256_unpackhi_epi32(EF_03, GH_03);
+    const __m256i EFGH_45 = _mm256_unpacklo_epi32(EF_47, GH_47);
+    const __m256i EFGH_67 = _mm256_unpackhi_epi32(EF_47, GH_47);
+
+    x[0] = _mm256_unpacklo_epi64(ABCD_01, EFGH_01); // ABCDEFGH_0
+    x[1] = _mm256_unpackhi_epi64(ABCD_01, EFGH_01); // ABCDEFGH_1
+    x[2] = _mm256_unpacklo_epi64(ABCD_23, EFGH_23); // ABCDEFGH_2
+    x[3] = _mm256_unpackhi_epi64(ABCD_23, EFGH_23); // ABCDEFGH_3
+    x[4] = _mm256_unpacklo_epi64(ABCD_45, EFGH_45); // ABCDEFGH_4
+    x[5] = _mm256_unpackhi_epi64(ABCD_45, EFGH_45); // ABCDEFGH_5
+    x[6] = _mm256_unpacklo_epi64(ABCD_67, EFGH_67); // ABCDEFGH_6
+    x[7] = _mm256_unpackhi_epi64(ABCD_67, EFGH_67); // ABCDEFGH_7
+}
+
 /// Transpose each 128-bit lane of \a x (treating it as two independent 16x16 matrices of \c uint8_t) using AVX2 intrinsics
 /**
 * The AVX2 integer unpack instructions operate within each 128-bit lane

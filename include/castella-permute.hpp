@@ -341,17 +341,15 @@ unpack_states(const arr_blocks_x2<N>& state_x2,
 * the AVX2 unpack instructions of the lane-paired \c simd_transpose are
 * lane-local, so the two states never mix.  The point is throughput: one
 * transpose network serves both states, and two chunks' worth of permutation
-* work is in flight on one core (see \c Castella::DuplexTree leaf batching).
-*
-* Only the 16-block state is supported: the lane-paired transpose exists
-* only for the 16x16 byte matrix (the geometry \c Castella::Duplex uses).
+* work is in flight on one core (see \c Castella::DuplexTree leaf batching,
+* which uses the 16-block geometry of \c Castella::Duplex).
 */
 // }}}
 template <size_t N>
 static void
 permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 {
-    static_assert(N == 16, "only the 16-block state has a lane-paired transpose");
+    static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
 #if defined(DEBUG)
     assert(num_rounds >= 0);

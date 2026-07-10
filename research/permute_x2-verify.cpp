@@ -32,11 +32,12 @@
 #include <string>
 #include <unistd.h>
 
-inline constexpr size_t N = 16; // permute_x2 supports only the 16-block state
-
+template <size_t N>
 void
 test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_blocks<N>& state_b)
 {
+    static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
+
     // verify unpack_states(pack_states(A, B)) == (A, B)
     {
         const auto state_x2 = Castella::pack_states(state_a, state_b);
@@ -72,6 +73,7 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_bloc
 }
 
 /// Test state pairs with byte values that are 0 (both states, and one of each)
+template <size_t N>
 void
 test_permute_x2_bytes_zero()
 {
@@ -87,6 +89,7 @@ test_permute_x2_bytes_zero()
 }
 
 /// Test state pairs with byte values that are random
+template <size_t N>
 void
 test_permute_x2_bytes_random()
 {
@@ -131,11 +134,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
-    test_permute_x2_bytes_zero();
+    test_permute_x2_bytes_zero<2>();
+    test_permute_x2_bytes_zero<4>();
+    test_permute_x2_bytes_zero<8>();
+    test_permute_x2_bytes_zero<16>();
 
     for (int i = 0; i < num_samples; ++i)
     {
-        test_permute_x2_bytes_random();
+        test_permute_x2_bytes_random<2>();
+        test_permute_x2_bytes_random<4>();
+        test_permute_x2_bytes_random<8>();
+        test_permute_x2_bytes_random<16>();
     }
 
     return 0;

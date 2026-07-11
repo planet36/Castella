@@ -10,6 +10,7 @@
 #pragma once
 
 #include "aes_enc.hpp"
+#include "lfsr.hpp"
 #include "simd_transpose.hpp"
 #include "simd_types.hpp"
 
@@ -19,10 +20,8 @@
 #include <array>
 #include <bit>
 #include <cstddef>
-#include <cstdint>
 #include <ranges>
 #include <span>
-#include <string_view>
 
 namespace Castella
 {
@@ -90,57 +89,16 @@ inline constexpr int B_MAX = 16;
 */
 using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
-/// The state of the Galois LFSR used to generate the Castella round constants
-using lfsr_state_t = std::array<uint64_t, 2>;
-
-/// Advance the 128-bit Galois LFSR state \a lfsr by 1 step
-/**
-* The LFSR uses the GCM reduction polynomial (x^128 + x^7 + x^2 + x + 1).
-* \sa https://en.wikipedia.org/wiki/Linear-feedback_shift_register#Galois_LFSRs
-* \sa https://en.wikipedia.org/wiki/Galois/Counter_Mode
-*/
-[[nodiscard]] static constexpr lfsr_state_t
-lfsr_step(lfsr_state_t lfsr) noexcept
-{
-    const uint64_t carry = lfsr[1] >> 63;
-    lfsr[1] = (lfsr[1] << 1) | (lfsr[0] >> 63);
-    lfsr[0] = (lfsr[0] << 1) ^ (carry * UINT64_C(0x87));
-    return lfsr;
-}
-
-/// The initial state of the LFSR used to generate the Castella round constants
-/**
-* The seed is <q>expand 16-byte c</q>.
-* (It's a perfectly cromulent initial value.)
-*/
-[[nodiscard]] static consteval lfsr_state_t
-lfsr_seed() noexcept
-{
-    constexpr std::string_view seed_str{"expand 16-byte c"};
-    static_assert(seed_str.size() == sizeof(lfsr_state_t));
-
-    // The intermediate copy to seed_bytes cannot be skipped.
-    // std::bit_cast requires a trivially copyable source object of exactly
-    // sizeof(lfsr_state_t) bytes, and no such object is available directly:
-    // - The string literal is a const char[17] (trailing NUL), so its size
-    //   does not match.
-    // - seed_str is a pointer + length object; casting it would reinterpret
-    //   the pointer's bits, not the characters.
-    // - There is no constexpr memcpy.
-    std::array<uint8_t, sizeof(lfsr_state_t)> seed_bytes{};
-    for (int i = 0; i < std::ssize(seed_bytes); ++i)
-    {
-        seed_bytes[i] = static_cast<uint8_t>(seed_str[i]);
-    }
-
-    return std::bit_cast<lfsr_state_t>(seed_bytes);
-}
-
 /// Create the round constants for the first \a N Castella rounds
 /**
 * The round constants are the successive states of the 128-bit Galois LFSR
-* (\c lfsr_step) seeded with \c lfsr_seed, stepped 128 times between round
-* constants.  The first round constant is the seed itself.
+* (\c lfsr_step) seeded with \c lfsr_seed, stepped \c LFSR_NUM_BITS times
+* between round constants.  The first round constant is the seed itself.
+*
+* Stepping the LFSR the full width of its state guarantees that no bit of a
+* round constant is a plain shifted copy of a bit of the previous round
+* constant.  The stride does not reduce the period (2^128 - 1 is odd), so the
+* round constants are all distinct and nonzero.
 *
 * The generator is deliberately unrelated to the AES round function used in
 * \c Castella::permute so that the round constants share no structure with it.
@@ -163,7 +121,7 @@ create_round_constants() noexcept
             {
                 rc = std::bit_cast<block_t>(lfsr);
 
-                for (int s = 0; s < 128; ++s)
+                for (int s = 0; s < LFSR_NUM_BITS; ++s)
                 {
                     lfsr = lfsr_step(lfsr);
                 }

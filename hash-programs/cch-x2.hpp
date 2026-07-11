@@ -73,7 +73,7 @@ public:
     // Copying and moving are implicitly disabled (node_type is neither
     // copyable nor movable), and each node zeroizes itself on destruction.
 
-    /// Consume \a len bytes into both nodes (\a data_a into A, \a data_b into B)
+    /// Consume \a src_a into node A and \a src_b into node B
     // {{{
     /**
     * The lockstep counterpart of \c compress_castella_hash::add_: the two
@@ -82,18 +82,16 @@ public:
     * what lets one bulk loop advance both states with interleaved
     * instructions.
     *
-    * \param data_a the input data for node A
-    * \param data_b the input data for node B
-    * \param len the size (in bytes) of BOTH inputs
-    * \pre \a len is 0 if \a data_a or \a data_b is null
+    * \param src_a the input data for node A
+    * \param src_b the input data for node B
+    * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep)
     * \pre neither node has been finalized
     */
     // }}}
-    void add(const void* data_a, const void* data_b, size_t len)
+    void add(std::span<const std::byte> src_a, std::span<const std::byte> src_b)
     {
 #if defined(DEBUG)
-        assert(!((data_a == nullptr) && (len != 0)));
-        assert(!((data_b == nullptr) && (len != 0)));
+        assert(std::size(src_a) == std::size(src_b)); // lockstep
         assert(!node_a_.has_been_finalized_);
         assert(!node_b_.has_been_finalized_);
         // The lockstep invariants: identical parameters, identical schedule.
@@ -103,28 +101,21 @@ public:
                node_b_.input_bytes_.remaining_space());
 #endif
 
-        if ((data_a == nullptr) || (data_b == nullptr))
-            return;
-
         using state_t = typename node_type::state_t;
         using block_t = typename node_type::block_t;
-
-        const auto* src_a = static_cast<const std::byte*>(data_a);
-        const auto* src_b = static_cast<const std::byte*>(data_b);
 
         // Top up partially filled input buffers first (both are at the
         // same fill level, so one count serves both).
         if (!node_a_.input_bytes_.is_empty())
         {
             const size_t num_bytes_to_add =
-                std::min(node_a_.input_bytes_.remaining_space(), len);
+                std::min(node_a_.input_bytes_.remaining_space(), std::size(src_a));
 
-            node_a_.input_bytes_.append_range(std::span(src_a, num_bytes_to_add));
-            node_b_.input_bytes_.append_range(std::span(src_b, num_bytes_to_add));
+            node_a_.input_bytes_.append_range(src_a.first(num_bytes_to_add));
+            node_b_.input_bytes_.append_range(src_b.first(num_bytes_to_add));
 
-            len -= num_bytes_to_add;
-            src_a += num_bytes_to_add;
-            src_b += num_bytes_to_add;
+            src_a = src_a.subspan(num_bytes_to_add);
+            src_b = src_b.subspan(num_bytes_to_add);
 
             if (node_a_.input_bytes_.is_full())
             {
@@ -137,7 +128,7 @@ public:
         // two states' work interleaved (the point of this class); the
         // states are kept in local variables so that they may stay in
         // registers across chunks, as in the single node's bulk loop.
-        if (len >= sizeof(state_t))
+        if (std::size(src_a) >= sizeof(state_t))
         {
             state_t state_a = node_a_.state_;
             state_t state_b = node_b_.state_;
@@ -146,14 +137,13 @@ public:
 
             do
             {
-                simd_compress_aes_enc_r3_arr(state_a,
-                                             reinterpret_cast<const block_t*>(src_a));
-                simd_compress_aes_enc_r3_arr(state_b,
-                                             reinterpret_cast<const block_t*>(src_b));
+                simd_compress_aes_enc_r3_arr(
+                    state_a, reinterpret_cast<const block_t*>(std::data(src_a)));
+                simd_compress_aes_enc_r3_arr(
+                    state_b, reinterpret_cast<const block_t*>(std::data(src_b)));
 
-                src_a += sizeof(state_t);
-                src_b += sizeof(state_t);
-                len -= sizeof(state_t);
+                src_a = src_a.subspan(sizeof(state_t));
+                src_b = src_b.subspan(sizeof(state_t));
 
                 if (mix_rate > 0)
                 {
@@ -169,7 +159,7 @@ public:
                         absorbs_since_mix = 0;
                     }
                 }
-            } while (len >= sizeof(state_t));
+            } while (std::size(src_a) >= sizeof(state_t));
 
             node_a_.state_ = state_a;
             node_b_.state_ = state_b;
@@ -178,16 +168,39 @@ public:
         }
 
         // Buffer the trailing partial chunks.
-        if (len > 0)
+        if (!std::empty(src_a))
         {
-            node_a_.input_bytes_.append_range(std::span(src_a, len));
-            node_b_.input_bytes_.append_range(std::span(src_b, len));
+            node_a_.input_bytes_.append_range(src_a);
+            node_b_.input_bytes_.append_range(src_b);
         }
 
 #if defined(DEBUG)
         assert(!node_a_.input_bytes_.is_full());
         assert(!node_b_.input_bytes_.is_full());
 #endif
+    }
+
+    /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
+    /**
+    * The raw-data form; null pointers are a no-op.
+    *
+    * \param data_a the input data for node A
+    * \param data_b the input data for node B
+    * \param len the size (in bytes) of BOTH inputs
+    * \pre \a len is 0 if \a data_a or \a data_b is null
+    */
+    void add(const void* data_a, const void* data_b, const size_t len)
+    {
+#if defined(DEBUG)
+        assert(!((data_a == nullptr) && (len != 0)));
+        assert(!((data_b == nullptr) && (len != 0)));
+#endif
+
+        if ((data_a == nullptr) || (data_b == nullptr))
+            return;
+
+        add(std::span{static_cast<const std::byte*>(data_a), len},
+            std::span{static_cast<const std::byte*>(data_b), len});
     }
 
     /// Get both nodes' final digest bytes, written into \a dst_a and \a dst_b

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
@@ -223,29 +224,27 @@ private:
         input_bytes_.clear();
     }
 
-    /// Consume \a len bytes of \a data
+    /// Consume the bytes of \a src
     /**
     * Whole chunks (of \c sizeof(state_) bytes) are compressed directly from
-    * \a data; only a leading partial chunk (if the input buffer is not empty)
+    * \a src; only a leading partial chunk (if the input buffer is not empty)
     * and a trailing partial chunk pass through the input buffer.
     */
-    void add_(const void* data, size_t len)
+    void add_(std::span<const std::byte> src)
     {
 #if defined(DEBUG)
         assert(!has_been_finalized_);
 #endif
 
-        const auto* src = static_cast<const std::byte*>(data);
-
         // Top up a partially filled input buffer first.
         if (!input_bytes_.is_empty())
         {
-            const size_t num_bytes_to_add = std::min(input_bytes_.remaining_space(), len);
+            const size_t num_bytes_to_add =
+                std::min(input_bytes_.remaining_space(), std::size(src));
 
-            input_bytes_.append_range(std::span(src, num_bytes_to_add));
+            input_bytes_.append_range(src.first(num_bytes_to_add));
 
-            len -= num_bytes_to_add;
-            src += num_bytes_to_add;
+            src = src.subspan(num_bytes_to_add);
 
             if (input_bytes_.is_full())
             {
@@ -256,17 +255,17 @@ private:
         // Compress whole chunks directly from the source buffer, bypassing
         // the input buffer.  The state is kept in a local variable so that
         // it may stay in registers across chunks.
-        if (len >= sizeof(state_))
+        if (std::size(src) >= sizeof(state_))
         {
             state_t state = state_;
             auto absorbs_since_mix = absorbs_since_mix_;
 
             do
             {
-                simd_compress_aes_enc_r3_arr(state, reinterpret_cast<const block_t*>(src));
+                simd_compress_aes_enc_r3_arr(
+                    state, reinterpret_cast<const block_t*>(std::data(src)));
 
-                src += sizeof(state_);
-                len -= sizeof(state_);
+                src = src.subspan(sizeof(state_));
 
                 if (mix_rate_ > 0)
                 {
@@ -280,16 +279,16 @@ private:
                         absorbs_since_mix = 0;
                     }
                 }
-            } while (len >= sizeof(state_));
+            } while (std::size(src) >= sizeof(state_));
 
             state_ = state;
             absorbs_since_mix_ = absorbs_since_mix;
         }
 
         // Buffer the trailing partial chunk.
-        if (len > 0)
+        if (!std::empty(src))
         {
-            input_bytes_.append_range(std::span(src, len));
+            input_bytes_.append_range(src);
         }
 
 #if defined(DEBUG)
@@ -376,18 +375,41 @@ public:
         zeroize_();
     }
 
-    /// Consume \a data into the input buffer
+    /// Consume \a byte_sp into the input buffer
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \param byte_sp the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
+    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
+    {
+        std::scoped_lock lock{mtx_};
+
+        // The finalized check is unconditional -- even an empty (or
+        // null-data) span throws, agreeing with add("").
+        if (has_been_finalized_)
+        {
+            throw std::logic_error("compress_castella_hash.add: state is finalized");
+        }
+
+        add_(byte_sp);
+
+        return *this;
+    }
+
+    /// \copydoc add(std::span<const std::byte>)
+    /**
+    * The raw-data form: equivalent to the byte-span form; a null \a data
+    * is treated as an empty span.
+    *
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
+    */
     compress_castella_hash& add(const void* data, size_t len)
     {
 #if defined(DEBUG)
@@ -395,37 +417,17 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        std::scoped_lock lock{mtx_};
-
-        // The finalized check precedes the null-data short-circuit so the
-        // documented std::logic_error is thrown unconditionally once
-        // finalized -- including for a null or default-constructed
-        // span/string_view, which would otherwise silently no-op and
-        // disagree with add("").
-        if (has_been_finalized_)
-        {
-            throw std::logic_error("compress_castella_hash.add: state is finalized");
-        }
-
         if (data == nullptr)
-            return *this;
+            return add(std::span<const std::byte>{});
 
-        add_(data, len);
-
-        return *this;
+        return add(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add(const void*, size_t)
-    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
-    {
-        return add(std::data(byte_sp), std::size(byte_sp));
-    }
-
-    /// \copydoc add(const void*, size_t)
+    /// \copydoc add(std::span<const std::byte>)
     compress_castella_hash& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(std::data(s), std::size(s));
+        return add(as_byte_span(s));
     }
 
     /// Get the final digest bytes

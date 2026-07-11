@@ -52,7 +52,7 @@ The number of rounds determines the safety margin.  The capacity size determines
 
 ### Adding/Absorbing Input
 
-Input data may be given in the form of raw data (i.e., a `const void*`, `size_t` pair) or a byte span (i.e., `const std::span<const std::byte>`) with these member functions:
+Input data may be given in the form of a byte span (i.e., `std::span<const std::byte>` — the primary interface) or raw data (i.e., a `const void*`, `size_t` pair, implemented in terms of the byte-span form) with these member functions:
 * `add`
     * Add the given data to the input buffer.
 * `add_left_encoded`

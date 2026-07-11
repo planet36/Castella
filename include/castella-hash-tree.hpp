@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "narrow_cast.hpp"
 #include "to_unsigned.hpp"
@@ -72,22 +73,21 @@ namespace Castella
 *     handoff -- parallelizes.  Like every threading knob, this NEVER
 *     affects the digest.
 *
-* The node type itself must absorb raw bytes via \c add(const void*,
-* size_t) and \c add(std::span<const std::byte>).  The tree performs all
-* integer encodings itself (see \c absorb_left_encoded_()), so the node
-* needs no encoding members.
+* The node type itself must absorb raw bytes via
+* \c add(std::span<const std::byte>).  The tree performs all integer
+* encodings itself (see \c absorb_left_encoded_()), so the node needs no
+* encoding members.
 */
 // }}}
 template <typename P>
 concept tree_node_policy =
     requires(const P p, typename P::node_type& node, const std::span<std::byte> cv_dst,
-             const void* data, const size_t len) {
+             const std::span<const std::byte> data) {
         { p.make_node() } -> std::same_as<typename P::node_type>;
         { p.cv_len(node) } -> std::convertible_to<int>;
         p.extract_cv(node, cv_dst);
         requires std::same_as<std::remove_const_t<decltype(P::USE_STREAMING_POOL)>, bool>;
-        node.add(data, len);
-        node.add(std::span<const std::byte>{});
+        node.add(data);
     };
 
 /// A tree-hashing layer over a node hash class
@@ -298,9 +298,9 @@ private:
     // }}}
     static constexpr bool HAS_PAIRED_LEAF =
         requires(const NodePolicy p, typename NodePolicy::node_x2_type& pair,
-                 const std::span<std::byte> cv_dst, const void* data, const size_t len) {
+                 const std::span<std::byte> cv_dst, const std::span<const std::byte> data) {
             { p.make_node_x2() } -> std::same_as<typename NodePolicy::node_x2_type>;
-            pair.add(data, data, len);
+            pair.add(data, data);
             p.extract_cv_x2(pair, cv_dst, cv_dst);
         };
 
@@ -516,8 +516,8 @@ private:
         assert(w >= 1);
 #endif
 
-        node.add(&w, sizeof(w));
-        node.add(&x, w);
+        node.add(as_byte_span(w));
+        node.add(as_byte_span(x).first(w));
     }
 
     /// Absorb the right-encoding of the unsigned integer \a x into \a node
@@ -534,8 +534,8 @@ private:
         assert(w >= 1);
 #endif
 
-        node.add(&x, w);
-        node.add(&w, sizeof(w));
+        node.add(as_byte_span(x).first(w));
+        node.add(as_byte_span(w));
     }
 
     /// Absorb the tree-role prefix into \a node
@@ -549,7 +549,7 @@ private:
     // }}}
     void absorb_role_prefix_(node_type& node, const uint8_t role) const
     {
-        node.add(&role, sizeof(role));
+        node.add(as_byte_span(role));
         absorb_left_encoded_(node, to_unsigned(CHUNK_SIZE));
         absorb_left_encoded_(node, to_unsigned(CV_LEN));
     }
@@ -602,8 +602,8 @@ private:
         assert(w >= 1);
 #endif
 
-        pair.add(&w, &w, sizeof(w));
-        pair.add(&x, &x, w);
+        pair.add(as_byte_span(w), as_byte_span(w));
+        pair.add(as_byte_span(x).first(w), as_byte_span(x).first(w));
     }
 
     /// Hash two adjacent chunks to their chaining values with one lane-paired node
@@ -660,15 +660,15 @@ private:
         auto pair = policy_.make_node_x2();
 
         // The role prefix (identical in both lanes); see absorb_role_prefix_.
-        pair.add(&ROLE_LEAF, &ROLE_LEAF, sizeof(ROLE_LEAF));
+        pair.add(as_byte_span(ROLE_LEAF), as_byte_span(ROLE_LEAF));
         absorb_left_encoded_x2_(pair, to_unsigned(CHUNK_SIZE));
         absorb_left_encoded_x2_(pair, to_unsigned(CV_LEN));
 
         // The chunk indices (equal width, checked above).
-        pair.add(&w, &w, sizeof(w));
-        pair.add(&index_a, &index_b, w);
+        pair.add(as_byte_span(w), as_byte_span(w));
+        pair.add(as_byte_span(index_a).first(w), as_byte_span(index_b).first(w));
 
-        pair.add(std::data(chunk_a), std::data(chunk_b), std::size(chunk_a));
+        pair.add(chunk_a, chunk_b);
 
         policy_.extract_cv_x2(pair, cv_dst_a, cv_dst_b);
     }
@@ -1483,23 +1483,22 @@ private:
     * buffer is never empty -- an input of exactly k*CHUNK_SIZE bytes
     * produces k chunks, never k full chunks plus an empty one.
     *
-    * Whole chunks are hashed directly from \a data when possible (only a
+    * Whole chunks are hashed directly from \a src when possible (only a
     * leading partial chunk and the trailing bytes pass through the chunk
     * buffer), the same bulk-bypass structure as compress_castella_hash --
     * and, when the batch is large enough, in parallel (see
     * flush_bulk_chunks_()).
     */
     // }}}
-    void add_(const void* data, size_t len)
+    void add_(std::span<const std::byte> src)
     {
 #if defined(DEBUG)
         assert(!has_been_finalized_);
 #endif
 
-        const auto* src = static_cast<const std::byte*>(data);
         const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
 
-        while (len > 0)
+        while (!std::empty(src))
         {
             // More input follows a full buffer, so it is safe to flush.
             if (chunk_buf_.size() == chunk_size)
@@ -1512,29 +1511,28 @@ private:
             // partial) chunk's worth of bytes may be flushed now; keeping
             // the final bytes back preserves the more-input-follows rule
             // ((len - 1) / chunk_size is 0 when len == chunk_size).
-            if (chunk_buf_.empty() && (len > chunk_size))
+            if (chunk_buf_.empty() && (std::size(src) > chunk_size))
             {
-                const auto num_bulk = static_cast<int64_t>((len - 1) / chunk_size);
+                const auto num_bulk =
+                    static_cast<int64_t>((std::size(src) - 1) / chunk_size);
 
-                flush_bulk_chunks_(src, num_bulk);
+                flush_bulk_chunks_(std::data(src), num_bulk);
 
-                const size_t num_bytes_flushed = to_unsigned(num_bulk) * chunk_size;
-                src += num_bytes_flushed;
-                len -= num_bytes_flushed;
+                src = src.subspan(to_unsigned(num_bulk) * chunk_size);
             }
 
             // Buffer what remains of this call (or top up a partial chunk).
             const size_t available_space = chunk_size - chunk_buf_.size();
-            const size_t num_bytes_to_add = std::min(available_space, len);
+            const size_t num_bytes_to_add = std::min(available_space, std::size(src));
 
 #if defined(DEBUG)
             assert(num_bytes_to_add > 0); // guarantees the loop terminates
 #endif
 
-            chunk_buf_.insert(chunk_buf_.end(), src, src + num_bytes_to_add);
+            chunk_buf_.insert(chunk_buf_.end(), std::data(src),
+                              std::data(src) + num_bytes_to_add);
 
-            src += num_bytes_to_add;
-            len -= num_bytes_to_add;
+            src = src.subspan(num_bytes_to_add);
         }
     }
 
@@ -1656,18 +1654,42 @@ public:
     HashTree(HashTree&&) = delete;
     HashTree& operator=(HashTree&&) = delete;
 
-    /// Consume \a data into the tree
+    /// Consume \a byte_sp into the tree
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \param byte_sp the input data
     * \return a reference to the derived tree (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
+    Derived& add(const std::span<const std::byte> byte_sp)
+    {
+        std::scoped_lock lock{mtx_};
+
+        // Unlike a plain node hash's squeeze, adding after finalization is
+        // an error: the final node has already absorbed the trailing chunk
+        // count, so later chunks could not be integrated into the tree.
+        // The check is unconditional -- even an empty (or null-data) span
+        // throws, agreeing with add("").
+        if (has_been_finalized_)
+            throw std::logic_error("Castella::HashTree::add: tree has been finalized");
+
+        add_(byte_sp);
+
+        return derived_();
+    }
+
+    /// \copydoc add(std::span<const std::byte>)
+    /**
+    * The raw-data form: equivalent to the byte-span form; a null \a data
+    * is treated as an empty span.
+    *
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
+    */
     Derived& add(const void* data, size_t len)
     {
 #if defined(DEBUG)
@@ -1675,37 +1697,17 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        std::scoped_lock lock{mtx_};
-
-        // Unlike a plain node hash's squeeze, adding after finalization is
-        // an error: the final node has already absorbed the trailing chunk
-        // count, so later chunks could not be integrated into the tree.
-        // This check precedes the null-data short-circuit so the documented
-        // std::logic_error is thrown unconditionally once finalized --
-        // including for a null or default-constructed span/string_view,
-        // which would otherwise silently no-op and disagree with add("").
-        if (has_been_finalized_)
-            throw std::logic_error("Castella::HashTree::add: tree has been finalized");
-
         if (data == nullptr)
-            return derived_();
+            return add(std::span<const std::byte>{});
 
-        add_(data, len);
-
-        return derived_();
+        return add(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add(const void*, size_t)
-    Derived& add(const std::span<const std::byte> byte_sp)
-    {
-        return add(std::data(byte_sp), std::size(byte_sp));
-    }
-
-    /// \copydoc add(const void*, size_t)
+    /// \copydoc add(std::span<const std::byte>)
     Derived& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(std::data(s), std::size(s));
+        return add(as_byte_span(s));
     }
 };
 

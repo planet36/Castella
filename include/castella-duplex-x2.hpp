@@ -16,6 +16,7 @@
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
+#include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "narrow_cast.hpp"
@@ -204,23 +205,19 @@ private:
         absorb_();
     }
 
-    /// Add \a len bytes to both input buffers (\a data_a to lane A, \a data_b to lane B)
+    /// Add the bytes of \a src_a / \a src_b to the two input buffers (lane A / lane B)
     /**
     * The lockstep counterpart of \c Duplex::add_(): the two lanes absorb
     * different bytes but always the same number of them, so both duplexes
     * fill, absorb, and permute on the same schedule.
     */
-    void add_(const void* data_a, const void* data_b, size_t len) noexcept
+    void add_(std::span<const std::byte> src_a, std::span<const std::byte> src_b) noexcept
     {
 #if defined(DEBUG)
-        assert(!((data_a == nullptr) && (len != 0)));
-        assert(!((data_b == nullptr) && (len != 0)));
+        assert(std::size(src_a) == std::size(src_b)); // lockstep
 #endif
 
-        const auto* src_a = static_cast<const std::byte*>(data_a);
-        const auto* src_b = static_cast<const std::byte*>(data_b);
-
-        while (len > 0)
+        while (!std::empty(src_a))
         {
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input bufs are not full
@@ -228,22 +225,21 @@ private:
 
             const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
             const auto num_bytes_to_add =
-                static_cast<int>(std::min<size_t>(available_space, len));
+                static_cast<int>(std::min<size_t>(available_space, std::size(src_a)));
 
 #if defined(DEBUG)
             assert(available_space > 0);
             assert(num_bytes_to_add > 0);
 #endif
 
-            (void)std::memcpy(&get_input_bytes_a_()[cur_input_byte_idx_], src_a,
-                              num_bytes_to_add);
-            (void)std::memcpy(&get_input_bytes_b_()[cur_input_byte_idx_], src_b,
-                              num_bytes_to_add);
+            (void)std::memcpy(&get_input_bytes_a_()[cur_input_byte_idx_],
+                              std::data(src_a), num_bytes_to_add);
+            (void)std::memcpy(&get_input_bytes_b_()[cur_input_byte_idx_],
+                              std::data(src_b), num_bytes_to_add);
 
             cur_input_byte_idx_ += num_bytes_to_add;
-            len -= num_bytes_to_add;
-            src_a += num_bytes_to_add;
-            src_b += num_bytes_to_add;
+            src_a = src_a.subspan(to_unsigned(num_bytes_to_add));
+            src_b = src_b.subspan(to_unsigned(num_bytes_to_add));
 
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ <= get_rate_size_bytes());
@@ -256,7 +252,6 @@ private:
         }
 
 #if defined(DEBUG)
-        assert(len == 0);
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input bufs are not full
 #endif
     }
@@ -272,8 +267,8 @@ private:
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
-        add_(&w, &w, sizeof(w));
-        add_(&x, &x, w);
+        add_(as_byte_span(w), as_byte_span(w));
+        add_(as_byte_span(x).first(w), as_byte_span(x).first(w));
     }
 
     /// Unambiguously encode the byte string into both input buffers
@@ -281,7 +276,7 @@ private:
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
         left_encode_(std::size(s));
-        add_(std::data(s), std::data(s), std::size(s));
+        add_(as_byte_span(s), as_byte_span(s));
     }
 
     /// Initialize the state (both lanes absorb the identical init stream)
@@ -334,12 +329,26 @@ public:
         zeroize_();
     }
 
-    /// Consume \a len bytes into both duplexes (\a data_a into A, \a data_b into B)
+    /// Consume \a byte_sp_a into duplex A and \a byte_sp_b into duplex B
     /**
+    * \param byte_sp_a the input data for duplex A
+    * \param byte_sp_b the input data for duplex B
+    * \pre \c std::size(byte_sp_a) == \c std::size(byte_sp_b) (lockstep: the
+    *      lanes may absorb different bytes, never different lengths)
+    */
+    void add(const std::span<const std::byte> byte_sp_a,
+             const std::span<const std::byte> byte_sp_b) noexcept
+    {
+        add_(byte_sp_a, byte_sp_b);
+    }
+
+    /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
+    /**
+    * The raw-data form; null pointers are a no-op.
+    *
     * \param data_a the input data for duplex A
     * \param data_b the input data for duplex B
-    * \param len the size (in bytes) of BOTH inputs (lockstep: the lanes may
-    *        absorb different bytes, never different lengths)
+    * \param len the size (in bytes) of BOTH inputs
     * \pre \a len is 0 if \a data_a or \a data_b is null
     */
     void add(const void* data_a, const void* data_b, const size_t len) noexcept
@@ -352,7 +361,8 @@ public:
         if ((data_a == nullptr) || (data_b == nullptr))
             return;
 
-        add_(data_a, data_b, len);
+        add(std::span{static_cast<const std::byte*>(data_a), len},
+            std::span{static_cast<const std::byte*>(data_b), len});
     }
 
     /// Squeeze bytes from both duplexes' outer states
@@ -376,7 +386,7 @@ public:
 
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if the destinations are empty.
-        add_(&INPUT_SUFFIX, &INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
+        add_(as_byte_span(INPUT_SUFFIX), as_byte_span(INPUT_SUFFIX));
         apply_padding_rule_();
 
 #if defined(DEBUG)

@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "narrow_cast.hpp"
@@ -498,7 +499,7 @@ private:
     {
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if dst is empty.
-        add_(&INPUT_SUFFIX, sizeof(INPUT_SUFFIX));
+        add_(as_byte_span(INPUT_SUFFIX));
         apply_padding_rule_();
 
 #if defined(DEBUG)
@@ -517,17 +518,10 @@ private:
         }
     }
 
-    /// Add \a data to the input buffer
-    void add_(const void* data, size_t len) noexcept
+    /// Add \a src to the input buffer
+    void add_(std::span<const std::byte> src) noexcept
     {
-#if defined(DEBUG)
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
-#endif
-
-        const auto* src = static_cast<const std::byte*>(data);
-
-        while (len > 0)
+        while (!std::empty(src))
         {
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
@@ -535,7 +529,7 @@ private:
 
             const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
             const auto num_bytes_to_add =
-                static_cast<int>(std::min<size_t>(available_space, len));
+                static_cast<int>(std::min<size_t>(available_space, std::size(src)));
 
 #if defined(DEBUG)
             assert(available_space > 0);
@@ -545,11 +539,10 @@ private:
             std::byte* input_bytes = get_input_bytes_();
             std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
-            (void)std::memcpy(dst, src, num_bytes_to_add);
+            (void)std::memcpy(dst, std::data(src), num_bytes_to_add);
 
             cur_input_byte_idx_ += num_bytes_to_add;
-            len -= num_bytes_to_add;
-            src += num_bytes_to_add;
+            src = src.subspan(to_unsigned(num_bytes_to_add));
 
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ <= get_rate_size_bytes());
@@ -562,7 +555,6 @@ private:
         }
 
 #if defined(DEBUG)
-        assert(len == 0);
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
     }
@@ -593,8 +585,8 @@ private:
         assert(w <= 255);
 #endif
 
-        add_(&w, sizeof(w));
-        add_(&x, w);
+        add_(as_byte_span(w));
+        add_(as_byte_span(x).first(w));
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -623,8 +615,8 @@ private:
         assert(w <= 255);
 #endif
 
-        add_(&x, w);
-        add_(&w, sizeof(w));
+        add_(as_byte_span(x).first(w));
+        add_(as_byte_span(w));
     }
 
     /// Unambiguously encode the byte string into the input buffer
@@ -644,17 +636,17 @@ private:
     * </blockquote>
     */
     // }}}
-    void left_encode_bytes_(const void* data, size_t len) noexcept
+    void left_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
-        left_encode_(len);
-        add_(data, len);
+        left_encode_(std::size(src));
+        add_(src);
     }
 
-    /// \copydoc left_encode_bytes_(const void*, size_t)
+    /// \copydoc left_encode_bytes_(std::span<const std::byte>)
     void left_encode_bytes_(const std::string_view s) noexcept
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        left_encode_bytes_(std::data(s), std::size(s));
+        left_encode_bytes_(as_byte_span(s));
     }
 
     /// Unambiguously encode the byte string into the input buffer
@@ -668,10 +660,10 @@ private:
     * Return 𝑆 || right_encode(len(𝑆)).
     */
     // }}}
-    void right_encode_bytes_(const void* data, size_t len) noexcept
+    void right_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
-        add_(data, len);
-        right_encode_(len);
+        add_(src);
+        right_encode_(std::size(src));
     }
 
     /// Initialize the state
@@ -822,17 +814,33 @@ public:
         zeroize_();
     }
 
-    /// Consume \a data into the input buffer
+    /// Consume \a byte_sp into the input buffer
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \param byte_sp the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
+    Duplex& add(const std::span<const std::byte> byte_sp)
+    {
+        std::scoped_lock lock{mtx_};
+
+        add_(byte_sp);
+
+        return *this;
+    }
+
+    /// \copydoc add(std::span<const std::byte>)
+    /**
+    * The raw-data form: equivalent to the byte-span form; a null \a data
+    * is treated as an empty span.
+    *
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
+    */
     Duplex& add(const void* data, size_t len)
     {
 #if defined(DEBUG)
@@ -840,97 +848,107 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        std::scoped_lock lock{mtx_};
-
         if (data == nullptr)
-            return *this;
+            return add(std::span<const std::byte>{});
 
-        add_(data, len);
-
-        return *this;
+        return add(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add(const void*, size_t)
-    Duplex& add(const std::span<const std::byte> byte_sp)
-    {
-        return add(std::data(byte_sp), std::size(byte_sp));
-    }
-
-    /// \copydoc add(const void*, size_t)
+    /// \copydoc add(std::span<const std::byte>)
     Duplex& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(std::data(s), std::size(s));
+        return add(as_byte_span(s));
     }
 
-    /// Consume left-encoded \a len then \a data into the input buffer
+    /// Consume the left-encoded size of \a byte_sp then its contents into the input buffer
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
+    * \param byte_sp the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    * \note A span with null data absorbs nothing -- not even the encoded
+    *       length 0 -- unlike an empty span with non-null data (e.g. of ""),
+    *       which absorbs left_encode(0).
     */
     // }}}
-    Duplex& add_left_encoded(const void* data, size_t len)
+    Duplex& add_left_encoded(const std::span<const std::byte> byte_sp)
     {
         std::scoped_lock lock{mtx_};
 
-        if (data == nullptr)
+        if (std::data(byte_sp) == nullptr)
             return *this;
 
-        left_encode_bytes_(data, len);
+        left_encode_bytes_(byte_sp);
 
         return *this;
     }
 
-    /// \copydoc add_left_encoded(const void*, size_t)
-    Duplex& add_left_encoded(const std::span<const std::byte> byte_sp)
+    /// \copydoc add_left_encoded(std::span<const std::byte>)
+    /**
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
+    */
+    Duplex& add_left_encoded(const void* data, size_t len)
     {
-        return add_left_encoded(std::data(byte_sp), std::size(byte_sp));
+        if (data == nullptr)
+            return add_left_encoded(std::span<const std::byte>{});
+
+        return add_left_encoded(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add_left_encoded(const void*, size_t)
+    /// \copydoc add_left_encoded(std::span<const std::byte>)
     Duplex& add_left_encoded(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_left_encoded(std::data(s), std::size(s));
+        return add_left_encoded(as_byte_span(s));
     }
 
-    /// Consume \a data then right-encoded \a len into the input buffer
+    /// Consume the contents of \a byte_sp then its right-encoded size into the input buffer
     // {{{
     /**
-    * \param data the input data
-    * \param len the size (in bytes) of the input data
+    * \param byte_sp the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    * \note A span with null data absorbs nothing -- not even the encoded
+    *       length 0 -- unlike an empty span with non-null data (e.g. of ""),
+    *       which absorbs right_encode(0).
     */
     // }}}
-    Duplex& add_right_encoded(const void* data, size_t len)
+    Duplex& add_right_encoded(const std::span<const std::byte> byte_sp)
     {
         std::scoped_lock lock{mtx_};
 
-        if (data == nullptr)
+        if (std::data(byte_sp) == nullptr)
             return *this;
 
-        right_encode_bytes_(data, len);
+        right_encode_bytes_(byte_sp);
 
         return *this;
     }
 
-    /// \copydoc add_right_encoded(const void*, size_t)
-    Duplex& add_right_encoded(const std::span<const std::byte> byte_sp)
+    /// \copydoc add_right_encoded(std::span<const std::byte>)
+    /**
+    * \param data the input data
+    * \param len the size (in bytes) of the input data
+    * \pre \a len is 0 if \a data is null
+    */
+    Duplex& add_right_encoded(const void* data, size_t len)
     {
-        return add_right_encoded(std::data(byte_sp), std::size(byte_sp));
+        if (data == nullptr)
+            return add_right_encoded(std::span<const std::byte>{});
+
+        return add_right_encoded(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add_right_encoded(const void*, size_t)
+    /// \copydoc add_right_encoded(std::span<const std::byte>)
     Duplex& add_right_encoded(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_right_encoded(std::data(s), std::size(s));
+        return add_right_encoded(as_byte_span(s));
     }
 
     /// Consume the left-encoding of the unsigned integer \a x

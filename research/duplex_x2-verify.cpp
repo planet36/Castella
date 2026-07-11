@@ -61,9 +61,9 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
         arc4random_buf(std::data(bytes_a), std::size(bytes_a));
         arc4random_buf(std::data(bytes_b), std::size(bytes_b));
 
-        (void)duplex_a.add(std::data(bytes_a), std::size(bytes_a));
-        (void)duplex_b.add(std::data(bytes_b), std::size(bytes_b));
-        duplex_x2.add(std::data(bytes_a), std::data(bytes_b), len);
+        (void)duplex_a.add(bytes_a);
+        (void)duplex_b.add(bytes_b);
+        duplex_x2.add(bytes_a, bytes_b);
     }
 
     // Squeeze twice (successive squeezes must also stay in lockstep), with

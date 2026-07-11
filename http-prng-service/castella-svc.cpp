@@ -378,7 +378,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     svr.Post("/absorb",
              [](const httplib::Request& req, [[maybe_unused]] httplib::Response& res)
-             { hash_obj->add(std::data(req.body), std::size(req.body)); });
+             { hash_obj->add(req.body); });
 
     // no path parameter
     svr.Get("/squeeze", process_req_squeeze);

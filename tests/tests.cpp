@@ -295,6 +295,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                        function_name, customization_str, chunk_size);
             for (const auto b : X)
             {
+                // deliberately the raw (const void*, size_t) shim, so it
+                // keeps regression coverage
                 tree1.add(&b, 1);
             }
             assert(tree1.squeeze_bytes() == expected);

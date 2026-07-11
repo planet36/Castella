@@ -48,9 +48,9 @@ test_cch_x2(const int mix_rate, const size_t max_piece_len, const uint32_t max_n
         arc4random_buf(std::data(bytes_a), std::size(bytes_a));
         arc4random_buf(std::data(bytes_b), std::size(bytes_b));
 
-        (void)hash_a.add(std::data(bytes_a), std::size(bytes_a));
-        (void)hash_b.add(std::data(bytes_b), std::size(bytes_b));
-        pair.add(std::data(bytes_a), std::data(bytes_b), len);
+        (void)hash_a.add(bytes_a);
+        (void)hash_b.add(bytes_b);
+        pair.add(bytes_a, bytes_b);
     }
 
     const auto expected_a =

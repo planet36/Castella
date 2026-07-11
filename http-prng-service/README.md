@@ -2,6 +2,10 @@
 
 An HTTP server that exposes `/absorb` and `/squeeze` endpoints backed by a Castella duplex PRNG, periodically reseeded from the OS (`getentropy`).
 
+## Dependencies
+
+[spdlog](https://github.com/gabime/spdlog) (header-only use) must be installed.
+
 ## Usage
 
 Run `make` to build the service.

@@ -13,13 +13,16 @@ SRCS = $(wildcard *.cpp)
 DEPS = $(addsuffix .d,$(basename $(SRCS)))
 BINS = $(basename $(SRCS))
 
+# https://github.com/yhirose/cpp-httplib
+HTTPLIB_URL = https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h
+HTTPLIB_H = $(notdir $(HTTPLIB_URL))
+
 all: $(BINS)
 
-$(BINS): httplib.h
+$(BINS): $(HTTPLIB_H)
 
-# https://github.com/yhirose/cpp-httplib
-httplib.h:
-	curl --fail -O https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h
+$(HTTPLIB_H):
+	curl --fail -O $(HTTPLIB_URL)
 
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp
@@ -28,8 +31,8 @@ httplib.h:
 clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
-lint: httplib.h
-	-clang-tidy --quiet --exclude-header-filter=httplib.h $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
+lint: $(HTTPLIB_H)
+	-clang-tidy --quiet --exclude-header-filter=$(HTTPLIB_H) $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
 .PHONY: all clean lint

@@ -840,7 +840,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 512; // bits
-        constexpr std::string_view X{"My eyes!  The goggles do nothing!"};
+        constexpr std::string_view X{"I'm not popular enough to be different."};
         constexpr size_t B = 8; // bytes; the last block is partial
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
@@ -860,10 +860,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, true);
 
         const std::string expected_result =
-            "e49315e5b4e6fac05ce2dcd1336871dcd49f8cf6f628cf7f0f13d8c0d12c895af198c22d16f9481954d85c4c9235fab0b543f5b63db19fb838add63a4f306765";
+            "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082eeecc629c4e2422928d3ed01b825d62989a8a0792d4f0476e9712a7c72039c5341";
         const std::string result = bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "e49315e5b4e6fac05ce2dcd1336871dcd49f8cf6f628cf7f0f13d8c0d12c895a";
+            "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082ee";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),

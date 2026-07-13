@@ -278,7 +278,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_left_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
@@ -317,7 +317,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_left_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(to_unsigned(num_bytes_to_squeeze)))
@@ -356,7 +356,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_left_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(0U))
@@ -395,7 +395,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto digest_bytes = Castella::Duplex(capacity_blocks, num_rounds, input_suffix,
                                                    function_name, customization_str)
-                                      .add_left_encoded(K)       // encode_string
+                                      .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
                                       .add(right_encode(0U))

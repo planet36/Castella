@@ -28,14 +28,11 @@ httplib.h:
 clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
-distclean: clean
-	@$(RM) --verbose -- httplib.h
-
 lint: httplib.h
 	-clang-tidy --quiet --exclude-header-filter=httplib.h $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
-.PHONY: all clean distclean lint
+.PHONY: all clean lint
 
 # https://www.gnu.org/software/make/manual/html_node/Special-Targets.html#index-removing-targets-on-failure
 .DELETE_ON_ERROR:

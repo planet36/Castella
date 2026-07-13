@@ -681,7 +681,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 256; // bits
-        constexpr std::string_view X{"Don't make me run.  I'm full of chocolate!"};
+        constexpr std::string_view X{"Don't make me run!  I'm full of chocolate!"};
         constexpr size_t B = 8;    // bytes; the last block is partial
         constexpr size_t B_2 = 12; // a different block size
 
@@ -702,10 +702,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, false);
 
         const std::string expected_result =
-            "6c236c030c575192ad492fbb8ce39db093b5dafdc401a035c2ab65ed269ba80f";
+            "42e7c70ae6486c4d081281f769428bfa6b69abe4d33f9d362c8478edc28e2d06";
         const std::string result = bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "0cfa8e20cbd2618d8a3435725efbf1ef383199d35827f80c8d4f40b44647e4e4";
+            "9a0861e8898437b042f3953b60ae5c170e9e62364ce4350ef9224f6d18aaa517";
         const std::string result_2 = bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),

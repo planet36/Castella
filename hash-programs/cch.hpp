@@ -175,7 +175,7 @@ private:
             const size_t num_bytes_to_add = std::min(input_bytes_.remaining_space(),
                                                      std::size(byte_sp));
 
-            input_bytes_.append_range(byte_sp.subspan(0, num_bytes_to_add));
+            input_bytes_.append_range(byte_sp.first(num_bytes_to_add));
 
             byte_sp = byte_sp.subspan(num_bytes_to_add);
 
@@ -216,7 +216,7 @@ private:
 #endif
 
         add_(as_byte_span(w));
-        add_(as_byte_span(x).subspan(0, w));
+        add_(as_byte_span(x).first(w));
     }
 
     /// Unambiguously encode the integer into the input buffer
@@ -234,7 +234,7 @@ private:
         assert(w <= 255);
 #endif
 
-        add_(as_byte_span(x).subspan(0, w));
+        add_(as_byte_span(x).first(w));
         add_(as_byte_span(w));
     }
 
@@ -376,7 +376,7 @@ public:
             has_been_finalized_ = true;
         }
 
-        const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
+        const auto byte_sp = std::as_bytes(std::span{state_}).first(n);
 
         result.assign(std::begin(byte_sp), std::end(byte_sp));
 

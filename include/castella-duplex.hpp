@@ -956,7 +956,7 @@ public:
         assert(cur_input_byte_idx_ == 0); // input buf is empty
 #endif
 
-        const auto byte_sp = std::as_bytes(std::span{state_}).subspan(0, n);
+        const auto byte_sp = std::as_bytes(std::span{state_}).first(n);
 
         result.assign(std::begin(byte_sp), std::end(byte_sp));
         return result;

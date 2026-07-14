@@ -222,6 +222,7 @@ inline constexpr auto round_constants_folded = create_round_constants_folded<NUM
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
 * \pre \a N ∈ {2, 4, 8, 16}
+* \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Each round consists of the following steps:
 *   1. Perform \c AES_NUM_ROUNDS rounds of AES encryption on each element of
@@ -333,6 +334,7 @@ unpack_states(const arr_blocks_x2<N>& state_x2,
 /**
 * \param state_x2 the lane-paired state to permute (see \c arr_blocks_x2)
 * \param num_rounds the number of rounds to perform
+* \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 *
 * Equivalent to calling \c permute on each state separately: the VAES
@@ -371,6 +373,7 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
 * \pre \a N ∈ {2, 4, 8, 16}
+* \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 * Rounds are performed in reverse order, and each round consists of the following
 * steps (in reverse order of \c permute):

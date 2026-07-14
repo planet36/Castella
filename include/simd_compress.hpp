@@ -51,6 +51,7 @@
 
 #pragma once
 
+#include "simd_load.hpp"
 #include "simd_types.hpp"
 
 #include <cstddef>
@@ -251,7 +252,8 @@ simd_compress_aes_enc_r2_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noex
 {
     for (unsigned int i = 0; i < N; ++i)
     {
-        arr_1[i] = simd_compress_aes_enc_r2(arr_1[i], arr_2[i]);
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r2(arr_1[i], b);
     }
 }
 
@@ -266,7 +268,8 @@ simd_compress_aes_enc_r3_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noex
 {
     for (unsigned int i = 0; i < N; ++i)
     {
-        arr_1[i] = simd_compress_aes_enc_r3(arr_1[i], arr_2[i]);
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r3(arr_1[i], b);
     }
 }
 
@@ -281,6 +284,7 @@ simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noex
 {
     for (unsigned int i = 0; i < N; ++i)
     {
-        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], arr_2[i]);
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], b);
     }
 }

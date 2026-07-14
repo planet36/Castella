@@ -528,7 +528,7 @@ left_encode(const std::unsigned_integral auto x)
     result.unchecked_push_back(static_cast<std::byte>(w));
 
     // the least significant w bytes
-    result.append_range(as_byte_span(x).subspan(0, w));
+    result.append_range(as_byte_span(x).first(w));
 
     return result;
 }
@@ -546,7 +546,7 @@ right_encode(const std::unsigned_integral auto x)
     const auto w = byte_width(x);
 
     // the least significant w bytes
-    result.append_range(as_byte_span(x).subspan(0, w));
+    result.append_range(as_byte_span(x).first(w));
 
     result.unchecked_push_back(static_cast<std::byte>(w));
 

@@ -30,7 +30,7 @@ squeeze_bytes_1(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     return byte_sp | std::ranges::to<std::vector>(); // range adaptor
 }
@@ -49,7 +49,7 @@ squeeze_bytes_2(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     return std::vector<std::byte>(std::from_range, byte_sp); // tagged ctor
 }
@@ -70,7 +70,7 @@ squeeze_bytes_3(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     std::ranges::copy(byte_sp, std::back_inserter(result));
     return result;
@@ -89,7 +89,7 @@ squeeze_bytes_4(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     result.assign(std::begin(byte_sp), std::end(byte_sp));
     return result;
@@ -109,7 +109,7 @@ squeeze_bytes_5(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     result.assign_range(byte_sp);
     return result;
@@ -131,7 +131,7 @@ squeeze_bytes_6(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     result.insert(std::end(result), std::begin(byte_sp), std::end(byte_sp));
     return result;
@@ -151,7 +151,7 @@ squeeze_bytes_7(const std::array<T, N>& state, int n)
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
 
-    const auto byte_sp = as_byte_span(state).subspan(0, n);
+    const auto byte_sp = as_byte_span(state).first(n);
 
     result.insert_range(std::end(result), byte_sp);
     return result;

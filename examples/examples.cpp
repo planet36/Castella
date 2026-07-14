@@ -35,7 +35,7 @@ right_encode(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     // the least significant w bytes
-    result.append_range(byte_sp.subspan(0, w));
+    result.append_range(byte_sp.first(w));
 
     result.unchecked_push_back(static_cast<std::byte>(w));
 

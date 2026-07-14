@@ -37,7 +37,7 @@ left_encode_1(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     // the least significant w bytes
-    result.append_range(byte_sp.subspan(0, w));
+    result.append_range(byte_sp.first(w));
 
     return result;
 }
@@ -76,7 +76,7 @@ left_encode_3(const std::unsigned_integral auto x)
 
     return std::views::concat(as_byte_span(w),
                               // the least significant w bytes
-                              byte_sp.subspan(0, w)) |
+                              byte_sp.first(w)) |
            std::ranges::to<std::vector>(); // range adaptor
 }
 #endif
@@ -114,7 +114,7 @@ left_encode_5(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     // the least significant w bytes
-    result.append_range(byte_sp.subspan(0, w));
+    result.append_range(byte_sp.first(w));
 
     return result;
 }
@@ -131,7 +131,7 @@ right_encode_1(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     // the least significant w bytes
-    result.append_range(byte_sp.subspan(0, w));
+    result.append_range(byte_sp.first(w));
 
     result.push_back(static_cast<std::byte>(w));
 
@@ -172,7 +172,7 @@ right_encode_3(const std::unsigned_integral auto x)
 
     return std::views::concat(
                // the least significant w bytes
-               byte_sp.subspan(0, w),
+               byte_sp.first(w),
                as_byte_span(w)) |
            std::ranges::to<std::vector>(); // range adaptor
 }
@@ -209,7 +209,7 @@ right_encode_5(const std::unsigned_integral auto x)
     const auto byte_sp = as_byte_span(x);
 
     // the least significant w bytes
-    result.append_range(byte_sp.subspan(0, w));
+    result.append_range(byte_sp.first(w));
 
     result.unchecked_push_back(static_cast<std::byte>(w));
 

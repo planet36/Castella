@@ -187,6 +187,7 @@ private:
         }
     }
 
+    /// Zeroize the state, input buffer, and data members
     void zeroize_()
     {
         explicit_bzero(std::data(state_), sizeof(state_));

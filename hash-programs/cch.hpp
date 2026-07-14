@@ -296,7 +296,7 @@ private:
 #endif
     }
 
-    /// fill remaining space in the input buffer
+    /// Fill remaining space in the input buffer
     /**
     * Padding bytes are always added before the state is finalized.
     * They are sequential values from \c 0 to \c sizeof(state_)-1.
@@ -466,9 +466,14 @@ public:
     * \exception std::system_error if the mutex cannot be locked
     */
     // }}}
-    compress_castella_hash& final_digest_to(const std::span<std::byte> dst)
+    compress_castella_hash& final_digest_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};
+
+        if (std::size(dst) > get_max_digest_size_bytes())
+        {
+            dst = dst.first(get_max_digest_size_bytes());
+        }
 
         final_digest_into_(dst);
 

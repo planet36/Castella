@@ -29,9 +29,10 @@ inline constexpr int LFSR_NUM_BITS = sizeof(lfsr_state_t) * 8;
 [[nodiscard]] static constexpr lfsr_state_t
 lfsr_step(lfsr_state_t lfsr) noexcept
 {
-    const uint64_t carry = lfsr[1] >> 63;
-    lfsr[1] = (lfsr[1] << 1) | (lfsr[0] >> 63);
-    lfsr[0] = (lfsr[0] << 1) ^ (carry * UINT64_C(0x87));
+    const bool carry_hi = lfsr[1] >> 63;
+    const bool carry_lo = lfsr[0] >> 63;
+    lfsr[1] = (lfsr[1] << 1) | carry_lo;
+    lfsr[0] = (lfsr[0] << 1) ^ (carry_hi * 0x87U); // 0x87 = 0b10000111
     return lfsr;
 }
 

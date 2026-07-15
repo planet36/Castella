@@ -225,22 +225,7 @@ private:
         assert(!has_been_finalized_);
 #endif
 
-        const auto* input_blocks = reinterpret_cast<const block_t*>(input_bytes_.begin());
-
-        simd_compress_aes_enc_r3_arr(state_, input_blocks);
-
-        if (mix_rate_ > 0)
-        {
-            // Periodically mix the state.
-
-            ++absorbs_since_mix_;
-
-            if (absorbs_since_mix_ >= mix_rate_)
-            {
-                Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
-                absorbs_since_mix_ = 0;
-            }
-        }
+        absorb_(input_bytes_.span());
 
         // zeroizing the input buffer is unnecessary
         input_bytes_.clear();

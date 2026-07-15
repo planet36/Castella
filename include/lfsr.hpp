@@ -55,7 +55,7 @@ lfsr_step_full(lfsr128_state_t lfsr) noexcept
 lfsr_seed() noexcept
 {
     constexpr std::string_view seed_str{"expand 16-byte c"};
-    static_assert(seed_str.size() == sizeof(lfsr128_state_t));
+    static_assert(std::size(seed_str) == sizeof(lfsr128_state_t));
 
     // The intermediate copy to seed_bytes cannot be skipped.
     // std::bit_cast requires a trivially copyable source object of exactly

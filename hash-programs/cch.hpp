@@ -185,8 +185,8 @@ private:
     void zeroize_()
     {
         explicit_bzero(std::data(state_), sizeof(state_));
-        explicit_bzero(input_bytes_.data(), input_bytes_.capacity());
         input_bytes_.clear();
+        input_bytes_.zeroize_remaining_space();
         absorbs_since_mix_ = 0;
         has_been_finalized_ = false;
     }

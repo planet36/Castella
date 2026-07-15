@@ -24,6 +24,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     std::println("Castella::AES_NUM_ROUNDS = {}", Castella::AES_NUM_ROUNDS);
 
+    std::println("Castella::B_MAX = {}", Castella::B_MAX);
+
     std::println("sizeof(Castella::round_constants) = {}", sizeof(Castella::round_constants));
     std::println("Castella::round_constants.size() = {}", Castella::round_constants.size());
     std::println("sizeof(Castella::Duplex) = {}", sizeof(Castella::Duplex));

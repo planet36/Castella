@@ -33,7 +33,7 @@ test: hash-programs tests
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $< -o $@ $(LDLIBS)
 
 clean:
-ifneq ($(strip $(BINS)),)
+ifneq ($(strip $(DEPS) $(BINS)),)
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 endif
 	for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done

@@ -7,6 +7,7 @@
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"
+#include "encode.hpp"
 #include "fd-utils.h"
 #include "fixed_vector.hpp"
 #include "fnv.hpp"
@@ -510,53 +511,6 @@ process_file(const std::string& path, auto& hash_obj)
         if (process_file_read_fd(fd.get(), hash_obj))
             throw SYSERR_PATH(path);
     }
-}
-
-/// The left encoding of the unsigned integer \a x, as bytes
-/**
-* The byte width of \a x followed by its low bytes in native byte order --
-* the identical encoding \c Duplex and \c HashTree absorb (the
-* left_encode of SP 800-185, in native byte order).
-*/
-[[nodiscard]] static auto
-left_encode(const std::unsigned_integral auto x) noexcept
-{
-    fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
-
-    const auto w = static_cast<uint8_t>(byte_width(x));
-
-#if defined(DEBUG)
-    assert(w >= 1);
-    assert(w <= 255);
-#endif
-
-    result.unchecked_push_back(std::byte{w});
-    result.append_range(as_byte_span(x).first(w));
-
-    return result;
-}
-
-/// The right encoding of the unsigned integer \a x, as bytes
-/**
-* The low bytes of \a x in native byte order followed by its byte width
-* (the right_encode of SP 800-185, in native byte order).
-*/
-[[nodiscard]] static auto
-right_encode(const std::unsigned_integral auto x) noexcept
-{
-    fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
-
-    const auto w = static_cast<uint8_t>(byte_width(x));
-
-#if defined(DEBUG)
-    assert(w >= 1);
-    assert(w <= 255);
-#endif
-
-    result.append_range(as_byte_span(x).first(w));
-    result.unchecked_push_back(std::byte{w});
-
-    return result;
 }
 
 /// The maximum key size (in bytes) for the given chunk size

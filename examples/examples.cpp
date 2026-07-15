@@ -8,6 +8,7 @@
 #include "byte_width.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
+#include "encode.hpp"
 #include "fixed_vector.hpp"
 #include "quote_shell_always.hpp"
 #include "to_unsigned.hpp"
@@ -22,26 +23,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-// right_encode is only here for compatibility with NIST algorithms
-
-[[nodiscard]] static auto
-right_encode(const std::unsigned_integral auto x) noexcept
-{
-    fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
-
-    const auto w = static_cast<uint8_t>(byte_width(x));
-
-#if defined(DEBUG)
-    assert(w >= 1);
-    assert(w <= 255);
-#endif
-
-    result.append_range(as_byte_span(x).first(w));
-    result.unchecked_push_back(std::byte{w});
-
-    return result;
-}
 
 /// ParallelHash-like construction over \c Castella::Duplex (SP 800-185 Section 6)
 /**

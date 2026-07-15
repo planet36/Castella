@@ -174,9 +174,9 @@ private:
     // }}}
     void bind_mix_rate_() noexcept
     {
-        std::array<uint16_t, sizeof(block_t) / sizeof(uint16_t)> arr{};
-        arr.fill(static_cast<uint16_t>(mix_rate_));
-        const auto mix_rate_block = std::bit_cast<block_t>(arr);
+        std::array<uint16_t, sizeof(block_t) / sizeof(uint16_t)> mix_rate_copies{};
+        mix_rate_copies.fill(static_cast<uint16_t>(mix_rate_));
+        const auto mix_rate_block = std::bit_cast<block_t>(mix_rate_copies);
 
         for (auto& lane : state_)
         {

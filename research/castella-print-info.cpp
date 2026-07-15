@@ -16,13 +16,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::println("sizeof(uint8x16_t) = {}", sizeof(uint8x16_t));
     std::println("sizeof(Castella::block_t) = {}", sizeof(Castella::block_t));
 
-    std::println("Castella::AES_NUM_ROUNDS = {}", Castella::AES_NUM_ROUNDS);
-
     std::println("Castella::NUM_ROUNDS_MIN<2>() = {}", Castella::NUM_ROUNDS_MIN<2>());
     std::println("Castella::NUM_ROUNDS_MIN<4>() = {}", Castella::NUM_ROUNDS_MIN<4>());
     std::println("Castella::NUM_ROUNDS_MIN<8>() = {}", Castella::NUM_ROUNDS_MIN<8>());
     std::println("Castella::NUM_ROUNDS_MIN<16>() = {}", Castella::NUM_ROUNDS_MIN<16>());
     std::println("Castella::NUM_ROUNDS_MAX = {}", Castella::NUM_ROUNDS_MAX);
+
+    std::println("Castella::AES_NUM_ROUNDS = {}", Castella::AES_NUM_ROUNDS);
 
     std::println("sizeof(Castella::round_constants) = {}", sizeof(Castella::round_constants));
     std::println("Castella::round_constants.size() = {}", Castella::round_constants.size());

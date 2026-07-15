@@ -103,7 +103,7 @@ using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 /// Create the round constants for the first \a N Castella rounds
 /**
 * The round constants are the successive states of the 128-bit Galois LFSR
-* (\c lfsr_step) seeded with \c lfsr_seed, stepped \c LFSR_NUM_BITS times
+* (\c lfsr_step) seeded with \c lfsr_seed, stepped 128 times
 * between round constants.  The first round constant is the seed itself.
 *
 * Stepping the LFSR the full width of its state guarantees that no bit of a

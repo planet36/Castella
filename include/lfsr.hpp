@@ -17,9 +17,6 @@
 /// The state of the 128-bit Galois LFSR
 using lfsr128_state_t = std::array<uint64_t, 2>;
 
-/// The number of bits in the LFSR state
-inline constexpr int LFSR_NUM_BITS = sizeof(lfsr128_state_t) * 8;
-
 /// Advance the 128-bit Galois LFSR state \a lfsr by 1 step
 /**
 * The LFSR uses the GCM reduction polynomial (x^128 + x^7 + x^2 + x + 1).
@@ -40,6 +37,8 @@ lfsr_step(lfsr128_state_t lfsr) noexcept
 [[nodiscard]] static constexpr lfsr128_state_t
 lfsr_step_full(lfsr128_state_t lfsr) noexcept
 {
+    constexpr int LFSR_NUM_BITS = sizeof(lfsr) * 8;
+
     for (int s = 0; s < LFSR_NUM_BITS; ++s)
     {
         lfsr = lfsr_step(lfsr);

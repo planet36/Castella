@@ -187,6 +187,36 @@ private:
         has_been_finalized_ = false;
     }
 
+    /// Absorb \a src into the state and perhaps apply the permutation function
+    /**
+    * \param src the bytes to absorb
+    * \pre the size of \a src is at least \c get_state_size_bytes()
+    */
+    void absorb_(const std::span<const std::byte> src) noexcept
+    {
+#if defined(DEBUG)
+        assert(std::ssize(src) >= get_state_size_bytes());
+        assert(!has_been_finalized_);
+#endif
+
+        const auto* src_blocks = reinterpret_cast<const block_t*>(std::data(src));
+
+        simd_compress_aes_enc_r3_arr(state_, src_blocks);
+
+        if (mix_rate_ > 0)
+        {
+            // Periodically mix the state.
+
+            ++absorbs_since_mix_;
+
+            if (absorbs_since_mix_ >= mix_rate_)
+            {
+                Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
+                absorbs_since_mix_ = 0;
+            }
+        }
+    }
+
     /// Absorb the input buffer into the state and perhaps apply the permutation function
     void absorb_()
     {

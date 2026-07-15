@@ -26,7 +26,7 @@ inline constexpr int LFSR_NUM_BITS = sizeof(lfsr128_state_t) * 8;
 * \sa https://en.wikipedia.org/wiki/Linear-feedback_shift_register#Galois_LFSRs
 * \sa https://en.wikipedia.org/wiki/Galois/Counter_Mode
 */
-[[nodiscard]] static consteval lfsr128_state_t
+[[nodiscard]] static constexpr lfsr128_state_t
 lfsr_step(lfsr128_state_t lfsr) noexcept
 {
     const bool carry_hi = lfsr[1] >> 63;
@@ -37,7 +37,7 @@ lfsr_step(lfsr128_state_t lfsr) noexcept
 }
 
 /// Step the LFSR the full width of its state
-[[nodiscard]] static consteval lfsr128_state_t
+[[nodiscard]] static constexpr lfsr128_state_t
 lfsr_step_full(lfsr128_state_t lfsr) noexcept
 {
     for (int s = 0; s < LFSR_NUM_BITS; ++s)

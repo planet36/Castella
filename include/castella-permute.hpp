@@ -132,10 +132,7 @@ create_round_constants() noexcept
             {
                 rc = std::bit_cast<block_t>(lfsr);
 
-                for (int s = 0; s < LFSR_NUM_BITS; ++s)
-                {
-                    lfsr = lfsr_step(lfsr);
-                }
+                lfsr = lfsr_step_full(lfsr);
             }
         }
     }

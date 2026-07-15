@@ -97,10 +97,7 @@ private:
 
         for (int c = 0; c < num_used_constants; ++c)
         {
-            for (int s = 0; s < LFSR_NUM_BITS; ++s)
-            {
-                lfsr = lfsr_step(lfsr);
-            }
+            lfsr = lfsr_step_full(lfsr);
         }
 
         state_t result{};
@@ -109,10 +106,7 @@ private:
         {
             lane = std::bit_cast<block_t>(lfsr);
 
-            for (int s = 0; s < LFSR_NUM_BITS; ++s)
-            {
-                lfsr = lfsr_step(lfsr);
-            }
+            lfsr = lfsr_step_full(lfsr);
         }
 
         return result;

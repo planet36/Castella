@@ -36,6 +36,17 @@ lfsr_step(lfsr128_state_t lfsr) noexcept
     return lfsr;
 }
 
+/// Step the LFSR the full width of its state
+[[nodiscard]] static consteval lfsr128_state_t
+lfsr_step_full(lfsr128_state_t lfsr) noexcept
+{
+    for (int s = 0; s < LFSR_NUM_BITS; ++s)
+    {
+        lfsr = lfsr_step(lfsr);
+    }
+    return lfsr;
+}
+
 /// The initial state of the LFSR used to generate the Castella round constants
 /**
 * The seed is <q>expand 16-byte c</q>.

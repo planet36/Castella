@@ -88,24 +88,17 @@ private:
     [[nodiscard]] static consteval state_t
     create_init_state_() noexcept
     {
-        auto lfsr = lfsr_seed();
-
         // Skip the LFSR states consumed by Castella::round_constants.
-        constexpr int num_used_constants =
-            Castella::NUM_ROUNDS_MAX * Castella::AES_NUM_ROUNDS * Castella::B_MAX;
-
-        for (int c = 0; c < num_used_constants; ++c)
-        {
-            lfsr = lfsr_step_full(lfsr);
-        }
+        constexpr auto last_rc = Castella::round_constants.back().back().back();
+        auto lfsr = std::bit_cast<lfsr128_state_t>(last_rc);
 
         state_t result{};
 
         for (auto& lane : result)
         {
-            lane = std::bit_cast<block_t>(lfsr);
-
             lfsr = lfsr_step_full(lfsr);
+
+            lane = std::bit_cast<block_t>(lfsr);
         }
 
         return result;

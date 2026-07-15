@@ -101,9 +101,6 @@ public:
                node_b_.input_bytes_.remaining_space());
 #endif
 
-        using state_t = typename node_type::state_t;
-        using block_t = typename node_type::block_t;
-
         // First, add to the partially filled input buffers.
         // Both are at the same fill level, so one count serves both.
         if (!node_a_.input_bytes_.is_empty())
@@ -123,6 +120,9 @@ public:
                 node_b_.absorb_();
             }
         }
+
+        using state_t = typename node_type::state_t;
+        using block_t = typename node_type::block_t;
 
         // Compress whole chunks directly from the source buffers with the
         // two states' work interleaved (the point of this class); the

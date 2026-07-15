@@ -28,6 +28,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     std::println("sizeof(Castella::round_constants) = {}", sizeof(Castella::round_constants));
     std::println("std::size(Castella::round_constants) = {}", std::size(Castella::round_constants));
+    std::println("std::size(Castella::round_constants[0]) = {}", std::size(Castella::round_constants[0]));
+    std::println("std::size(Castella::round_constants[0][0]) = {}", std::size(Castella::round_constants[0][0]));
+
     std::println("sizeof(Castella::Duplex) = {}", sizeof(Castella::Duplex));
 
     std::println("Castella::Duplex::B = {}", Castella::Duplex::B);

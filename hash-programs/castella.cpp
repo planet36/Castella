@@ -518,16 +518,19 @@ process_file(const std::string& path, auto& hash_obj)
 * the identical encoding \c Duplex and \c HashTree absorb (the
 * left_encode of SP 800-185, in native byte order).
 */
-[[nodiscard]] auto
-left_encode(const std::unsigned_integral auto x)
+[[nodiscard]] static auto
+left_encode(const std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
-    result.unchecked_push_back(static_cast<std::byte>(w));
+#if defined(DEBUG)
+    assert(w >= 1);
+    assert(w <= 255);
+#endif
 
-    // the least significant w bytes
+    result.unchecked_push_back(std::byte{w});
     result.append_range(as_byte_span(x).first(w));
 
     return result;
@@ -538,17 +541,20 @@ left_encode(const std::unsigned_integral auto x)
 * The low bytes of \a x in native byte order followed by its byte width
 * (the right_encode of SP 800-185, in native byte order).
 */
-[[nodiscard]] auto
-right_encode(const std::unsigned_integral auto x)
+[[nodiscard]] static auto
+right_encode(const std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
-    // the least significant w bytes
+#if defined(DEBUG)
+    assert(w >= 1);
+    assert(w <= 255);
+#endif
+
     result.append_range(as_byte_span(x).first(w));
-
-    result.unchecked_push_back(static_cast<std::byte>(w));
+    result.unchecked_push_back(std::byte{w});
 
     return result;
 }

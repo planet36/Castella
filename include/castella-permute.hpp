@@ -100,7 +100,7 @@ inline constexpr int B_MAX = 16;
 */
 using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
-/// Create the round constants for the first \a N Castella rounds
+/// Create the round constants for the first \a NUM_ROUNDS Castella rounds
 /**
 * The round constants are the successive states of the 128-bit Galois LFSR
 * (\c lfsr_step) seeded with \c lfsr_seed, stepped 128 times
@@ -114,15 +114,15 @@ using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 * The generator is deliberately unrelated to the AES round function used in
 * \c Castella::permute so that the round constants share no structure with it.
 */
-template <size_t N>
+template <size_t NUM_ROUNDS>
 [[nodiscard]] static consteval auto
 create_round_constants() noexcept
 {
-    static_assert(N > 0);
+    static_assert(NUM_ROUNDS > 0);
 
     auto lfsr = lfsr_seed();
 
-    std::array<round_constants_t, N> result{};
+    std::array<round_constants_t, NUM_ROUNDS> result{};
 
     for (auto& round_rc : result)
     {
@@ -184,15 +184,15 @@ using round_constants_folded_t = std::array<simd_arr_x2_t<B_MAX / 2>, AES_NUM_RO
 * Derived from \c round_constants (never regenerated), so the two tables
 * can never disagree.
 */
-template <size_t N>
+template <size_t NUM_ROUNDS>
 [[nodiscard]] static consteval auto
 create_round_constants_folded() noexcept
 {
-    static_assert(N <= NUM_ROUNDS_MAX);
+    static_assert(NUM_ROUNDS <= NUM_ROUNDS_MAX);
 
-    std::array<round_constants_folded_t, N> result{};
+    std::array<round_constants_folded_t, NUM_ROUNDS> result{};
 
-    for (size_t r = 0; r < N; ++r)
+    for (size_t r = 0; r < NUM_ROUNDS; ++r)
     {
         for (size_t aes_r = 0; aes_r < AES_NUM_ROUNDS; ++aes_r)
         {

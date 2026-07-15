@@ -104,8 +104,8 @@ public:
         using state_t = typename node_type::state_t;
         using block_t = typename node_type::block_t;
 
-        // Top up partially filled input buffers first (both are at the
-        // same fill level, so one count serves both).
+        // First, add to the partially filled input buffers.
+        // Both are at the same fill level, so one count serves both.
         if (!node_a_.input_bytes_.is_empty())
         {
             const size_t num_bytes_to_add =
@@ -167,7 +167,7 @@ public:
             node_b_.absorbs_since_mix_ = absorbs_since_mix;
         }
 
-        // Buffer the trailing partial chunks.
+        // Finally, store the remaining partial chunks.
         if (!std::empty(src_a))
         {
             node_a_.input_bytes_.append_range(src_a);

@@ -63,8 +63,7 @@ public:
     /**
     * One more than the full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN.
     * The finalizing permutation only needs to diffuse the last chunks across
-    * the lanes; \c Castella::NUM_ROUNDS_MAX rounds accounted for about half
-    * the cost of hashing a short input.
+    * the lanes.
     */
     static constexpr int FINAL_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>() + 1;
     static_assert(FINAL_NUM_ROUNDS <= Castella::NUM_ROUNDS_MAX);
@@ -115,6 +114,10 @@ private:
     state_t state_ = create_init_state_();
     static_assert(sizeof(state_) <= 256); // constrained by padding bytes
 
+    /**
+    * Input data that's too small to be directly absorbed passes through this buffer.
+    * The padding bytes are added to this buffer before finalization.
+    */
     fixed_vector<std::byte, sizeof(state_), alignof(block_t)> input_bytes_;
 
     mutable std::mutex mtx_;
@@ -162,8 +165,8 @@ private:
     /**
     * The mix rate affects the state only when a mix is performed, so without
     * this, different mix rates produce identical digests for any input
-    * shorter than <code>mix_rate_ * sizeof(state_)</code> bytes (no mix is
-    * ever triggered before finalization).
+    * shorter than <code>mix_rate_ * get_state_size_bytes()</code> bytes (i.e.,
+    * when no mix is ever triggered before finalization).
     *
     * XORing the mix rate into every lane preserves the distinctness of the
     * initial lane values.
@@ -191,6 +194,7 @@ private:
         has_been_finalized_ = false;
     }
 
+    /// Absorb the input buffer into the state and perhaps apply the permutation function
     void absorb_()
     {
 #if defined(DEBUG)
@@ -219,10 +223,11 @@ private:
         input_bytes_.clear();
     }
 
-    /// Consume the bytes of \a src
+    /// Consume \a src
     /**
-    * Whole chunks (of \c sizeof(state_) bytes) are compressed directly from
-    * \a src; only a leading partial chunk (if the input buffer is not empty)
+    * Whole chunks (of \c get_state_size_bytes() bytes) are compressed directly from
+    * \a src.
+    * Only a leading partial chunk (if the input buffer is not empty)
     * and a trailing partial chunk pass through the input buffer.
     */
     void add_(std::span<const std::byte> src)
@@ -231,7 +236,7 @@ private:
         assert(!has_been_finalized_);
 #endif
 
-        // Top up a partially filled input buffer first.
+        // First, add to the partially filled input buffer.
         if (!input_bytes_.is_empty())
         {
             const size_t num_bytes_to_add =
@@ -280,7 +285,7 @@ private:
             absorbs_since_mix_ = absorbs_since_mix;
         }
 
-        // Buffer the trailing partial chunk.
+        // Finally, store the remaining partial chunk.
         if (!std::empty(src))
         {
             input_bytes_.append_range(src);
@@ -294,7 +299,7 @@ private:
     /// Fill remaining space in the input buffer
     /**
     * Padding bytes are always added before the state is finalized.
-    * They are sequential values from \c 0 to \c sizeof(state_)-1.
+    * They are sequential values from \c 0 to \c get_state_size_bytes()-1.
     */
     void add_padding_bytes_()
     {
@@ -370,7 +375,7 @@ public:
         zeroize_();
     }
 
-    /// Consume \a src into the input buffer
+    /// Consume \a src
     // {{{
     /**
     * \param src the input data

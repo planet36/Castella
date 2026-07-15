@@ -370,17 +370,17 @@ public:
         zeroize_();
     }
 
-    /// Consume \a byte_sp into the input buffer
+    /// Consume \a src into the input buffer
     // {{{
     /**
-    * \param byte_sp the input data
+    * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    compress_castella_hash& add(const std::span<const std::byte> byte_sp)
+    compress_castella_hash& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
 
@@ -391,7 +391,7 @@ public:
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
 
-        add_(byte_sp);
+        add_(src);
 
         return *this;
     }

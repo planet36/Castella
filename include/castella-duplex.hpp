@@ -512,9 +512,9 @@ private:
         // behavior (its pointer arguments are declared never-null).
         if (!std::empty(dst))
         {
-            const auto byte_sp = std::as_bytes(std::span{state_}).first(std::size(dst));
+            const auto src = std::as_bytes(std::span{state_}).first(std::size(dst));
 
-            (void)std::memcpy(std::data(dst), std::data(byte_sp), std::size(dst));
+            (void)std::memcpy(std::data(dst), std::data(src), std::size(dst));
         }
     }
 
@@ -814,20 +814,20 @@ public:
         zeroize_();
     }
 
-    /// Consume \a byte_sp into the input buffer
+    /// Consume \a src into the input buffer
     // {{{
     /**
-    * \param byte_sp the input data
+    * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Duplex& add(const std::span<const std::byte> byte_sp)
+    Duplex& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
 
-        add_(byte_sp);
+        add_(src);
 
         return *this;
     }
@@ -861,10 +861,10 @@ public:
         return add(as_byte_span(s));
     }
 
-    /// Consume the left-encoded size of \a byte_sp then its contents into the input buffer
+    /// Consume the left-encoded size of \a src, then its contents into the input buffer
     // {{{
     /**
-    * \param byte_sp the input data
+    * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
@@ -873,14 +873,14 @@ public:
     *       which absorbs left_encode(0).
     */
     // }}}
-    Duplex& add_left_encoded(const std::span<const std::byte> byte_sp)
+    Duplex& add_left_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::data(byte_sp) == nullptr)
+        if (std::data(src) == nullptr)
             return *this;
 
-        left_encode_bytes_(byte_sp);
+        left_encode_bytes_(src);
 
         return *this;
     }
@@ -906,10 +906,10 @@ public:
         return add_left_encoded(as_byte_span(s));
     }
 
-    /// Consume the contents of \a byte_sp then its right-encoded size into the input buffer
+    /// Consume \a src, then its right-encoded size into the input buffer
     // {{{
     /**
-    * \param byte_sp the input data
+    * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
@@ -918,14 +918,14 @@ public:
     *       which absorbs right_encode(0).
     */
     // }}}
-    Duplex& add_right_encoded(const std::span<const std::byte> byte_sp)
+    Duplex& add_right_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::data(byte_sp) == nullptr)
+        if (std::data(src) == nullptr)
             return *this;
 
-        right_encode_bytes_(byte_sp);
+        right_encode_bytes_(src);
 
         return *this;
     }

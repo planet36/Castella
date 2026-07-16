@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
+#include "byte_width.hpp"
 #include "fixed_vector.hpp"
 
 #if defined(DEBUG)

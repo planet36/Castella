@@ -121,50 +121,15 @@ public:
             }
         }
 
-        using state_t = typename node_type::state_t;
-        using block_t = typename node_type::block_t;
-
-        // Compress whole chunks directly from the source buffers with the
-        // two states' work interleaved (the point of this class); the
-        // states are kept in local variables so that they may stay in
-        // registers across chunks, as in the single node's bulk loop.
-        if (std::size(src_a) >= sizeof(state_t))
+        // Then, process whole chunks directly from the sources, bypassing the
+        // input buffers.
+        while (std::size(src_a) >= node_a_.get_state_size_bytes())
         {
-            state_t state_a = node_a_.state_;
-            state_t state_b = node_b_.state_;
-            auto absorbs_since_mix = node_a_.absorbs_since_mix_;
-            const auto mix_rate = node_a_.mix_rate_;
+            node_a_.absorb_(src_a);
+            node_b_.absorb_(src_b);
 
-            do
-            {
-                simd_compress_aes_enc_r3_arr(
-                    state_a, reinterpret_cast<const block_t*>(std::data(src_a)));
-                simd_compress_aes_enc_r3_arr(
-                    state_b, reinterpret_cast<const block_t*>(std::data(src_b)));
-
-                src_a = src_a.subspan(sizeof(state_t));
-                src_b = src_b.subspan(sizeof(state_t));
-
-                if (mix_rate > 0)
-                {
-                    // Periodically mix the states (in the same iteration:
-                    // the lanes share one absorb schedule).
-
-                    ++absorbs_since_mix;
-
-                    if (absorbs_since_mix >= mix_rate)
-                    {
-                        Castella::permute(state_a, Castella::NUM_ROUNDS_MIN<N>());
-                        Castella::permute(state_b, Castella::NUM_ROUNDS_MIN<N>());
-                        absorbs_since_mix = 0;
-                    }
-                }
-            } while (std::size(src_a) >= sizeof(state_t));
-
-            node_a_.state_ = state_a;
-            node_b_.state_ = state_b;
-            node_a_.absorbs_since_mix_ = absorbs_since_mix;
-            node_b_.absorbs_since_mix_ = absorbs_since_mix;
+            src_a = src_a.subspan(node_a_.get_state_size_bytes());
+            src_b = src_b.subspan(node_b_.get_state_size_bytes());
         }
 
         // Finally, store the remaining partial chunks.

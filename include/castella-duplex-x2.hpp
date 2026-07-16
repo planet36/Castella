@@ -23,6 +23,7 @@
 #include "to_unsigned.hpp"
 
 #include <algorithm>
+#include <array>
 #if defined(DEBUG)
 #include <cassert>
 #endif
@@ -413,18 +414,18 @@ public:
 
         if (num_bytes_remaining > 0)
         {
-            alignas(block_t) std::byte tmp[sizeof(block_t)];
+            alignas(block_t) std::array<std::byte, sizeof(block_t)> tmp{};
 
-            _mm_store_si128(reinterpret_cast<__m128i*>(tmp),
+            _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),
                             _mm256_castsi256_si128(state_x2_[i]));
-            (void)std::memcpy(out_a, tmp, num_bytes_remaining);
+            (void)std::memcpy(out_a, std::data(tmp), num_bytes_remaining);
 
-            _mm_store_si128(reinterpret_cast<__m128i*>(tmp),
+            _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),
                             _mm256_extracti128_si256(state_x2_[i], 1));
-            (void)std::memcpy(out_b, tmp, num_bytes_remaining);
+            (void)std::memcpy(out_b, std::data(tmp), num_bytes_remaining);
 
             // tmp held outer-state bytes beyond those squeezed; wipe it.
-            explicit_bzero(tmp, sizeof(tmp));
+            explicit_bzero(std::data(tmp), sizeof(tmp));
         }
     }
 

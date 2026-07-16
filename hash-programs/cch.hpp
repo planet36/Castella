@@ -260,37 +260,13 @@ private:
             }
         }
 
-        // Compress whole chunks directly from the source buffer, bypassing
-        // the input buffer.  The state is kept in a local variable so that
-        // it may stay in registers across chunks.
-        if (std::size(src) >= sizeof(state_))
+        // Then, process whole chunks directly from the source, bypassing the
+        // input buffer.
+        while (std::size(src) >= get_state_size_bytes())
         {
-            state_t state = state_;
-            auto absorbs_since_mix = absorbs_since_mix_;
+            absorb_(src);
 
-            do
-            {
-                simd_compress_aes_enc_r3_arr(
-                    state, reinterpret_cast<const block_t*>(std::data(src)));
-
-                src = src.subspan(sizeof(state_));
-
-                if (mix_rate_ > 0)
-                {
-                    // Periodically mix the state.
-
-                    ++absorbs_since_mix;
-
-                    if (absorbs_since_mix >= mix_rate_)
-                    {
-                        Castella::permute(state, Castella::NUM_ROUNDS_MIN<N>());
-                        absorbs_since_mix = 0;
-                    }
-                }
-            } while (std::size(src) >= sizeof(state_));
-
-            state_ = state;
-            absorbs_since_mix_ = absorbs_since_mix;
+            src = src.subspan(get_state_size_bytes());
         }
 
         // Finally, store the remaining partial chunk.

@@ -81,7 +81,7 @@ namespace Castella
 // }}}
 template <typename P>
 concept tree_node_policy =
-    requires(const P p, typename P::node_type& node, const std::span<std::byte> cv_dst,
+    requires(const P p, P::node_type& node, const std::span<std::byte> cv_dst,
              const std::span<const std::byte> data) {
         { p.make_node() } -> std::same_as<typename P::node_type>;
         { p.cv_len(node) } -> std::convertible_to<int>;
@@ -202,7 +202,7 @@ template <tree_node_policy NodePolicy, typename Derived>
 struct HashTree
 {
     /// The node hash class this tree is built from
-    using node_type = typename NodePolicy::node_type;
+    using node_type = NodePolicy::node_type;
 
     /// The minimum chunk size (in bytes)
     // {{{
@@ -297,7 +297,7 @@ private:
     */
     // }}}
     static constexpr bool HAS_PAIRED_LEAF =
-        requires(const NodePolicy p, typename NodePolicy::node_x2_type& pair,
+        requires(const NodePolicy p, NodePolicy::node_x2_type& pair,
                  const std::span<std::byte> cv_dst, const std::span<const std::byte> data) {
             { p.make_node_x2() } -> std::same_as<typename NodePolicy::node_x2_type>;
             pair.add(data, data);

@@ -19,7 +19,7 @@ ifeq ($(ARCH), aarch64)
     CXXFLAGS += -march=armv8-a+aes
 else ifeq ($(ARCH), x86_64)
     #CXXFLAGS += -march=native
-    CXXFLAGS += -march=x86-64-v3 -maes -mvaes
+    CXXFLAGS += -march=x86-64-v3 -maes -mvaes # x86-64-v3 implies avx, avx2
     #CXXFLAGS += -march=raptorlake
 endif
 

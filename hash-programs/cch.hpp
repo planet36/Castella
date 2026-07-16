@@ -448,6 +448,7 @@ public:
     *        \c get_max_digest_size_bytes()
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
+    * \note The size of \a dst is clamped to \c get_max_digest_size_bytes().
     */
     // }}}
     compress_castella_hash& final_digest_to(std::span<std::byte> dst)

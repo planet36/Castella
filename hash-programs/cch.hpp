@@ -77,7 +77,12 @@ public:
     /**
     * One more than the full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN.
     * The finalizing permutation only needs to diffuse the last chunks across
-    * the lanes.
+    * the lanes, but the floor is the empirically measured round count at
+    * which every output bit first depends on every input bit -- a bare
+    * threshold, not a quality margin -- so one extra round is kept as safety
+    * margin.  Finalization is a fixed per-digest cost; the savings over a
+    * \c NUM_ROUNDS_MAX finalization come from the many rounds shed, not from
+    * this one.
     */
     static constexpr int FINAL_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>() + 1;
     static_assert(FINAL_NUM_ROUNDS <= Castella::NUM_ROUNDS_MAX);
@@ -411,6 +416,9 @@ public:
 
     ~compress_castella_hash()
     {
+        // Defensive only: destruction concurrent with a member call is
+        // already a caller data race, but the uncontended lock is nearly
+        // free and keeps the scrub from racing a straggling call.
         std::scoped_lock lock{mtx_};
 
         zeroize_();

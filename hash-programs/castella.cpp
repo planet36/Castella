@@ -507,6 +507,8 @@ process_file(const std::string& path, auto& hash_obj)
 [[nodiscard]] constexpr int
 max_key_size_bytes(const int chunk_size_bytes) noexcept
 {
+    // 10 = the two left_encode fields above at their 5-byte maximum
+    // (1 length byte + up to 4 value bytes each)
     return std::min(key_size_max, chunk_size_bytes - 10);
 }
 
@@ -524,6 +526,8 @@ read_key_file(const std::string& path, const int max_size_bytes)
         errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
 
     std::vector<std::byte> key;
+    // Not a protocol constant -- just enough for typical key sizes
+    // (e.g., 32 or 64 bytes) without reallocation.
     key.reserve(64);
 
     char c = 0;

@@ -97,6 +97,19 @@ inline constexpr int B_MAX = 16;
 /**
 * \c round_constants_t[aes_r][i] is used as the AES round key for state block
 * \c i in AES round \c aes_r.  The round constants are not secret.
+*
+* A [round][block][AES round] nesting would be possible if creation and
+* consumption were both reshaped, but it would pessimize the key loads:
+* \c aes_enc_arr applies one AES round to two adjacent blocks per 256-bit
+* instruction, so each key fetch wants adjacent blocks' keys for the SAME
+* AES round to be contiguous -- block must be the fastest-varying index.
+* With AES round innermost, adjacent blocks' keys would sit
+* \c AES_NUM_ROUNDS blocks apart, splitting every 256-bit key load in two.
+* The nesting is also frozen now: the LFSR assigns the constants' values in
+* generation order (and cch's \c create_init_state_ continues the same
+* stream), so reshaping it would change every digest (pinned by
+* tests/KAT.txt).  The folded VAES table \c round_constants_folded is
+* derived from this one and does not dictate its shape.
 */
 using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
@@ -257,10 +270,11 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
     if constexpr (N == 16)
     {
-        // Fold the state into 8 ymm registers: element j = [block j |
-        // block j+8].  This layout is preserved by simd_transpose_folded,
-        // so the whole permutation runs register-resident; the state
-        // touches memory only here and at the unfold below.
+        // Fold the state into N/2 ymm registers: element j = [block j |
+        // block j+N/2].  This layout is preserved by
+        // simd_transpose_folded, so the whole permutation runs
+        // register-resident; the state touches memory only here and at
+        // the unfold below.
         simd_arr_x2_t<N / 2> state_folded;
 
         for (size_t j = 0; j < N / 2; ++j)

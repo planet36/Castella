@@ -209,6 +209,16 @@ public:
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
 
+        // A null pointer implies len == 0 (a documented precondition,
+        // checked only by the DEBUG asserts above), so there is nothing
+        // to absorb, and returning early behaves the same as substituting
+        // two empty spans -- without ever forming a span from a null
+        // pointer.  The single-node shim (compress_castella_hash::add)
+        // substitutes an empty span instead of returning because its span
+        // form must still throw if the state is finalized even when there
+        // is no input; this class has no such runtime check (it is an
+        // internal single-thread worker), so the plain early return
+        // suffices.  DuplexX2 does the same.
         if ((data_a == nullptr) || (data_b == nullptr))
             return;
 

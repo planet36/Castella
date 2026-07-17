@@ -17,9 +17,14 @@
 #if defined(DEBUG)
 #include <cassert>
 #endif
+#include <bit>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+
+static_assert(std::endian::native == std::endian::little,
+              "little-endian host required (left_encode/right_encode take the "
+              "low-order bytes of the native object representation)");
 
 /// Unambiguously encode the integer into a buffer
 /**

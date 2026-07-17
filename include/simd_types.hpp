@@ -10,6 +10,11 @@
 #pragma once
 
 #include <array>
+#include <bit>
+
+static_assert(std::endian::native == std::endian::little,
+              "little-endian host required (integer length encodings and "
+              "round-constant serialization use native byte order)");
 
 #if defined(__x86_64__) && defined(__AES__)
 

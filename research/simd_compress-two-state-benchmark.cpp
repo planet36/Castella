@@ -217,11 +217,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         [&]<size_t... N>(std::index_sequence<N...>) {
             ((benchmark::RegisterBenchmark(
-                  std::format("{}-states-sequential({} x {} KiB)", N + 2, N + 2,
+                  std::format("{}-states-sequential({}x_{}_KiB)", N + 2, N + 2,
                               buf_size >> 10),
                   BM_states_sequential<N + 2>, buf_size),
               benchmark::RegisterBenchmark(
-                  std::format("{}-states-interleaved({} x {} KiB)", N + 2, N + 2,
+                  std::format("{}-states-interleaved({}x_{}_KiB)", N + 2, N + 2,
                               buf_size >> 10),
                   BM_states_interleaved<N + 2>, buf_size)),
              ...);

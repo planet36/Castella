@@ -88,7 +88,13 @@ private:
     [[nodiscard]] static consteval state_t
     create_init_state_() noexcept
     {
-        // Skip the LFSR states consumed by Castella::round_constants.
+        // Continue the LFSR stream where Castella::round_constants left
+        // off, so this state's initial lanes are distinct from every
+        // round constant. Presumes round_constants' round -> aes_round ->
+        // block nesting order (see create_round_constants()); if that
+        // generation order/shape is ever reshaped, this must be updated
+        // to match, or cch's digests will silently change (catch via
+        // KAT.txt, not a compiler error).
         constexpr auto last_rc = Castella::round_constants.back().back().back();
         auto lfsr = std::bit_cast<lfsr128_state_t>(last_rc);
 

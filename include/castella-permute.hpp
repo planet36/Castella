@@ -113,6 +113,13 @@ inline constexpr int B_MAX = 16;
 */
 using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
+/// The initial state of the LFSR used to generate the Castella round constants
+/**
+* The seed is <q>expand 16-byte c</q>.
+* (It's a perfectly cromulent initial value.)
+*/
+constexpr auto lfsr_seed = lfsr_from_bytes16("expand 16-byte c");
+
 /// Create the round constants for the first \a NUM_ROUNDS Castella rounds
 /**
 * The round constants are the successive states of the 128-bit Galois LFSR
@@ -133,7 +140,7 @@ create_round_constants() noexcept
 {
     static_assert(NUM_ROUNDS > 0);
 
-    auto lfsr = lfsr_seed();
+    auto lfsr = lfsr_seed;
 
     std::array<round_constants_t, NUM_ROUNDS> result{};
 

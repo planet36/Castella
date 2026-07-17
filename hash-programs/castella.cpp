@@ -40,7 +40,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-07-10";
+inline constexpr std::string_view program_version = "2026-07-16";
 
 inline constexpr std::string_view function_name = "Castella";
 
@@ -82,8 +82,6 @@ inline constexpr int default_num_threads = 0;
 // }}}
 
 // {{{ options
-bool verbose = false;
-
 auto input_suffix = default_input_suffix;
 
 auto num_rounds = default_num_rounds;
@@ -154,8 +152,6 @@ print_usage()
     std::println("");
 
     std::println("Compute the Castella tree hash.");
-    std::println("");
-
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
@@ -167,9 +163,6 @@ print_usage()
 
     std::println("  -h, --help");
     std::println("        Print this message, then exit.");
-
-    std::println("  -v, --verbose");
-    std::println("        Print diagnostics.");
 
     std::println("  -c, --check");
     std::println("        Read digest lines from each FILE (or standard input) and verify them.");
@@ -268,7 +261,6 @@ void process_options(int argc, char* argv[])
 
     constexpr int OPTION_HASH_VERSION     = static_cast<int>(fnv1a_32("version"    ));
     constexpr int OPTION_HASH_HELP        = static_cast<int>(fnv1a_32("help"       ));
-    constexpr int OPTION_HASH_VERBOSE     = static_cast<int>(fnv1a_32("verbose"    ));
     constexpr int OPTION_HASH_CHECK       = static_cast<int>(fnv1a_32("check"      ));
     constexpr int OPTION_HASH_CHUNK_SIZE  = static_cast<int>(fnv1a_32("chunk-size" ));
     constexpr int OPTION_HASH_CUSTOM      = static_cast<int>(fnv1a_32("custom"     ));
@@ -288,7 +280,6 @@ void process_options(int argc, char* argv[])
         // const char*      , int                       , int*         , int
         {.name="version"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERSION    },
         {.name="help"       , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_HELP       },
-        {.name="verbose"    , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_VERBOSE    },
         {.name="check"      , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_CHECK      },
         {.name="chunk-size" , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CHUNK_SIZE },
         {.name="custom"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_CUSTOM     },
@@ -318,11 +309,6 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_HELP:
             print_usage();
             std::exit(EXIT_SUCCESS);
-            break;
-
-        case 'v':
-        case OPTION_HASH_VERBOSE:
-            verbose = true;
             break;
 
         case 'c':
@@ -826,20 +812,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         key_bytes = read_key_file(key_file_path, max_key_size_bytes(chunk_size));
     }
 
-    const int capacity_blocks = num_digest_bytes_to_capacity_blocks(num_bytes_to_squeeze);
-
-    if (verbose)
-    {
-        std::println(stderr, "# num_rounds={}", num_rounds);
-        std::println(stderr, "# num_bytes_to_squeeze={}", num_bytes_to_squeeze);
-        std::println(stderr, "# capacity_blocks={}", capacity_blocks);
-        std::println(stderr, "# input_suffix={}", input_suffix);
-        std::println(stderr, "# function_name={}", quote_shell_always(function_name));
-        std::println(stderr, "# customization_str={}", quote_shell_always(customization_str));
-        std::println(stderr, "# chunk_size={}", chunk_size);
-        std::println(stderr, "# num_threads={}", num_threads);
-    }
-
     std::vector<std::string> paths;
 
     for (int i = optind; i < argc; ++i)
@@ -868,11 +840,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         try
         {
-            if (verbose)
-            {
-                std::println(stderr, "# processing file {}", quote_shell_always(path));
-            }
-
             const auto digest_bytes =
                 compute_file_digest(path, num_bytes_to_squeeze, num_rounds, input_suffix,
                                     customization_str, chunk_size, key_bytes);

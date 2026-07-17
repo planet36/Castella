@@ -24,6 +24,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | aes\_enc\_arr\_cast-benchmark.cpp | Compare throughput of 128-bit vs. VAES 256-bit AES array encryption |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
 | nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
+| permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path across all state sizes |
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
@@ -43,6 +44,23 @@ The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) 
 * `python3 permute-min-active-sboxes.py --help`
 
 Raw benchmark results are saved in a folder named `results`.
+
+## Findings: the folded permute wins at every state size (2026-07-17)
+
+When the folded (register-resident) `Castella::permute` was generalized from _N_ = 16 to all supported _N_, only _N_ = 16 had been measured (~1.7×).  `permute_folded-benchmark.cpp` compares the folded path against a copy of the generic path it replaced.  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (ratios are generic ÷ folded; compare only within this table):
+
+| _N_ | rounds=2 | rounds=4 | rounds=8 | rounds=16 |
+|-----|---------:|---------:|---------:|----------:|
+| 2 | 16.9 → 7.5 ns (2.25×) | 34.7 → 14.2 ns (2.44×) | 67.0 → 25.7 ns (2.61×) | 134 → 50.1 ns (2.67×) |
+| 4 | 18.5 → 9.3 ns (2.00×) | 37.1 → 16.8 ns (2.21×) | 73.3 → 31.4 ns (2.33×) | 147 → 62.1 ns (2.37×) |
+| 8 | 24.9 → 13.6 ns (1.83×) | 48.9 → 25.2 ns (1.94×) | 92.6 → 44.1 ns (2.10×) | 193 → 88.3 ns (2.19×) |
+| 16 | — | — | 135 → 81.1 ns (1.66×) | — |
+
+The _N_ = 16 row reproduces the previously documented ~1.7×, anchoring this run to the earlier measurements.
+
+Interpretation: the speedup **grows as _N_ shrinks** — a 2- or 4-block state fits entirely in one or two ymm registers, so the folded path has zero memory traffic between rounds, while the generic path still round-trips the state through memory every round and pays the store-to-load-forwarding stall (a 256-bit AES load spanning two 128-bit transpose stores), a fixed cost that looms larger the less AES work a round contains.  The speedup also **grows with the round count** at every _N_, because the fold/unfold at the boundaries is a fixed cost amortized over more register-resident rounds.
+
+Conclusion: folding every supported state size (not just the 16-block state used by `Duplex`) is a clear win; the smaller research-only sizes benefit even more than _N_ = 16 does.
 
 ## Findings: two interleaved cch states beat two sequential ones (2026-07-10)
 

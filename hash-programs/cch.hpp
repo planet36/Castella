@@ -508,7 +508,7 @@ public:
     // {{{
     /**
     * Like \c final_digest_bytes(int) but writes the first
-    * \c std::size(dst) bytes of the finalized state into the
+    * \c std::ssize(dst) bytes of the finalized state into the
     * caller-provided buffer instead of allocating a vector.
     *
     * \param dst the destination buffer; its size must not exceed
@@ -522,7 +522,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::size(dst) > get_max_digest_size_bytes())
+        if (std::ssize(dst) > get_max_digest_size_bytes())
         {
             dst = dst.first(get_max_digest_size_bytes());
         }

@@ -1091,8 +1091,9 @@ public:
     /// Squeeze bytes from the outer state into \a dst
     // {{{
     /**
-    * Like \c squeeze_bytes(int) but writes \c std::size(dst) bytes into the
-    * caller-provided buffer instead of allocating a vector.
+    * Like \c squeeze_bytes(int) but writes the first \c std::ssize(dst) bytes
+    * of the outer state into the caller-provided buffer instead of allocating
+    * a vector.
     *
     * \param dst the destination buffer; its size must not exceed
     *        \c get_rate_size_bytes()
@@ -1107,7 +1108,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::size(dst) > get_rate_size_bytes())
+        if (std::ssize(dst) > get_rate_size_bytes())
         {
             dst = dst.first(get_rate_size_bytes());
         }

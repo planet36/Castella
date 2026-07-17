@@ -16,6 +16,12 @@ echo
 echo "________________________________________________________________________________"
 echo
 
+echo "# Find the minimum aes_num_rounds for aes_enc to achieve full bit diffusion"
+echo
+./aes_enc-aes_num_rounds -n 300000 || exit
+echo "________________________________________________________________________________"
+echo
+
 echo "# Verify that Castella::permute_inv is the inverse of Castella::permute"
 echo
 ./permute_inv-verify -n 50000 || exit

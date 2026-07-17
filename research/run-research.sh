@@ -39,3 +39,21 @@ echo
 ./simd_compress_aes_enc-num_rounds -n 250000 || exit
 echo "________________________________________________________________________________"
 echo
+
+echo "# Verify that the lane-paired Castella::permute_x2 matches two separate Castella::permute calls"
+echo
+./permute_x2-verify -n 70000 || exit
+echo "________________________________________________________________________________"
+echo
+
+echo "# Verify that the lockstep Castella::DuplexX2 squeezes the same bytes as two separate Castella::Duplex objects"
+echo
+./duplex_x2-verify -n 3000 || exit
+echo "________________________________________________________________________________"
+echo
+
+echo "# Verify that the interleaved compress_castella_hash_x2 produces the same digests as two separate compress_castella_hash objects"
+echo
+./cch_x2-verify -n 3000 || exit
+echo "________________________________________________________________________________"
+echo

@@ -21,6 +21,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | name | purpose |
 | ---- | ------- |
 | aes\_enc\_0-aes\_num\_rounds-benchmark.cpp | Benchmark `aes_enc_0` across different AES round counts |
+| aes\_enc\_arr-benchmark.cpp | Benchmark the `aes_enc_arr`/`aes_enc_inv_arr` overloads of `aes_enc.hpp` in isolation (no transpose), with per-block round keys |
 | aes\_enc\_arr\_cast-benchmark.cpp | Compare throughput of 128-bit vs. VAES 256-bit AES array encryption |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
 | nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
@@ -44,6 +45,26 @@ The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) 
 * `python3 permute-min-active-sboxes.py --help`
 
 Raw benchmark results are saved in a folder named `results`.
+
+## Findings: the AES stage in isolation (2026-07-17)
+
+`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr`/`aes_enc_inv_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overloads are shadowed under VAES by the constrained same-signature overloads, the benchmark carries verbatim copies of them (`aes_enc_arr_generic`/`aes_enc_inv_arr_generic` — keep in sync).  Medians of 7 repetitions, interleaved, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
+
+| variant | header overload | ns/call | per byte |
+|---------|-----------------|--------:|---------:|
+| generic\<16\> | copy of the non-VAES fallback | 5.40 | 44.2 GiB/s |
+| vaes\_cast\<16\> | VAES pair-cast (selected in real use) | 2.93 | 81.4 GiB/s |
+| x2\_broadcast\<16\> | lane-paired, key broadcast to both lanes (`permute_x2`) | 7.31 (2 states) | 65.2 GiB/s |
+| folded\<8x2\> | 256-bit keys, folded state (register-resident `permute`) | 3.07 | 77.6 GiB/s |
+| inv\_generic\<16\> | copy of the non-VAES inverse | 17.0 | 14.0 GiB/s |
+| inv\_vaes\_cast\<16\> | VAES inverse | 17.9 | 13.3 GiB/s |
+
+Interpretation:
+
+* The VAES pair-cast is **1.84×** the generic path on the AES stage alone — larger than the ~1.7× whole-permute gap, which the transpose dilutes.
+* folded ≈ vaes\_cast confirms that both run the same eight 256-bit AES dependency chains; the folded `permute`'s win over the generic path comes from keeping the state in registers *across the transpose*, not from the AES stage.
+* x2\_broadcast is slower per byte than vaes\_cast (3.66 ns per state vs. 2.93) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
+* The inverses are ~6× slower than the forward transforms — `aes_enc_inv` is an `aesimc` + `aesdeclast` pair — and the "VAES" inverse is slightly *slower* than the generic one: `_mm256_aesimc_epi128` does not exist in silicon, so the header emulates it with two extracts, two `_mm_aesimc_si128`, and a recombine.  Harmless in practice (`permute_inv` deliberately uses the generic path), but now measured rather than assumed.
 
 ## Findings: the folded permute wins at every state size (2026-07-17)
 

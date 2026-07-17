@@ -1,5 +1,6 @@
 aes_enc_0-aes_num_rounds
 aes_enc_0-aes_num_rounds-benchmark
+aes_enc_arr-benchmark
 aes_enc_arr_cast-benchmark
 castella-print-info
 cch_x2-verify

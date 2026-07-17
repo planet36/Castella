@@ -84,7 +84,7 @@ left_encode_3(const std::unsigned_integral auto x)
 
 /// Unambiguously encode the integer into a byte string
 [[nodiscard]] static auto
-left_encode_4(std::unsigned_integral auto x)
+left_encode_4(std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
@@ -163,7 +163,7 @@ right_encode_3(const std::unsigned_integral auto x)
 
 /// Unambiguously encode the integer into a byte string
 [[nodiscard]] static auto
-right_encode_4(std::unsigned_integral auto x)
+right_encode_4(std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 

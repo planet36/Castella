@@ -512,7 +512,7 @@ private:
         // behavior (its pointer arguments are declared never-null).
         if (!std::empty(dst))
         {
-            const auto src = std::as_bytes(std::span{state_}).first(std::size(dst));
+            const auto src = as_byte_span(state_).first(std::size(dst));
 
             (void)std::memcpy(std::data(dst), std::data(src), std::size(dst));
         }

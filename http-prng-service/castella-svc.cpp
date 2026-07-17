@@ -7,6 +7,7 @@
 * \author Steven Ward
 */
 
+#include "as_byte_span.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
 #include "config.h"
@@ -393,8 +394,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             // XXX: This prints the body data of requests & responses.
             spdlog::trace("[{}] ({}) -> [{}] ({})",
-                bytes_to_hex(std::as_bytes(std::span{req.body})), std::size(req.body),
-                bytes_to_hex(std::as_bytes(std::span{res.body})), std::size(res.body));
+                bytes_to_hex(as_byte_span(req.body)), std::size(req.body),
+                bytes_to_hex(as_byte_span(res.body)), std::size(res.body));
         });
 
     spdlog::info("Attempting to bind to http://{}:{} ...", host, port);

@@ -103,18 +103,19 @@ left_encode_4(std::unsigned_integral auto x)
 
 /// Unambiguously encode the integer into a byte string
 [[nodiscard]] static auto
-left_encode_5(const std::unsigned_integral auto x)
+left_encode_5(const std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
-    result.unchecked_push_back(static_cast<std::byte>(w));
+#if defined(DEBUG)
+    assert(w >= 1);
+    assert(w <= 255);
+#endif
 
-    const auto byte_sp = as_byte_span(x);
-
-    // the least significant w bytes
-    result.append_range(byte_sp.first(w));
+    result.unchecked_push_back(std::byte{w});
+    result.append_range(as_byte_span(x).first(w));
 
     return result;
 }

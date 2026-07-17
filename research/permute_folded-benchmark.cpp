@@ -148,18 +148,40 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    for (auto num_rounds = Castella::NUM_ROUNDS_MIN<2>();
-         num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
-        register_pair<2>(num_rounds, num_threads);
-        register_pair<4>(num_rounds, num_threads);
-        register_pair<8>(num_rounds, num_threads);
+        constexpr int N = 2;
+        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
+             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        {
+            register_pair<N>(num_rounds, num_threads);
+        }
     }
 
-    for (auto num_rounds = Castella::NUM_ROUNDS_MIN<16>();
-         num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
-        register_pair<16>(num_rounds, num_threads);
+        constexpr int N = 4;
+        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
+             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        {
+            register_pair<N>(num_rounds, num_threads);
+        }
+    }
+
+    {
+        constexpr int N = 8;
+        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
+             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        {
+            register_pair<N>(num_rounds, num_threads);
+        }
+    }
+
+    {
+        constexpr int N = 16;
+        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
+             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+        {
+            register_pair<N>(num_rounds, num_threads);
+        }
     }
 
     benchmark::RunSpecifiedBenchmarks();

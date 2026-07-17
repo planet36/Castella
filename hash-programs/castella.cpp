@@ -90,7 +90,6 @@ auto num_rounds = default_num_rounds;
 
 auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
 
-// NOLINTNEXTLINE(bugprone-throwing-static-initialization,cert-err58-cpp)
 auto customization_str = default_customization_str;
 
 auto chunk_size = default_chunk_size;

@@ -148,6 +148,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
+    /*
     {
         constexpr int N = 2;
         for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
@@ -174,6 +175,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             register_pair<N>(num_rounds, num_threads);
         }
     }
+    */
 
     {
         constexpr int N = 16;

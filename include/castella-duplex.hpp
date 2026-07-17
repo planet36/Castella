@@ -1098,6 +1098,7 @@ public:
     *        \c get_rate_size_bytes()
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
+    * \note The size of \a dst is clamped to \c get_rate_size_bytes().
     * \note Like \c squeeze_bytes, the input suffix and padding are added
     *       before squeezing, even if \a dst is empty.
     */
@@ -1105,6 +1106,11 @@ public:
     Duplex& squeeze_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};
+
+        if (std::size(dst) > get_rate_size_bytes())
+        {
+            dst = dst.first(get_rate_size_bytes());
+        }
 
         squeeze_into_(dst);
 

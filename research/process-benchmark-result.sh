@@ -13,19 +13,19 @@ fi
 
 if grep -q bytes_per_second "$1"; then
 
-command grep median "$1" |
-    sed -r -e 's|(/threads:[0-9]+)?_median||' |
-    awk '{print $1, $7}' |
-    sed -E -e 's/bytes_per_second=//' |
-    sort -h -k 2 -r |
-    column --table || exit
+    command grep median "$1" |
+        sed -r -e 's|(/threads:[0-9]+)?_median||' |
+        awk '{print $1, $7}' |
+        sed -E -e 's/bytes_per_second=//' |
+        sort -h -k 2 -r |
+        column --table || exit
 
 else
 
-command grep median "$1" |
-    sed -r -e 's|(/threads:[0-9]+)?_median||' |
-    awk '{print $1, $4, $5}' |
-    sort -n -k 2 |
-    column --table
+    command grep median "$1" |
+        sed -r -e 's|(/threads:[0-9]+)?_median||' |
+        awk '{print $1, $4, $5}' |
+        sort -n -k 2 |
+        column --table
 
 fi

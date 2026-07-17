@@ -32,6 +32,20 @@
 #include <string_view>
 #include <vector>
 
+/*
+* The technique is usually called a local staging copy (also referred to as an
+* accumulator pattern, or from the compiler's side, what it enables: scalar
+* replacement of aggregates / register promotion). The idea: copy a member into
+* a local variable, mutate the local across the loop, write it back once at the
+* end. Because the local's address never escapes anywhere the compiler can't
+* track, the compiler can prove — via escape analysis, not type-based alias
+* analysis — that nothing else touches it, and can keep it in registers for the
+* loop's duration instead of reloading from memory every iteration. It
+* sidesteps std::byte's strict-aliasing exemption entirely rather than trying
+* to argue with it.
+*/
+#define USE_LOCAL_STAGING_COPY
+
 template <size_t N>
 struct compress_castella_hash_x2;
 
@@ -266,6 +280,42 @@ private:
             }
         }
 
+#if defined(USE_LOCAL_STAGING_COPY)
+        // Compress whole chunks directly from the source, bypassing the
+        // input buffer.  The state is kept in a local variable so that it
+        // may stay in registers across chunks: src is a std::byte span, and
+        // std::byte is exempt from strict aliasing, so the compiler cannot
+        // otherwise rule out state_ and src overlapping.
+        if (std::size(src) >= get_state_size_bytes())
+        {
+            state_t state = state_;
+            auto absorbs_since_mix = absorbs_since_mix_;
+
+            do
+            {
+                simd_compress_aes_enc_r3_arr(
+                    state, reinterpret_cast<const block_t*>(std::data(src)));
+
+                src = src.subspan(get_state_size_bytes());
+
+                if (mix_rate_ > 0)
+                {
+                    // Periodically mix the state.
+
+                    ++absorbs_since_mix;
+
+                    if (absorbs_since_mix >= mix_rate_)
+                    {
+                        Castella::permute(state, Castella::NUM_ROUNDS_MIN<N>());
+                        absorbs_since_mix = 0;
+                    }
+                }
+            } while (std::size(src) >= get_state_size_bytes());
+
+            state_ = state;
+            absorbs_since_mix_ = absorbs_since_mix;
+        }
+#else
         // Then, process whole chunks directly from the source, bypassing the
         // input buffer.
         while (std::size(src) >= get_state_size_bytes())
@@ -274,6 +324,7 @@ private:
 
             src = src.subspan(get_state_size_bytes());
         }
+#endif
 
         // Finally, store the remaining partial chunk.
         if (!std::empty(src))

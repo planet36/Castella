@@ -23,7 +23,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | aes\_enc\_0-aes\_num\_rounds-benchmark.cpp | Benchmark `aes_enc_0` across different AES round counts |
 | aes\_enc\_arr\_cast-benchmark.cpp | Compare throughput of 128-bit vs. VAES 256-bit AES array encryption |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
-| nested-for-loop-order-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
+| nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |

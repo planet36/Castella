@@ -5,7 +5,7 @@ castella-print-info
 cch_x2-verify
 duplex_x2-verify
 left_encode-right_encode-benchmark
-nested-for-loop-order-benchmark
+nested-for-loop-order-aes_enc_0-benchmark
 permute_inv-verify
 permute-num_rounds
 permute-num_rounds-avalanche_matrix

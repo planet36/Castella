@@ -14,6 +14,16 @@ export NUM_THREADS
 # Should be an odd number for simpler median
 BENCHMARK_REPS=5
 
+# Pin to one CPU per thread: mid-run core migration adds noise that can invert
+# small effects.  CPU affinity is inherited across the benchmarks' ASLR
+# re-exec.  With NUM_THREADS=1 this is "taskset -c 0-0", keeping results
+# comparable with the recorded measurements (all pinned to core 0).
+PIN_CMD=()
+if command -v taskset > /dev/null
+then
+    PIN_CMD=(taskset -c "0-$(( NUM_THREADS - 1 ))")
+fi
+
 OUTPUT_DIR=results
 DATETIME=$(date -u +'%Y%m%dT%H%M%S')
 
@@ -28,7 +38,7 @@ do
     echo "# $PROGRAM"
     echo
 
-    ./"$PROGRAM" \
+    "${PIN_CMD[@]}" ./"$PROGRAM" \
         --benchmark_enable_random_interleaving=true \
         --benchmark_repetitions="$BENCHMARK_REPS" \
         --benchmark_report_aggregates_only=true \

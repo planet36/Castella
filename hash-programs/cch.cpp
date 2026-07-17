@@ -32,12 +32,14 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-07-10";
+inline constexpr std::string_view program_version = "2026-07-16";
 
 // {{{ default values for options
-inline constexpr int default_digest_size_bytes = 32;
-static_assert(default_digest_size_bytes <=
-              compress_castella_hash<>::get_max_digest_size_bytes());
+inline constexpr int min_digest_size_bytes = 1;
+inline constexpr int max_digest_size_bytes = compress_castella_hash<>::get_max_digest_size_bytes();
+inline constexpr int default_digest_size_bytes = max_digest_size_bytes / 2;
+static_assert(default_digest_size_bytes >= min_digest_size_bytes);
+static_assert(default_digest_size_bytes <= max_digest_size_bytes);
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 
@@ -85,7 +87,6 @@ print_usage()
     std::println("");
 
     std::println("Compute the Compress-Castella tree hash (CCH).");
-
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
@@ -138,9 +139,8 @@ print_usage()
     std::println("  --size=SIZE");
     std::println("        Specify the output size (in bytes).");
     std::println("        Typical values are: 32, 48, or 64.");
-    std::println("        SIZE is clamped to {} bytes.",
-                 compress_castella_hash<>::get_max_digest_size_bytes());
-    std::println("        (default={})", default_digest_size_bytes);
+    std::println("        (default={}) (minimum={}) (maximum={})",
+                 default_digest_size_bytes, min_digest_size_bytes, max_digest_size_bytes);
 
     std::println("  --tag");
     std::println("        Print each digest in a self-describing format that embeds the");
@@ -267,10 +267,8 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_SIZE:
-            // No range check: SIZE is clamped by final_digest_bytes
-            // (unchanged behavior).
-            digest_size_bytes = parse_bounded_int(optarg, std::numeric_limits<int>::min(),
-                                                  std::numeric_limits<int>::max(), "--size");
+            digest_size_bytes = parse_bounded_int(optarg, min_digest_size_bytes,
+                                                  max_digest_size_bytes, "--size");
             break;
 
         default:

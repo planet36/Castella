@@ -315,6 +315,85 @@ simd_transpose(std::array<__m256i, 16>& x) noexcept
     x[0xf] = _mm256_unpackhi_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_f
 }
 
+/// Transpose one 2x2 matrix of \c uint64_t stored in the folded (row 0, row 1) layout using AVX2 intrinsics
+/**
+* The matrix is held in 1 ymm register with x[0] = [row 0 | row 1], and the
+* result is produced in the same layout.  Transposing a 2x2 matrix just
+* swaps the off-diagonal elements, which in this layout is exactly the
+* qword permute ([q0 q1 | q2 q3] -> [q0 q2 | q1 q3]) that finishes the
+* larger folded overloads below; no unpack levels are needed.
+*/
+static void
+simd_transpose_folded(std::array<__m256i, 1>& x) noexcept
+{
+    constexpr int q0_q2_q1_q3 = 0b11'01'10'00;
+    x[0] = _mm256_permute4x64_epi64(x[0], q0_q2_q1_q3);
+}
+
+/// Transpose one 4x4 matrix of \c uint32_t stored in the folded (row j, row j+2) layout using AVX2 intrinsics
+/**
+* The matrix is held in 2 ymm registers with x[j] = [row j | row j+2]
+* (rows 0-1, named A-B, in the low 128-bit lanes; rows 2-3, named C-D, in
+* the high lanes), and the result is produced in the same layout.  Same
+* network as the 16x16 folded overload below, shrunk to one unpack level:
+* per lane, the dword unpacks transpose the 2x4 submatrix, the qword
+* unpacks pair column c with column c+2, and the final qword permute
+* rejoins each column's halves; see the 16x16 overload for the rationale.
+*/
+static void
+simd_transpose_folded(std::array<__m256i, 2>& x) noexcept
+{
+    // Low lanes: rows A-B; high lanes: rows C-D (same network per lane).
+    const __m256i AB_01 = _mm256_unpacklo_epi32(x[0], x[1]);
+    const __m256i AB_23 = _mm256_unpackhi_epi32(x[0], x[1]);
+
+    // Pair column c with column c+2 within each lane.
+    const __m256i COL_02 = _mm256_unpacklo_epi64(AB_01, AB_23);
+    const __m256i COL_13 = _mm256_unpackhi_epi64(AB_01, AB_23);
+
+    constexpr int q0_q2_q1_q3 = 0b11'01'10'00;
+    x[0] = _mm256_permute4x64_epi64(COL_02, q0_q2_q1_q3);
+    x[1] = _mm256_permute4x64_epi64(COL_13, q0_q2_q1_q3);
+}
+
+/// Transpose one 8x8 matrix of \c uint16_t stored in the folded (row j, row j+4) layout using AVX2 intrinsics
+/**
+* The matrix is held in 4 ymm registers with x[j] = [row j | row j+4]
+* (rows 0-3, named A-D, in the low 128-bit lanes; rows 4-7, named E-H, in
+* the high lanes), and the result is produced in the same layout.  Same
+* network as the 16x16 folded overload below, shrunk to two unpack levels:
+* per lane, the word/dword unpacks transpose the 4x8 submatrix, the qword
+* unpacks pair column c with column c+4, and the final qword permute
+* rejoins each column's halves; see the 16x16 overload for the rationale.
+*/
+static void
+simd_transpose_folded(std::array<__m256i, 4>& x) noexcept
+{
+    // Low lanes: rows A-D; high lanes: rows E-H (same network per lane).
+    const __m256i AB_03 = _mm256_unpacklo_epi16(x[0], x[1]);
+    const __m256i AB_47 = _mm256_unpackhi_epi16(x[0], x[1]);
+    const __m256i CD_03 = _mm256_unpacklo_epi16(x[2], x[3]);
+    const __m256i CD_47 = _mm256_unpackhi_epi16(x[2], x[3]);
+
+    // Per lane: two full 4-element columns of the lane's 4x8 submatrix.
+    const __m256i ABCD_01 = _mm256_unpacklo_epi32(AB_03, CD_03);
+    const __m256i ABCD_23 = _mm256_unpackhi_epi32(AB_03, CD_03);
+    const __m256i ABCD_45 = _mm256_unpacklo_epi32(AB_47, CD_47);
+    const __m256i ABCD_67 = _mm256_unpackhi_epi32(AB_47, CD_47);
+
+    // Pair column c with column c+4 within each lane.
+    const __m256i COL_04 = _mm256_unpacklo_epi64(ABCD_01, ABCD_45);
+    const __m256i COL_15 = _mm256_unpackhi_epi64(ABCD_01, ABCD_45);
+    const __m256i COL_26 = _mm256_unpacklo_epi64(ABCD_23, ABCD_67);
+    const __m256i COL_37 = _mm256_unpackhi_epi64(ABCD_23, ABCD_67);
+
+    constexpr int q0_q2_q1_q3 = 0b11'01'10'00;
+    x[0] = _mm256_permute4x64_epi64(COL_04, q0_q2_q1_q3);
+    x[1] = _mm256_permute4x64_epi64(COL_15, q0_q2_q1_q3);
+    x[2] = _mm256_permute4x64_epi64(COL_26, q0_q2_q1_q3);
+    x[3] = _mm256_permute4x64_epi64(COL_37, q0_q2_q1_q3);
+}
+
 /// Transpose one 16x16 matrix of \c uint8_t stored in the folded (row j, row j+8) layout using AVX2 intrinsics
 /**
 * The matrix is held in 8 ymm registers with x[j] = [row j | row j+8]

@@ -495,7 +495,7 @@ private:
     * \pre \c std::size(dst) <= \c get_rate_size_bytes()
     */
     // }}}
-    void squeeze_into_(std::span<std::byte> dst) noexcept
+    void squeeze_into_(const std::span<std::byte> dst) noexcept
     {
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if dst is empty.
@@ -512,9 +512,7 @@ private:
         // behavior (its pointer arguments are declared never-null).
         if (!std::empty(dst))
         {
-            const auto src = as_byte_span(state_).first(std::size(dst));
-
-            (void)std::memcpy(std::data(dst), std::data(src), std::size(dst));
+            (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
         }
     }
 

@@ -143,9 +143,9 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 * Unlike the overload above (which broadcasts one 128-bit key to both
 * lanes), each element's key here is a full 256-bit value, so the two
 * lanes of an element may use different 128-bit round keys.  Used by the
-* register-resident single-state \c Castella::permute, whose folded state
-* pairs blocks \c i and \c i+8 in one element (with correspondingly folded
-* round constants).
+* register-resident single-state \c Castella::permute, whose folded N-block
+* state pairs blocks \c i and \c i+N/2 in one element (with correspondingly
+* folded round constants).
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void

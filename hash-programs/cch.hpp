@@ -16,6 +16,7 @@
 #include "lfsr.hpp"
 #include "narrow_cast.hpp"
 #include "simd_compress.hpp"
+#include "to_unsigned.hpp"
 
 #include <algorithm>
 #include <array>
@@ -496,7 +497,7 @@ public:
 
         n = std::clamp(n, 0, get_max_digest_size_bytes());
 
-        std::vector<std::byte> result(static_cast<size_t>(n));
+        std::vector<std::byte> result(to_unsigned(n));
 
         final_digest_into_(result);
 

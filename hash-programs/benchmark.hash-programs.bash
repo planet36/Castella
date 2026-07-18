@@ -18,8 +18,9 @@ source ./benchmark-common.bash
 
 
 # Takes about 10:10
+CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
 time hyperfine --shell=none --time-unit millisecond --warmup=5 \
-    --export-csv "${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv" \
+    --export-csv "$CSV" \
     --ignore-failure \
 "${PIN}cksum --untagged --algorithm sysv              /tmp/test.txt" \
 "${PIN}cksum --untagged --algorithm bsd               /tmp/test.txt" \
@@ -99,7 +100,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}xxhsum -H3 /tmp/test.txt" \
 
 
-printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
+printf 'Exported results: %q\n' "$CSV"
 
 # Most recent output (nproc=8)
 :<<EOT

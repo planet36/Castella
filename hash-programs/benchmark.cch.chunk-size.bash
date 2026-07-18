@@ -30,9 +30,10 @@ source ./benchmark-common.bash
 # 2**30 = 1073741824
 
 # Vary --chunk-size
+CSV="${OUTPUT_DIR}/benchmark.cch.chunk-size.${DATETIME}.csv"
 "${PIN_CMD[@]}" hyperfine --shell=none --time-unit millisecond --warmup=5 \
-    --export-csv "${OUTPUT_DIR}/benchmark.cch.chunk-size.${DATETIME}.csv" \
+    --export-csv "$CSV" \
     --parameter-list CHUNK-SIZE 1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216 \
     "./cch --chunk-size={CHUNK-SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt"
 
-printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.cch.chunk-size.${DATETIME}.csv"
+printf 'Exported results: %q\n' "$CSV"

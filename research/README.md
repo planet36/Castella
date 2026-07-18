@@ -79,12 +79,12 @@ Interpretation:
 
 ## Findings: full-suite rerun on the committed flags (2026-07-18)
 
-A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, `-march=x86-64-v3 -maes -mvaes` — the committed config.mk flags, unlike the `-march=raptorlake` used for some earlier findings) reproduced the recorded ratios:
+A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, on the committed config.mk flags `-march=x86-64-v3 -maes -mvaes`) reproduced the recorded ratios:
 
 * Folded permute, _N_ = 16: 1.67× (rounds = 3) to 1.70× (rounds = 16) over the generic path — the documented ~1.7×.
 * `permute_x2`: 1.69–1.79× over two sequential register-resident permutes for rounds ≥ 4 (1.43× at rounds = 3, where the pack/unpack boundary cost weighs most) — at or slightly above the documented ~1.7×.
 * AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — exactly the recorded ratio.
-* The interleaved cch pair measured 1.11× (L1), 1.06× (L2), 1.15× (L3), 1.15× (DRAM) over sequential.  This is consistent with the earlier **pinned** run (the `raptorlake` column of the no-VAES table below: 1.12/1.03/1.02/1.17) and below the 1.23–1.37× of the original **unpinned** medians-of-5 run.  Under pinned, low-noise conditions on this machine, the pair's compute-regime win is real but modest (~1.05–1.15×), and that is the figure the docs now quote; the 1.23–1.37× of the unpinned run should be read as the optimistic end.
+* The interleaved cch pair and the wider-group question: see the dedicated section below, built from this run's data.
 
 ## Findings: the AES stage in isolation (2026-07-17)
 
@@ -123,53 +123,46 @@ Interpretation: the speedup **grows as _N_ shrinks** — a 2- or 4-block state f
 
 Conclusion: folding every supported state size (not just the 16-block state used by `Duplex`) is a clear win; the smaller research-only sizes benefit even more than _N_ = 16 does.
 
-## Findings: two interleaved cch states beat two sequential ones (2026-07-10)
+## Findings: the interleaved cch pair pays ~1.1×; wider groups do not (2026-07-18)
 
-`simd_compress-two-state-benchmark.cpp` hashes two equal-size buffers with two independent `compress_castella_hash` states, either sequentially (buffer A start to finish, then buffer B — what two single-leaf hashes do) or interleaved chunk by chunk (what a paired cch leaf node would do).  Medians of 5 on an i9-13980HX (GCC, `-march=raptorlake`):
+`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do).  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; the last column compares per-byte interleaved throughput against the _N_ = 2 pair:
 
-| per-buffer size (regime) | sequential | interleaved | speedup |
-|--------------------------|-----------:|------------:|--------:|
-| 16 KiB (L1) | 31.2 GiB/s | 38.4 GiB/s | 1.23× |
-| 512 KiB (L2) | 27.6 GiB/s | 38.0 GiB/s | 1.37× |
-| 8 MiB (L3) | 25.9 GiB/s | 33.0 GiB/s | 1.28× |
-| 128 MiB (DRAM) | 17.2 GiB/s | 21.9 GiB/s | 1.28× |
+| per-buffer size (regime) | _N_ | sequential | interleaved | speedup | vs. pair |
+|--------------------------|----:|-----------:|------------:|--------:|---------:|
+| 16 KiB (L1)    | 2 | 65.5 GiB/s | 73.0 GiB/s | 1.11× | — |
+| 16 KiB (L1)    | 3 | 64.7 GiB/s | 69.0 GiB/s | 1.07× | 0.94× |
+| 16 KiB (L1)    | 4 | 62.8 GiB/s | 68.5 GiB/s | 1.09× | 0.94× |
+| 512 KiB (L2)   | 2 | 62.1 GiB/s | 65.8 GiB/s | 1.06× | — |
+| 512 KiB (L2)   | 3 | 61.5 GiB/s | 65.6 GiB/s | 1.07× | 1.00× |
+| 512 KiB (L2)   | 4 | 61.1 GiB/s | 67.4 GiB/s | 1.10× | 1.03× |
+| 8 MiB (L3)     | 2 | 50.4 GiB/s | 57.7 GiB/s | 1.15× | — |
+| 8 MiB (L3)     | 3 | 45.0 GiB/s | 52.4 GiB/s | 1.17× | 0.91× |
+| 8 MiB (L3)     | 4 | 34.6 GiB/s | 44.5 GiB/s | 1.29× | 0.77× |
+| 128 MiB (DRAM) | 2 | 24.4 GiB/s | 28.0 GiB/s | 1.15× | — |
+| 128 MiB (DRAM) | 3 | 23.3 GiB/s | 29.3 GiB/s | 1.26× | 1.05× |
+| 128 MiB (DRAM) | 4 | 22.9 GiB/s | 30.1 GiB/s | 1.31× | 1.07× |
 
-Interpretation: one cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency ≈ 15 cycles) exceeds the throughput cost (24 `vaesenc` ÷ 2 per cycle = 12 cycles) — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count and makes the loop throughput-bound.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize and its state already stays register/store-forwarding friendly.)
+(The 8 MiB rows at _N_ = 3 and 4 approach the L3 capacity, so cross-_N_ comparisons there mix regimes.)
 
-Conclusion: a paired cch leaf node (`HAS_PAIRED_LEAF` for the cch tree policy) is worth ~1.25–1.4× per core.  (Implemented as `compress_castella_hash_x2` in `hash-programs/cch-x2.hpp`; verified by `cch_x2-verify.cpp`.)
+Interpretation:
 
-## Findings: 3 and 4 interleaved cch states do NOT clearly beat 2 (2026-07-10)
+* One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency) exceeds the throughput cost — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count: the pair is worth ~1.05–1.15× per core in the compute-bound regimes.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize.)
+* One state is 8 ymm registers, so two states already fill the 16-register file, and a third and fourth must spill between chunks.  In the cache-resident regimes the wider groups add no instruction-level parallelism the pair did not already provide (0.91–1.03× per byte vs. the pair); only in the DRAM regime does wider interleaving keep winning slightly (1.05–1.07× vs. the pair) — more concurrent read streams, a memory effect rather than an AES one.
 
-The benchmark was extended to N ∈ {2, 3, 4} states to ask whether a node group wider than the pair would pay.  One run, pinned with `taskset -c 0` — unpinned runs on this machine wander enough across cores to invert small differences, so compare only within this table, not against the older one above:
-
-| per-buffer size (regime) | N | sequential | interleaved | speedup | vs. 2-state interleaved |
-|--------------------------|--:|-----------:|------------:|--------:|------------------------:|
-| 16 KiB (L1)   | 2 | 56.2 GiB/s | 65.7 GiB/s | 1.17× | — |
-| 16 KiB (L1)   | 3 | 53.0 GiB/s | 63.1 GiB/s | 1.19× | 0.96× |
-| 16 KiB (L1)   | 4 | 53.6 GiB/s | 60.8 GiB/s | 1.13× | 0.93× |
-| 512 KiB (L2)  | 2 | 57.4 GiB/s | 59.2 GiB/s | 1.03× | — |
-| 512 KiB (L2)  | 3 | 55.0 GiB/s | 60.3 GiB/s | 1.10× | 1.02× |
-| 512 KiB (L2)  | 4 | 52.1 GiB/s | 58.0 GiB/s | 1.11× | 0.98× |
-| 128 MiB (DRAM)| 2 | 19.3 GiB/s | 22.6 GiB/s | 1.17× | — |
-| 128 MiB (DRAM)| 3 | 18.9 GiB/s | 25.2 GiB/s | 1.33× | 1.12× |
-| 128 MiB (DRAM)| 4 | 19.9 GiB/s | 27.3 GiB/s | 1.38× | 1.21× |
-
-(The 8 MiB rows are omitted: at N = 3 and 4 the working set outgrows L3, so cross-N comparisons there mix regimes.)
-
-Interpretation: one cch state is 8 ymm registers, so two states already fill the 16-register file, and a third and fourth must spill between chunks.  In the compute-bound (cache-resident) regimes the extra states add no instruction-level parallelism the pair did not already provide — per-byte throughput tapers mildly *down* with width (the spills) — and only in the DRAM regime does wider interleaving keep winning (~1.2× over the pair at N = 4): more concurrent read streams keep more memory bandwidth in flight, and the AES units are no longer the constraint.
-
-Conclusion: keep the pair.  A `compress_castella_hash_x4` would add a second lockstep class, wider tree machinery, and wider verify programs to buy ~20% more hashing throughput only in the single-threaded DRAM regime (multi-threaded cch is already DRAM-bound, and hashing is only part of single-threaded wall time).  Revisit if a use case hashes huge cache-cold files strictly single-threaded.
+Conclusion: keep the pair (implemented as `compress_castella_hash_x2` in `hash-programs/cch-x2.hpp`; verified by `cch_x2-verify.cpp`); a wider lockstep class would buy a few percent only in the single-threaded DRAM regime.  These tables supersede the 2026-07-10 measurements, which were taken on non-default flags (and, for the original pair table, unpinned — that run's 1.23–1.37× overstated the pinned win).
 
 ## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
 
 `compress_castella_hash_x2` contains no VAES-specific code, so its VAES guard (the cch tree policy's pairing opt-in in `hash-programs/cch-tree.hpp`) looked like it might be an accident of what was measured.  It is not.  The benchmark builds for any AES-capable target (its guard was widened accordingly), and the pair rows, pinned, compare across code generation (ratios are interleaved ÷ sequential per byte):
 
-| regime | `x86-64-v2 -maes` (SSE) | `x86-64-v3 -maes` (AVX2, no VAES) | `raptorlake` (VAES) |
-|--------|------------------------:|----------------------------------:|--------------------:|
-| 16 KiB (L1)    | 1.15× | 0.98× | 1.12× |
-| 512 KiB (L2)   | 0.99× | 0.86× | 1.03× |
-| 8 MiB (L3)     | 0.94× | 0.89× | 1.02× |
-| 128 MiB (DRAM) | 1.28× | 1.28× | 1.17× |
+| regime | `x86-64-v2 -maes` (SSE) | `x86-64-v3 -maes` (AVX2, no VAES) |
+|--------|------------------------:|----------------------------------:|
+| 16 KiB (L1)    | 1.15× | 0.98× |
+| 512 KiB (L2)   | 0.99× | 0.86× |
+| 8 MiB (L3)     | 0.94× | 0.89× |
+| 128 MiB (DRAM) | 1.28× | 1.28× |
+
+(The corresponding VAES ratios on the default flags are in the 2026-07-18 pair section above.)
 
 Interpretation: the pairing win exists because **VAES halves the chain count**.  With 256-bit `vaesenc`, one cch state runs only 8 independent 3-deep chains per 256-byte chunk, leaving the AES units latency-starved — the gap the second state fills.  With 128-bit `aesenc` codegen, one state already runs 16 independent chains, which saturates the AES units on its own; the second state's registers just spill (the AVX2-no-VAES column, whose 16 ymm registers hold the two 8-register states with nothing to spare, loses outright in L2/L3).  The DRAM-regime ~1.28× appears in every column because it is memory-level parallelism (two concurrent read streams), not an AES effect — and in the tree, adjacent leaf chunks are contiguous memory, so the prefetcher already gets much of that.
 

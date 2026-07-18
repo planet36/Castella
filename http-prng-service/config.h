@@ -42,4 +42,4 @@ inline constexpr int max_consec_bytes_sqzd = 0xFFFF;
 * \pre must be >= 8
 * \pre must be <= 256
 */
-inline constexpr int periodic_entropy_size_bytes = 8 + 16;
+inline constexpr int periodic_entropy_size_bytes = 32;

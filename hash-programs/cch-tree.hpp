@@ -117,24 +117,6 @@ private:
         Castella::HashTree<compress_castella_tree_node_policy, compress_castella_tree>;
 
 public:
-    /// The default chunk size (in bytes); shadows the HashTree default
-    // {{{
-    /**
-    * Larger than DuplexTree's 16 KiB because cch nodes hash roughly an
-    * order of magnitude faster, so the per-leaf fixed overhead (state
-    * init, role prefix, padding, finalizing permutation) needs a bigger
-    * chunk to amortize: measured single-thread batch throughput was ~28%
-    * below plain cch at 16 KiB chunks but only ~6% below at 64 KiB, with
-    * the best multithreaded scaling (~63 GiB/s at 512 MiB) also at
-    * 64 KiB.  Files of a few MiB still parallelize.
-    * Reproducible with benchmark.cch.chunk-size.bash.
-    */
-    // }}}
-    static constexpr int32_t DEFAULT_CHUNK_SIZE = 65'536;
-
-    static_assert(CHUNK_SIZE_MIN <= DEFAULT_CHUNK_SIZE);
-    static_assert(DEFAULT_CHUNK_SIZE <= CHUNK_SIZE_MAX);
-
     /// ctor
     /**
     * \param mix_rate forwarded to every node's \c compress_castella_hash

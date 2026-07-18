@@ -7,7 +7,7 @@
 
 Both programs read from standard input when FILE is absent or `-`.
 
-Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `compress_castella_tree`, two instantiations of the same `Castella::HashTree` layer), so the work can be spread across CPU cores with `--num-threads=NUM` (0, the default, means one thread per hardware thread).  The digest never depends on the thread count or the I/O mode; it does depend on `--chunk-size`, which is part of the digest format (the defaults differ: 16 KiB for `castella`, 64 KiB for `cch`).
+Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `compress_castella_tree`, two instantiations of the same `Castella::HashTree` layer), so the work can be spread across CPU cores with `--num-threads=NUM` (0, the default, means one thread per hardware thread).  The digest never depends on the thread count or the I/O mode; it does depend on `--chunk-size`, which is part of the digest format (both programs default to 64 KiB).
 
 Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but their throughput is limited by the reading thread.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread: a CCH node hashes a chunk faster than the chunk could be handed to another core.
 
@@ -19,7 +19,7 @@ The default output format is a line for each FILE:
 
 With `--tag`, each line instead embeds the digest-relevant options (BSD style; `--size` is inferred from the digest length):
 
-    castella (chunk-size=16384,custom='hash',rounds=6,suffix=1) 'FILE' = digest
+    castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) 'FILE' = digest
     cch (chunk-size=65536,mix-rate=256) 'FILE' = digest
 
 Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A `--tag` line carries its own parameters; a default-format line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time, and the accounting, warnings, and exit status follow the `md5sum --check` conventions.
@@ -83,7 +83,7 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent; the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
-These claims were last verified against a full run on 2026-07-18: `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.2×); `castella --rounds=3` beat multithreaded `b3sum` while `--rounds=6` roughly matched it; `castella --no-mmap` was fastest at exactly 2 threads (more threads made it *slower*); streamed `cch` times were identical across thread counts; and the 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input.
+These claims were last verified against a full run on 2026-07-18: `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.2×); `castella --rounds=3` beat multithreaded `b3sum` while `--rounds=6` roughly matched it; `castella --no-mmap` was fastest at exactly 2 threads (more threads made it *slower*); streamed `cch` times were identical across thread counts; and the 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input (for `castella`, 64 KiB was within ~4% of the best and ~7% faster than the former 16 KiB default, single-threaded).
 
 Create the test input the same way the benchmark scripts do (the scripts remove `/tmp/test.txt` when they exit, so a previous script run will not have left it behind):
 
@@ -107,6 +107,6 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
 * **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: `bash benchmark.threads.bash` sweeps `--num-threads` (override with `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads; `castella --no-mmap` and piped input flatten once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` and piped input ignore extra threads entirely (streamed cch input hashes inline by design).  Plot any of the CSVs with `python plot-results.py results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`.
 
-* **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.  The multithreaded-scaling figure quoted in `cch-tree.hpp` (~63 GiB/s) was measured on a 512 MiB input: `FILE_SIZE=512M bash benchmark.cch.chunk-size.bash`.
+* **The 64 KiB default `--chunk-size` of both programs**: `bash benchmark.castella.chunk-size.bash` and `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog` on each resulting CSV.  The defaults were chosen from 512 MiB runs (`FILE_SIZE=512M`): throughput plateaus above roughly 64 KiB for both programs, and 64 KiB keeps small files parallelizable.  The multithreaded-scaling figure quoted in `castella-hash-tree.hpp` (~63 GiB/s for `cch`) comes from the same runs.
 
 * **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.1×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/); findings and methodology are recorded in [research/README.md](../research/README.md).

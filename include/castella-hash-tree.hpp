@@ -163,7 +163,7 @@ concept tree_node_policy =
 *    its adjacent leaf chunks two at a time.
 *
 * 2. **Streaming (pipeline) path.**  When input arrives in pieces too small
-*    for the batch path (e.g. a 32 KiB read loop feeding 16 KiB chunks), a
+*    for the batch path (e.g. a 32 KiB read loop feeding 64 KiB chunks), a
 *    persistent pool of NUM_THREADS workers hashes leaves *while the
 *    calling thread goes back for more input*: each completed chunk is
 *    placed in the next slot of a fixed ring of preallocated slots, a
@@ -227,13 +227,18 @@ struct HashTree
     /// The default chunk size (in bytes)
     // {{{
     /**
-    * Large enough that per-leaf fixed overhead and per-chunk
-    * thread-dispatch overhead are negligible; small enough that files of
-    * a few hundred KiB already parallelize.  A derived tree may shadow
-    * this with a default suited to its node's speed.
+    * Empirically chosen (benchmark.castella.chunk-size.bash and
+    * benchmark.cch.chunk-size.bash, 512 MiB input, 2026-07-18):
+    * throughput climbs until the per-leaf fixed overhead (state init,
+    * role prefix, padding, finalizing permutation) and per-chunk
+    * dispatch overhead are amortized, then plateaus.  64 KiB sits at or
+    * within a few percent of the plateau for both node types (for cch
+    * nodes, the best multithreaded scaling -- ~63 GiB/s -- was also at
+    * 64 KiB), while files of a few hundred KiB still parallelize.  A
+    * derived tree may shadow this with a default suited to its node.
     */
     // }}}
-    static constexpr int32_t DEFAULT_CHUNK_SIZE = 16'384;
+    static constexpr int32_t DEFAULT_CHUNK_SIZE = 65'536;
 
     static_assert(CHUNK_SIZE_MIN <= DEFAULT_CHUNK_SIZE);
     static_assert(DEFAULT_CHUNK_SIZE <= CHUNK_SIZE_MAX);

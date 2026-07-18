@@ -61,7 +61,7 @@ Generic KangarooTwelve-style two-level tree hash, built for multicore hashing. `
 
 The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 
-- **`Castella::DuplexTree`** (`castella-duplex-tree.hpp`): `Duplex` nodes; CV = capacity size; constructor adds `chunk_size_bytes` (default 16 KiB) and `num_threads` after the `Duplex` five; digest via `squeeze_bytes` (successive squeezes distinct). `USE_STREAMING_POOL=true` (~3.3 GiB/s/core nodes benefit from the pipeline). Opts into VAES leaf batching (`node_x2_type = DuplexX2`). Tree KAT in tests/: `1204a8d4…` (must never change).
+- **`Castella::DuplexTree`** (`castella-duplex-tree.hpp`): `Duplex` nodes; CV = capacity size; constructor adds `chunk_size_bytes` (default 64 KiB) and `num_threads` after the `Duplex` five; digest via `squeeze_bytes` (successive squeezes distinct). `USE_STREAMING_POOL=true` (~3.3 GiB/s/core nodes benefit from the pipeline). Opts into VAES leaf batching (`node_x2_type = DuplexX2`). Tree KAT in tests/: `1204a8d4…` (must never change).
 - **`compress_castella_tree`** (`hash-programs/cch-tree.hpp`): `compress_castella_hash<>` nodes; CV = 64 bytes; constructor `(mix_rate, chunk_size_bytes=64 KiB, num_threads)`; digest via `final_digest_bytes` (idempotent). `USE_STREAMING_POOL=false` — a cch node (~15 GiB/s/core) outruns cross-core chunk handoff, so only the batch (mmap) path parallelizes; streamed input hashes inline. Opts into leaf pairing (`node_x2_type = compress_castella_hash_x2<>`, the interleaved — not lane-packed — pair). Beats multithreaded b3sum ~2× on cache-hot files (single-thread ~3.2×).
 
 ### Subprojects

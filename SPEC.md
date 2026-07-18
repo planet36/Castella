@@ -138,7 +138,7 @@ The digest is a function of the tree geometry, the node parameters, and the inpu
 * `CV_i` = the leaf's `squeeze(CV_LEN)`;
 * the digest is the final node's `squeeze(n)`, `n ≤ 16R` (successive squeezes are distinct, as for any duplex).
 
-The `castella` command-line program uses `N` = `"Castella"`, default `S` = `"hash"`, default `CHUNK_SIZE` = 16384, default `num_rounds` = 6, default `suffix` = 1, and derives `C` from the requested digest size `n` as the smallest even block count with `16·C ≥ 2n`.
+The `castella` command-line program uses `N` = `"Castella"`, default `S` = `"hash"`, default `CHUNK_SIZE` = 65536, default `num_rounds` = 6, default `suffix` = 1, and derives `C` from the requested digest size `n` as the smallest even block count with `16·C ≥ 2n`.
 
 ### The keyed (MAC) construction
 

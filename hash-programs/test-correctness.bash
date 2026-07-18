@@ -153,9 +153,9 @@ function assert_eq_cmd_str_status
 #     1 KiB: too small to trigger a mix at the default mix rate
 #    64 KiB: exactly 256 chunks (the default mix rate boundary)
 #   100 KB : large enough to be memory-mapped; not a multiple of the cch
-#            compression block size (256), castella's default tree chunk
-#            size (16384), cch's default tree chunk size (65536), the read
-#            block size (32768), or the page size (4096)
+#            compression block size (256), the default tree chunk size of
+#            both programs (65536), the read block size (32768), or the
+#            page size (4096)
 #     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
@@ -193,19 +193,19 @@ SUFFIX=0
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    53b87705bfec46e396eedacc06f3fc2a
+    28972bdafe8179d94cadc226523f5619
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    226c6d056c26f752d0fb521196669b6fcab63b60152eae22f54da94fab3d59ac
+    c49fdd8a0c2f0d25be7a23b8801fbdb57d6eb6f20f04f289c7fc8ac5ca610ab7
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    586dfedb64341e6dc36298a76e3d638ae9b0433cd44175b9b60cd2ccaa13757b130f2d3ae8716388bc7323e150e1b9fc
+    295f2570600b59ec63b58ae93fecb1fe025fe19018ea2a2f9e4e41652716b36898bcaf9b31d4ccb5933c000f354e97ee
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS  --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    6a2215f0df50f0cff822368decc5babd44007e826e86a44373a73110ab7c9dee9997e22f5ba64cb9ca8ee7a253b25c570f75f37007e8180feed2fe47d4d02564
+    32c7917372fa301f4fde2585ae371539da2152ba63c36ecb74a5dda63756af69ecb47bc543c7c8c6c3b97125b41e8afe9684f3bfbf00d0306dd5adb923aa5bfe
 
 CUSTOM='¡Ay, caramba!'
 ROUNDS=16
@@ -213,19 +213,19 @@ SUFFIX=105
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    a1320ab593fff863b5e21bda60151741
+    e8394ac8c21b209ade9b7501c56bfc1e
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    c51c9a24fa3e6d3f2752aed52f088008d8386e372484eeb5d5cae7526fff22d7
+    679d8b01ff5db3c821de89aec8ffe5b8b200488b2a3451162b24a60c31e419d3
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    86e665faa88ac36318518ed1a1b8dea77eb79e054b0fab98f55b64adfbe720ea4b0602d9bc0374c100b53799e06d7bce
+    f3110931f131afb9c36fde659e10b883639241543ae72fa583a42878c9fcb12311e1c20ce082beab672f654e5b04ae00
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-    b9a113556e549bf89345f871686bf4fc66851a4692bec39d17e05a8a4951373b20627bf9abc54ad7d266f3058a6567f0ffa2960bdc8f93fb7b85ffc2c32ba6d1
+    b1517ca48696ff050ed10f3eb3696f5000838212716705ff81b4421d8bb3d8655924b3285fc14c32bd69a1884d84b5f6159292a23a48053cc9c043e5810952a5
 
 assert_eq_cmd_str \
     "./cch --size=16 /tmp/test-1MiB.txt | cut -w -f 1" \
@@ -253,15 +253,15 @@ SUFFIX=0
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-0B.txt | cut -w -f 1" \
-    3f310987cf2e5725fd39e6281694c5b93878e17e92cb5863f2e8bdd25990727e
+    6d7cfcfab9493b5fc842ba35e82c79de66addefe151c7d924a2d23450bb680fa
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100B.txt | cut -w -f 1" \
-    6e5e8b4ff6c19b317290a060ece90419a74fb302890471b49df9c0271f82bad8
+    023b50ff0a3e8a8822e4778548270f6e2e884ba0335428dbff1e051ab44f091f
 
 assert_eq_cmd_str \
     "./castella --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100KB.txt | cut -w -f 1" \
-    82d2bd2d5b8ba4b80963655f7d97a27877a61a651cf42ef652c96278c3a4c6e0
+    14a592e9d6cdfcab5d5cd8654a3a0ea8734e40c6ce0a2767db5fae0520c8a465
 
 assert_eq_cmd_str \
     "./cch --size=32 /tmp/test-0B.txt | cut -w -f 1" \
@@ -557,7 +557,7 @@ printf 'Duff'     > /tmp/test-key2.bin || exit
 
 assert_eq_cmd_str \
     './castella --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | cut -w -f 1' \
-    7fa10db569fb361d394e05f27dd812a50b462989feda874130d15ed386129d85
+    3072378b717dd04714e99e74bc2050b82ce0ce3deff877d28bee041481cf953d
 
 # A keyed digest differs from the unkeyed digest, and differs per key.
 

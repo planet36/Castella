@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Parse a command line option argument as a bounded int
+/// Parse a command line option argument as an int
 /**
 * \file
 * \author Steven Ward
@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -49,4 +50,20 @@ parse_option_int(const char* optarg, const int min, const int max, const char* o
         (void)std::fflush(stdout);
         errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
     }
+}
+
+/// Parse \a optarg as an int, or exit with an error.
+/**
+* \param optarg the option argument to parse
+* \param option_name the option name, used in the error message
+* \return the parsed value
+* \note The parsed value is bounded only by the range of \c int.
+* \note On a malformed or out-of-range value this prints a diagnostic and
+*       exits (via \c errx); it does not return.
+*/
+inline int
+parse_option_int(const char* optarg, const char* option_name)
+{
+    return parse_option_int(optarg, std::numeric_limits<int>::min(),
+                            std::numeric_limits<int>::max(), option_name);
 }

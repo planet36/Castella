@@ -19,6 +19,7 @@
 #include "../hash-programs/cch-x2.hpp"
 #include "../hash-programs/cch.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -100,7 +101,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     }
 
     // 0 disables periodic mixing; small rates mix within a few chunks.
-    constexpr int mix_rates[] = {0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
+    constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
                                  compress_castella_hash<>::MIX_RATE_MAX};
 
     for (int i = 0; i < num_samples; ++i)

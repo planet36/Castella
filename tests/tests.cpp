@@ -11,6 +11,7 @@
 #include "quote_shell_always.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <print>
@@ -317,7 +318,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // Test input lengths at the chunk boundaries; all digests must
             // be pairwise distinct (in particular: empty vs 1 byte, and
             // exactly k chunks vs k chunks + 1 byte)
-            constexpr size_t lens[] = {
+            constexpr std::array lens{
                 0,
                 1,
                 chunk_size - 1,

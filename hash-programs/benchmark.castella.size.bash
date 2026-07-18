@@ -14,8 +14,19 @@ DATETIME=$(date -u +'%Y%m%dT%H%M%S')
 
 mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
+# Optional low-noise mode: CPU_LIST pins the run via taskset (affinity is
+# inherited by the hash program); NUM_THREADS is passed as --num-threads
+# (default 0 = one thread per hardware thread).  Pair them, e.g.:
+#   CPU_LIST=0 NUM_THREADS=1 bash benchmark.castella.size.bash
+NUM_THREADS=${NUM_THREADS:-0}
+PIN_CMD=()
+if [[ -n "${CPU_LIST:-}" ]] && command -v taskset > /dev/null
+then
+    PIN_CMD=(taskset -c "$CPU_LIST")
+fi
+
 # Vary --size
-hyperfine --shell=none --time-unit millisecond --warmup=5 \
+"${PIN_CMD[@]}" hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv" \
     --parameter-scan SIZE 8 64 --parameter-step-size 8 \
-    './castella --size={SIZE} /tmp/test.txt'
+    "./castella --size={SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt"

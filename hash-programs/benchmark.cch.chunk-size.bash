@@ -14,6 +14,17 @@ DATETIME=$(date -u +'%Y%m%dT%H%M%S')
 
 mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
+# Optional low-noise mode: CPU_LIST pins the run via taskset (affinity is
+# inherited by the hash program); NUM_THREADS is passed as --num-threads
+# (default 0 = one thread per hardware thread).  Pair them, e.g.:
+#   CPU_LIST=0 NUM_THREADS=1 bash benchmark.cch.chunk-size.bash
+NUM_THREADS=${NUM_THREADS:-0}
+PIN_CMD=()
+if [[ -n "${CPU_LIST:-}" ]] && command -v taskset > /dev/null
+then
+    PIN_CMD=(taskset -c "$CPU_LIST")
+fi
+
 # 2**10 = 1024
 # 2**11 = 2048
 # 2**12 = 4096
@@ -37,7 +48,7 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 # 2**30 = 1073741824
 
 # Vary --chunk-size
-hyperfine --shell=none --time-unit millisecond --warmup=5 \
+"${PIN_CMD[@]}" hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "${OUTPUT_DIR}/benchmark.cch.chunk-size.${DATETIME}.csv" \
     --parameter-list CHUNK-SIZE 1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216 \
-    './cch --chunk-size={CHUNK-SIZE} /tmp/test.txt'
+    "./cch --chunk-size={CHUNK-SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt"

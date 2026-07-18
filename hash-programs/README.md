@@ -49,6 +49,8 @@ Reading from standard input (both piped and redirected) is verified to produce t
 
 The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated 200 MB file that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
+For low-noise single-core runs, the parameter-sweep scripts accept `CPU_LIST` (pin the run via `taskset`, e.g. `CPU_LIST=0`) and `NUM_THREADS` (passed as `--num-threads`; default 0 = one thread per hardware thread) — pair them.  `benchmark.hash-programs.bash` pins its single-thread rows to core 0 automatically (when `taskset` exists).
+
 Benchmark results are saved in CSV format in a folder named `results`.
 
 Use `plot-results.py` to plot a benchmark CSV file (except the result of `benchmark.hash-programs.bash`).  It requires module `matplotlib`.

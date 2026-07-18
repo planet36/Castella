@@ -7,6 +7,11 @@ export LC_ALL=C
 test -x castella || exit
 test -x cch || exit
 
+# Pin the single-thread rows to core 0 (when taskset exists) to reduce
+# scheduler noise; the multithreaded rows stay unpinned.
+PIN=
+command -v taskset > /dev/null && PIN='taskset -c 0 '
+
 # Setup
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 200M > /tmp/test.txt || exit
 
@@ -104,11 +109,11 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 './cch --mix-rate=1024 /tmp/test.txt' \
 './cch --mix-rate=2048 /tmp/test.txt' \
 './cch --mix-rate=0    /tmp/test.txt' \
-'./castella --num-threads=1 /tmp/test.txt' \
-'./cch --num-threads=1      /tmp/test.txt' \
+"${PIN}./castella --num-threads=1 /tmp/test.txt" \
+"${PIN}./cch --num-threads=1      /tmp/test.txt" \
 'b3sum                 /tmp/test.txt' \
 'b3sum --no-mmap       /tmp/test.txt' \
-'b3sum --num-threads=1 /tmp/test.txt' \
+"${PIN}b3sum --num-threads=1 /tmp/test.txt" \
 'xxhsum -H0 /tmp/test.txt' \
 'xxhsum -H1 /tmp/test.txt' \
 'xxhsum -H2 /tmp/test.txt' \

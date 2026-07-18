@@ -13,7 +13,17 @@ test -x cch || exit
 # shellcheck source=benchmark-common.bash
 source ./benchmark-common.bash
 
-THREAD_COUNTS=${THREAD_COUNTS:-1,2,4,8}
+# Default: powers of 2 up to nproc, then nproc itself (so the hardware
+# ceiling is always measured, without duplicating a power of 2)
+NPROC=$(nproc)
+DEFAULT_THREAD_COUNTS=1
+for ((T = 2; T < NPROC; T *= 2))
+do
+    DEFAULT_THREAD_COUNTS+=",$T"
+done
+((NPROC > 1)) && DEFAULT_THREAD_COUNTS+=",$NPROC"
+
+THREAD_COUNTS=${THREAD_COUNTS:-$DEFAULT_THREAD_COUNTS}
 
 for PROGRAM in castella cch
 do

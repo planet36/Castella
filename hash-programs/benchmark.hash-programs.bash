@@ -97,8 +97,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}xxhsum -H0 /tmp/test.txt" \
 "${PIN}xxhsum -H1 /tmp/test.txt" \
 "${PIN}xxhsum -H2 /tmp/test.txt" \
-"${PIN}xxhsum -H3 /tmp/test.txt" \
-
+"${PIN}xxhsum -H3 /tmp/test.txt" || exit
 
 printf 'Exported results: %q\n' "$CSV"
 

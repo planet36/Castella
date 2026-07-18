@@ -78,6 +78,7 @@ Run these commands:
 * `python plot-results.py results/benchmark.castella.size.<TIMESTAMP>.csv`
 * `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`
 * `python plot-results.py --xlog results/benchmark.cch.mix-rate.<TIMESTAMP>.csv`
+* `python plot-results.py --xlog results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`
 
 ## Reproducing the documented performance claims
 

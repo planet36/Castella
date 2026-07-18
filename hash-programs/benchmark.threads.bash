@@ -33,11 +33,15 @@ do
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --num-threads={NUM-THREADS} /tmp/test.txt" || exit
 
+    printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.mmap.${DATETIME}.csv"
+
     # --no-mmap: a single thread reads the file into a buffer
     hyperfine --shell=none --time-unit millisecond --warmup=5 \
         --export-csv "${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.no-mmap.${DATETIME}.csv" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} /tmp/test.txt" || exit
+
+    printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.no-mmap.${DATETIME}.csv"
 
     # Piped stdin: a shell is needed for the pipe (no --shell=none), so the
     # measured time includes the cat+pipe cost
@@ -45,4 +49,6 @@ do
         --export-csv "${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.stdin.${DATETIME}.csv" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "cat /tmp/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
+
+    printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.stdin.${DATETIME}.csv"
 done

@@ -12,3 +12,5 @@ source ./benchmark-common.bash
     --export-csv "${OUTPUT_DIR}/benchmark.castella.rounds.${DATETIME}.csv" \
     --parameter-scan ROUNDS 3 16 \
     "./castella --rounds={ROUNDS} --num-threads=${NUM_THREADS} /tmp/test.txt"
+
+printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.castella.rounds.${DATETIME}.csv"

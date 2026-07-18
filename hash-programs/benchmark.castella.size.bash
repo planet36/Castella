@@ -12,3 +12,5 @@ source ./benchmark-common.bash
     --export-csv "${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv" \
     --parameter-scan SIZE 8 64 --parameter-step-size 8 \
     "./castella --size={SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt"
+
+printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv"

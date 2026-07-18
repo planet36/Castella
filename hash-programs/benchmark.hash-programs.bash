@@ -99,6 +99,8 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}xxhsum -H3 /tmp/test.txt" \
 
 
+printf 'Exported results: %q\n' "${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
+
 # Most recent output (nproc=8)
 :<<EOT
 

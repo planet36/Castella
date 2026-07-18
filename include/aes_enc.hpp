@@ -83,6 +83,82 @@ aes_enc_0_inv(T data) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
+/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
+template <int aes_num_rounds, size_t N>
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
+static void
+aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
+{
+    for (int i = 0; i < std::ssize(arr); i += 2)
+    {
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
+
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            v = aes_enc_0(v);
+        }
+
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
+    }
+}
+
+#endif
+
+/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
+template <int aes_num_rounds, size_t N>
+static void
+aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
+{
+    for (int i = 0; i < std::ssize(arr); ++i)
+    {
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            arr[i] = aes_enc_0(arr[i]);
+        }
+    }
+}
+
+#if defined(__x86_64__) && defined(__VAES__)
+
+/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
+template <int aes_num_rounds, size_t N>
+requires (N > 0) && ((N % 2) == 0) // N must be positive and even
+static void
+aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
+{
+    for (int i = 0; i < std::ssize(arr); i += 2)
+    {
+        // Cast adjacent pairs of elements to __m256i.
+        __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
+
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            v = aes_enc_0_inv(v);
+        }
+
+        _mm256_storeu_si256(reinterpret_cast<__m256i*>(&arr[i]), v);
+    }
+}
+
+#endif
+
+/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
+template <int aes_num_rounds, size_t N>
+static void
+aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
+{
+    for (int i = 0; i < std::ssize(arr); ++i)
+    {
+        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        {
+            arr[i] = aes_enc_0_inv(arr[i]);
+        }
+    }
+}
+
+#if defined(__x86_64__) && defined(__VAES__)
+
 /// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
 /**
 * In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its

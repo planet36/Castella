@@ -49,7 +49,7 @@ lfsr_step_full(lfsr128_state_t lfsr) noexcept
 
 /// Create a \c lfsr128_state_t from the given bytes
 [[nodiscard]] static consteval lfsr128_state_t
-lfsr_from_bytes16(const std::string_view src) noexcept
+lfsr_from_bytes16(const std::string_view src)
 {
     if (std::size(src) != sizeof(lfsr128_state_t))
         throw std::invalid_argument("src size != lfsr size");

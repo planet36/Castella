@@ -86,9 +86,6 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 './castella            --size=32 /tmp/test.txt' \
 './castella            --size=48 /tmp/test.txt' \
 './castella            --size=64 /tmp/test.txt' \
-'./castella --rounds=16 --size=32 /tmp/test.txt' \
-'./castella --rounds=16 --size=48 /tmp/test.txt' \
-'./castella --rounds=16 --size=64 /tmp/test.txt' \
 "${PIN}./cch --num-threads=1      /tmp/test.txt" \
 './cch --mix-rate=1    /tmp/test.txt' \
 './cch                 /tmp/test.txt' \

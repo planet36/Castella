@@ -12,9 +12,21 @@
 #include <string_view>
 
 /// Castella hash object parameters
+
+/**
+* \pre must be >= \c Castella::Duplex::C_MIN (2)
+* \pre must be <= \c Castella::Duplex::C_MAX (8)
+*/
 inline constexpr int capacity_blocks = 6;
+
+/**
+* \pre must be >= <code>Castella::NUM_ROUNDS_MIN<16>()</code> (3)
+* \pre must be <= \c Castella::NUM_ROUNDS_MAX (16)
+*/
 inline constexpr int num_rounds = 8;
+
 inline constexpr int input_suffix = 1;
+
 inline constexpr std::string_view customization_str = "HTTP PRNG service";
 
 /// High-quality entropy will be added to the Castella service after this

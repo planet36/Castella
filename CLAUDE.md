@@ -82,6 +82,24 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 
 Always re-read source files before analyzing or modifying them. Do not rely on previously cached file contents.
 
+## Git Workflow
+
+- NEVER create git branches or worktrees, and NEVER commit or push without explicit user approval. Work in place on the current branch.
+- Only stage or commit changes when the user explicitly asks, and only the specific changes requested.
+- When commits are requested, make them granular (one logical change per commit) and follow existing repo conventions.
+
+## Accuracy / Verification
+
+Verify all technical claims empirically (compile/run/test) before asserting them — do not rely on memory for API details, header locations, language-standard requirements, or compiler behavior.
+
+## Code Style / Comments
+
+Keep code comments concise: prefer brief, accurate wording over verbose explanations. Avoid "load-bearing" phrasing and avoid over-compressing accuracy away.
+
+## Build / Makefile
+
+Do not change build flags (e.g., `-std`) or other configuration based on unverified documentation; confirm the current value and justification before altering.
+
 ## Code Review Checklist
 
 When reviewing C/C++ code, check for: memory leaks, include audit issues, API consistency, constexpr optimization opportunities, performance, documentation, security issues, and README accuracy.

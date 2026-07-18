@@ -45,6 +45,7 @@ Reading from standard input (both piped and redirected) is verified to produce t
 | benchmark.castella.size.bash | Benchmark `castella` across different `--size` values |
 | benchmark.cch.chunk-size.bash | Benchmark `cch` across different `--chunk-size` values |
 | benchmark.cch.mix-rate.bash | Benchmark `cch` across different `--mix-rate` values |
+| benchmark.threads.bash | Sweep `--num-threads` in each I/O mode (mmap, `--no-mmap`, piped stdin) for both programs |
 
 The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated 200 MB file that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
@@ -63,6 +64,7 @@ Run these commands:
 * `bash benchmark.castella.size.bash`
 * `bash benchmark.cch.chunk-size.bash`
 * `bash benchmark.cch.mix-rate.bash`
+* `bash benchmark.threads.bash`
 * `python plot-results.py results/benchmark.castella.rounds.<TIMESTAMP>.csv`
 * `python plot-results.py results/benchmark.castella.size.<TIMESTAMP>.csv`
 * `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`
@@ -90,15 +92,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
   (`taskset` pins the run to one core, matching the per-core claim.  Node-level throughput — one hash state, no tree — is measured by `research/simd_compress-two-state-benchmark` instead; see [research/README.md](../research/README.md).)
 
-* **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: sweep thread counts in each I/O mode and observe where the times stop improving:
-
-  ```bash
-  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './castella --num-threads={N} /tmp/test.txt'
-  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './castella --no-mmap --num-threads={N} /tmp/test.txt'
-  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './cch --num-threads={N} /tmp/test.txt' './cch --no-mmap --num-threads={N} /tmp/test.txt'
-  ```
-
-  The mmap mode keeps scaling with threads; `castella --no-mmap` flattens once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` ignores extra threads entirely (streamed cch input hashes inline by design).
+* **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: `bash benchmark.threads.bash` sweeps `--num-threads` (override with `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads; `castella --no-mmap` and piped input flatten once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` and piped input ignore extra threads entirely (streamed cch input hashes inline by design).  Plot any of the CSVs with `python plot-results.py results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`.
 
 * **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.
 

@@ -84,7 +84,7 @@ A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, `-march=x86-64-v3 -m
 * Folded permute, _N_ = 16: 1.67× (rounds = 3) to 1.70× (rounds = 16) over the generic path — the documented ~1.7×.
 * `permute_x2`: 1.69–1.79× over two sequential register-resident permutes for rounds ≥ 4 (1.43× at rounds = 3, where the pack/unpack boundary cost weighs most) — at or slightly above the documented ~1.7×.
 * AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — exactly the recorded ratio.
-* The interleaved cch pair measured 1.11× (L1), 1.06× (L2), 1.15× (L3), 1.15× (DRAM) over sequential.  This is consistent with the earlier **pinned** run (the `raptorlake` column of the no-VAES table below: 1.12/1.03/1.02/1.17) and below the 1.23–1.37× of the original **unpinned** medians-of-5 run.  Under pinned, low-noise conditions on this machine, the pair's compute-regime win is real but modest (~1.05–1.15×); the docs' headline "~1.25–1.4×" comes from the unpinned run and should be read as the optimistic end.
+* The interleaved cch pair measured 1.11× (L1), 1.06× (L2), 1.15× (L3), 1.15× (DRAM) over sequential.  This is consistent with the earlier **pinned** run (the `raptorlake` column of the no-VAES table below: 1.12/1.03/1.02/1.17) and below the 1.23–1.37× of the original **unpinned** medians-of-5 run.  Under pinned, low-noise conditions on this machine, the pair's compute-regime win is real but modest (~1.05–1.15×), and that is the figure the docs now quote; the 1.23–1.37× of the unpinned run should be read as the optimistic end.
 
 ## Findings: the AES stage in isolation (2026-07-17)
 

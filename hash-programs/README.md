@@ -104,4 +104,4 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
 * **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.  The multithreaded-scaling figure quoted in `cch-tree.hpp` (~63 GiB/s) was measured on a 512 MiB input: `FILE_SIZE=512M bash benchmark.cch.chunk-size.bash`.
 
-* **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.25–1.4×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/); findings and methodology are recorded in [research/README.md](../research/README.md).
+* **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.1×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/); findings and methodology are recorded in [research/README.md](../research/README.md).

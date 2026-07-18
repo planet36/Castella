@@ -82,7 +82,7 @@ Every performance number in this repository's documentation is machine-dependent
 
 These claims were last verified against a full run on 2026-07-18: `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.2×); `castella --rounds=3` beat multithreaded `b3sum` while `--rounds=6` roughly matched it; `castella --no-mmap` was fastest at exactly 2 threads (more threads made it *slower*); streamed `cch` times were identical across thread counts; and the 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input.
 
-Create the test input the same way the benchmark scripts do:
+Create the test input the same way the benchmark scripts do (the scripts remove `/tmp/test.txt` when they exit, so a previous script run will not have left it behind):
 
 ```bash
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 200M > /tmp/test.txt

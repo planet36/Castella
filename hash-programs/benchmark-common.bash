@@ -12,6 +12,11 @@ export LC_ALL=C
 
 # Setup
 FILE_SIZE=${FILE_SIZE:-200M}
+
+# Remove the generated input file at the end of every run (the trap is set
+# before the generation so a failed or interrupted run is cleaned up too)
+trap 'rm --force -- /tmp/test.txt' EXIT
+
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > /tmp/test.txt || exit
 
 OUTPUT_DIR=results

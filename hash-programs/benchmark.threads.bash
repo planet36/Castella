@@ -12,21 +12,13 @@
 # The stdin runs go through a shell (for the pipe), so their absolute times
 # include the cat+pipe cost; that cost is inherent to piped input.
 
-export LC_ALL=C
-
 test -x castella || exit
 test -x cch || exit
 
-# Setup
-FILE_SIZE=${FILE_SIZE:-200M}
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > /tmp/test.txt || exit
+# shellcheck source=benchmark-common.bash
+source ./benchmark-common.bash
 
 THREAD_COUNTS=${THREAD_COUNTS:-1,2,4,8}
-
-OUTPUT_DIR=results
-DATETIME=$(date -u +'%Y%m%dT%H%M%S')
-
-mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
 for PROGRAM in castella cch
 do

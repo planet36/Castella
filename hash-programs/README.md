@@ -47,6 +47,8 @@ Reading from standard input (both piped and redirected) is verified to produce t
 | benchmark.cch.mix-rate.bash | Benchmark `cch` across different `--mix-rate` values |
 | benchmark.threads.bash | Sweep `--num-threads` in each I/O mode (mmap, `--no-mmap`, piped stdin) for both programs |
 
+Shared setup (test-file generation, the results directory, and the pinning variables) lives in `benchmark-common.bash`, which every benchmark script sources.
+
 The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated test file (200 MB by default; override with `FILE_SIZE=…`, in `head --bytes` syntax) that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
 For low-noise single-core runs, the parameter-sweep scripts accept `CPU_LIST` (a CPU list for `taskset`, e.g. `CPU_LIST=0`, which pins the run) and `NUM_THREADS` (passed as `--num-threads`; default 0 = one thread per hardware thread) — pair them.  `benchmark.hash-programs.bash` pins its single-thread rows to core 0 automatically (when `taskset` exists).

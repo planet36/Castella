@@ -2,25 +2,15 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
-export LC_ALL=C
-
 test -x castella || exit
 test -x cch || exit
 
-# Pin the single-threaded rows (the external sequential tools and the
-# --num-threads=1 rows) to core 0 (when taskset exists) to reduce scheduler
-# noise; the multithreaded rows stay unpinned.
-PIN=
-command -v taskset > /dev/null && PIN='taskset -c 0 '
+# shellcheck source=benchmark-common.bash
+source ./benchmark-common.bash
 
-# Setup
-FILE_SIZE=${FILE_SIZE:-200M}
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > /tmp/test.txt || exit
-
-OUTPUT_DIR=results
-DATETIME=$(date -u +'%Y%m%dT%H%M%S')
-
-mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
+# The single-threaded rows (the external sequential tools and the
+# --num-threads=1 rows) are prefixed with ${PIN} to reduce scheduler noise;
+# the multithreaded rows stay unpinned.
 
 # How to get openssl digest algorithms
 # XXX: some of the algorithms give this error: Error setting digest

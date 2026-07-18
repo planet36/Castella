@@ -12,7 +12,8 @@ NUM_THREADS=1
 export NUM_THREADS
 
 # Should be an odd number for simpler median
-BENCHMARK_REPS=5
+# (the recorded findings in README.md used BENCHMARK_REPS=7)
+BENCHMARK_REPS=${BENCHMARK_REPS:-5}
 
 # Pin to one CPU per thread: mid-run core migration adds noise that can invert
 # small effects.  CPU affinity is inherited across the benchmarks' ASLR

@@ -47,7 +47,7 @@ Reading from standard input (both piped and redirected) is verified to produce t
 | benchmark.cch.mix-rate.bash | Benchmark `cch` across different `--mix-rate` values |
 | benchmark.threads.bash | Sweep `--num-threads` in each I/O mode (mmap, `--no-mmap`, piped stdin) for both programs |
 
-The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated 200 MB file that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
+The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated test file (200 MB by default; override with `FILE_SIZE=…`, in `head --bytes` syntax) that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
 For low-noise single-core runs, the parameter-sweep scripts accept `CPU_LIST` (pin the run via `taskset`, e.g. `CPU_LIST=0`) and `NUM_THREADS` (passed as `--num-threads`; default 0 = one thread per hardware thread) — pair them.  `benchmark.hash-programs.bash` pins its single-thread rows to core 0 automatically (when `taskset` exists).
 
@@ -96,6 +96,6 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
 * **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: `bash benchmark.threads.bash` sweeps `--num-threads` (override with `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads; `castella --no-mmap` and piped input flatten once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` and piped input ignore extra threads entirely (streamed cch input hashes inline by design).  Plot any of the CSVs with `python plot-results.py results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`.
 
-* **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.
+* **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.  The multithreaded-scaling figure quoted in `cch-tree.hpp` (~63 GiB/s) was measured on a 512 MiB input: `FILE_SIZE=512M bash benchmark.cch.chunk-size.bash`.
 
 * **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.25–1.4×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/); findings and methodology are recorded in [research/README.md](../research/README.md).

@@ -49,6 +49,8 @@ The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) 
 
 Raw benchmark results are saved in a folder named `results`.
 
+`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions per benchmark; override with `BENCHMARK_REPS=…` (the 2026-07-17 findings below used 7; each findings section states its own repetition count).
+
 ## Findings: the AES stage in isolation (2026-07-17)
 
 `aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr`/`aes_enc_inv_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overloads are shadowed under VAES by the constrained same-signature overloads, the benchmark carries verbatim copies of them (`aes_enc_arr_generic`/`aes_enc_inv_arr_generic` — keep in sync).  Medians of 7 repetitions, interleaved, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):

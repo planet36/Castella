@@ -7,8 +7,9 @@ export LC_ALL=C
 test -x castella || exit
 test -x cch || exit
 
-# Pin the single-thread rows to core 0 (when taskset exists) to reduce
-# scheduler noise; the multithreaded rows stay unpinned.
+# Pin the single-threaded rows (the external sequential tools and the
+# --num-threads=1 rows) to core 0 (when taskset exists) to reduce scheduler
+# noise; the multithreaded rows stay unpinned.
 PIN=
 command -v taskset > /dev/null && PIN='taskset -c 0 '
 
@@ -30,64 +31,64 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 time hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv" \
     --ignore-failure \
-'cksum --untagged --algorithm sysv              /tmp/test.txt' \
-'cksum --untagged --algorithm bsd               /tmp/test.txt' \
-'cksum --untagged --algorithm crc               /tmp/test.txt' \
-'cksum --untagged --algorithm crc32b            /tmp/test.txt' \
-'cksum --untagged --algorithm md5               /tmp/test.txt' \
-'cksum --untagged --algorithm sha1              /tmp/test.txt' \
-'cksum --untagged --algorithm sha2 --length 224 /tmp/test.txt' \
-'cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt' \
-'cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt' \
-'cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length 224 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length 256 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length 384 /tmp/test.txt' \
-'cksum --untagged --algorithm sha3 --length 512 /tmp/test.txt' \
-'cksum --untagged --algorithm blake2b           /tmp/test.txt' \
-'cksum --untagged --algorithm sm3               /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sysv                  /tmp/test.txt' \
-'uu-cksum --untagged --algorithm bsd                   /tmp/test.txt' \
-'uu-cksum --untagged --algorithm crc                   /tmp/test.txt' \
-'uu-cksum --untagged --algorithm crc32b                /tmp/test.txt' \
-'uu-cksum --untagged --algorithm md5                   /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha1                  /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha2 --length 224     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha2 --length 256     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha2 --length 384     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha2 --length 512     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha3 --length 224     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha3 --length 256     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha3 --length 384     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sha3 --length 512     /tmp/test.txt' \
-'uu-cksum --untagged --algorithm blake2b               /tmp/test.txt' \
-'uu-cksum --untagged --algorithm sm3                   /tmp/test.txt' \
-'uu-cksum --untagged --algorithm blake3                /tmp/test.txt' \
-'uu-cksum --untagged --algorithm shake128 --length 256 /tmp/test.txt' \
-'uu-cksum --untagged --algorithm shake256 --length 512 /tmp/test.txt' \
-'openssl dgst -r -blake2b512          /tmp/test.txt' \
-'openssl dgst -r -blake2s256          /tmp/test.txt' \
-'openssl dgst -r -md5                 /tmp/test.txt' \
-'openssl dgst -r -md5-sha1            /tmp/test.txt' \
-'openssl dgst -r -ripemd              /tmp/test.txt' \
-'openssl dgst -r -ripemd160           /tmp/test.txt' \
-'openssl dgst -r -rmd160              /tmp/test.txt' \
-'openssl dgst -r -sha1                /tmp/test.txt' \
-'openssl dgst -r -sha224              /tmp/test.txt' \
-'openssl dgst -r -sha256              /tmp/test.txt' \
-'openssl dgst -r -sha3-224            /tmp/test.txt' \
-'openssl dgst -r -sha3-256            /tmp/test.txt' \
-'openssl dgst -r -sha3-384            /tmp/test.txt' \
-'openssl dgst -r -sha3-512            /tmp/test.txt' \
-'openssl dgst -r -sha384              /tmp/test.txt' \
-'openssl dgst -r -sha512              /tmp/test.txt' \
-'openssl dgst -r -sha512-224          /tmp/test.txt' \
-'openssl dgst -r -sha512-256          /tmp/test.txt' \
-'openssl dgst -r -shake128 -xoflen 32 /tmp/test.txt' \
-'openssl dgst -r -shake256 -xoflen 64 /tmp/test.txt' \
-'openssl dgst -r -sm3                 /tmp/test.txt' \
-'openssl dgst -r -ssl3-md5            /tmp/test.txt' \
-'openssl dgst -r -ssl3-sha1           /tmp/test.txt' \
+"${PIN}cksum --untagged --algorithm sysv              /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm bsd               /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm crc               /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm crc32b            /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm md5               /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha1              /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha2 --length 224 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha3 --length 224 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha3 --length 256 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha3 --length 384 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sha3 --length 512 /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm blake2b           /tmp/test.txt" \
+"${PIN}cksum --untagged --algorithm sm3               /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sysv                  /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm bsd                   /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm crc                   /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm crc32b                /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm md5                   /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha1                  /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha2 --length 224     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha2 --length 256     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha2 --length 384     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha2 --length 512     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha3 --length 224     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha3 --length 256     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha3 --length 384     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sha3 --length 512     /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm blake2b               /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm sm3                   /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm blake3                /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm shake128 --length 256 /tmp/test.txt" \
+"${PIN}uu-cksum --untagged --algorithm shake256 --length 512 /tmp/test.txt" \
+"${PIN}openssl dgst -r -blake2b512          /tmp/test.txt" \
+"${PIN}openssl dgst -r -blake2s256          /tmp/test.txt" \
+"${PIN}openssl dgst -r -md5                 /tmp/test.txt" \
+"${PIN}openssl dgst -r -md5-sha1            /tmp/test.txt" \
+"${PIN}openssl dgst -r -ripemd              /tmp/test.txt" \
+"${PIN}openssl dgst -r -ripemd160           /tmp/test.txt" \
+"${PIN}openssl dgst -r -rmd160              /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha1                /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha224              /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha256              /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha3-224            /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha3-256            /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha3-384            /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha3-512            /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha384              /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha512              /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha512-224          /tmp/test.txt" \
+"${PIN}openssl dgst -r -sha512-256          /tmp/test.txt" \
+"${PIN}openssl dgst -r -shake128 -xoflen 32 /tmp/test.txt" \
+"${PIN}openssl dgst -r -shake256 -xoflen 64 /tmp/test.txt" \
+"${PIN}openssl dgst -r -sm3                 /tmp/test.txt" \
+"${PIN}openssl dgst -r -ssl3-md5            /tmp/test.txt" \
+"${PIN}openssl dgst -r -ssl3-sha1           /tmp/test.txt" \
 './castella --rounds=3 --size=32 /tmp/test.txt' \
 './castella --rounds=3 --size=48 /tmp/test.txt' \
 './castella --rounds=3 --size=64 /tmp/test.txt' \
@@ -115,10 +116,10 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 'b3sum                 /tmp/test.txt' \
 'b3sum --no-mmap       /tmp/test.txt' \
 "${PIN}b3sum --num-threads=1 /tmp/test.txt" \
-'xxhsum -H0 /tmp/test.txt' \
-'xxhsum -H1 /tmp/test.txt' \
-'xxhsum -H2 /tmp/test.txt' \
-'xxhsum -H3 /tmp/test.txt' \
+"${PIN}xxhsum -H0 /tmp/test.txt" \
+"${PIN}xxhsum -H1 /tmp/test.txt" \
+"${PIN}xxhsum -H2 /tmp/test.txt" \
+"${PIN}xxhsum -H3 /tmp/test.txt" \
 
 
 # Output

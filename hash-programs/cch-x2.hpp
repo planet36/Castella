@@ -122,8 +122,8 @@ public:
         }
 
 #if defined(USE_LOCAL_STAGING_COPY)
-        using state_t = typename node_type::state_t;
-        using block_t = typename node_type::block_t;
+        using state_t = node_type::state_t;
+        using block_t = node_type::block_t;
 
         // Compress whole chunks directly from the source buffers with the
         // two states' work interleaved (the point of this class); the

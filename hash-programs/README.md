@@ -43,7 +43,10 @@ Reading from standard input (both piped and redirected) is verified to produce t
 | benchmark.hash-programs.bash | Benchmark `castella` and `cch` against many common hash programs |
 | benchmark.castella.rounds.bash | Benchmark `castella` across different `--rounds` values |
 | benchmark.castella.size.bash | Benchmark `castella` across different `--size` values |
+| benchmark.cch.chunk-size.bash | Benchmark `cch` across different `--chunk-size` values |
 | benchmark.cch.mix-rate.bash | Benchmark `cch` across different `--mix-rate` values |
+
+The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated 200 MB file that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
 Benchmark results are saved in CSV format in a folder named `results`.
 
@@ -58,7 +61,45 @@ Run these commands:
 * `bash benchmark.hash-programs.bash`
 * `bash benchmark.castella.rounds.bash`
 * `bash benchmark.castella.size.bash`
+* `bash benchmark.cch.chunk-size.bash`
 * `bash benchmark.cch.mix-rate.bash`
 * `python plot-results.py results/benchmark.castella.rounds.<TIMESTAMP>.csv`
 * `python plot-results.py results/benchmark.castella.size.<TIMESTAMP>.csv`
+* `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`
 * `python plot-results.py --xlog results/benchmark.cch.mix-rate.<TIMESTAMP>.csv`
+
+## Reproducing the documented performance claims
+
+Every performance number in this repository's documentation is machine-dependent; the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.  Create the test input the same way the benchmark scripts do:
+
+```bash
+yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 200M > /tmp/test.txt
+```
+
+* **Comparisons against other hash programs** (the top-level README FAQ: `castella` vs. b2sum/sha1sum/md5sum/b3sum, `cch` vs. multithreaded `b3sum` and `xxhsum -H3`): `bash benchmark.hash-programs.bash`.  For a single-thread-vs.-single-thread comparison, time `./cch --num-threads=1` against `b3sum --num-threads=1` directly:
+
+  ```bash
+  taskset -c 0 hyperfine --shell=none --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'
+  ```
+
+* **Per-core whole-program throughput** (e.g., the "~15 GiB/s per core" cch figure quoted in the source comments; throughput = file size ÷ mean time):
+
+  ```bash
+  taskset -c 0 hyperfine --shell=none --warmup=5 './cch --num-threads=1 /tmp/test.txt'
+  ```
+
+  (`taskset` pins the run to one core, matching the per-core claim.  Node-level throughput — one hash state, no tree — is measured by `research/simd_compress-two-state-benchmark` instead; see [research/README.md](../research/README.md).)
+
+* **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: sweep thread counts in each I/O mode and observe where the times stop improving:
+
+  ```bash
+  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './castella --num-threads={N} /tmp/test.txt'
+  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './castella --no-mmap --num-threads={N} /tmp/test.txt'
+  hyperfine --shell=none --warmup=3 --parameter-list N 1,2,4,8 './cch --num-threads={N} /tmp/test.txt' './cch --no-mmap --num-threads={N} /tmp/test.txt'
+  ```
+
+  The mmap mode keeps scaling with threads; `castella --no-mmap` flattens once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` ignores extra threads entirely (streamed cch input hashes inline by design).
+
+* **The 64 KiB default `--chunk-size` of `cch`**: `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`.
+
+* **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.25–1.4×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/); findings and methodology are recorded in [research/README.md](../research/README.md).

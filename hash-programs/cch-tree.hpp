@@ -127,6 +127,7 @@ public:
     * below plain cch at 16 KiB chunks but only ~6% below at 64 KiB, with
     * the best multithreaded scaling (~63 GiB/s at 512 MiB) also at
     * 64 KiB.  Files of a few MiB still parallelize.
+    * Reproducible with benchmark.cch.chunk-size.bash.
     */
     // }}}
     static constexpr int32_t DEFAULT_CHUNK_SIZE = 65'536;

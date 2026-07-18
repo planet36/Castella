@@ -12,6 +12,7 @@
 #include "castella-duplex.hpp"
 #include "config.h"
 #include "httplib.h"
+#include "parse_option_int.hpp"
 #include "quote_shell_always.hpp"
 #define SPDLOG_USE_STD_FORMAT
 #include "spdlog/cfg/env.h"
@@ -301,18 +302,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 break;
 
             case 'p':
-                try
-                {
-                    port = std::stoi(optarg);
-                }
-                catch (const std::invalid_argument& ex)
-                {
-                    errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-                }
-                catch (const std::out_of_range& ex)
-                {
-                    errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-                }
+                port = parse_option_int(optarg, "-p");
                 break;
 
             default:

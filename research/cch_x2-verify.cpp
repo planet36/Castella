@@ -18,15 +18,13 @@
 
 #include "../hash-programs/cch-x2.hpp"
 #include "../hash-programs/cch.hpp"
+#include "parse_option_int.hpp"
 
 #include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <err.h>
-#include <stdexcept>
-#include <string>
 #include <unistd.h>
 #include <vector>
 
@@ -80,18 +78,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             switch (c) // NOLINT(hicpp-multiway-paths-covered)
             {
             case 'n':
-                try
-                {
-                    num_samples = std::stoi(optarg);
-                }
-                catch (const std::invalid_argument& ex)
-                {
-                    errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-                }
-                catch (const std::out_of_range& ex)
-                {
-                    errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-                }
+                num_samples = parse_option_int(optarg, "-n");
                 break;
 
             default:

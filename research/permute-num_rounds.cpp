@@ -5,6 +5,7 @@
 #undef NDEBUG
 
 #include "castella-permute.hpp"
+#include "parse_option_int.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
 #include "simd_equal.hpp"
@@ -13,10 +14,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
-#include <err.h>
 #include <map>
 #include <print>
-#include <string>
 #include <unistd.h>
 
 template <size_t N>
@@ -142,18 +141,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             switch (c) // NOLINT(hicpp-multiway-paths-covered)
             {
             case 'n':
-                try
-                {
-                    num_samples = std::stoi(optarg);
-                }
-                catch (const std::invalid_argument& ex)
-                {
-                    errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
-                }
-                catch (const std::out_of_range& ex)
-                {
-                    errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-                }
+                num_samples = parse_option_int(optarg, "-n");
                 break;
 
             default:

@@ -83,9 +83,9 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 './castella --rounds=3 --size=32 /tmp/test.txt' \
 './castella --rounds=3 --size=48 /tmp/test.txt' \
 './castella --rounds=3 --size=64 /tmp/test.txt' \
-'./castella --rounds=6 --size=32 /tmp/test.txt' \
-'./castella --rounds=6 --size=48 /tmp/test.txt' \
-'./castella --rounds=6 --size=64 /tmp/test.txt' \
+'./castella            --size=32 /tmp/test.txt' \
+'./castella            --size=48 /tmp/test.txt' \
+'./castella            --size=64 /tmp/test.txt' \
 './castella --rounds=16 --size=32 /tmp/test.txt' \
 './castella --rounds=16 --size=48 /tmp/test.txt' \
 './castella --rounds=16 --size=64 /tmp/test.txt' \

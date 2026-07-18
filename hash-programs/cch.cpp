@@ -243,7 +243,7 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_CHUNK_SIZE:
-            chunk_size = parse_bounded_int(optarg, compress_castella_tree::CHUNK_SIZE_MIN,
+            chunk_size = parse_option_int(optarg, compress_castella_tree::CHUNK_SIZE_MIN,
                                            compress_castella_tree::CHUNK_SIZE_MAX,
                                            "--chunk-size");
             break;
@@ -251,7 +251,7 @@ void process_options(int argc, char* argv[])
         case OPTION_HASH_MIX_RATE:
             // 0 (disable periodic mixing) or [MIX_RATE_MIN, MIX_RATE_MAX];
             // MIX_RATE_MIN is 1, so the valid values are contiguous.
-            mix_rate = parse_bounded_int(optarg, 0,
+            mix_rate = parse_option_int(optarg, 0,
                                          compress_castella_hash<>::MIX_RATE_MAX,
                                          "--mix-rate");
             break;
@@ -261,13 +261,13 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_NUM_THREADS:
-            num_threads = parse_bounded_int(optarg, 0,
+            num_threads = parse_option_int(optarg, 0,
                                             compress_castella_tree::NUM_THREADS_MAX,
                                             "--num-threads");
             break;
 
         case OPTION_HASH_SIZE:
-            digest_size_bytes = parse_bounded_int(optarg, min_digest_size_bytes,
+            digest_size_bytes = parse_option_int(optarg, min_digest_size_bytes,
                                                   max_digest_size_bytes, "--size");
             break;
 

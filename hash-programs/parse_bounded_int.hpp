@@ -26,7 +26,7 @@
 *       exits (via \c errx); it does not return.
 */
 inline int
-parse_bounded_int(const char* optarg, const int min, const int max, const char* option_name)
+parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
 {
     try
     {

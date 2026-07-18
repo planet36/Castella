@@ -325,7 +325,7 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_CHUNK_SIZE:
-            chunk_size = parse_bounded_int(optarg, Castella::DuplexTree::CHUNK_SIZE_MIN,
+            chunk_size = parse_option_int(optarg, Castella::DuplexTree::CHUNK_SIZE_MIN,
                                            Castella::DuplexTree::CHUNK_SIZE_MAX,
                                            "--chunk-size");
             break;
@@ -343,26 +343,26 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_NUM_THREADS:
-            num_threads = parse_bounded_int(optarg, 0,
+            num_threads = parse_option_int(optarg, 0,
                                             Castella::DuplexTree::NUM_THREADS_MAX,
                                             "--num-threads");
             break;
 
         case OPTION_HASH_ROUNDS:
-            num_rounds = parse_bounded_int(optarg,
+            num_rounds = parse_option_int(optarg,
                                            Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
                                            Castella::NUM_ROUNDS_MAX, "--rounds");
             break;
 
         case OPTION_HASH_SIZE:
-            num_bytes_to_squeeze = parse_bounded_int(optarg, min_num_bytes_to_squeeze,
+            num_bytes_to_squeeze = parse_option_int(optarg, min_num_bytes_to_squeeze,
                                                      max_num_bytes_to_squeeze, "--size");
             break;
 
         case OPTION_HASH_SUFFIX:
             // No range check: an out-of-byte-range suffix is rejected later by
             // the narrow_cast in the Duplex constructor (unchanged behavior).
-            input_suffix = parse_bounded_int(optarg, std::numeric_limits<int>::min(),
+            input_suffix = parse_option_int(optarg, std::numeric_limits<int>::min(),
                                              std::numeric_limits<int>::max(), "--suffix");
             break;
 

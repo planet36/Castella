@@ -114,7 +114,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}./castella --num-threads=1 /tmp/test.txt" \
 "${PIN}./cch --num-threads=1      /tmp/test.txt" \
 'b3sum                 /tmp/test.txt' \
-'b3sum --no-mmap       /tmp/test.txt' \
+"${PIN}b3sum --no-mmap       /tmp/test.txt" \
 "${PIN}b3sum --num-threads=1 /tmp/test.txt" \
 "${PIN}xxhsum -H0 /tmp/test.txt" \
 "${PIN}xxhsum -H1 /tmp/test.txt" \

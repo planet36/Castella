@@ -11,7 +11,7 @@
 export LC_ALL=C
 
 # Setup
-FILE_SIZE=${FILE_SIZE:-200M}
+FILE_SIZE=${FILE_SIZE:-500M}
 
 # Remove the generated input file at the end of every run (the trap is set
 # before the generation so a failed or interrupted run is cleaned up too)

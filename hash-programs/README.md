@@ -85,7 +85,7 @@ These claims were last verified against a full run on 2026-07-18: `cch` beat mul
 Create the test input the same way the benchmark scripts do (the scripts remove `/tmp/test.txt` when they exit, so a previous script run will not have left it behind):
 
 ```bash
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 200M > /tmp/test.txt
+yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 500M > /tmp/test.txt
 ```
 
 * **Comparisons against other hash programs** (the top-level README FAQ: `castella` vs. b2sum/sha1sum/md5sum/b3sum, `cch` vs. multithreaded `b3sum` and `xxhsum -H3`): `bash benchmark.hash-programs.bash`.  For a single-thread-vs.-single-thread comparison, time `./cch --num-threads=1` against `b3sum --num-threads=1` directly:

@@ -158,6 +158,19 @@ function assert_eq_cmd_str_status
 #            block size (32768), or the page size (4096)
 #     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+# Remove the created files at the end of every run, including failed or
+# interrupted ones.  (An EXIT trap preserves the script's exit status.)
+trap 'rm -f -- \
+/tmp/test-0B.txt    \
+/tmp/test-100B.txt  \
+/tmp/test-1KiB.txt  \
+/tmp/test-64KiB.txt \
+/tmp/test-100KB.txt \
+/tmp/test-1MiB.txt  \
+/tmp/test-key1.bin  \
+/tmp/test-key2.bin' EXIT
+
 yes "$LINE" | head --bytes 0     > /tmp/test-0B.txt    || exit
 yes "$LINE" | head --bytes 100   > /tmp/test-100B.txt  || exit
 yes "$LINE" | head --bytes 1K    > /tmp/test-1KiB.txt  || exit
@@ -587,17 +600,6 @@ assert_eq_cmd_str_status \
     "'/tmp/test-100KB.txt': FAILED" \
     1
 
-rm -f -- /tmp/test-key1.bin /tmp/test-key2.bin
-
 echo "$PASS passed, $FAIL failed"
-
-# Remove the input data files.
-rm -f -- \
-/tmp/test-0B.txt    \
-/tmp/test-100B.txt  \
-/tmp/test-1KiB.txt  \
-/tmp/test-64KiB.txt \
-/tmp/test-100KB.txt \
-/tmp/test-1MiB.txt
 
 (( FAIL == 0 ))

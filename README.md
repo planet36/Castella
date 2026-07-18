@@ -137,7 +137,7 @@ I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp) — a tree over a faster non-cryptographic node — beats fully-multithreaded `b3sum` by about 2× on the same files, and even single-threaded it roughly matches [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
+But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp) — the same tree structure built from much faster non-cryptographic nodes — beats fully-multithreaded `b3sum` by about 2× on the same files, and even single-threaded it roughly matches [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
 
 Don't take my word for it: these comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash), which uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 200 MB file (hyperfine's warm-up runs make it page-cache-hot).  Run it yourself — the results are machine-dependent.
 

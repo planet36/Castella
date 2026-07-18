@@ -41,6 +41,7 @@ Reading from standard input (both piped and redirected) is verified to produce t
 | name | purpose |
 | ---- | ------- |
 | benchmark.hash-programs.bash | Benchmark `castella` and `cch` against many common hash programs |
+| benchmark.castella.chunk-size.bash | Benchmark `castella` across different `--chunk-size` values |
 | benchmark.castella.rounds.bash | Benchmark `castella` across different `--rounds` values |
 | benchmark.castella.size.bash | Benchmark `castella` across different `--size` values |
 | benchmark.cch.chunk-size.bash | Benchmark `cch` across different `--chunk-size` values |
@@ -66,11 +67,13 @@ Run these commands:
 * `make`
 * `bash test-correctness.bash`
 * `bash benchmark.hash-programs.bash`
+* `bash benchmark.castella.chunk-size.bash`
 * `bash benchmark.castella.rounds.bash`
 * `bash benchmark.castella.size.bash`
 * `bash benchmark.cch.chunk-size.bash`
 * `bash benchmark.cch.mix-rate.bash`
 * `bash benchmark.threads.bash`
+* `python plot-results.py --xlog results/benchmark.castella.chunk-size.<TIMESTAMP>.csv`
 * `python plot-results.py results/benchmark.castella.rounds.<TIMESTAMP>.csv`
 * `python plot-results.py results/benchmark.castella.size.<TIMESTAMP>.csv`
 * `python plot-results.py --xlog results/benchmark.cch.chunk-size.<TIMESTAMP>.csv`

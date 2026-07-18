@@ -148,6 +148,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
+    // The N = 2, 4, 8 registrations are commented out: they lengthen the
+    // run considerably, and only the 16-block state is used outside
+    // research.  Uncomment them to reproduce the non-16 rows of the
+    // findings table in README.md.
+
     /*
     {
         constexpr int N = 2;

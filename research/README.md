@@ -28,7 +28,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | duplex-throughput-benchmark.cpp | Measure the absorb and squeeze throughput (bytes/s) of `Castella::Duplex` through its public API, across capacity and round counts |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
 | nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
-| permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path across all state sizes |
+| permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path (_N_ = 16 by default; the _N_ = 2, 4, 8 registrations are commented out to keep the run short) |
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
@@ -109,6 +109,8 @@ Interpretation:
 ## Findings: the folded permute wins at every state size (2026-07-17)
 
 When the folded (register-resident) `Castella::permute` was generalized from _N_ = 16 to all supported _N_, only _N_ = 16 had been measured (~1.7×).  `permute_folded-benchmark.cpp` compares the folded path against a copy of the generic path it replaced.  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (ratios are generic ÷ folded; compare only within this table):
+
+(To keep the default run short, the benchmark now registers only _N_ = 16; the decision this table records is settled, and _N_ < 16 is research-only.  To reproduce the other rows, uncomment the _N_ = 2, 4, 8 blocks in the benchmark's `main()`.)
 
 | _N_ | rounds=2 | rounds=4 | rounds=8 | rounds=16 |
 |-----|---------:|---------:|---------:|----------:|

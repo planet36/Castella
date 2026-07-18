@@ -51,6 +51,15 @@ Raw benchmark results are saved in a folder named `results`.
 
 `run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions per benchmark; override with `BENCHMARK_REPS=…` (the 2026-07-17 findings below used 7; each findings section states its own repetition count).
 
+## Benchmark coverage on ARM
+
+Every performance claim in this repository was measured on x86-64 with VAES; none has been validated on ARM.  What runs where:
+
+* **Build and are meaningful on ARM** (aarch64 with the Crypto extensions): `duplex-throughput-benchmark`, `permute-num_rounds-benchmark`, `aes_enc_0-aes_num_rounds-benchmark`, `copy_bytes_into-benchmark`, `left_encode-right_encode-benchmark`, `squeeze_bytes-benchmark`, and `simd_compress-two-state-benchmark` (its guard explicitly includes `__aarch64__ && __ARM_FEATURE_AES`).
+* **x86-64-with-VAES only** — they measure code paths that exist only there, and compile to a stub that prints `skipped` elsewhere: `permute_folded-benchmark`, `permute_x2-benchmark`, `aes_enc_arr-benchmark`, `aes_enc_arr_cast-benchmark`, `nested-for-loop-order-aes_enc_0-benchmark`, `simd_compress_aes_enc-num_rounds-benchmark`.
+
+The one open ARM question is the cch leaf pairing: the tree's pairing opt-in is guarded by `__VAES__ && __AVX2__`, so ARM hashes leaves one at a time.  The untested expectation is that this matches the non-VAES x86 finding below — 128-bit AES codegen already runs 16 independent chains per state, so a second interleaved state should be a wash to a loss outside the DRAM regime.  To check on ARM hardware: build and run `simd_compress-two-state-benchmark` and compare the pair rows' interleaved vs. sequential per-byte throughput; if interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
+
 ## Findings: the AES stage in isolation (2026-07-17)
 
 `aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr`/`aes_enc_inv_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overloads are shadowed under VAES by the constrained same-signature overloads, the benchmark carries verbatim copies of them (`aes_enc_arr_generic`/`aes_enc_inv_arr_generic` — keep in sync).  Medians of 7 repetitions, interleaved, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):

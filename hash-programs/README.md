@@ -49,7 +49,9 @@ Reading from standard input (both piped and redirected) is verified to produce t
 
 The benchmark scripts require [hyperfine](https://github.com/sharkdp/hyperfine).  They time a generated test file (200 MB by default; override with `FILE_SIZE=…`, in `head --bytes` syntax) that hyperfine's warm-up runs make page-cache-hot, so they measure hashing, not disk I/O.  Results are machine-dependent; run them on an otherwise idle machine.
 
-For low-noise single-core runs, the parameter-sweep scripts accept `CPU_LIST` (pin the run via `taskset`, e.g. `CPU_LIST=0`) and `NUM_THREADS` (passed as `--num-threads`; default 0 = one thread per hardware thread) — pair them.  `benchmark.hash-programs.bash` pins its single-thread rows to core 0 automatically (when `taskset` exists).
+For low-noise single-core runs, the parameter-sweep scripts accept `CPU_LIST` (a CPU list for `taskset`, e.g. `CPU_LIST=0`, which pins the run) and `NUM_THREADS` (passed as `--num-threads`; default 0 = one thread per hardware thread) — pair them.  `benchmark.hash-programs.bash` pins its single-thread rows to core 0 automatically (when `taskset` exists).
+
+Hyperfine's statistical-outlier warnings on multithreaded rows are expected in a virtualized or busy environment: with every core in use, any host or background work lands inside the measurement, and `--warmup` cannot prevent that (it only fixes cache state).  Treat small differences between multithreaded rows with suspicion, and prefer the median over the mean for them.
 
 Benchmark results are saved in CSV format in a folder named `results`.
 
@@ -74,7 +76,11 @@ Run these commands:
 
 ## Reproducing the documented performance claims
 
-Every performance number in this repository's documentation is machine-dependent; the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.  Create the test input the same way the benchmark scripts do:
+Every performance number in this repository's documentation is machine-dependent; the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
+
+These claims were last verified against a full run on 2026-07-18: `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.2×); `castella --rounds=3` beat multithreaded `b3sum` while `--rounds=6` roughly matched it; `castella --no-mmap` was fastest at exactly 2 threads (more threads made it *slower*); streamed `cch` times were identical across thread counts; and the 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input.
+
+Create the test input the same way the benchmark scripts do:
 
 ```bash
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 200M > /tmp/test.txt

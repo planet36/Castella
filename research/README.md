@@ -49,16 +49,42 @@ The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) 
 
 Raw benchmark results are saved in a folder named `results`.
 
-`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions per benchmark; override with `BENCHMARK_REPS=…` (the 2026-07-17 findings below used 7; each findings section states its own repetition count).
+`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…` (the 2026-07-17 and 2026-07-18 findings below used 7; each findings section states its own repetition count).
 
 ## Benchmark coverage on ARM
 
 Every performance claim in this repository was measured on x86-64 with VAES; none has been validated on ARM.  What runs where:
 
-* **Build and are meaningful on ARM** (aarch64 with the Crypto extensions): `duplex-throughput-benchmark`, `permute-num_rounds-benchmark`, `aes_enc_0-aes_num_rounds-benchmark`, `copy_bytes_into-benchmark`, `left_encode-right_encode-benchmark`, `squeeze_bytes-benchmark`, and `simd_compress-two-state-benchmark` (its guard explicitly includes `__aarch64__ && __ARM_FEATURE_AES`).
+* **ARM-capable** — they build on aarch64 with the Crypto extensions and measure real code paths there: `duplex-throughput-benchmark`, `permute-num_rounds-benchmark`, `aes_enc_0-aes_num_rounds-benchmark`, `copy_bytes_into-benchmark`, `left_encode-right_encode-benchmark`, `squeeze_bytes-benchmark`, and `simd_compress-two-state-benchmark` (its guard explicitly includes `__aarch64__ && __ARM_FEATURE_AES`).
 * **x86-64-with-VAES only** — they measure code paths that exist only there, and compile to a stub that prints `skipped` elsewhere: `permute_folded-benchmark`, `permute_x2-benchmark`, `aes_enc_arr-benchmark`, `aes_enc_arr_cast-benchmark`, `nested-for-loop-order-aes_enc_0-benchmark`, `simd_compress_aes_enc-num_rounds-benchmark`.
 
 The one open ARM question is the cch leaf pairing: the tree's pairing opt-in is guarded by `__VAES__ && __AVX2__`, so ARM hashes leaves one at a time.  The untested expectation is that this matches the non-VAES x86 finding below — 128-bit AES codegen already runs 16 independent chains per state, so a second interleaved state should be a wash to a loss outside the DRAM regime.  To check on ARM hardware: build and run `simd_compress-two-state-benchmark` and compare the pair rows' interleaved vs. sequential per-byte throughput; if interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
+
+## Findings: Duplex throughput through the public API (2026-07-18)
+
+`duplex-throughput-benchmark.cpp` measures `Castella::Duplex` end to end: absorb is repeated `add` of a cache-resident 64 KiB buffer, squeeze is repeated `squeeze_to` of a rate-size buffer (the PRNG usage).  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes`.  Values are GiB/s, **absorb / squeeze**:
+
+| _C_ (rate bytes) | rounds=3 | rounds=6 | rounds=8 | rounds=16 |
+|------------------|---------:|---------:|---------:|----------:|
+| 2 (224) | 6.67 / 4.80 | 3.69 / 3.12 | 2.88 / 2.49 | 1.49 / 1.39 |
+| 4 (192) | 5.83 / 4.30 | 3.25 / 2.73 | 2.50 / 2.17 | 1.26 / 1.16 |
+| 8 (128) | 4.04 / 2.84 | 2.20 / 1.81 | 1.66 / 1.43 | 0.84 / 0.78 |
+
+Interpretation:
+
+* The numbers cross-check against the permutation benchmarks from the same run (absorb ceiling = rate bytes ÷ permutation time): at _C_ = 4, rounds = 6, the ceiling is 192 B ÷ 52.3 ns = 3.42 GiB/s and the measured absorb is 3.25 (95%); at rounds = 3 the same comparison gives ~86%.  The buffering overhead (copy + XOR into the outer state) is a fixed per-byte cost that matters more the faster the permutation.
+* At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.65 (rounds = 3) to ~1.78 (rounds = 16), converging on the rate ratio 224:128 = 1.75 as the permutation dominates.
+* The top-level README's "~2.8 GiB/s per core" absorb figure (_C_ = 4, rounds = 6 — the castella hash program's defaults) measured 3.25 GiB/s on this run.  Absolute figures wander between sessions on this machine (this run's permutation times were also faster than the recorded ones); the ratios are the stable part.
+* Squeeze is 70–94% of absorb at the same parameters (converging as rounds grow): every `squeeze_to` pads and absorbs the near-empty input buffer, permutes, and copies the rate bytes out.
+
+## Findings: full-suite rerun on the committed flags (2026-07-18)
+
+A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, `-march=x86-64-v3 -maes -mvaes` — the committed config.mk flags, unlike the `-march=raptorlake` used for some earlier findings) reproduced the recorded ratios:
+
+* Folded permute, _N_ = 16: 1.67× (rounds = 3) to 1.70× (rounds = 16) over the generic path — the documented ~1.7×.
+* `permute_x2`: 1.69–1.79× over two sequential register-resident permutes for rounds ≥ 4 (1.43× at rounds = 3, where the pack/unpack boundary cost weighs most) — at or slightly above the documented ~1.7×.
+* AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — exactly the recorded ratio.
+* The interleaved cch pair measured 1.11× (L1), 1.06× (L2), 1.15× (L3), 1.15× (DRAM) over sequential.  This is consistent with the earlier **pinned** run (the `raptorlake` column of the no-VAES table below: 1.12/1.03/1.02/1.17) and below the 1.23–1.37× of the original **unpinned** medians-of-5 run.  Under pinned, low-noise conditions on this machine, the pair's compute-regime win is real but modest (~1.05–1.15×); the docs' headline "~1.25–1.4×" comes from the unpinned run and should be read as the optimistic end.
 
 ## Findings: the AES stage in isolation (2026-07-17)
 

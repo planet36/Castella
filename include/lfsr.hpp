@@ -54,7 +54,7 @@ lfsr_from_bytes16(const std::string_view src)
     if (std::size(src) != sizeof(lfsr128_state_t))
         throw std::invalid_argument("src size != lfsr size");
 
-    // The intermediate copy to src cannot be skipped.
+    // The intermediate copy to dst cannot be skipped.
     // std::bit_cast requires a trivially copyable source object of exactly
     // sizeof(lfsr128_state_t) bytes, and no such object is available directly:
     // - The string literal is a const char[17] (trailing NUL), so its size

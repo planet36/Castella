@@ -42,7 +42,7 @@ lint:
 ifneq ($(strip $(SRCS)),)
 	-clang-tidy --quiet $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
 endif
-	for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
+	-for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
 .PHONY: all everything test clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)

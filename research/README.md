@@ -25,6 +25,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | aes\_enc\_arr-benchmark.cpp | Benchmark the `aes_enc_arr`/`aes_enc_inv_arr` overloads of `aes_enc.hpp` in isolation (no transpose), with per-block round keys |
 | aes\_enc\_arr\_cast-benchmark.cpp | Compare throughput of 128-bit vs. VAES 256-bit AES array encryption |
 | copy\_bytes\_into-benchmark.cpp | Benchmark alternative implementations of the buffer copy of `Duplex::squeeze_into_` |
+| duplex-throughput-benchmark.cpp | Measure the absorb and squeeze throughput (bytes/s) of `Castella::Duplex` through its public API, across capacity and round counts |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
 | nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
 | permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path across all state sizes |

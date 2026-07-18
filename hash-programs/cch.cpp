@@ -7,7 +7,7 @@
 #include "check_utils.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
-#include "parse_bounded_int.hpp"
+#include "parse_option_int.hpp"
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 

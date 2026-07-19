@@ -23,7 +23,8 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties | executable | §10 |
-| 11 | Clustering, rebound, slide analysis, algebraic degree, trail tightness | evidence pending | §11 |
+| 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
+| 12 | Clustering, rebound, slide analysis, algebraic degree, trail tightness | evidence pending | §12 |
 
 Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the two scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing)).  All commands run from `research/` unless noted.
 
@@ -111,6 +112,14 @@ Nothing to verify — it is a non-claim, documented so nobody assumes otherwise.
 
 Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds; probes 2 and 3 must print only PASS lines (fixed-point screen; round constants: seed value, nonzero, distinct, no shifted predecessors).  Results and scope caveats: [README.md](README.md#findings-structural-probes-of-castellapermute-2026-07-19) — the probes cover the transpose's natural symmetry classes, not every conceivable invariant subspace.
 
-## 11. Evidence pending
+## 11. Zero-sum (cube) probes
 
-Differential clustering, rebound attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth, and tightness of the trail bounds (finding real characteristics): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+```bash
+./permute-zero_sum-probes -n 1
+```
+
+Expected: `all pass/fail checks passed`, exit status 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums (single-block: exactly 1920 surviving bits — the positive control; spread: all 2048), and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  Results and scope (black-box random cubes up to k = 16 only): [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19).
+
+## 12. Evidence pending
+
+Differential clustering, rebound attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and tightness of the trail bounds (finding real characteristics): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

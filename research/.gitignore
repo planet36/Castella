@@ -18,6 +18,7 @@ permute-num_rounds-benchmark
 permute-structural-probes
 permute_x2-benchmark
 permute_x2-verify
+permute-zero_sum-probes
 results/
 simd_compress_aes_enc-num_rounds
 simd_compress_aes_enc-num_rounds-benchmark

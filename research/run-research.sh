@@ -46,6 +46,12 @@ echo
 echo "________________________________________________________________________________"
 echo
 
+echo "# Zero-sum (cube) probes of Castella::permute"
+echo
+./permute-zero_sum-probes -n 1 || exit
+echo "________________________________________________________________________________"
+echo
+
 echo "# Find the bit diffusion rate of simd_compress_aes_enc_r{2,3,4} when each param varies"
 echo
 ./simd_compress_aes_enc-num_rounds -n 250000 || exit

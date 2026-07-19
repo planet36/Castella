@@ -14,6 +14,7 @@
 | permute-num\_rounds.cpp | Find the minimum `num_rounds` for `Castella::permute` to achieve full bit diffusion |
 | permute-num\_rounds-avalanche\_matrix.cpp | Print statistics of the avalanche matrix of `Castella::permute` |
 | permute-structural-probes.cpp | Structural probes of `Castella::permute`: structured-subspace escape, fixed-point screen, round-constant properties (nonzero exit on any violation) |
+| permute-zero\_sum-probes.cpp | Zero-sum (cube) probes of `Castella::permute`: counts output bits whose cube sums vanish across many base states (nonzero exit on any surviving bit at 3+ rounds) |
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
@@ -183,6 +184,23 @@ Conclusion: the VAES guard on the cch pairing opt-in is correct and stays.  Non-
 * **Round-constant properties** (the SPEC.md assertions, machine-verified for the first time): the first constant is the seed string `"expand 16-byte c"`; all 768 are distinct and nonzero; no constant is a bitwise shift (by 1–127, either direction) of its predecessor in generation order; Hamming weights μ = 63.89, min 45, max 79.
 
 Scope: these probes are necessary sanity checks, not distinguisher proofs — they test the symmetry classes the transpose makes natural, and absence of evidence in 10^4 samples is not evidence of absence for subtler invariant subspaces.  The pass/fail checks exit nonzero on violation, so the program can gate regressions.
+
+## Findings: zero-sum (cube) probes of `Castella::permute` (2026-07-19)
+
+`permute-zero_sum-probes.cpp` XOR-sums `P` over all 2^k assignments of k chosen input bits and counts the output bits whose sums vanish for every one of 32 random base states (a random bit survives all 32 with probability 2^−32, so surviving bits are structure, not chance).  Cube sizes k = 8, 12, 16; two placements; every round count 1–16.  Results:
+
+| Nr | single-block (all k) | spread (all k) |
+|----|----------------------|-----------------|
+| 1 | 1920 | 2048 |
+| 2–16 | 0 | 0 |
+
+Interpretation:
+
+* Both 1-round rows are **exact structural zero-sum distinguishers of the 1-round permutation**, and both have complete explanations.  Single-block: one round cannot spread a block beyond one byte per output block, so the 15 unvaried input blocks leave exactly 15 × 128 = 1920 output bits constant (the predicted value — this row doubles as the harness's positive control).  Spread: one round is nonlinear only block-locally and the transpose is linear, so for any cube spanning 2+ blocks, each block sees its own sub-cube of values an even number of times and every block's XOR-sum cancels — all 2048 bits vanish.
+* From **2 rounds on, nothing survives**: no zero-sum property distinguishable by random black-box cubes up to k = 16, consistent with the diffusion measurements (49.8% avalanche at 2 rounds, full at 3).  Any surviving bit at 3+ rounds is a FAIL (a distinguisher of the reduced-round permutation) and exits nonzero.
+* Scope: black-box **random** cubes only.  Structured cube choices (e.g. positioned to exploit AES's column structure), higher dimensions (degree after 2 rounds is bounded by ~49 per AES-layer counting, out of reach of a 2^49 cube), and inside-out zero-sums that run `P` and `P⁻¹` from a middle state are not covered — those are the standard next steps of an algebraic analysis, not a gap in this probe's claim.
+
+Runtime: ~9 s at `-n 1` (the k = 16 column dominates: 2 placements × 16 round counts × 32 bases × 2^16 permutations).
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

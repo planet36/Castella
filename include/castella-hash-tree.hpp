@@ -554,6 +554,7 @@ private:
     // }}}
     void absorb_role_prefix_(node_type& node, const uint8_t role) const
     {
+        // The role is a fixed-width framing byte, deliberately not left-encoded.
         node.add(as_byte_span(role));
         absorb_left_encoded_(node, to_unsigned(CHUNK_SIZE));
         absorb_left_encoded_(node, to_unsigned(CV_LEN));

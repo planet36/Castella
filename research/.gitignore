@@ -6,6 +6,7 @@ aes_enc_arr_cast-benchmark
 castella-print-info
 cch_x2-verify
 copy_bytes_into-benchmark
+duplex-prng-stream
 duplex-throughput-benchmark
 duplex_x2-verify
 left_encode-right_encode-benchmark

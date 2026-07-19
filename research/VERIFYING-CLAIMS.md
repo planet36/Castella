@@ -24,7 +24,8 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 9 | No PRNG forward secrecy | non-claim | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
-| 12 | Clustering, rebound, slide analysis, algebraic degree, trail tightness | evidence pending | §12 |
+| 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
+| 13 | Clustering, rebound, slide analysis, algebraic degree, trail tightness | evidence pending | §13 |
 
 Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the two scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing)).  All commands run from `research/` unless noted.
 
@@ -120,6 +121,17 @@ Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tabl
 
 Expected: `all pass/fail checks passed`, exit status 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums (single-block: exactly 1920 surviving bits — the positive control; spread: all 2048), and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  Results and scope (black-box random cubes up to k = 16 only): [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19).
 
-## 12. Evidence pending
+## 12. Statistical smoke test (PractRand)
+
+Requires [PractRand](https://pracrand.sourceforge.net/)'s `RNG_test` (external; not run by any repo script):
+
+```bash
+./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
+./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
+```
+
+Expected: `no anomalies` at every checkpoint (recorded runs: 311 test results through 16 GiB for both, ~6 s/GiB).  Read it as a smoke test only — passing means nothing cryptographically; a failure at 3+ rounds would be a real distinguisher.  See the findings section in [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19).
+
+## 13. Evidence pending
 
 Differential clustering, rebound attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and tightness of the trail bounds (finding real characteristics): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

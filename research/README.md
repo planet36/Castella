@@ -15,6 +15,7 @@
 | permute-num\_rounds-avalanche\_matrix.cpp | Print statistics of the avalanche matrix of `Castella::permute` |
 | permute-structural-probes.cpp | Structural probes of `Castella::permute`: structured-subspace escape, fixed-point screen, round-constant properties (nonzero exit on any violation) |
 | permute-zero\_sum-probes.cpp | Zero-sum (cube) probes of `Castella::permute`: counts output bits whose cube sums vanish across many base states (nonzero exit on any surviving bit at 3+ rounds) |
+| duplex-prng-stream.cpp | Emit an endless duplex PRNG byte stream to stdout, for piping into statistical batteries (e.g. PractRand's `RNG_test`) |
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
@@ -201,6 +202,17 @@ Interpretation:
 * Scope: black-box **random** cubes only.  Structured cube choices (e.g. positioned to exploit AES's column structure), higher dimensions (degree after 2 rounds is bounded by ~49 per AES-layer counting, out of reach of a 2^49 cube), and inside-out zero-sums that run `P` and `P⁻¹` from a middle state are not covered — those are the standard next steps of an algebraic analysis, not a gap in this probe's claim.
 
 Runtime: ~9 s at `-n 1` (the k = 16 column dominates: 2 placements × 16 round counts × 32 bases × 2^16 permutations).
+
+## Findings: PractRand statistical smoke test of the duplex PRNG (2026-07-19)
+
+`duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  Piped into PractRand's `RNG_test stdin64 -tlmax 16GB` (PractRand is an external tool; not run by `run-research.sh`):
+
+| configuration | result |
+|---------------|--------|
+| `-C 4 -r 6` (the `castella` defaults; a claimed instance) | no anomalies in 311 test results through 16 GiB |
+| `-C 4 -r 3` (minimum constructible rounds; unclaimed) | no anomalies in 311 test results through 16 GiB |
+
+This is a **smoke test only**: passing means nothing cryptographically (any decent non-cryptographic PRNG also passes PractRand), but a failure at 3+ rounds would have meant everything.  ~6 s/GiB on this machine; rerun with a larger `-tlmax` for more coverage.
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

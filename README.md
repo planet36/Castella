@@ -32,6 +32,8 @@ The source code is liberally documented with many annotations and excerpts from 
 
 A standalone specification — the permutation, round constants, duplex, tree mode, MAC construction, and Compress-Castella, readable without the C++ — is in [SPEC.md](SPEC.md).  Its completeness is proven by [research/spec-conformance.py](research/spec-conformance.py), an independent pure-Python implementation written from the specification alone that reproduces every digest in [tests/KAT.txt](tests/KAT.txt).
 
+SPEC.md also states the [security claims and non-claims](SPEC.md#security-claims-and-non-claims): a falsifiable flat sponge claim in the Keccak tradition, the claimed security strengths (matching the SHA-3 levels at equal capacity), the proven mode reductions, and the supporting evidence.  [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) maps every claim to the exact commands that reproduce its evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage targets for anyone who wants to attack the design.
+
 ### Capacity and Rate
 
 The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.
@@ -143,7 +145,7 @@ Don't take my word for it: these comparisons come from [hash-programs/benchmark.
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 
-I don't know because it hasn't been scrutinized by others.  Although I myself can't break it. [^Schneier]
+Not yet — it hasn't been scrutinized by others, and until it has been, the honest answer stays no.  What exists now is a precise target for that scrutiny: [SPEC.md states a falsifiable security claim](SPEC.md#security-claims-and-non-claims) with its supporting evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage challenges.  Although I myself can't break it. [^Schneier]
 
 ### Don't roll your own crypto.
 

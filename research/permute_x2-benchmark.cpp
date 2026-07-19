@@ -95,8 +95,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads =
-        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads = std::max<int>(min_threads, std::thread::hardware_concurrency());
 
     // NUM_THREADS=0 means max_threads
     auto num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);

@@ -24,7 +24,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_1(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
@@ -43,7 +43,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_2(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     // State is mutated here in Castella::Duplex::squeeze_bytes().
     // Vector allocation should happen before this in case of std::bad_alloc.
@@ -61,7 +61,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_3(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -80,7 +80,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_4(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -100,7 +100,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_5(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -122,7 +122,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_6(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -142,7 +142,7 @@ template <typename T, std::size_t N>
 [[nodiscard]] static std::vector<std::byte>
 squeeze_bytes_7(const std::array<T, N>& state, int n)
 {
-    n = std::clamp(n, 0, static_cast<decltype(n)>(sizeof(state)));
+    n = std::clamp<int>(n, 0, sizeof(state));
 
     std::vector<std::byte> result;
     result.reserve(n);
@@ -200,8 +200,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ determine num_threads
 
     constexpr int min_threads = 1;
-    const auto max_threads =
-        std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
+    const auto max_threads = std::max<int>(min_threads, std::thread::hardware_concurrency());
     // https://en.wikipedia.org/wiki/Elvis_operator
     //const auto max_threads = static_cast<int>(std::thread::hardware_concurrency()) ?: min_threads;
 

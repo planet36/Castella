@@ -499,8 +499,8 @@ private:
         if (num_threads == 0)
         {
             // hardware_concurrency() may return 0 if it cannot be determined.
-            const auto hw = static_cast<int>(std::thread::hardware_concurrency());
-            return std::clamp(hw, 1, NUM_THREADS_MAX);
+            const auto hw = std::thread::hardware_concurrency();
+            return std::clamp<int>(hw, 1, NUM_THREADS_MAX);
         }
 
         return static_cast<int32_t>(num_threads);

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Parse a string as an integer
+/// Parse integers from strings, option arguments, and environment variables
 /**
 * \file
 * \author Steven Ward

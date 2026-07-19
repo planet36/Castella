@@ -23,7 +23,7 @@
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 #include "castella-permute.hpp"
-#include "get_env.hpp"
+#include "parse_int.hpp"
 
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark

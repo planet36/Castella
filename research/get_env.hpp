@@ -42,23 +42,3 @@ get_env(const char* name)
         return std::nullopt;
     return std::string{value};
 }
-
-/// Parse the environment variable \a name as an int in <code>[min, max]</code>, or exit with an error.
-/**
-* \param name the name of the environment variable
-* \param min the minimum allowed value (inclusive)
-* \param max the maximum allowed value (inclusive)
-* \param default_value the value returned if the variable is not set
-* \return the parsed value, or \a default_value if the variable is not set
-* \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits (via \c errx); it does not return.
-*/
-[[nodiscard]] inline int
-parse_env_int(const char* name, const int min, const int max, const int default_value)
-{
-    const char* const value = std::getenv(name);
-    if (value == nullptr)
-        return default_value;
-
-    return parse_option_int(value, min, max, name);
-}

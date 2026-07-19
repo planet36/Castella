@@ -355,7 +355,9 @@ public:
     void add(const void* data_a, const void* data_b, const size_t len) noexcept
     {
 #if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data_a == nullptr) && (len != 0)));
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
 

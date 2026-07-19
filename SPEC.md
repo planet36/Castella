@@ -166,18 +166,91 @@ The `cch` program is the tree mode over these nodes with `CV_LEN = 64` and defau
 
 ## Security claims and non-claims
 
-**Non-claims first.**  Castella has had no external cryptanalysis.  No security proof is claimed for the duplex-with-AES-rounds construction; the sponge/duplex indifferentiability results assume a random permutation, which `P` is not claimed to be.  Compress-Castella is explicitly **not** a cryptographic hash: its compression step is invertible in each input given the state, and no collision or preimage resistance is claimed for it — it is a fast checksum with good statistical behavior.  Do not use any of this where security matters.
+This section separates four kinds of statement that must not be confused: **non-claims** (what is explicitly not promised), a **security claim** (a falsifiable conjecture — the target offered to cryptanalysts, in the tradition of Keccak's flat sponge claim), **proven mode reductions** (theorems conditional on the claim), and **evidence** (analysis that supports the claim but can never prove it).  A claim is not a proof; its credibility comes from surviving cryptanalysis, of which Castella has had none by anyone but its author.
 
-**Design targets.**  The capacity determines the intended security level (as in any sponge: at most `64·C` bits against generic attacks — half the capacity in bits); the round count provides the safety margin.  The `castella` program derives the capacity from the digest size as `16·C ≥ 2n` bytes, so an `n`-byte digest's generic collision bound (`4n` bits) is not undercut by the capacity.
+### Non-claims
 
-**What has been analyzed** (see [research/README.md](research/README.md) for the model, caveats, and full tables):
+Castella has had no external cryptanalysis.  No security proof is claimed for the duplex-with-AES-rounds construction; the sponge/duplex indifferentiability results assume a random permutation, which `P` is not claimed to be.  Compress-Castella is explicitly **not** a cryptographic hash: its compression step is invertible in each input given the state, and no collision or preimage resistance is claimed for it — it is a fast checksum with good statistical behavior.  Do not use any of this where security matters.
+
+**No forward secrecy for PRNG usage.**  Squeezing does not erase the state (there is no state-forgetting operation), and `P` is invertible, so an adversary who captures the state can recompute earlier outputs back to the last absorption of secret input, as well as all future outputs until the next one.  Backtracking resistance in the sense of the sponge-PRNG literature would require deliberate state erasure, which the duplex does not perform.
+
+### The security claim
+
+> **Flat sponge claim.**  For each claimed instance below, the success probability of any attack against the Castella duplex does not exceed the success probability of the same attack against a random sponge with the same rate and capacity.  Equivalently: the claimed security level is `64·C` bits — half the capacity `c = 128·C` bits — against all attacks (collision, preimage, second preimage, output distinguishing and prediction), capped by the output-length bounds in the next section.
+
+The claim is made about the duplex *instances*, not about `P` being an ideal permutation (any concrete permutation has trivial distinguishers — `P` is efficiently invertible — the claim is that none of them translate into an attack on the duplex better than generic).  It covers every `suffix`/`N`/`S`, since those only frame the input; the tree and MAC constructions inherit it through the mode reductions below.  It covers **only** the instances listed here — reduced-round instances are explicitly unclaimed and exist to be attacked.  If an attack beats a claimed bound, the claim was false and these parameters will be revised; that possibility is what makes the claim meaningful.
+
+| `C` | capacity (bits) | claimed level (bits) | minimum claimed rounds `R*` |
+|-----|-----------------|----------------------|------------------------------|
+| 2 | 256 | 128 | 6 |
+| 4 | 512 | 256 | 6 |
+| 6 | 768 | 384 | 6 |
+| 8 | 1024 | 512 | 8 |
+
+An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.  **Margin rationale:** `R*` = 2 × max(diffusion floor, trail floor).  The diffusion floor is 3 rounds (full bit diffusion; see Evidence).  The trail floor is the smallest round count whose proven per-characteristic bound `2^−6·A` is at most `2^−2b` for claimed level `b` — twice the exponent of the generic bound, as headroom for the trail clustering the model does not cover: from the Evidence table, 2 rounds cover `b` ≤ 135, 3 rounds `b` ≤ 399, 4 rounds `b` ≤ 675.  Hence `R*` = 2·max(3, 3) = 6 for `C` ∈ {2, 4, 6} and 2·max(3, 4) = 8 for `C` = 8.  The factor 2 is a deliberate margin against the structural attacks the bounds do not address and will be revisited as evidence accumulates.
+
+Note: the `castella` program's default `num_rounds` = 6 makes its defaults claimed instances for digests up to 48 bytes (`C` ≤ 6); a 512-bit-level digest (`C` = 8, e.g. 64 bytes) is a claimed instance only with `--rounds` ≥ 8.
+
+### Security strengths (generic bounds)
+
+These follow arithmetically from the claim — they are the random-sponge generic bounds, which the claim asserts cannot be beaten.  For an `n`-byte digest at capacity `C` blocks, with MAC key `K` and MAC output length `L` bytes (all strengths in bits):
+
+| property | claimed strength |
+|----------|------------------|
+| collision resistance | min(4·n, 64·C) |
+| preimage resistance | min(8·n, 64·C) |
+| second-preimage resistance | min(8·n, 64·C) |
+| MAC forgery | min(8·\|K\|, 8·L, 64·C) |
+| MAC key recovery | min(8·\|K\|, 64·C) |
+| XOF/PRNG output distinguishing | 64·C |
+
+The `castella` program derives the capacity from the digest size as `16·C ≥ 2n` bytes, i.e. `64·C ≥ 8n` bits, so the output-length bounds always dominate and the table collapses to the SHA-3 shape: **collision `4n`, preimage and second preimage `8n` bits** for an `n`-byte digest.
+
+**Comparison with SHA-3.**  SHA3-`d`'s security levels come from its capacity `2d` bits and output `d` bits; the claimed instances match them exactly (SHA3-224's 448-bit capacity falls between Castella's `C` = 2 and `C` = 4, so it maps upward):
+
+| target | SHA-3 capacity | Castella instance | capacity | collision / preimage / 2nd-preimage |
+|--------|----------------|-------------------|----------|--------------------------------------|
+| SHA3-224 | 448 | `C=4`, `n=28` | 512 | 112 / 224 / 224 |
+| SHA3-256 | 512 | `C=4`, `n=32` | 512 | 128 / 256 / 256 |
+| SHA3-384 | 768 | `C=6`, `n=48` | 768 | 192 / 384 / 384 |
+| SHA3-512 | 1024 | `C=8`, `n=64` | 1024 | 256 / 512 / 512 |
+
+The `castella` program's capacity rule produces exactly this mapping from the digest size.  Round counts appear nowhere in this table — as in SHA-3, whose 24 rounds are safety margin, not a security parameter, the security levels are set by the capacity and the output length; the rounds back the claim (see the margin rationale above).
+
+### Proven mode reductions
+
+These are theorems, not conjectures — but each one transfers the claim rather than replacing it, so together they establish that the *modes* add no weakness, not that the primitive has any strength.
+
+#### The duplex is a sponge
+
+The byte string XORed into the state over a duplex object's lifetime is determined by the call history alone: the initialization string, then, per `pad_and_permute`, the bytes added so far followed by `suffix` (at a squeeze) and the pad10\*1 completion to a rate boundary.  By induction over the primitive operations, the state after every permutation equals the state of a plain sponge (permutation `P`, rate `16·R` bytes) midway through absorbing that string, so **every `squeeze` output is the first output block of the sponge applied to the accumulated, padded input** — a string the adversary could have submitted to the sponge directly.  Any attack on the duplex is therefore an attack on the sponge with the same parameters; this is the duplexing lemma (*Duplexing the sponge*), and it covers every usage pattern, including interleaved `add`/`squeeze` and PRNG use.
+
+Two properties of the encodings make this transfer meaningful.  First, pad10\*1 is sponge-compliant: the padding is injective and its final byte (`0x80` or `0x81`) makes the last block of every padded segment nonzero, so no two distinct inputs pad to strings differing only by trailing zero blocks.  Second, the initialization string is uniquely parseable — `left_encode(256)`, `left_encode(16·R)`, `left_encode(num_rounds)`, `encode_string(N)`, `encode_string(S)` are each self-delimiting and read in a fixed order — so distinct parameter tuples produce distinct absorbed prefixes, and distinct `suffix` bytes produce distinct absorbed strings at every squeeze.  Distinct parameterizations therefore behave as independent functions (the cSHAKE property), and a random sponge at capacity `c` has the generic bounds of the strengths table (indifferentiable from a random oracle up to ~`2^(c/2)` calls; Bertoni et al., *Cryptographic sponge functions*).
+
+#### Tree collisions reduce to node collisions
+
+**Claim:** for a fixed parameterization (node parameters, `CHUNK_SIZE`, `CV_LEN`), any two distinct tree inputs `M ≠ M'` with equal tree digests yield a collision of the node hash.  Let `F(M)` be the final node's input string, `role_prefix(0x00) || chunk_0 || CV_1 || … || CV_m || right_encode(m)`.
+
+* **Case `F(M) ≠ F(M')`.**  The final node hashed two distinct strings to the same digest: a node collision at full digest length.
+* **Case `F(M) = F(M')`.**  The string decodes uniquely from the end: the last byte is the width `w` of `right_encode(m)`, the `w` bytes before it are `m` — so `m = m'`; the `m·CV_LEN` bytes before that are the chaining values — so `CV_i = CV'_i` for every `i`; and what remains after the fixed-length role prefix is chunk 0 — so `chunk_0 = chunk'_0`.  Chunk boundaries sit at fixed offsets, so if every chunk were equal, `M` and `M'` would be equal; since they are not, some leaf chunk `i ≥ 1` has `chunk_i ≠ chunk'_i` while `CV_i = CV'_i`.  The two leaf strings share the role prefix and `left_encode(i)` and differ in the chunk, so they are distinct strings whose `CV_LEN`-byte node outputs are equal: a node collision at `CV_LEN` bytes.
+
+The role byte makes the two cases airtight (a leaf string and a final-node string differ in their first byte, so the colliding pair always lies within one domain), and `left_encode(i)` pins each CV to its position (equal chunks at different indices are distinct leaf strings).  Truncation to `CV_LEN = 16·C` bytes costs nothing: its birthday bound is `64·C` bits, exactly the claimed level.  Beyond collisions, the mode satisfies the sufficient conditions for sound tree hashing (*Sufficient conditions for sound tree and sequential hashing modes*): final-node decodability, recoverability of the message from the node inputs, and leaf/final domain separation — which give indifferentiability of the tree from a random oracle (with an ideal node hash) up to ~`2^(64·C)` queries, so the preimage and XOF properties carry over at the claimed level too.
+
+**Scope caveat.**  The reduction is *within* the tree function.  The tree is not domain-separated from the plain duplex under identical parameters — its final node *is* a plain duplex absorbing a decodable string, so a plain-hash user hashing an adversarially chosen message can reproduce a tree digest by construction.  This is the precise content of the existing warning that a tree hash and its plain node hash are not interoperable; an application needing both under the same parameters must separate them via `N` or `S`.
+
+#### The keyed construction is a MAC
+
+The MAC argument chains three injectivity facts onto the reductions above.  **Domain:** the function name `"Castella-MAC"` puts every MAC query in a domain disjoint from all unkeyed digests (by the initialization-string injectivity above), so unkeyed-hash queries give the forger nothing.  **Key framing:** the key constraint (1 byte to one chunk, framing included) makes `bytepad(encode_string(K), CHUNK_SIZE)` exactly chunk 0, a fixed-length block absorbed first by the final node; `encode_string` is injective (different lengths change `left_encode(|K|)`, equal lengths differ in the key bytes), so distinct keys produce distinct chunk-0 blocks, and the fixed block length means the message `X` — which starts at the next chunk boundary — can never shift how the key parses.  **PRF:** under the claim and the tree reduction, the tree behaves as a random oracle up to `2^(64·C)` work, and a random oracle applied to a secret fixed-length prefix followed by the adversary's input is a PRF until the key is guessed — hence distinguishing and key recovery at min(`8·|K|`, `64·C`) bits and forgery additionally capped by tag guessing at `8·L`, as in the strengths table.
+
+Two MD-style failure modes are structurally absent.  There is no length extension: a tag reveals at most one rate block of output, and continuing the computation would require the `128·C`-bit inner state.  And tags of different lengths are unrelated: the trailing `right_encode(L)` makes `MAC(K, X, L)` and `MAC(K, X, L')` random-oracle outputs on *different inputs*, so a shorter tag is not a truncation of a longer one — deliberately unlike unkeyed digests, where truncation consistency is a feature.
+
+### Evidence
+
+Evidence supports the claim; it cannot prove it.  What has been analyzed so far (see [research/README.md](research/README.md) for the model, caveats, full tables, and the commands to reproduce every result):
 
 * Full bit diffusion of `P` for the 16-block state needs 3 rounds (empirical; corroborated by avalanche-matrix statistics).
-* A byte-level truncated-differential MILP model gives **proven lower bounds** on differentially active AES S-boxes per characteristic: 45 active S-boxes for 2 rounds of `P` (DP ≤ 2^−270), 133 for 3 rounds (DP ≤ 2^−798), 225 for 4.  The same counts bound linear-trail correlations by 2^−3·A.  These bounds cover **single characteristics only** — nothing about differential clustering, rebound attacks, invariant subspaces, or other structural distinguishers — so they are necessary, not sufficient.
+* A byte-level truncated-differential MILP model gives **proven lower bounds** on differentially active AES S-boxes per characteristic: 45 active S-boxes for 2 rounds of `P` (DP ≤ 2^−270), 133 for 3 rounds (DP ≤ 2^−798), 225 for 4 (DP ≤ 2^−1350).  The same counts bound linear-trail correlations by 2^−3·A.  These bounds cover **single characteristics only** — nothing about differential clustering, rebound attacks, invariant subspaces, or other structural distinguishers — so they are necessary, not sufficient.
 * The choice of 3 AES rounds per Castella round is supported by the same model: 4 AES rounds per round is strictly worse beyond 2 rounds (the AES hourglass trail bypasses the transpose), and 2 AES rounds spends 50% more transposes for the same bound at an equal AES budget.
-
-**Tree soundness** is inherited, not assumed: the tree's encodings make the final node's input stream unambiguously decodable, so any tree collision yields a node collision (Section [The tree-hashing mode](#the-tree-hashing-mode)).
-
 ## Test vectors
 
 [tests/KAT.txt](tests/KAT.txt) contains 58 known-answer tests covering the duplex, the DuplexTree, and the Compress-Castella tree across parameter and length sweeps; `tests/kat.cpp` verifies them (`./kat`) or regenerates the file (`kat --generate`).  Each line is self-describing; the message of length `msglen` is the byte pattern `msg[i] = i mod 256`, and `fn=`/`custom=`/`digest=` values are hexadecimal.  Two examples:
@@ -191,9 +264,12 @@ tree C=4 rounds=6 suffix=0 fn=43617374656c6c61 custom=4b4154 chunk=1024 msglen=0
 
 ## References
 
-* G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Cryptographic sponge functions](https://keccak.team/files/CSF-0.1.pdf) (the sponge and duplex constructions)
+* G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Cryptographic sponge functions](https://keccak.team/files/CSF-0.1.pdf) (the sponge and duplex constructions; the flat sponge claim; the generic security bounds)
+* G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Duplexing the sponge](https://keccak.team/files/SpongeDuplex.pdf) (the duplexing lemma: duplex security reduces to sponge security)
+* G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Sponge-based pseudo-random number generators](https://keccak.team/files/SpongePRNG.pdf) (the state-forgetting requirement behind the forward-secrecy non-claim)
 * [NIST FIPS 202](https://csrc.nist.gov/pubs/fips/202/final) (SHA-3; pad10\*1, domain-separation suffixes)
 * [NIST SP 800-185](https://csrc.nist.gov/pubs/sp/800/185/final) (cSHAKE, KMAC; the encodings this spec adapts to little-endian)
 * [KangarooTwelve](https://keccak.team/files/KangarooTwelve.pdf) and [Sakura](https://keccak.team/files/Sakura.pdf) (the tree structure and its soundness argument)
+* G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Sufficient conditions for sound tree and sequential hashing modes](https://eprint.iacr.org/2009/210) (the tree-soundness conditions and indifferentiability bound)
 * J. Daemen, V. Rijmen — [The Design of Rijndael (AES)](https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_2002.pdf) (the AES round; 2-round full diffusion)
 * N. Mouha, Q. Wang, D. Gu, B. Preneel — *Differential and Linear Cryptanalysis Using Mixed-Integer Linear Programming* (Inscrypt 2011; the active-S-box model)

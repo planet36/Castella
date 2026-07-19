@@ -98,18 +98,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     const auto max_threads =
         std::max(min_threads, static_cast<int>(std::thread::hardware_concurrency()));
 
-    auto num_threads = min_threads;
+    // NUM_THREADS=0 means max_threads
+    auto num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);
 
-    try
-    {
-        num_threads = std::stoi(get_env("NUM_THREADS").value_or("0"));
-    }
-    catch (...)
-    {
-        num_threads = min_threads;
-    }
-
-    num_threads = std::clamp(num_threads, min_threads, max_threads);
+    if (num_threads == 0)
+        num_threads = max_threads;
 
     // }}}
 

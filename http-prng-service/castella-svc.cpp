@@ -13,7 +13,6 @@
 #include "config.h"
 #include "httplib.h"
 #include "parse_int.hpp"
-#include "parse_option_int.hpp"
 #include "quote_shell_always.hpp"
 #define SPDLOG_USE_STD_FORMAT
 #include "spdlog/cfg/env.h"

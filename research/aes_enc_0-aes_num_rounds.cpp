@@ -5,7 +5,7 @@
 #undef NDEBUG
 
 #include "aes_enc.hpp"
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 #include "running_stats.hpp"
 #include "simd_bitmask.hpp"
 #include "simd_popcount.hpp"

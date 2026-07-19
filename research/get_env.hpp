@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 
 #include <cstdlib>
 #include <optional>

@@ -18,7 +18,7 @@
 
 #include "../hash-programs/cch-x2.hpp"
 #include "../hash-programs/cch.hpp"
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 
 #include <array>
 #include <cassert>

@@ -11,7 +11,7 @@
 #include "fd-utils.h"
 #include "fixed_vector.hpp"
 #include "fnv.hpp"
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 #include "quote_shell_always.hpp"
 #include "to_unsigned.hpp"
 #include "unique_fd.hpp"

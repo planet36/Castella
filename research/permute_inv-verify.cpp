@@ -5,7 +5,7 @@
 #undef NDEBUG
 
 #include "castella-permute.hpp"
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 #include "simd_equal.hpp"
 
 #include <array>

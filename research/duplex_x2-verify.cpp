@@ -21,7 +21,7 @@
 
 #include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
-#include "parse_option_int.hpp"
+#include "parse_int.hpp"
 
 #include <cassert>
 #include <cstddef>

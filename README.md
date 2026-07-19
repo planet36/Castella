@@ -112,7 +112,7 @@ The top-level Makefile recurses into the subdirectories:
 
 * `make` — build the examples, the hash programs, and the tests
 * `make test` — build and run every test suite (the fixed tests, the KAT file checker, the randomized equivalence tests, and the hash programs' correctness script)
-* `make everything` — additionally build `research/` (needs [google-benchmark](https://github.com/google/benchmark)) and `http-prng-service/` (needs [spdlog](https://github.com/gabime/spdlog); downloads `httplib.h` if missing)
+* `make everything` — additionally build `research/` (needs [google-benchmark](https://github.com/google/benchmark)) and `http-prng-service/` (needs [spdlog](https://github.com/gabime/spdlog); `httplib.h` is committed in-tree, re-downloaded by the Makefile only if missing)
 * `make clean`, `make lint` — recurse into every subdirectory
 
 Each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets.

@@ -20,4 +20,4 @@ To stop the service, send `SIGINT`, `SIGTERM`, or `SIGHUP` to it.  (For example,
 
 ## External file
 
-[httplib.h](https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h) is automatically downloaded (if not present) by the Makefile from its GitHub repo (https://github.com/yhirose/cpp-httplib).
+[httplib.h](https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h) is an external dependency ([cpp-httplib](https://github.com/yhirose/cpp-httplib)) that is **committed to this repository** and updated in-tree as upstream changes.  The Makefile downloads it from the GitHub repo only as a fallback when the file is missing; because it is tracked, it is normally restored with `git checkout -- http-prng-service/httplib.h` rather than re-downloaded.

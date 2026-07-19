@@ -11,7 +11,7 @@ the KAT file, an implementer needs nothing but SPEC.md.
 
 Usage: python3 spec-conformance.py [path/to/KAT.txt]
 
-Pure Python, no dependencies.  Verifying all 58 KATs takes a few minutes
+Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 (the point is independence, not speed).
 """
 

@@ -15,6 +15,7 @@ permute_inv-verify
 permute-num_rounds
 permute-num_rounds-avalanche_matrix
 permute-num_rounds-benchmark
+permute-structural-probes
 permute_x2-benchmark
 permute_x2-verify
 results/

@@ -40,6 +40,12 @@ echo
 echo "________________________________________________________________________________"
 echo
 
+echo "# Structural probes of Castella::permute (subspace escape, fixed points, round constants)"
+echo
+./permute-structural-probes -n 10000 || exit
+echo "________________________________________________________________________________"
+echo
+
 echo "# Find the bit diffusion rate of simd_compress_aes_enc_r{2,3,4} when each param varies"
 echo
 ./simd_compress_aes_enc-num_rounds -n 250000 || exit

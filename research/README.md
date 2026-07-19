@@ -11,6 +11,7 @@
 | cch\_x2-verify.cpp | Verify that the interleaved `compress_castella_hash_x2` produces the same digests as two separate `compress_castella_hash` objects |
 | permute-num\_rounds.cpp | Find the minimum `num_rounds` for `Castella::permute` to achieve full bit diffusion |
 | permute-num\_rounds-avalanche\_matrix.cpp | Print statistics of the avalanche matrix of `Castella::permute` |
+| permute-structural-probes.cpp | Structural probes of `Castella::permute`: structured-subspace escape, fixed-point screen, round-constant properties (nonzero exit on any violation) |
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
@@ -169,6 +170,17 @@ Conclusion: keep the pair (implemented as `compress_castella_hash_x2` in `hash-p
 Interpretation: the pairing win exists because **VAES halves the chain count**.  With 256-bit `vaesenc`, one cch state runs only 8 independent 3-deep chains per 256-byte chunk, leaving the AES units latency-starved — the gap the second state fills.  With 128-bit `aesenc` codegen, one state already runs 16 independent chains, which saturates the AES units on its own; the second state's registers just spill (the AVX2-no-VAES column, whose 16 ymm registers hold the two 8-register states with nothing to spare, loses outright in L2/L3).  The DRAM-regime ~1.28× appears in every column because it is memory-level parallelism (two concurrent read streams), not an AES effect — and in the tree, adjacent leaf chunks are contiguous memory, so the prefetcher already gets much of that.
 
 Conclusion: the VAES guard on the cch pairing opt-in is correct and stays.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark directly to check their machine.
+
+## Findings: structural probes of `Castella::permute` (2026-07-19)
+
+`permute-structural-probes.cpp` (run at `-n 10000`, ~0.3 s) probes the _N_ = 16 permutation for the structural weaknesses the MILP trail bounds do not cover.  All pass/fail checks passed:
+
+* **Structured-subspace escape.**  Random states from the transpose's three natural symmetry classes — all blocks equal, constant-byte blocks (the transpose maps these two to each other), and symmetric byte matrices (which the transpose fixes) — were permuted for every round count 1–16.  In 480,000 outputs, **none re-entered any of the three classes**, and the residual-structure statistics (symmetric byte pairs, cross-block and within-block equal-byte counts) sat at their random-model expectations already at 1 round (e.g. symmetric pairs 0.457–0.475 vs. expected 0.469).  The round constants do the symmetry-breaking they were designed for.
+* **In-subspace avalanche.**  Minimal in-subspace differences diffuse like random differences: ~1024 flipped bits (half the state) from round 3 at every class.  The partial values below that are the expected diffusion ramp, not residual structure: at 1 round a one-block difference has diffused only within its block (~64 bits) and at 2 rounds reaches 1019.9 — the same "almost-complete at 2, complete at 3" picture as `permute-num_rounds`.  (An earlier draft of the probe showed the symmetric class ~25σ below expectation at all rounds; the cause was a probe bug — the paired flip cancelled itself when the random matrix indices landed on the diagonal — which the printed expectation exposed immediately.  Worth keeping in mind: print the null-model value next to every measured statistic.)
+* **Fixed-point screen.**  No all-same-byte state (all 256) is a fixed point of `P`, or maps to its own transpose, at any round count.  This is only a screen of the candidates symmetry suggests — a generic fixed-point search over a 2048-bit state is infeasible, and a random permutation would also pass.
+* **Round-constant properties** (the SPEC.md assertions, machine-verified for the first time): the first constant is the seed string `"expand 16-byte c"`; all 768 are distinct and nonzero; no constant is a bitwise shift (by 1–127, either direction) of its predecessor in generation order; Hamming weights μ = 63.89, min 45, max 79.
+
+Scope: these probes are necessary sanity checks, not distinguisher proofs — they test the symmetry classes the transpose makes natural, and absence of evidence in 10^4 samples is not evidence of absence for subtler invariant subspaces.  The pass/fail checks exit nonzero on violation, so the program can gate regressions.
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

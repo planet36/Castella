@@ -246,7 +246,7 @@ Two MD-style failure modes are structurally absent.  There is no length extensio
 
 ### Evidence
 
-Evidence supports the claim; it cannot prove it.  What has been analyzed so far (see [research/README.md](research/README.md) for the model, caveats, full tables, and the commands to reproduce every result):
+Evidence supports the claim; it cannot prove it.  [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) maps every claim in this section to its evidence and the exact commands that reproduce it; [research/README.md](research/README.md) holds the models, caveats, and full result tables.  What has been analyzed so far:
 
 * Full bit diffusion of `P` for the 16-block state needs 3 rounds (empirical; corroborated by avalanche-matrix statistics).
 * A byte-level truncated-differential MILP model gives **proven lower bounds** on differentially active AES S-boxes per characteristic: 45 active S-boxes for 2 rounds of `P` (DP ≤ 2^−270), 133 for 3 rounds (DP ≤ 2^−798), 225 for 4 (DP ≤ 2^−1350).  The same counts bound linear-trail correlations by 2^−3·A.  These bounds cover **single characteristics only** — nothing about differential clustering, rebound attacks, invariant subspaces, or other structural distinguishers — so they are necessary, not sufficient.

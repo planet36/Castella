@@ -12,6 +12,7 @@
 #include "castella-duplex.hpp"
 #include "config.h"
 #include "httplib.h"
+#include "parse_int.hpp"
 #include "parse_option_int.hpp"
 #include "quote_shell_always.hpp"
 #define SPDLOG_USE_STD_FORMAT
@@ -226,18 +227,8 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 
     if (req.path_params.contains("num_bytes_to_squeeze"))
     {
-        try
-        {
-            num_bytes_to_squeeze = std::stoi(req.path_params.at("num_bytes_to_squeeze"));
-        }
-        catch (const std::invalid_argument& ex)
-        {
-            num_bytes_to_squeeze = get_default_num_bytes_to_squeeze();
-        }
-        catch (const std::out_of_range& ex)
-        {
-            num_bytes_to_squeeze = get_default_num_bytes_to_squeeze();
-        }
+        num_bytes_to_squeeze = parse_int<int>(req.path_params.at("num_bytes_to_squeeze"))
+                                   .value_or(num_bytes_to_squeeze);
     }
 
     {

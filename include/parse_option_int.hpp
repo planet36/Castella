@@ -9,12 +9,12 @@
 
 #pragma once
 
+#include "parse_int.hpp"
+
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <limits>
-#include <stdexcept>
-#include <string>
 
 /// Parse \a optarg as an int in <code>[min, max]</code>, or exit with an error.
 /**
@@ -29,27 +29,19 @@
 inline int
 parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
 {
-    try
-    {
-        const int value = std::stoi(optarg);
+    const auto value = parse_int<int>(optarg, min, max);
 
-        if (value < min || value > max)
-        {
-            throw std::invalid_argument(option_name);
-        }
-
-        return value;
-    }
-    catch (const std::invalid_argument& ex)
+    if (!value.has_value())
     {
         (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", ex.what(), optarg);
+
+        if (value.error() == std::errc::result_out_of_range)
+            errx(EXIT_FAILURE, "out of range: %s: \"%s\"", option_name, optarg);
+        else
+            errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", option_name, optarg);
     }
-    catch (const std::out_of_range& ex)
-    {
-        (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "out of range: %s: \"%s\"", ex.what(), optarg);
-    }
+
+    return *value;
 }
 
 /// Parse \a optarg as an int, or exit with an error.

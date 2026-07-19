@@ -27,11 +27,14 @@
 
 #include "../hash-programs/cch-tree.hpp"
 #include "castella-duplex-tree.hpp"
+#include "parse_int.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <err.h>
+#include <limits>
 #include <print>
 #include <random>
 #include <span>
@@ -128,7 +131,15 @@ int main(int argc, char* argv[])
 
     if (argc > 1)
     {
-        seed = std::strtoull(argv[1], nullptr, 0);
+        // base 0: accept the "0x..." form this program prints
+        const auto parsed_seed = parse_int<uint64_t>(
+            argv[1], std::numeric_limits<uint64_t>::min(),
+            std::numeric_limits<uint64_t>::max(), 0);
+
+        if (!parsed_seed.has_value())
+            errx(EXIT_FAILURE, "invalid argument: SEED: \"%s\"", argv[1]);
+
+        seed = *parsed_seed;
     }
 
     std::println("seed = {:#x} (pass a SEED argument to reproduce)", seed);

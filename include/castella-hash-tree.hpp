@@ -212,7 +212,7 @@ struct HashTree
     * work, and each chunk costs the final node one CV absorption.
     */
     // }}}
-    static constexpr int32_t CHUNK_SIZE_MIN = 1024;
+    static constexpr int CHUNK_SIZE_MIN = 1024;
 
     /// The maximum chunk size (in bytes)
     // {{{
@@ -222,7 +222,7 @@ struct HashTree
     * bloats the buffer and starves the thread pool.
     */
     // }}}
-    static constexpr int32_t CHUNK_SIZE_MAX = 1 << 30;
+    static constexpr int CHUNK_SIZE_MAX = 1 << 30;
 
     /// The default chunk size (in bytes)
     // {{{
@@ -238,7 +238,7 @@ struct HashTree
     * derived tree may shadow this with a default suited to its node.
     */
     // }}}
-    static constexpr int32_t DEFAULT_CHUNK_SIZE = 65'536;
+    static constexpr int DEFAULT_CHUNK_SIZE = 65'536;
 
     static_assert(CHUNK_SIZE_MIN <= DEFAULT_CHUNK_SIZE);
     static_assert(DEFAULT_CHUNK_SIZE <= CHUNK_SIZE_MAX);
@@ -247,7 +247,7 @@ struct HashTree
     /**
     * An arbitrary sanity bound; NUM_THREADS never affects the digest.
     */
-    static constexpr int32_t NUM_THREADS_MAX = 1024;
+    static constexpr int NUM_THREADS_MAX = 1024;
 
 private:
     /// The minimum number of leaf chunks each worker thread must have
@@ -263,7 +263,7 @@ private:
     * only which thread computes each (pure-function) leaf CV.
     */
     // }}}
-    static constexpr int64_t MIN_LEAF_CHUNKS_PER_WORKER = 8;
+    static constexpr int MIN_LEAF_CHUNKS_PER_WORKER = 8;
 
     /// The number of chunks that must be seen before the worker pool starts
     // {{{
@@ -279,7 +279,7 @@ private:
     * same order.
     */
     // }}}
-    static constexpr int64_t MIN_CHUNKS_BEFORE_POOL_START = 4;
+    static constexpr int MIN_CHUNKS_BEFORE_POOL_START = 4;
 
     /// Role byte for the final node (the root of the tree)
     static constexpr uint8_t ROLE_FINAL_NODE = 0x00;
@@ -499,8 +499,8 @@ private:
         if (num_threads == 0)
         {
             // hardware_concurrency() may return 0 if it cannot be determined.
-            const auto hw = static_cast<int32_t>(std::thread::hardware_concurrency());
-            return std::clamp(hw, INT32_C(1), NUM_THREADS_MAX);
+            const auto hw = static_cast<int>(std::thread::hardware_concurrency());
+            return std::clamp(hw, 1, NUM_THREADS_MAX);
         }
 
         return static_cast<int32_t>(num_threads);

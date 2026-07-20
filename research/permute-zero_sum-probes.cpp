@@ -3,30 +3,30 @@
 
 /// Zero-sum (cube) probes of Castella::permute (N=16)
 /**
-\file
-For k chosen input bits (a "cube"), the XOR-sum of P over all 2^k
-assignments of those bits is zero in every output bit whose algebraic
-degree in the cube variables is less than k -- and trivially in every
-output bit that does not depend on them at all.  This probe counts, per
-round count and cube size, the output bits whose cube sums vanish for
-every one of NUM_BASES random base states (a random bit's sums survive
-all bases with probability 2^-NUM_BASES, so surviving bits indicate
-structure, not chance).
-
-Two cube placements:
-
-* single-block -- all k bits inside one random block, the placement that
-  minimizes mixing.  At 1 round this MUST find structure (the positive
-  control): one round cannot spread a block beyond one byte per output
-  block, so the 15 unvaried input blocks leave 1920 output bits constant.
-* spread -- k bits at random positions across the whole state.  At 1
-  round every spread cube spanning 2+ blocks also sums to zero in ALL
-  bits (one round is nonlinear only block-locally, and each block sees
-  its sub-cube's values an even number of times); gone by 2 rounds.
-
-Any surviving bit at 3+ rounds (full diffusion) is a zero-sum
-distinguisher of the reduced-round permutation and a FAIL; rows for 1-2
-rounds are informational.
+* \file
+* For k chosen input bits (a "cube"), the XOR-sum of P over all 2^k
+* assignments of those bits is zero in every output bit whose algebraic
+* degree in the cube variables is less than k -- and trivially in every
+* output bit that does not depend on them at all.  This probe counts, per
+* round count and cube size, the output bits whose cube sums vanish for
+* every one of NUM_BASES random base states (a random bit's sums survive
+* all bases with probability 2^-NUM_BASES, so surviving bits indicate
+* structure, not chance).
+*
+* Two cube placements:
+*
+* * single-block -- all k bits inside one random block, the placement that
+*   minimizes mixing.  At 1 round this MUST find structure (the positive
+*   control): one round cannot spread a block beyond one byte per output
+*   block, so the 15 unvaried input blocks leave 1920 output bits constant.
+* * spread -- k bits at random positions across the whole state.  At 1
+*   round every spread cube spanning 2+ blocks also sums to zero in ALL
+*   bits (one round is nonlinear only block-locally, and each block sees
+*   its sub-cube's values an even number of times); gone by 2 rounds.
+*
+* Any surviving bit at 3+ rounds (full diffusion) is a zero-sum
+* distinguisher of the reduced-round permutation and a FAIL; rows for 1-2
+* rounds are informational.
 */
 
 #if !defined(DEBUG)

@@ -3,29 +3,29 @@
 
 /// Empirical structural probes of Castella::permute (N=16)
 /**
-\file
-Three probes supporting the security claim's evidence section (SPEC.md):
-
-1. Structured-subspace escape: states from three symmetry classes the
-   transpose maps to each other (all blocks equal, constant-byte blocks,
-   symmetric byte matrix) must leave the classes after one round and show
-   no residual structure or weakened diffusion afterward.
-2. Fixed-point screen: no structured candidate state (all-same-byte
-   states) is a fixed point of P, or maps to its own transpose.
-   (A generic fixed-point search over a 2048-bit state is infeasible;
-   this is only a screen of the candidates symmetry would suggest.)
-3. Round-constant properties asserted in SPEC.md: the first constant is
-   the seed string, all 768 are distinct and nonzero, and no constant is
-   a bitwise shift of its predecessor in generation order.  Plus a
-   slide-resistance screen: no whole-round shift relates two rounds'
-   constants by a fixed XOR difference (an affine self-similar schedule,
-   which is what a slide -- with or without a twist -- would need).
-   Distinctness alone only rules out the zero difference.
-
-Probes 2 and 3 are pass/fail (nonzero exit on any violation).  Probe 1's
-tables are informational: compare the residual-structure means against
-the printed random-model expectations (deviations at 1 round are
-expected; they must vanish as rounds increase).
+* \file
+* Three probes supporting the security claim's evidence section (SPEC.md):
+*
+* 1. Structured-subspace escape: states from three symmetry classes the
+*    transpose maps to each other (all blocks equal, constant-byte blocks,
+*    symmetric byte matrix) must leave the classes after one round and show
+*    no residual structure or weakened diffusion afterward.
+* 2. Fixed-point screen: no structured candidate state (all-same-byte
+*    states) is a fixed point of P, or maps to its own transpose.
+*    (A generic fixed-point search over a 2048-bit state is infeasible;
+*    this is only a screen of the candidates symmetry would suggest.)
+* 3. Round-constant properties asserted in SPEC.md: the first constant is
+*    the seed string, all 768 are distinct and nonzero, and no constant is
+*    a bitwise shift of its predecessor in generation order.  Plus a
+*    slide-resistance screen: no whole-round shift relates two rounds'
+*    constants by a fixed XOR difference (an affine self-similar schedule,
+*    which is what a slide -- with or without a twist -- would need).
+*    Distinctness alone only rules out the zero difference.
+*
+* Probes 2 and 3 are pass/fail (nonzero exit on any violation).  Probe 1's
+* tables are informational: compare the residual-structure means against
+* the printed random-model expectations (deviations at 1 round are
+* expected; they must vanish as rounds increase).
 */
 
 #if !defined(DEBUG)

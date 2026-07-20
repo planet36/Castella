@@ -3,16 +3,16 @@
 
 /// Emit an endless Castella duplex PRNG byte stream to stdout
 /**
-\file
-The PRNG usage of the duplex: absorb a fixed seed string (so the stream
-is reproducible), then repeatedly squeeze the full rate to stdout.
-Intended for piping into statistical test batteries, e.g. PractRand:
-
-    ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
-
-The stream never ends; the consumer cuts it (SIGPIPE terminates this
-program).  Statistical batteries are a smoke test only: passing means
-nothing cryptographically, failing at 3+ rounds would mean everything.
+* \file
+* The PRNG usage of the duplex: absorb a fixed seed string (so the stream
+* is reproducible), then repeatedly squeeze the full rate to stdout.
+* Intended for piping into statistical test batteries, e.g. PractRand:
+*
+*     ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
+*
+* The stream never ends; the consumer cuts it (SIGPIPE terminates this
+* program).  Statistical batteries are a smoke test only: passing means
+* nothing cryptographically, failing at 3+ rounds would mean everything.
 */
 
 #include "castella-duplex.hpp"

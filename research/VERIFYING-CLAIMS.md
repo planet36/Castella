@@ -25,9 +25,10 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Clustering, rebound, slide analysis, algebraic degree, trail tightness | evidence pending | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed) and first-order differential clustering | executable (solver) | §13 |
+| 14 | Rebound, slide analysis, algebraic degree, r≥2 trail tightness | evidence pending | §14 |
 
-Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the two scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing)).  All commands run from `research/` unless noted.
+Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
 
 ## 1. The claim itself cannot be verified — only falsified
 
@@ -132,6 +133,22 @@ Requires [PractRand](https://pracrand.sourceforge.net/)'s `RNG_test` (external; 
 
 Expected: `no anomalies` at every checkpoint (recorded runs: 311 test results through 16 GiB for both, ~6 s/GiB).  Read it as a smoke test only — passing means nothing cryptographically; a failure at 3+ rounds would be a real distinguisher.  See the findings section in [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19).
 
-## 13. Evidence pending
+## 13. Trail tightness and differential clustering
 
-Differential clustering, rebound attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and tightness of the trail bounds (finding real characteristics): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+The §4 MILP bounds are *lower* bounds on active S-boxes.  This row checks them from the other side — do real bit-level characteristics attain the bound? — and measures first-order clustering.  Requires the z3 solver (Arch: `python-z3-solver`).
+
+```bash
+python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
+
+# r=1: the bound is proven tight, and the optimal differential's full cluster
+python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
+
+# r=2: realizable near the floor; minimization is expected to report 'unknown' (timeout)
+python3 permute-trail-search.py -r 2 --patterns 3 -t 1800 --encoding rows
+```
+
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 847 characteristics with total DP 2<sup>−51.8</sup> (`complete`).  r=2 finds a realizable trail at weight 315 and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 315], not solved.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
+
+## 14. Evidence pending
+
+Rebound / start-from-the-middle attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

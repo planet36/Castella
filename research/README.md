@@ -18,6 +18,7 @@
 | duplex-prng-stream.cpp | Emit an endless duplex PRNG byte stream to stdout, for piping into statistical batteries (e.g. PractRand's `RNG_test`) |
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
+| permute-trail-search.py | Bit-level SAT/SMT search (z3) for actual differential characteristics realizing the MILP-minimal activity patterns; reports the best-trail weight (an upper bound complementing the MILP lower bound) and, with `--cluster`, enumerates the characteristics sharing one differential |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
 
 ## Benchmark programs
@@ -51,6 +52,13 @@ Run these commands:
 The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) package (which bundles the CBC solver):
 
 * `python3 permute-min-active-sboxes.py --help`
+
+The trail search requires Python 3 and the [z3](https://github.com/Z3Prover/z3) SMT solver (Arch: `python-z3-solver`):
+
+* `python3 permute-trail-search.py --help`
+* `python3 permute-trail-search.py --self-test`
+
+Neither Python program is run by `run-research.sh` (which drives only the compiled binaries): both are slow and depend on a solver that is not installed by default.
 
 Raw benchmark results are saved in a folder named `results`.
 
@@ -325,3 +333,70 @@ None needed: the script prints the finished table directly — unlike the benchm
     * `no integer solution found within the time limit` — nothing usable; re-run with a larger `-t`.
 * _A_ never decreases as _r_ grows (any longer trail contains a shorter one), so a slow row can be bracketed by its neighbors.
 * Rule of thumb: for a _b_-bit claim against single-characteristic differential attacks, require 6·_A_ comfortably above _b_ (e.g., 6·_A_ ≥ 256 is reached at _r_ = 2 for _N_ = 16, _a_ = 3).  Remember the scope caveat from the assumptions: these bounds do not cover differential clustering, rebound, or other structural attacks, so they are necessary — not sufficient — for the round-count choice.
+
+## Findings: bit-level trail search and clustering in `Castella::permute` (2026-07-19)
+
+The MILP model above proves a **lower bound** on the number of active S-boxes, hence an upper bound 2<sup>−6·A</sup> on any single characteristic's differential probability — but only if a real, byte-valued characteristic actually attains _A_ active boxes at the maximum S-box probability.  `permute-trail-search.py` closes that loop from the other side: it searches for actual bit-level characteristics with z3, giving an **upper bound** on the best-trail weight, and (with `--cluster`) enumerates the characteristics sharing one differential to measure clustering.  Notation as above, plus _weight_ = −log<sub>2</sub>(DP) of a characteristic = Σ over its active S-boxes of −log<sub>2</sub>(DDT-probability); each AES S-box transition costs 6 bits (the one 2<sup>−6</sup> = 4/256 entry per DDT row) or 7 bits (a 2<sup>−7</sup> = 2/256 entry).  A weight-_w_ characteristic has DP = 2<sup>−w</sup>, and _w_ ≥ 6·_A_ always.
+
+These runs are _N_ = 16, _a_ = 3.
+
+### Model and validation
+
+* **Two stages.**  Stage A rebuilds the MILP activity model as SAT and fixes the total active-S-box count to the proven MILP optimum _A_, yielding one minimal-weight activity pattern (blocking clauses enumerate further patterns).  Stage B instantiates one pattern at the bit level: each active byte is an 8-bit difference; an S-box transition is constrained to a nonzero DDT entry; MixColumns acts linearly over GF(2<sup>8</sup>); ShiftRows and the transpose re-index; round constants cancel.
+* **Two S-box encodings, opposite strengths.**  `witness` (∃x: dout = S[x⊕din]⊕S[x]) finds first solutions in seconds but cannot _refute_ in reasonable time (weight minimization returns `unknown`).  `rows` (255 implications din = a ⇒ dout ∈ DDT-allowed(a)) is larger to build but propagates well, so it drives minimization and cluster enumeration to completion.  This asymmetry — the encoding that finds solutions fastest is not the one that proves bounds fastest — is the main engineering lesson.
+* **Every reported trail is re-verified** in Python by propagating the model's input difference through the linear layers and checking each S-box transition against the DDT; the recomputed weight must match z3's.
+* **Self-tests** (`--self-test`, run at startup): the S-box is generated from the GF(2<sup>8</sup>) inverse plus the AES affine map; the DDT is recomputed (entries ∈ {0, 2, 4}, one 4 per row); the value-level AES round reproduces hardware `aesenc(x, 0)` test vectors.
+
+### Results
+
+| _r_ | AES rounds | _A_ (MILP) | idealized floor 6·_A_ | best trail found | status |
+|-----|-----------|-----------|-----------------------|------------------|--------|
+| 1 | 3 | 9 | 2<sup>−54</sup> | **2<sup>−54</sup>** | optimal for its pattern (proven) |
+| 2 | 6 | 45 | 2<sup>−270</sup> | 2<sup>−315</sup> | upper bound only (see below) |
+
+* **_r_ = 1: the byte-level bound is tight.**  A real characteristic attains weight exactly 54 = 6·9 — every one of the 9 active S-boxes simultaneously takes its 2<sup>−6</sup> transition — and z3 proves no lighter trail exists in that pattern.  (This is the classic 3-round AES super-box: blocks do not interact until the first transpose, so _r_ = 1 is pure AES, and the search independently reconstructs the known result.)  Gap above the floor: **0**.
+* **_r_ = 2: bracketed, not solved.**  The 45-box minimal pattern _is_ bit-level realizable, at weight 315 = 45 × 7 (a generic characteristic with every active box at 2<sup>−7</sup>).  This is only an **upper bound**: with no weight constraint the solver lands on all-2<sup>−7</sup> boxes (only 1 of a byte's 127 valid output differences is a 2<sup>−6</sup> transition).  Minimizing further — even the question "is there one 2<sup>−6</sup> box?", i.e. weight ≤ 314 — returned `unknown` after 30 min per pattern on all three patterns tried: at 45 coupled S-boxes the instance is genuinely hard.  So the best-trail weight lies in **[270, 315]**, a per-box gap of at most (315 − 270)/45 = **1 bit**.
+
+The contrast is itself informative.  At _r_ = 1 the small, decoupled super-box lets every S-box hit its maximum simultaneously, so the bound is exact.  At _r_ = 2 the transpose couples the boxes and even _locating_ a single maximum-probability transition becomes intractable — direct evidence that simultaneously maximizing many coupled S-box transitions is hard, the property a good diffusion layer should have.  Either way real trails sit at or barely above the MILP floor, never below it (they cannot: 6·_A_ is a proven lower bound), so the byte-level DP bounds used for the round-count argument are conservative, and tightening 315 → 270 could only _raise_ the demonstrated margin.
+
+### Differential clustering (`--cluster`)
+
+A single characteristic is not a differential: DP(Δ<sub>in</sub> → Δ<sub>out</sub>) sums 2<sup>−weight</sup> over _all_ characteristics connecting the two differences.  For the weight-optimal _r_ = 1 differential, z3 enumerated the complete set within its activity pattern (proven complete by UNSAT):
+
+| trail weight | meaning | count | contribution to DP |
+|--------------|---------|-------|--------------------|
+| 54 | all 9 boxes at 2<sup>−6</sup> | 1 | 2<sup>−54.00</sup> |
+| 59 | 4 boxes at 2<sup>−6</sup> | 70 | 2<sup>−52.87</sup> |
+| 62 | 1 box at 2<sup>−6</sup> | 8 | 2<sup>−59.00</sup> |
+| 63 | all boxes at 2<sup>−7</sup> | 768 | 2<sup>−53.42</sup> |
+
+* **847 characteristics** share this differential; summing gives **DP = 2<sup>−51.8</sup>**, versus 2<sup>−54</sup> for the single best trail — a clustering gain of about **2.2 bits**.
+* **The best trail is not the dominant contributor.**  The 70 weight-59 characteristics together (2<sup>−52.9</sup>) outweigh the single weight-54 optimum, and the 768 weight-63 characteristics add another 2<sup>−53.4</sup>.  This is the concrete reason a single-characteristic bound is _necessary but not sufficient_: a swarm of mediocre trails can dominate one excellent one.  Here the effect is directly measured rather than assumed.
+* **The gain is small and bounded.**  The achievable count of maximum-probability (2<sup>−6</sup>) boxes is quantized to {0, 1, 4, 9} — a rigidity the two MixColumns layers impose on the super-box — which is _why_ the clustering stays near 2 bits instead of exploding.  Two bits against the per-two-round idealized margin of 270 is immaterial.
+
+The measurement covers one differential within one activity pattern, so 2<sup>−51.8</sup> is a lower-bound estimate of that differential's total DP (other patterns could contribute), and it is a single differential, not the maximum over all differentials.  It is a data point, not a proof of the differential-hull bound — the maximum expected differential probability over many rounds remains out of reach of exact enumeration and is left to the security claim's margin rather than computed here.
+
+### Scope
+
+Consistent with the MILP section: this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers, and the reduced-round instances (_r_ = 1, 2) are validation and calibration points — where full bit diffusion is not yet reached (`NUM_ROUNDS_MIN<16>()` = 3) and no security is claimed — not standalone security statements.  See [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) for how these results feed the claim.
+
+### Reproducing
+
+Dependencies: Python 3 and the z3 solver (Arch: `python-z3-solver`; elsewhere `pip install z3-solver`).  z3 solves single-threaded, so independent round counts can run in parallel.
+
+```bash
+python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, <0.1 s
+
+# r = 1: proven tight, plus the full differential cluster (~90 s total)
+python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
+
+# r = 2: realizable near the floor; minimization is expected to time out (~90 min for 3 patterns)
+python3 permute-trail-search.py -r 2 --patterns 3 -t 1800 --encoding rows --print-trail
+```
+
+Notes:
+
+* `--encoding rows` is required for the minimization and cluster results; the default `witness` finds first trails faster but returns `unknown` on the refutation queries.
+* `-t` is the per-solver-call time limit.  The _r_ = 2 minimization did not finish within 30 min per pattern on this machine; a longer limit may or may not tighten the 315.
+* `-A` overrides the target active-S-box count (default: the proven MILP optimum for _N_/_r_ embedded in the script); the two must stay in sync with the MILP table above if `AES_NUM_ROUNDS` ever changes.
+* Raw solver logs are not kept; the tables above are the record (as with the other findings sections).

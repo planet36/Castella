@@ -353,12 +353,12 @@ These runs are _N_ = 16, _a_ = 3.
 | _r_ | AES rounds | _A_ (MILP) | idealized floor 6·_A_ | best trail found | status |
 |-----|-----------|-----------|-----------------------|------------------|--------|
 | 1 | 3 | 9 | 2<sup>−54</sup> | **2<sup>−54</sup>** | optimal for its pattern (proven) |
-| 2 | 6 | 45 | 2<sup>−270</sup> | 2<sup>−315</sup> | upper bound only (see below) |
+| 2 | 6 | 45 | 2<sup>−270</sup> | 2<sup>−313</sup> | upper bound only (see below) |
 
 * **_r_ = 1: the byte-level bound is tight.**  A real characteristic attains weight exactly 54 = 6·9 — every one of the 9 active S-boxes simultaneously takes its 2<sup>−6</sup> transition — and z3 proves no lighter trail exists in that pattern.  (This is the classic 3-round AES super-box: blocks do not interact until the first transpose, so _r_ = 1 is pure AES, and the search independently reconstructs the known result.)  Gap above the floor: **0**.
-* **_r_ = 2: bracketed, not solved.**  The 45-box minimal pattern _is_ bit-level realizable, at weight 315 = 45 × 7 (a generic characteristic with every active box at 2<sup>−7</sup>).  This is only an **upper bound**: with no weight constraint the solver lands on all-2<sup>−7</sup> boxes (only 1 of a byte's 127 valid output differences is a 2<sup>−6</sup> transition).  Minimizing further — even the question "is there one 2<sup>−6</sup> box?", i.e. weight ≤ 314 — returned `unknown` after 30 min per pattern on all three patterns tried: at 45 coupled S-boxes the instance is genuinely hard.  So the best-trail weight lies in **[270, 315]**, a per-box gap of at most (315 − 270)/45 = **1 bit**.
+* **_r_ = 2: bracketed, not solved.**  The 45-box minimal pattern _is_ bit-level realizable.  The best characteristic found has weight **313** (43 active boxes at 2<sup>−7</sup> and 2 at 2<sup>−6</sup>) — an **upper bound** only; proving it minimal is intractable.  Successive `witness`-encoding runs found weights 315, then 314, then 313, and every request for anything lighter returned `unknown` after up to 60 min.  (The `rows` encoding's first solution was all-2<sup>−7</sup> at weight 315 and it could not even locate a single 2<sup>−6</sup> box within 30 min: at _r_ = 2, finding low-weight trails is the `witness` encoding's strength and refuting them is the `rows` encoding's — see the encoding note above — and neither finishes the minimization.)  So the best-trail weight lies in **[270, 313]**: the found trail is 43 bits above the floor across 45 boxes, under 1 bit per S-box.
 
-The contrast is itself informative.  At _r_ = 1 the small, decoupled super-box lets every S-box hit its maximum simultaneously, so the bound is exact.  At _r_ = 2 the transpose couples the boxes and even _locating_ a single maximum-probability transition becomes intractable — direct evidence that simultaneously maximizing many coupled S-box transitions is hard, the property a good diffusion layer should have.  Either way real trails sit at or barely above the MILP floor, never below it (they cannot: 6·_A_ is a proven lower bound), so the byte-level DP bounds used for the round-count argument are conservative, and tightening 315 → 270 could only _raise_ the demonstrated margin.
+The contrast is itself informative.  At _r_ = 1 the small, decoupled super-box lets every S-box hit its maximum simultaneously, so the bound is exact.  At _r_ = 2 the transpose couples the boxes and driving the weight down to the floor becomes intractable — direct evidence that simultaneously maximizing many coupled S-box transitions is hard, the property a good diffusion layer should have.  Either way real trails sit at or barely above the MILP floor, never below it (they cannot: 6·_A_ is a proven lower bound), so the byte-level DP bounds used for the round-count argument are conservative, and tightening 313 → 270 could only _raise_ the demonstrated margin.
 
 ### Differential clustering (`--cluster`)
 
@@ -391,13 +391,13 @@ python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, 
 # r = 1: proven tight, plus the full differential cluster (~90 s total)
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
 
-# r = 2: realizable near the floor; minimization is expected to time out (~90 min for 3 patterns)
-python3 permute-trail-search.py -r 2 --patterns 3 -t 1800 --encoding rows --print-trail
+# r = 2: witness finds the low-weight trails (~500 s each); minimization then times out
+python3 permute-trail-search.py -r 2 --patterns 1 -t 3600 --encoding witness --print-trail
 ```
 
 Notes:
 
-* `--encoding rows` is required for the minimization and cluster results; the default `witness` finds first trails faster but returns `unknown` on the refutation queries.
-* `-t` is the per-solver-call time limit.  The _r_ = 2 minimization did not finish within 30 min per pattern on this machine; a longer limit may or may not tighten the 315.
+* Pick the encoding by the task.  For the _r_ = 1 minimization and the cluster enumeration (refutation-heavy: prove nothing lighter exists), `--encoding rows` is required — the default `witness` returns `unknown` on those.  For _r_ = 2, where the goal is to *find* a low-weight trail rather than prove optimality, `witness` is the one that succeeds (`rows` gets stuck at its all-2<sup>−7</sup> first solution).
+* `-t` is the per-solver-call time limit.  The _r_ = 2 minimization did not finish within 60 min on this machine; the reported 313 is the best trail found across runs, not a proven minimum, and a longer limit may or may not tighten it.
 * `-A` overrides the target active-S-box count (default: the proven MILP optimum for _N_/_r_ embedded in the script); the two must stay in sync with the MILP table above if `AES_NUM_ROUNDS` ever changes.
 * Raw solver logs are not kept; the tables above are the record (as with the other findings sections).

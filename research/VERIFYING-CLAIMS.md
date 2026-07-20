@@ -143,11 +143,11 @@ python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
 # r=1: the bound is proven tight, and the optimal differential's full cluster
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
 
-# r=2: realizable near the floor; minimization is expected to report 'unknown' (timeout)
-python3 permute-trail-search.py -r 2 --patterns 3 -t 1800 --encoding rows
+# r=2: witness finds the low-weight trails; minimization then reports 'unknown' (timeout)
+python3 permute-trail-search.py -r 2 --patterns 1 -t 3600 --encoding witness
 ```
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 847 characteristics with total DP 2<sup>−51.8</sup> (`complete`).  r=2 finds a realizable trail at weight 315 and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 315], not solved.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 847 characteristics with total DP 2<sup>−51.8</sup> (`complete`).  r=2 finds a realizable trail near weight 313 and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 313], not solved (the exact value depends on solver luck; only the bracket is guaranteed).  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 
 ## 14. Evidence pending
 

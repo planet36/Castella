@@ -13,8 +13,10 @@
 * interleaved path must be execution-level only, never digest-visible.
 */
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "../hash-programs/cch-x2.hpp"
 #include "../hash-programs/cch.hpp"

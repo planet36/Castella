@@ -18,8 +18,10 @@
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "castella-permute.hpp"
 #include "parse_int.hpp"

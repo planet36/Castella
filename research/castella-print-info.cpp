@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "castella-duplex.hpp"
 

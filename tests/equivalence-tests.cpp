@@ -22,8 +22,10 @@
 * The seed is printed so a failure can be reproduced.
 */
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "../hash-programs/cch-tree.hpp"
 #include "castella-duplex-tree.hpp"

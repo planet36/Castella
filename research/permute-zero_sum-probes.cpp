@@ -29,8 +29,10 @@ distinguisher of the reduced-round permutation and a FAIL; rows for 1-2
 rounds are informational.
 */
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "castella-permute.hpp"
 #include "parse_int.hpp"

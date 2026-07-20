@@ -28,8 +28,10 @@ the printed random-model expectations (deviations at 1 round are
 expected; they must vanish as rounds increase).
 */
 
+#if !defined(DEBUG)
 #define DEBUG 1
 #undef NDEBUG
+#endif
 
 #include "castella-permute.hpp"
 #include "parse_int.hpp"

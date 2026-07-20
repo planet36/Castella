@@ -16,7 +16,11 @@ Three probes supporting the security claim's evidence section (SPEC.md):
    this is only a screen of the candidates symmetry would suggest.)
 3. Round-constant properties asserted in SPEC.md: the first constant is
    the seed string, all 768 are distinct and nonzero, and no constant is
-   a bitwise shift of its predecessor in generation order.
+   a bitwise shift of its predecessor in generation order.  Plus a
+   slide-resistance screen: no whole-round shift relates two rounds'
+   constants by a fixed XOR difference (an affine self-similar schedule,
+   which is what a slide -- with or without a twist -- would need).
+   Distinctness alone only rules out the zero difference.
 
 Probes 2 and 3 are pass/fail (nonzero exit on any violation).  Probe 1's
 tables are informational: compare the residual-structure means against
@@ -415,6 +419,41 @@ probe_round_constants()
         {
             ++num_failed_checks;
             std::println("FAIL: {} shifted-copy pairs among consecutive constants", num_shift_matches);
+        }
+    }
+
+    {
+        // Slide-resistance screen.  A slide (with a twist) needs the round
+        // function to repeat up to a fixed XOR offset: some whole-round shift
+        // s and difference d with rc[round r+s] = rc[round r] XOR d at every
+        // within-round position.  Distinctness only rules out d=0; this rules
+        // out any fixed d, so no two rounds are affinely related.  The slide
+        // unit is a whole Castella round (48 = AES_NUM_ROUNDS x 16 blocks of
+        // constants), so only whole-round shifts are relevant.
+        constexpr size_t per_round = Castella::AES_NUM_ROUNDS * Castella::B_MAX;
+        const size_t num_rounds = std::size(flat) / per_round;
+        int num_affine_shifts = 0;
+        for (size_t s = 1; s < num_rounds; ++s)
+        {
+            const u128 d0 = flat[per_round * s] ^ flat[0];
+            bool affine = true;
+            for (size_t r = 0; (r + s < num_rounds) && affine; ++r)
+                for (size_t k = 0; k < per_round; ++k)
+                    if ((flat[(r + s) * per_round + k] ^ flat[r * per_round + k]) != d0)
+                    {
+                        affine = false;
+                        break;
+                    }
+            num_affine_shifts += static_cast<int>(affine);
+        }
+        if (num_affine_shifts == 0)
+        {
+            std::println("PASS: no whole-round shift gives an affine (XOR-constant) self-similar schedule (slide screen)");
+        }
+        else
+        {
+            ++num_failed_checks;
+            std::println("FAIL: {} round-shifts give an affine self-similar schedule", num_affine_shifts);
         }
     }
 

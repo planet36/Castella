@@ -22,11 +22,11 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
-| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties | executable | §10 |
+| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed) and first-order differential clustering | executable (solver) | §13 |
-| 14 | Rebound, slide analysis, algebraic degree, r≥2 trail tightness | evidence pending | §14 |
+| 14 | Rebound, algebraic degree, r≥2 trail tightness | evidence pending | §14 |
 
 Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
 
@@ -112,7 +112,7 @@ Nothing to verify — it is a non-claim, documented so nobody assumes otherwise.
 ./permute-structural-probes -n 10000
 ```
 
-Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds; probes 2 and 3 must print only PASS lines (fixed-point screen; round constants: seed value, nonzero, distinct, no shifted predecessors).  Results and scope caveats: [README.md](README.md#findings-structural-probes-of-castellapermute-2026-07-19) — the probes cover the transpose's natural symmetry classes, not every conceivable invariant subspace.
+Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds; probes 2 and 3 must print only PASS lines (fixed-point screen; round constants: seed value, nonzero, distinct, no shifted predecessors; and the **slide-resistance screen** — no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist).  Results and scope caveats: [README.md](README.md#findings-structural-probes-of-castellapermute-2026-07-19) — the probes cover the transpose's natural symmetry classes, not every conceivable invariant subspace, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
 
 ## 11. Zero-sum (cube) probes
 
@@ -151,4 +151,4 @@ Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern
 
 ## 14. Evidence pending
 
-Rebound / start-from-the-middle attacks, slide analysis (beyond the verified round-constant distinctness), algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+Rebound / start-from-the-middle attacks, algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums), and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10: the affine-self-similarity screen closes the constant-schedule route.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

@@ -40,7 +40,7 @@ echo
 echo "________________________________________________________________________________"
 echo
 
-echo "# Structural probes of Castella::permute (subspace escape, fixed points, round constants)"
+echo "# Structural probes of Castella::permute (subspace escape, fixed points, round constants, slide screen)"
 echo
 ./permute-structural-probes -n 10000 || exit
 echo "________________________________________________________________________________"

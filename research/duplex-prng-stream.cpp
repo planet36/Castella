@@ -55,7 +55,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     Castella::Duplex duplex{capacity_blocks, num_rounds};
 
-    duplex.add("duplex-prng-stream seed", 23);
+    duplex.add("duplex-prng-stream seed");
 
     std::vector<std::byte> buf(static_cast<size_t>(duplex.get_rate_size_bytes()));
 

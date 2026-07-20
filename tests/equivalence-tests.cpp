@@ -86,7 +86,7 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
         if (get_digest(tree) != reference)
         {
             std::println(stderr, "FAILED: {}: one-shot, num_threads={}, len={}", name,
-                         num_threads, std::size(input));
+                         num_threads, std::ssize(input));
             std::exit(EXIT_FAILURE);
         }
     }
@@ -97,19 +97,19 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
     // boundaries fall wherever the random split points put them relative
     // to the fixed byte offsets -- which is exactly the property under
     // test.
-    for (const size_t max_piece_len : {size_t{300}, size_t{3 * chunk_size + 1}})
+    for (const int max_piece_len : {300, 3 * chunk_size + 1})
     {
         for (const int num_threads : {1, 4})
         {
-            std::uniform_int_distribution<size_t> piece_len_dist(1, max_piece_len);
+            std::uniform_int_distribution<int> piece_len_dist(1, max_piece_len);
 
             auto tree = make_tree(num_threads);
 
-            size_t offset = 0;
-            while (offset < std::size(input))
+            int offset = 0;
+            while (offset < std::ssize(input))
             {
-                const size_t piece_len =
-                    std::min(piece_len_dist(rng), std::size(input) - offset);
+                const int piece_len =
+                    std::min<int>(piece_len_dist(rng), std::ssize(input) - offset);
                 tree.add(input.subspan(offset, piece_len));
                 offset += piece_len;
             }
@@ -118,7 +118,7 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
             {
                 std::println(stderr,
                              "FAILED: {}: split adds, max_piece_len={}, num_threads={}, len={}",
-                             name, max_piece_len, num_threads, std::size(input));
+                             name, max_piece_len, num_threads, std::ssize(input));
                 std::exit(EXIT_FAILURE);
             }
         }
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     //   - around 256 chunks: the left_encode of leaf index 255 is one
     //     byte, of 256 two, so these inputs cross the paired-leaf
     //     byte-width fallback
-    std::vector<size_t> lens = {
+    std::vector<int> lens = {
         0,
         1,
         2,
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
         258 * chunk_size + 5,
     };
 
-    std::uniform_int_distribution<size_t> len_dist(0, 300 * chunk_size);
+    std::uniform_int_distribution<int> len_dist(0, 300 * chunk_size);
     for (int i = 0; i < 4; ++i)
     {
         lens.push_back(len_dist(rng));
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
                            std::span<const std::byte>{data}.first(len), rng);
         }
 
-        std::println("DuplexTree: {} input lengths verified", std::size(lens));
+        std::println("DuplexTree: {} input lengths verified", std::ssize(lens));
     }
 
     for (const int mix_rate : {0, 1, 256})
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
         }
 
         std::println("compress_castella_tree (mix_rate={}): {} input lengths verified",
-                     mix_rate, std::size(lens));
+                     mix_rate, std::ssize(lens));
     }
 
     return EXIT_SUCCESS;

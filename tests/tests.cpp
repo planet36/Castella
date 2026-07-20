@@ -260,8 +260,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         // Deterministic input data spanning several chunks, with a partial
         // trailing chunk.
-        std::vector<std::byte> X(3 * static_cast<size_t>(chunk_size) + 41);
-        for (size_t i = 0; i < X.size(); ++i)
+        std::vector<std::byte> X(3 * chunk_size + 41);
+        for (int i = 0; i < std::ssize(X); ++i)
         {
             X[i] = static_cast<std::byte>((i * 31 + 7) & 0xFF);
         }
@@ -308,10 +308,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // are crossed mid-call
             Castella::DuplexTree tree2(capacity_blocks, num_rounds, input_suffix,
                                        function_name, customization_str, chunk_size);
-            constexpr size_t piece_size = 1000;
-            for (size_t off = 0; off < X_sp.size(); off += piece_size)
+            constexpr int piece_size = 1000;
+            for (int off = 0; off < std::ssize(X_sp); off += piece_size)
             {
-                tree2.add(X_sp.subspan(off, std::min(piece_size, X_sp.size() - off)));
+                tree2.add(X_sp.subspan(off, std::min<int>(piece_size, std::ssize(X_sp) - off)));
             }
             assert(tree2.squeeze_bytes() == expected);
         }
@@ -337,9 +337,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 digests.push_back(tree_digest(X_sp.first(len)));
             }
 
-            for (size_t i = 0; i < std::size(digests); ++i)
+            for (int i = 0; i < std::ssize(digests); ++i)
             {
-                for (size_t j = i + 1; j < std::size(digests); ++j)
+                for (int j = i + 1; j < std::ssize(digests); ++j)
                 {
                     assert(digests[i] != digests[j]);
                 }
@@ -483,8 +483,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // that a one-shot add() with several threads statically
             // partitions the leaves across workers; with num_threads=1 the
             // identical input takes the sequential chunk-by-chunk path.
-            std::vector<std::byte> Y(64 * static_cast<size_t>(chunk_size) + 17);
-            for (size_t i = 0; i < Y.size(); ++i)
+            std::vector<std::byte> Y(64 * chunk_size + 17);
+            for (int i = 0; i < std::ssize(Y); ++i)
             {
                 Y[i] = static_cast<std::byte>((i * 131 + 3) & 0xFF);
             }
@@ -503,14 +503,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // path and flow through the streaming pipeline; 33000-byte
             // pieces produce ~32-chunk batches for the transient-worker
             // path.  Both must reproduce the one-shot digest.
-            for (const size_t piece_size : {size_t{1000}, size_t{33'000}})
+            for (const int piece_size : {1000, 33'000})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                           function_name, customization_str, chunk_size,
                                           4);
-                for (size_t off = 0; off < Y_sp.size(); off += piece_size)
+                for (int off = 0; off < std::ssize(Y_sp); off += piece_size)
                 {
-                    tree.add(Y_sp.subspan(off, std::min(piece_size, Y_sp.size() - off)));
+                    tree.add(Y_sp.subspan(off, std::min<int>(piece_size, std::ssize(Y_sp) - off)));
                 }
                 assert(tree.squeeze_bytes() == expected);
             }
@@ -522,8 +522,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // several threads the leaves are hashed by the persistent
             // worker pool, in whatever order the workers finish -- and the
             // digest must still equal the inline sequential reference.
-            std::vector<std::byte> Z(48 * static_cast<size_t>(chunk_size) + 5);
-            for (size_t i = 0; i < Z.size(); ++i)
+            std::vector<std::byte> Z(48 * chunk_size + 5);
+            for (int i = 0; i < std::ssize(Z); ++i)
             {
                 Z[i] = static_cast<std::byte>((i * 37 + 11) & 0xFF);
             }
@@ -537,17 +537,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // 1024: exactly one chunk per call
             // 2500: mixed 1-2-chunk batches (copied span handoff) plus
             //       buffering
-            for (const size_t piece_size : {size_t{512}, size_t{1024}, size_t{2500}})
+            for (const int piece_size : {512, 1024, 2500})
             {
                 for (const int num_threads : {2, 4})
                 {
                     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                               function_name, customization_str,
                                               chunk_size, num_threads);
-                    for (size_t off = 0; off < Z_sp.size(); off += piece_size)
+                    for (int off = 0; off < std::ssize(Z_sp); off += piece_size)
                     {
                         tree.add(
-                            Z_sp.subspan(off, std::min(piece_size, Z_sp.size() - off)));
+                            Z_sp.subspan(off, std::min<int>(piece_size, std::ssize(Z_sp) - off)));
                     }
                     assert(tree.squeeze_bytes() == expected);
                 }
@@ -561,7 +561,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                           function_name, customization_str, chunk_size,
                                           4);
-                for (size_t off = 0; off + 1024 <= Z_sp.size(); off += 1024)
+                for (int off = 0; off + 1024 <= std::ssize(Z_sp); off += 1024)
                 {
                     tree.add(Z_sp.subspan(off, 1024));
                 }

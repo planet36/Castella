@@ -61,11 +61,11 @@ constexpr std::string_view kat_customization_str = "KAT";
 
 /// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
-make_msg(const size_t len)
+make_msg(const int len)
 {
     std::vector<std::byte> msg(len);
 
-    for (size_t i = 0; i < len; ++i)
+    for (int i = 0; i < len; ++i)
     {
         msg[i] = static_cast<std::byte>(i & 0xFF);
     }
@@ -76,7 +76,7 @@ make_msg(const size_t len)
 [[nodiscard]] std::vector<std::byte>
 duplex_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
               const std::string_view function_name, const std::string_view customization_str,
-              const size_t msglen, const int out)
+              const int msglen, const int out)
 {
     Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
                               customization_str);
@@ -90,7 +90,7 @@ duplex_digest(const int capacity_blocks, const int num_rounds, const int input_s
 [[nodiscard]] std::vector<std::byte>
 tree_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
             const std::string_view function_name, const std::string_view customization_str,
-            const int chunk_size_bytes, const size_t msglen, const int out)
+            const int chunk_size_bytes, const int msglen, const int out)
 {
     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
                               customization_str, chunk_size_bytes, 1);
@@ -102,7 +102,7 @@ tree_digest(const int capacity_blocks, const int num_rounds, const int input_suf
 }
 
 [[nodiscard]] std::vector<std::byte>
-cchtree_digest(const int mix_rate, const int chunk_size_bytes, const size_t msglen,
+cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
                const int out)
 {
     compress_castella_tree tree{mix_rate, chunk_size_bytes, 1};
@@ -117,7 +117,7 @@ cchtree_digest(const int mix_rate, const int chunk_size_bytes, const size_t msgl
 
 void
 print_duplex_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
-                 const size_t msglen, const int out)
+                 const int msglen, const int out)
 {
     std::println("duplex C={} rounds={} suffix={} fn={} custom={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
@@ -130,7 +130,7 @@ print_duplex_kat(const int capacity_blocks, const int num_rounds, const int inpu
 
 void
 print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
-               const int chunk_size_bytes, const size_t msglen, const int out)
+               const int chunk_size_bytes, const int msglen, const int out)
 {
     std::println("tree C={} rounds={} suffix={} fn={} custom={} chunk={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
@@ -143,7 +143,7 @@ print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_
 }
 
 void
-print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const size_t msglen,
+print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msglen,
                   const int out)
 {
     std::println("cchtree mix={} chunk={} msglen={} out={} digest={}", mix_rate,
@@ -181,7 +181,7 @@ generate()
 
     std::println("");
     std::println("# Castella::Duplex: msglen sweep (the C=4 rate is 192 bytes)");
-    for (const size_t msglen : {0, 1, 2, 15, 16, 17, 63, 64, 65, 191, 192, 193, 384, 1000})
+    for (const int msglen : {0, 1, 2, 15, 16, 17, 63, 64, 65, 191, 192, 193, 384, 1000})
     {
         print_duplex_kat(4, 6, 0, msglen, 32);
     }
@@ -208,8 +208,8 @@ generate()
     std::println("");
     std::println("# Castella::DuplexTree: msglen sweep (chunk boundaries; leaf index");
     std::println("# 255/256 left_encode byte-width boundary at msglen 256*1024)");
-    for (const size_t msglen : {0UZ, 1UZ, 1023UZ, 1024UZ, 1025UZ, 2047UZ, 2048UZ, 2049UZ,
-                                4096UZ, 5000UZ, 257UZ * 1024, 258UZ * 1024 + 5})
+    for (const int msglen : {0, 1, 1023, 1024, 1025, 2047, 2048, 2049,
+                                4096, 5000, 257 * 1024, 258 * 1024 + 5})
     {
         print_tree_kat(4, 6, 0, 1024, msglen, 32);
     }
@@ -224,8 +224,8 @@ generate()
 
     std::println("");
     std::println("# compress_castella_tree: msglen sweep (256 is the compression block size)");
-    for (const size_t msglen : {0UZ, 1UZ, 255UZ, 256UZ, 257UZ, 1023UZ, 1024UZ, 1025UZ,
-                                5000UZ, 258UZ * 1024 + 5})
+    for (const int msglen : {0, 1, 255, 256, 257, 1023, 1024, 1025,
+                                5000, 258 * 1024 + 5})
     {
         print_cchtree_kat(256, 1024, msglen, 32);
     }
@@ -326,7 +326,7 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
         if (type == "duplex")
         {
             return duplex_digest(*C, *rounds, *suffix, *fn, *custom,
-                                 static_cast<size_t>(*msglen), out);
+                                 *msglen, out);
         }
 
         const auto chunk = get_int_field(fields, "chunk",
@@ -337,7 +337,7 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
             return std::nullopt;
 
         return tree_digest(*C, *rounds, *suffix, *fn, *custom, *chunk,
-                           static_cast<size_t>(*msglen), out);
+                           *msglen, out);
     }
 
     if (type == "cchtree")
@@ -351,7 +351,7 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
         if (!mix.has_value() || !chunk.has_value())
             return std::nullopt;
 
-        return cchtree_digest(*mix, *chunk, static_cast<size_t>(*msglen), out);
+        return cchtree_digest(*mix, *chunk, *msglen, out);
     }
 
     return std::nullopt;

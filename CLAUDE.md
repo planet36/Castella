@@ -14,7 +14,8 @@ A top-level Makefile recurses into the subdirectories; each subdirectory also ha
 # Build examples, hash-programs, and tests (any root *.cpp scratch files too)
 make
 
-# Build and run every test suite (tests, kat, equivalence-tests, test-correctness.bash)
+# Build and run every test suite (tests, kat, equivalence-tests, test-correctness.bash,
+# and research/spec-conformance.py — the last step needs python3)
 make test
 
 # Additionally build research (requires google-benchmark) and

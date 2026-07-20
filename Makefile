@@ -27,6 +27,8 @@ $(SUBDIRS) $(EXTRA_SUBDIRS):
 test: hash-programs tests
 	cd tests && ./tests && ./kat && ./equivalence-tests
 	cd hash-programs && bash test-correctness.bash
+	@command -v python3 >/dev/null || { echo 'make test: python3 is required for the spec-conformance check'; exit 1; }
+	cd research && python3 spec-conformance.py
 
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp

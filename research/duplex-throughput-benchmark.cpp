@@ -136,8 +136,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    // C_MIN, the castella hash program's default (--size=32 gives C=4), C_MAX
-    constexpr std::array capacities{2, 4, 8};
+    // Even values between C_MIN and C_MAX
+    constexpr std::array capacities{2, 4, 6, 8};
+
     // the minimum, the castella hash program's default, a round margin, the maximum
     constexpr std::array round_counts{Castella::NUM_ROUNDS_MIN<16>(), 6, 8,
                                       Castella::NUM_ROUNDS_MAX};

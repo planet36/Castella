@@ -55,6 +55,7 @@
 #include <vector>
 
 using state_t = Castella::arr_blocks<16>;
+inline constexpr int state_size_bytes = sizeof(state_t);
 
 /// The default mix rate of compress_castella_hash (one mix per 64 KiB)
 inline constexpr int MIX_RATE = 256;
@@ -76,37 +77,37 @@ absorb_chunk(state_t& state, const std::byte* chunk, int& absorbs_since_mix) noe
 }
 
 static void
-hash_buffer(state_t& state, const std::byte* src, const size_t len,
+hash_buffer(state_t& state, const std::byte* src, const int len,
             int& absorbs_since_mix) noexcept
 {
-    for (size_t off = 0; off + sizeof(state_t) <= len; off += sizeof(state_t))
+    for (int off = 0; off + state_size_bytes <= len; off += state_size_bytes)
     {
         absorb_chunk(state, src + off, absorbs_since_mix);
     }
 }
 
 /// The shared setup of both benchmark bodies: N random buffers and N random states
-template <size_t N>
+template <int N>
 struct bench_data final
 {
     std::array<std::vector<std::byte>, N> bufs;
     std::array<state_t, N> states;
     std::array<int, N> absorbs{};
 
-    explicit bench_data(const size_t buf_size)
+    explicit bench_data(const int buf_size)
     {
-        for (size_t i = 0; i < N; ++i)
+        for (int i = 0; i < N; ++i)
         {
             bufs[i].resize(buf_size);
             arc4random_buf(std::data(bufs[i]), std::size(bufs[i]));
-            arc4random_buf(&states[i], sizeof(state_t));
+            arc4random_buf(&states[i], state_size_bytes);
         }
     }
 };
 
-template <size_t N>
+template <int N>
 void
-BM_states_sequential(benchmark::State& BM_state, const size_t buf_size)
+BM_states_sequential(benchmark::State& BM_state, const int buf_size)
 {
     // Perform setup here
 
@@ -116,7 +117,7 @@ BM_states_sequential(benchmark::State& BM_state, const size_t buf_size)
     {
         // This code gets timed
 
-        for (size_t i = 0; i < N; ++i)
+        for (int i = 0; i < N; ++i)
         {
             hash_buffer(data.states[i], std::data(data.bufs[i]), buf_size,
                         data.absorbs[i]);
@@ -130,9 +131,9 @@ BM_states_sequential(benchmark::State& BM_state, const size_t buf_size)
     benchmark::DoNotOptimize(data.states);
 }
 
-template <size_t N>
+template <int N>
 void
-BM_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
+BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
 {
     // Perform setup here
 
@@ -142,7 +143,7 @@ BM_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
     {
         // This code gets timed
 
-        for (size_t off = 0; off + sizeof(state_t) <= buf_size; off += sizeof(state_t))
+        for (int off = 0; off + state_size_bytes <= buf_size; off += state_size_bytes)
         {
             // The compile-time loop keeps the N absorbs a straight-line
             // instruction sequence, as a real interleaved node group's
@@ -163,23 +164,23 @@ BM_states_interleaved(benchmark::State& BM_state, const size_t buf_size)
 }
 
 /// Verify that the interleaved loop computes exactly the sequential states
-template <size_t N>
+template <int N>
 static void
 self_check()
 {
-    constexpr size_t buf_size = 96 * sizeof(state_t);
+    constexpr int buf_size = 96 * state_size_bytes;
 
     bench_data<N> seq(buf_size);
     bench_data<N> inter(buf_size);
     inter.bufs = seq.bufs;
     inter.states = seq.states;
 
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
         hash_buffer(seq.states[i], std::data(seq.bufs[i]), buf_size, seq.absorbs[i]);
     }
 
-    for (size_t off = 0; off + sizeof(state_t) <= buf_size; off += sizeof(state_t))
+    for (int off = 0; off + state_size_bytes <= buf_size; off += state_size_bytes)
     {
         [&]<size_t... I>(std::index_sequence<I...>) {
             (absorb_chunk(inter.states[I], std::data(inter.bufs[I]) + off,
@@ -188,7 +189,7 @@ self_check()
         }(std::make_index_sequence<N>{});
     }
 
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
         assert(simd_arr_equal(seq.states[i], inter.states[i]));
     }

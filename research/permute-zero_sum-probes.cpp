@@ -45,15 +45,16 @@
 #include <string_view>
 #include <unistd.h>
 
-constexpr size_t B = 16;
+inline constexpr int B = 16;
 using state_t = Castella::arr_blocks<B>;
-using bytes_t = std::array<uint8_t, sizeof(state_t)>;
-static_assert(sizeof(state_t) == B * B);
+inline constexpr int state_size_bytes = sizeof(state_t);
+using bytes_t = std::array<uint8_t, state_size_bytes>;
+static_assert(state_size_bytes == B * B);
 
-constexpr int NUM_BASES = 32;
-constexpr std::array CUBE_SIZES{8, 12, 16};
-constexpr int MAX_CUBE_SIZE = 16;
-constexpr size_t STATE_BITS = sizeof(bytes_t) * 8;
+inline constexpr int NUM_BASES = 32;
+inline constexpr std::array CUBE_SIZES{8, 12, 16};
+inline constexpr int MAX_CUBE_SIZE = 16;
+inline constexpr int STATE_BITS = state_size_bytes * 8;
 
 static bytes_t
 permuted_bytes(const bytes_t& b, const int num_rounds)
@@ -124,12 +125,12 @@ count_surviving_bits(const int num_rounds, const int k,
                 set_bit(x, positions[c], ((idx >> c) & 1U) != 0);
 
             const auto y = permuted_bytes(x, num_rounds);
-            for (size_t i = 0; i < sizeof(bytes_t); ++i)
+            for (int i = 0; i < state_size_bytes; ++i)
                 acc[i] ^= y[i];
         }
 
         // a bit survives only if its cube sum is zero for this base too
-        for (size_t i = 0; i < sizeof(bytes_t); ++i)
+        for (int i = 0; i < state_size_bytes; ++i)
             surviving[i] &= static_cast<uint8_t>(~acc[i]);
     }
 

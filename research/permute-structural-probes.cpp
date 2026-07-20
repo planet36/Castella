@@ -48,22 +48,26 @@
 #include <unistd.h>
 #include <vector>
 
-constexpr size_t B = 16;
+inline constexpr int B = 16;
 using state_t = Castella::arr_blocks<B>;
-using bytes_t = std::array<uint8_t, sizeof(state_t)>;
-static_assert(sizeof(state_t) == B * B);
+inline constexpr int state_size_bytes = sizeof(state_t);
+using bytes_t = std::array<uint8_t, state_size_bytes>;
+static_assert(state_size_bytes == B * B);
 
-__extension__ typedef unsigned __int128 u128; // NOLINT(modernize-use-using)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+using u128 = unsigned __int128;
+#pragma GCC diagnostic pop
 
 // matrix view: M[row][col] = byte col of block row
 static constexpr uint8_t&
-mat(bytes_t& b, const size_t row, const size_t col)
+mat(bytes_t& b, const int row, const int col)
 {
     return b[(B * row) + col];
 }
 
 static constexpr uint8_t
-mat(const bytes_t& b, const size_t row, const size_t col)
+mat(const bytes_t& b, const int row, const int col)
 {
     return b[(B * row) + col];
 }
@@ -80,8 +84,8 @@ static bytes_t
 transposed(const bytes_t& b)
 {
     bytes_t result{};
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = 0; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = 0; j < B; ++j)
             mat(result, i, j) = mat(b, j, i);
     return result;
 }
@@ -92,7 +96,7 @@ hamming_distance(const bytes_t& a, const bytes_t& b)
     const auto sa = std::bit_cast<state_t>(a);
     const auto sb = std::bit_cast<state_t>(b);
     int result = 0;
-    for (size_t i = 0; i < B; ++i)
+    for (int i = 0; i < B; ++i)
         result += simd_popcount(sa[i] ^ sb[i]);
     return result;
 }
@@ -103,8 +107,8 @@ hamming_distance(const bytes_t& a, const bytes_t& b)
 static bool
 is_equal_blocks(const bytes_t& b)
 {
-    for (size_t i = 1; i < B; ++i)
-        for (size_t j = 0; j < B; ++j)
+    for (int i = 1; i < B; ++i)
+        for (int j = 0; j < B; ++j)
             if (mat(b, i, j) != mat(b, 0, j))
                 return false;
     return true;
@@ -114,8 +118,8 @@ is_equal_blocks(const bytes_t& b)
 static bool
 is_constant_byte_blocks(const bytes_t& b)
 {
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = 1; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = 1; j < B; ++j)
             if (mat(b, i, j) != mat(b, i, 0))
                 return false;
     return true;
@@ -125,8 +129,8 @@ is_constant_byte_blocks(const bytes_t& b)
 static bool
 is_symmetric(const bytes_t& b)
 {
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = i + 1; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = i + 1; j < B; ++j)
             if (mat(b, i, j) != mat(b, j, i))
                 return false;
     return true;
@@ -145,8 +149,8 @@ static int
 count_symmetric_pairs(const bytes_t& b)
 {
     int result = 0;
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = i + 1; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = i + 1; j < B; ++j)
             result += mat(b, i, j) == mat(b, j, i);
     return result;
 }
@@ -156,9 +160,9 @@ static int
 count_cross_block_equal_bytes(const bytes_t& b)
 {
     int result = 0;
-    for (size_t i = 0; i < B; ++i)
-        for (size_t k = i + 1; k < B; ++k)
-            for (size_t j = 0; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int k = i + 1; k < B; ++k)
+            for (int j = 0; j < B; ++j)
                 result += mat(b, i, j) == mat(b, k, j);
     return result;
 }
@@ -168,9 +172,9 @@ static int
 count_within_block_equal_bytes(const bytes_t& b)
 {
     int result = 0;
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = 0; j < B; ++j)
-            for (size_t k = j + 1; k < B; ++k)
+    for (int i = 0; i < B; ++i)
+        for (int j = 0; j < B; ++j)
+            for (int k = j + 1; k < B; ++k)
                 result += mat(b, i, j) == mat(b, i, k);
     return result;
 }
@@ -193,8 +197,8 @@ random_equal_blocks()
     std::array<uint8_t, B> x{};
     arc4random_buf(std::data(x), sizeof(x));
     bytes_t b{};
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = 0; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = 0; j < B; ++j)
             mat(b, i, j) = x[j];
     return b;
 }
@@ -205,7 +209,7 @@ flip_equal_blocks(bytes_t& b)
     // flip one bit of the shared block value, i.e. the same bit in every block
     const auto j = arc4random_uniform(B);
     const uint8_t bit = 1U << arc4random_uniform(8);
-    for (size_t i = 0; i < B; ++i)
+    for (int i = 0; i < B; ++i)
         mat(b, i, j) ^= bit;
 }
 
@@ -215,8 +219,8 @@ random_constant_byte_blocks()
     std::array<uint8_t, B> c{};
     arc4random_buf(std::data(c), sizeof(c));
     bytes_t b{};
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = 0; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = 0; j < B; ++j)
             mat(b, i, j) = c[i];
     return b;
 }
@@ -226,7 +230,7 @@ flip_constant_byte_blocks(bytes_t& b)
 {
     const auto i = arc4random_uniform(B);
     const uint8_t bit = 1U << arc4random_uniform(8);
-    for (size_t j = 0; j < B; ++j)
+    for (int j = 0; j < B; ++j)
         mat(b, i, j) ^= bit;
 }
 
@@ -235,8 +239,8 @@ random_symmetric()
 {
     bytes_t b{};
     arc4random_buf(std::data(b), sizeof(b));
-    for (size_t i = 0; i < B; ++i)
-        for (size_t j = i + 1; j < B; ++j)
+    for (int i = 0; i < B; ++i)
+        for (int j = i + 1; j < B; ++j)
             mat(b, j, i) = mat(b, i, j);
     return b;
 }
@@ -328,7 +332,7 @@ probe_fixed_point_screen()
 {
     int num_violations = 0;
 
-    for (unsigned v = 0; v <= 0xFFU; ++v)
+    for (int v = 0; v <= 0xFF; ++v)
     {
         bytes_t x{};
         x.fill(static_cast<uint8_t>(v));
@@ -369,7 +373,7 @@ probe_round_constants()
             for (const auto& rc : rc_aes_round)
                 flat.push_back(std::bit_cast<u128>(rc));
 
-    std::println("number of round constants: {}", std::size(flat));
+    std::println("number of round constants: {}", std::ssize(flat));
 
     constexpr std::array<uint8_t, 16> seed_str{'e', 'x', 'p', 'a', 'n', 'd', ' ', '1',
                                                '6', '-', 'b', 'y', 't', 'e', ' ', 'c'};
@@ -409,7 +413,7 @@ probe_round_constants()
 
     {
         int num_shift_matches = 0;
-        for (size_t k = 0; k + 1 < std::size(flat); ++k)
+        for (int k = 0; k + 1 < std::ssize(flat); ++k)
             for (int sh = 1; sh < 128; ++sh)
                 num_shift_matches += (flat[k] << sh == flat[k + 1]) +
                                      (flat[k] >> sh == flat[k + 1]);
@@ -432,15 +436,15 @@ probe_round_constants()
         // out any fixed d, so no two rounds are affinely related.  The slide
         // unit is a whole Castella round (48 = AES_NUM_ROUNDS x 16 blocks of
         // constants), so only whole-round shifts are relevant.
-        constexpr size_t per_round = Castella::AES_NUM_ROUNDS * Castella::B_MAX;
-        const size_t num_rounds = std::size(flat) / per_round;
+        constexpr int per_round = Castella::AES_NUM_ROUNDS * Castella::B_MAX;
+        const int num_rounds = std::ssize(flat) / per_round;
         int num_affine_shifts = 0;
-        for (size_t s = 1; s < num_rounds; ++s)
+        for (int s = 1; s < num_rounds; ++s)
         {
             const u128 d0 = flat[per_round * s] ^ flat[0];
             bool affine = true;
-            for (size_t r = 0; (r + s < num_rounds) && affine; ++r)
-                for (size_t k = 0; k < per_round; ++k)
+            for (int r = 0; (r + s < num_rounds) && affine; ++r)
+                for (int k = 0; k < per_round; ++k)
                     if ((flat[(r + s) * per_round + k] ^ flat[r * per_round + k]) != d0)
                     {
                         affine = false;

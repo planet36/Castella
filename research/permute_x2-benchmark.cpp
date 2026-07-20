@@ -32,7 +32,7 @@
 #include <string>
 #include <thread>
 
-inline constexpr size_t N = 16; // permute_x2 supports only the 16-block state
+inline constexpr int N = 16; // permute_x2 supports only the 16-block state
 
 void
 BM_permute_pair_sequential(benchmark::State& BM_state, const int num_rounds)

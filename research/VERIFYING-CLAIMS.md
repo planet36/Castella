@@ -27,7 +27,8 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
-| 15 | Algebraic degree, r≥2 trail tightness | evidence pending | §15 |
+| 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
+| 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
 
 Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
 
@@ -154,6 +155,17 @@ Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern
 
 There is no program to run: rebound resistance is a **reasoned margin argument**, not machine-checked evidence, and verifying it means checking the reasoning.  The full argument (the two-phase attack, the outbound cost from the MILP active-S-box bounds, the inbound-reach table, and the caveats that keep it a heuristic, not a proof) is in [README.md](README.md#analysis-rebound-attack-resistance-margin-argument-2026-07-20).  Its skeleton: a rebound attack gets a free inbound of ~2 rounds (≈3 with super-inbound), and the outbound over the remaining rounds costs `2^(6·A_out)` where the transpose's superlinear active-S-box growth forces `A_out ≥ 54` for a 3-round outbound.  At the default 6 rounds even a generous 3-round inbound leaves an outbound ≥ 2^324, above the 2^256 claim for `C` = 4; the margin erodes only for an inbound of 4 rounds, beyond any known technique.  The quantitative input — `A(1..4) = 9/45/133/225` — is itself machine-proven (§4).
 
-## 15. Evidence pending
+## 15. Algebraic-degree bound and zero-sum reach
 
-Algebraic degree growth (beyond §11's small black-box cubes: structured cube choices, higher dimensions, inside-out zero-sums; a bit-based division-property model would give provable per-round degree bounds) and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+The degree of `P` governs higher-order / integral / zero-sum distinguishers.  This bound is computed from the AES S-box's measured coordinate-product degrees; no solver or package is needed.
+
+```bash
+python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the AES validation
+python3 permute-degree-bound.py               # the AES echo + the Castella table
+```
+
+Expected: the self-test passes (it asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher — degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.  This is an **upper** bound on degree (it bounds the distinguisher's reach, it does not prove security beyond it), and — as with Keccak's full-round zero-sums — permutation zero-sums are conceded by the flat claim, so this is characterization and margin, not a claim requirement.  Details and the Keccak contrast: [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20).
+
+## 16. Evidence pending
+
+A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely) and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument; the algebraic-degree upper bound to §15.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

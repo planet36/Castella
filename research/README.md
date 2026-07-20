@@ -19,6 +19,7 @@
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
 | permute-trail-search.py | Bit-level SAT/SMT search (z3) for actual differential characteristics realizing the MILP-minimal activity patterns; reports the best-trail weight (an upper bound complementing the MILP lower bound) and, with `--cluster`, enumerates the characteristics sharing one differential |
+| permute-degree-bound.py | Bounds the algebraic degree of `Castella::permute` round by round (Boura–Canteaut–De Cannière), from the AES S-box's measured coordinate-product degrees; reports the reach of a degree-based zero-sum / integral distinguisher (validated against AES's 3-round Square distinguisher) |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
 
 ## Benchmark programs
@@ -58,7 +59,10 @@ The trail search requires Python 3 and the [z3](https://github.com/Z3Prover/z3) 
 * `python3 permute-trail-search.py --help`
 * `python3 permute-trail-search.py --self-test`
 
-Neither Python program is run by `run-research.sh` (which drives only the compiled binaries): both are slow and depend on a solver that is not installed by default.
+Neither of those two Python programs is run by `run-research.sh` (which drives only the compiled binaries): both are slow and depend on a solver that is not installed by default.  The degree bound needs only the standard library and runs instantly:
+
+* `python3 permute-degree-bound.py --help`
+* `python3 permute-degree-bound.py --self-test`
 
 Raw benchmark results are saved in a folder named `results`.
 
@@ -448,3 +452,45 @@ The underlying reason is the transpose.  In AES itself the four-round "hourglass
 * It compares against the flat claim level as the reference; a precise limited-birthday generic bound for a specific truncated differential would refine the comparison but does not change the order-of-magnitude margin.
 
 The conclusion — rebound does not threaten the default rounds, with the crossover a full round beyond known inbound reach — is a heuristic margin, disclosed as such in [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) and [SPEC.md](../SPEC.md#security-claims-and-non-claims).
+
+## Findings: algebraic-degree bound and zero-sum reach (2026-07-20)
+
+`permute-degree-bound.py` bounds the algebraic degree of `Castella::permute` round by round and reports how far a degree-based higher-order / integral / zero-sum distinguisher can reach.  It needs only the Python standard library.
+
+### Method
+
+The bound is the one Boura, Canteaut and De Cannière introduced for iterated permutations with a parallel-S-box layer (FSE 2011, the same tool that produced full-round zero-sums for Keccak-_f_).  One substitution layer of _b_-bit S-boxes raises the degree by at most
+
+> deg(layer ∘ G) ≤ n − (n − deg G) / γ,  γ = max<sub>1 ≤ i ≤ b−1</sub> (b − i) / (b − δ<sub>i</sub>),
+
+where δ<sub>i</sub> is the largest degree of a product of any _i_ output coordinates of one S-box.  The δ<sub>i</sub> are computed here directly from the AES S-box (and its inverse) by the Möbius transform, so γ is measured, not assumed: δ<sub>1..7</sub> = 7 and δ<sub>8</sub> = 8, giving **γ = 7**.  Castella's linear layers (MixColumns, ShiftRows, the transpose) and the affine round-constant additions preserve degree, so the bound is applied once per AES round; one Castella round is `AES_NUM_ROUNDS` = 3 such layers.
+
+### Validation
+
+Run on AES-128 itself (same S-box, _n_ = 128), the recursion must reproduce a published fact — the Square/integral distinguisher covers 3 rounds.  It does: the degree bound is 7 → 110 → 125 → 127 over rounds 1–4, i.e. **< 127 through round 3 and full at round 4**, so the zero-sum reach is exactly 3 rounds.  `--self-test` asserts this (and the δ<sub>i</sub> values) and exits nonzero on any mismatch.
+
+### Result for `Castella::permute` (_n_ = 2048)
+
+| Castella round | AES layers | degree ≤ | full (2047)? |
+|---:|---:|---:|:--:|
+| 1 | 3 | 2006 | no |
+| 2 | 6 | 2047 | yes |
+| ≥3 | ≥9 | 2047 | yes |
+
+The degree upper bound reaches the maximum `n − 1` = 2047 by **2 rounds**.  A Boura–Canteaut zero-sum built from the middle covers `r_fwd + r_bwd` rounds only while the forward degree and the inverse degree both stay ≤ `n − 2`; the forward bound holds through 4 AES layers, and the inverse S-box has the same δ<sub>i</sub> and γ, so the construction reaches at most **4 + 4 = 8 AES rounds ≈ 2.67 Castella rounds**.  The default permutation runs **6 rounds = 18 AES rounds** (8 for the high-capacity instances), so this distinguisher covers well under half of them.
+
+The contrast with Keccak is the point: Keccak's χ has degree 2, so its degree grows slowly and zero-sums reach the full 24 rounds of Keccak-_f_; the AES S-box has degree 7, so Castella's degree saturates in ~2 rounds and the zero-sum reach is a small fraction of the budget.
+
+### Scope
+
+* This is an **upper** bound on the degree, so its direct use is the attacker's: where the bound is < `n − 1`, a distinguisher provably exists; where it equals `n − 1`, the method is simply silent.  It therefore bounds the reach of the degree-based construction — it does **not** prove that no integral distinguisher exists beyond 2.67 rounds.  A matching lower bound (a bit-based division-property model) would be needed for that and remains future work.
+* Like Keccak, Castella makes a **flat** sponge claim and concedes that `P` is not a random permutation, so zero-sum distinguishers on `P` do not by themselves violate the claim (they are exactly the kind of structural property the flat claim declines to rule out).  This section is characterization and margin confirmation, not a claim requirement.
+
+### Reproducing
+
+```bash
+python3 permute-degree-bound.py --self-test   # δ_i, γ, and the AES validation
+python3 permute-degree-bound.py               # the AES echo + the Castella table
+```
+
+No solver or package is required; the run is instant and the printed tables are the record.

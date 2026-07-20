@@ -401,3 +401,50 @@ Notes:
 * `-t` is the per-solver-call time limit.  The _r_ = 2 minimization did not finish within 60 min on this machine; the reported 313 is the best trail found across runs, not a proven minimum, and a longer limit may or may not tighten it.
 * `-A` overrides the target active-S-box count (default: the proven MILP optimum for _N_/_r_ embedded in the script); the two must stay in sync with the MILP table above if `AES_NUM_ROUNDS` ever changes.
 * Raw solver logs are not kept; the tables above are the record (as with the other findings sections).
+
+## Analysis: rebound-attack resistance (margin argument, 2026-07-20)
+
+This section is a **reasoned margin argument, not a proof and not executable evidence** — the honest counterpart to the machine-checked findings above.  It bounds how far the rebound attack, the strongest known structural attack on AES-based permutations, reaches into `Castella::permute`, using the proven MILP active-S-box bounds as its only quantitative input.
+
+### The attack
+
+A rebound attack (Mendel–Rechberger–Schläffer–Thomsen 2009, against Whirlpool and Grøstl) splits the permutation `P = P_out_bot ∘ P_in ∘ P_out_top` and works in two phases:
+
+* **Inbound.**  Over the middle `P_in`, where the state is fully active and every byte is free, the attacker uses the AES differential distribution table to *match in the middle*: it produces conforming pairs for a chosen inbound truncated differential at ≈ 1 unit of amortized work each ("starting points").  Standard inbounds span **2 rounds** of the underlying AES structure; the AES super-box / super-inbound techniques stretch this to **≈ 3** in favourable cases.
+* **Outbound.**  Each starting point is propagated outward through `P_out_top` and `P_out_bot`; the outbound truncated differential holds only probabilistically, so ≈ 1/p starting points are needed, where `p ≤ 2^(−6·A_out)` and `A_out` is the number of active S-boxes on the outbound trails (AES S-box max DP = 2^−6).  The attack distinguishes `P` when its cost is below the generic cost of the target property (a limited-birthday / near-collision).
+
+The attacker therefore wants a **long inbound** (free rounds) and a **cheap outbound** (few active S-boxes).
+
+### The outbound cost is set by the transpose's steep active-S-box growth
+
+Using the proven MILP minimums `A(1)=9, A(2)=45, A(3)=133, A(4)=225` (all _N_ = 16, _a_ = 3), an outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`.  Because `A` grows superlinearly (the transpose makes activity superadditive: `A(a+b) ≥ A(a)+A(b)`), splitting lowers the guaranteed count, and for these values the most even split gives the smallest sum — the attacker's best case.  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
+
+| outbound rounds `r_out` | best split | min `A_out` | outbound cost `2^(6·A_out)` |
+|---|---|---|---|
+| 2 | 1 + 1 | 18 | 2^108 |
+| 3 | 1 + 2 | 54 | 2^324 |
+| 4 | 2 + 2 | 90 | 2^540 |
+| 5 | 2 + 3 | 178 | 2^1068 |
+
+### Margin for the default 6-round permutation
+
+Giving the attacker a free inbound of `r_in` rounds leaves `r_out = 6 − r_in`:
+
+| inbound `r_in` | reach | outbound rounds | outbound cost | vs. `C`=4 claim 2^256 |
+|---|---|---|---|---|
+| 2 | standard | 4 | 2^540 | safe by 2^284 |
+| 3 | super-inbound (generous) | 3 | 2^324 | safe by 2^68 |
+| 4 | beyond any known technique | 2 | 2^108 | **would break** |
+
+So the default 6 rounds resist rebound with room to spare: even a generous **3-round** inbound leaves an outbound costing ≥ 2^324, above the 2^256 claimed level for `C` = 4 (and every smaller-capacity claim).  The margin erodes only if the inbound reaches **4 rounds** — twice the standard reach, and beyond any published rebound technique.  The higher-capacity instances are safer still: `C` = 8 (claim 2^512, run at `R*` = 8 rounds) survives a 3-round inbound with an outbound of ≥ 2^(6·178) = 2^1068, and even a 5-round inbound leaves 2^324.
+
+The underlying reason is the transpose.  In AES itself the four-round "hourglass" trail re-concentrates a difference to one active byte, keeping active-S-box counts low over many rounds and giving rebound long, cheap outbounds; Castella's byte transpose scatters every full block across all 16 blocks (see the [`AES_NUM_ROUNDS` = 3 conclusion](#conclusions)), so activity grows superlinearly and outbounds become expensive after very few rounds — exactly the effect the numbers above quantify.
+
+### Why this is an argument, not a proof
+
+* The outbound cost uses the MILP *lower* bounds, so the true cost is ≥ what is shown (conservative), but the inbound is assumed entirely free and to reach `r_in` rounds — generous to the attacker, and not itself proven for this specific permutation.
+* The even-split outbound assumes the attacker can realize a minimum-active trail from the inbound boundary; a fixed boundary difference constrains the trails, so the real `A_out` is likely larger.
+* It does not model advanced variants (multiple / triple inbound, non-full-active inbounds, biclique-style extensions) that might change the reachable `r_in` by a round.
+* It compares against the flat claim level as the reference; a precise limited-birthday generic bound for a specific truncated differential would refine the comparison but does not change the order-of-magnitude margin.
+
+The conclusion — rebound does not threaten the default rounds, with the crossover a full round beyond known inbound reach — is a heuristic margin, disclosed as such in [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) and [SPEC.md](../SPEC.md#security-claims-and-non-claims).

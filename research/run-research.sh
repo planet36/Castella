@@ -30,7 +30,7 @@ echo
 
 echo "# Find the minimum num_rounds for Castella::permute to achieve full bit diffusion"
 echo
-./permute-num_rounds -n 120 || exit
+./permute-num_rounds -n 200 || exit
 echo "________________________________________________________________________________"
 echo
 
@@ -42,7 +42,7 @@ echo
 
 echo "# Structural probes of Castella::permute (subspace escape, fixed points, round constants, slide screen)"
 echo
-./permute-structural-probes -n 10000 || exit
+./permute-structural-probes -n 30000 || exit
 echo "________________________________________________________________________________"
 echo
 
@@ -60,7 +60,7 @@ echo
 
 echo "# Verify that the lane-paired Castella::permute_x2 matches two separate Castella::permute calls"
 echo
-./permute_x2-verify -n 70000 || exit
+./permute_x2-verify -n 100000 || exit
 echo "________________________________________________________________________________"
 echo
 

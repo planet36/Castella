@@ -9,6 +9,26 @@ The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers i
 
 There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, open an issue in the repository.  **Status: all challenges unsolved** (as of 2026-07-19; solutions will be recorded in this file).
 
+## Invitation to external cryptanalysts
+
+Castella has had no cryptanalysis by anyone other than its author.  A claim's credibility comes only from the independent scrutiny it has survived, so **independent analysis is exactly what this project is soliciting** — not just solutions to the instances below.  Contributions of every size are welcome and will be acknowledged here: a full break, a reduced-round distinguisher, a tighter trail bound, a new structural observation, or a well-argued reason one of the existing arguments is too optimistic.
+
+**Start here** — the design is fully specified and reproducible without reading the AES-NI C++:
+
+* [SPEC.md](SPEC.md) — the standalone specification (permutation, round-constant LFSR, duplex, tree, MAC) and the [security claim](SPEC.md#security-claims-and-non-claims) being offered.
+* [research/spec-conformance.py](research/spec-conformance.py) — an independent pure-Python implementation, to compute and check target digests against without trusting the optimized code.
+* [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) — every existing piece of evidence with commands that reproduce it, so analysis can build on the frontier instead of re-treading it.
+* [research/](research/) — the tooling behind that evidence (MILP trail bounds, a bit-level z3 trail search, zero-sum/cube probes, structural probes, the algebraic-degree bound).
+
+**Where the frontier is** — the most useful places to push, cross-referenced to the evidence sections in [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md):
+
+* **Differential trails.**  The MILP lower bound is A = 45/133/225 active S-boxes at r = 2/3/4 (§4).  Real-trail tightness is settled only at r = 1 (weight 54, proven optimal for its pattern); r = 2 is bracketed **[270, 313]** and r ≥ 3 exact search is open (§13, §16).  A verified r ≥ 2 trail below weight 270, or a tighter bound, is a direct result.
+* **Algebraic / integral.**  The algebraic-degree *upper* bound puts degree-based zero-sums at ≈ 2.67 of the 6 default rounds (§15); a matching division-property *lower* bound — a precise integral-distinguisher length — is unbuilt (§16).  Any integral or cube distinguisher reaching ≥ 2 rounds beats the current empirical probes (§11).
+* **Rebound.**  §14 is an explicitly heuristic *margin argument*, not a proof: an actual rebound (or other inbound/outbound) distinguisher covering more rounds than it concedes would re-open the round-count margin.
+* **Anything unmodeled.**  Rotational, invariant-subspace, higher-order-differential, and meet-in-the-middle angles have had only the light screening in §10 (structural probes) — they are wide open.
+
+The reduced-round instances to attack are in the sections below; the [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
+
 ## Common parameters
 
 Every instance is the `castella` tree hash ([hash-programs/](hash-programs/)) with `chunk-size=65536`, `custom=challenge`, `suffix=1`, and the round count and digest size given per instance; digests are computed by the shipped CLI, e.g.:

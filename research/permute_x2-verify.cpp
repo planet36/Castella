@@ -24,8 +24,10 @@
 #endif
 
 #include "castella-permute.hpp"
+#include "pack_states.hpp"
 #include "parse_int.hpp"
 #include "simd_equal.hpp"
+#include "unpack_states.hpp"
 
 #include <cassert>
 #include <cstdlib>
@@ -40,11 +42,11 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_bloc
 
     // verify unpack_states(pack_states(A, B)) == (A, B)
     {
-        const auto state_x2 = Castella::pack_states(state_a, state_b);
+        const auto state_x2 = pack_states(state_a, state_b);
 
         Castella::arr_blocks<N> unpacked_a;
         Castella::arr_blocks<N> unpacked_b;
-        Castella::unpack_states(state_x2, unpacked_a, unpacked_b);
+        unpack_states(state_x2, unpacked_a, unpacked_b);
 
         assert(simd_arr_equal(state_a, unpacked_a));
         assert(simd_arr_equal(state_b, unpacked_b));
@@ -58,13 +60,13 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_bloc
         Castella::permute(expected_a, num_rounds);
         Castella::permute(expected_b, num_rounds);
 
-        auto state_x2 = Castella::pack_states(state_a, state_b);
+        auto state_x2 = pack_states(state_a, state_b);
 
         Castella::permute_x2(state_x2, num_rounds);
 
         Castella::arr_blocks<N> actual_a;
         Castella::arr_blocks<N> actual_b;
-        Castella::unpack_states(state_x2, actual_a, actual_b);
+        unpack_states(state_x2, actual_a, actual_b);
 
         // verify the lanes never mixed
         assert(simd_arr_equal(expected_a, actual_a));

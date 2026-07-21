@@ -311,39 +311,6 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
-/// Pack two states into a lane-paired state
-/**
-* Element \c i of the result holds <code>state_a[i]</code> in its low
-* 128-bit lane and <code>state_b[i]</code> in its high 128-bit lane.
-*/
-template <size_t N>
-[[nodiscard]] static arr_blocks_x2<N>
-pack_states(const arr_blocks<N>& state_a, const arr_blocks<N>& state_b) noexcept
-{
-    arr_blocks_x2<N> state_x2;
-
-    for (size_t i = 0; i < N; ++i)
-    {
-        state_x2[i] = _mm256_set_m128i(state_b[i], state_a[i]);
-    }
-
-    return state_x2;
-}
-
-/// Unpack a lane-paired state into its two states (the inverse of \c pack_states)
-template <size_t N>
-static void
-unpack_states(const arr_blocks_x2<N>& state_x2,
-              arr_blocks<N>& state_a,
-              arr_blocks<N>& state_b) noexcept
-{
-    for (size_t i = 0; i < N; ++i)
-    {
-        state_a[i] = _mm256_castsi256_si128(state_x2[i]);
-        state_b[i] = _mm256_extracti128_si256(state_x2[i], 1);
-    }
-}
-
 /// The Castella permutation function applied to two independent states in lockstep
 // {{{
 /**

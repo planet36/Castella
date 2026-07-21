@@ -23,6 +23,7 @@
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 #include "castella-permute.hpp"
+#include "pack_states.hpp"
 #include "parse_int.hpp"
 
 #include <algorithm>
@@ -67,7 +68,7 @@ BM_permute_x2(benchmark::State& BM_state, const int num_rounds)
     arc4random_buf(&state_a, sizeof(state_a));
     arc4random_buf(&state_b, sizeof(state_b));
 
-    auto state_x2 = Castella::pack_states(state_a, state_b);
+    auto state_x2 = pack_states(state_a, state_b);
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
     {

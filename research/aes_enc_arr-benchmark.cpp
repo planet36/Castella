@@ -41,8 +41,10 @@
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 #include "castella-permute.hpp"
+#include "pack_states.hpp"
 #include "parse_int.hpp"
 #include "simd_equal.hpp"
+#include "unpack_states.hpp"
 
 #include <algorithm>
 #include <array>
@@ -291,11 +293,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // independently transformed state.
         auto result_b = state_b;
         aes_enc_arr(result_b, keys);
-        auto state_x2 = Castella::pack_states(state_a, state_b);
+        auto state_x2 = pack_states(state_a, state_b);
         aes_enc_arr(state_x2, keys);
         Castella::arr_blocks<N> lane_a{};
         Castella::arr_blocks<N> lane_b{};
-        Castella::unpack_states(state_x2, lane_a, lane_b);
+        unpack_states(state_x2, lane_a, lane_b);
         assert(simd_arr_equal(lane_a, result_vaes));
         assert(simd_arr_equal(lane_b, result_b));
 

@@ -147,7 +147,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         for (int i = 0; i < std::ssize(round_counts); ++i)
         {
-            // skip duplicates if NUM_ROUNDS_MIN<16>() collides with a listed value
+            // skip adjacent duplicates if NUM_ROUNDS_MIN<16>() collides with a listed value
             if (i > 0 && round_counts[i] == round_counts[i - 1])
                 continue;
 

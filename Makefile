@@ -20,6 +20,11 @@ all: $(BINS) $(SUBDIRS)
 
 everything: all $(EXTRA_SUBDIRS)
 
+# Debug build (see config.mk)
+# Run `make clean` before switching between release and debug.
+debug:
+	$(MAKE) BUILD=debug all
+
 $(SUBDIRS) $(EXTRA_SUBDIRS):
 	$(MAKE) -C $@
 
@@ -47,7 +52,7 @@ endif
 	-for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
-.PHONY: all everything test clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)
+.PHONY: all everything debug test clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)
 
 # https://www.gnu.org/software/make/manual/html_node/Special-Targets.html#index-removing-targets-on-failure
 .DELETE_ON_ERROR:

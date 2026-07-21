@@ -1,11 +1,6 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#if !defined(DEBUG)
-#define DEBUG 1
-#undef NDEBUG
-#endif
-
 #include "castella-duplex.hpp"
 
 #include <print>
@@ -14,6 +9,12 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
+
+#if defined(DEBUG)
+    std::println("(debug build)");
+#else
+    std::println("(release build)");
+#endif
 
     std::println("sizeof(uint8x16_t) = {}", sizeof(uint8x16_t));
     std::println("sizeof(Castella::block_t) = {}", sizeof(Castella::block_t));

@@ -28,7 +28,7 @@ using uint8x16x2_t = __m256i;
 
 #endif
 
-#elif defined(__aarch64__) && defined(__ARM_FEATURE_AES)
+#elif defined(__aarch64__) && defined(__ARM_NEON)
 
 #include <arm_neon.h>
 

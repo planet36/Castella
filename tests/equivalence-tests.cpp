@@ -27,8 +27,8 @@
 #undef NDEBUG
 #endif
 
-#include "../hash-programs/cch-tree.hpp"
 #include "castella-duplex-tree.hpp"
+#include "cch-tree.hpp"
 #include "parse_int.hpp"
 
 #include <algorithm>

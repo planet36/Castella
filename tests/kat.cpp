@@ -29,12 +29,12 @@
 * the thread count, so no thread count appears in the format.
 */
 
-#include "../hash-programs/cch-tree.hpp"
 #include "../hash-programs/check_utils.hpp"
 #include "as_byte_span.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
+#include "cch-tree.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -9,7 +9,7 @@
 * Design probe for "cch leaf pairing" (and beyond): would an interleaved
 * compress_castella_hash node group (N states advanced in lockstep on one
 * thread) beat N sequential nodes?  The N=2 result motivated
-* compress_castella_hash_x2 (hash-programs/cch-x2.hpp); N=3 and N=4 ask
+* compress_castella_hash_x2 (include/cch-x2.hpp); N=3 and N=4 ask
 * whether a wider group is worth building.
 *
 * Each benchmark hashes N equal-size buffers with N independent states

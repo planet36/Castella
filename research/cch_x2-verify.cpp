@@ -18,8 +18,8 @@
 #undef NDEBUG
 #endif
 
-#include "../hash-programs/cch-x2.hpp"
-#include "../hash-programs/cch.hpp"
+#include "cch-x2.hpp"
+#include "cch.hpp"
 #include "parse_int.hpp"
 
 #include <array>

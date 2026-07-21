@@ -63,7 +63,6 @@ Pure standard library; no solver or package needed.
 """
 
 import argparse
-import sys
 from itertools import combinations
 from math import floor
 

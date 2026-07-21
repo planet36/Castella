@@ -258,8 +258,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // The minimum chunk size keeps the multi-chunk tests cheap.
         constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 
-        // Deterministic input data spanning several chunks, with a partial
-        // trailing chunk.
+        // Deterministic input data spanning several chunks (3 full + a 41-byte
+        // partial trailing chunk, relative to the 1024-byte test chunk size
+        // above).  The odd trailing byte count exercises the partial-chunk
+        // path.  The fill is an affine byte generator: an odd multiplier is
+        // coprime to 256, so it has full period (every byte value appears once
+        // per 256-byte run) -- non-constant, non-repeating data so a bug that
+        // misplaces a byte offset actually perturbs the digest.
+        //
+        // FROZEN: this exact size and fill feed the pinned tree KAT
+        // (1204a8d4..., asserted near the end of this block).  Changing either
+        // changes that digest, which must never change -- it would also require
+        // regenerating tests/KAT.txt and research/spec-conformance.py.
         std::vector<std::byte> X(3 * chunk_size + 41);
         for (int i = 0; i < std::ssize(X); ++i)
         {
@@ -483,6 +493,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // that a one-shot add() with several threads statically
             // partitions the leaves across workers; with num_threads=1 the
             // identical input takes the sequential chunk-by-chunk path.
+            //
+            // 64 full chunks is comfortably above 2 * MIN_LEAF_CHUNKS_PER_WORKER
+            // (the batch path's arm-the-workers threshold), so 2/4/auto threads
+            // each get a real share of leaves; the 17-byte tail adds a partial
+            // chunk.  The size is deliberate (path selection + partial tail);
+            // the fill coefficients are arbitrary -- any odd multiplier gives
+            // full-period, non-degenerate data.  Unlike X, no KAT depends on Y:
+            // it is only ever checked against its own single-threaded digest.
             std::vector<std::byte> Y(64 * chunk_size + 17);
             for (int i = 0; i < std::ssize(Y); ++i)
             {
@@ -499,10 +517,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             assert(tree_digest(Y_sp, 4) == expected);
             assert(tree_digest(Y_sp, 0) == expected); // 0 = auto
 
-            // Piecewise adds: 1000-byte pieces are too small for the batch
-            // path and flow through the streaming pipeline; 33000-byte
-            // pieces produce ~32-chunk batches for the transient-worker
-            // path.  Both must reproduce the one-shot digest.
+            // Piecewise adds (piece sizes are relative to the 1024-byte test
+            // chunk size, NOT DEFAULT_CHUNK_SIZE): 1000-byte pieces are too
+            // small for the batch path and flow through the streaming
+            // pipeline; 33000-byte pieces produce ~32-chunk batches
+            // (33000 / 1024 ~= 32) for the transient-worker path.  Both must
+            // reproduce the one-shot digest.
             for (const int piece_size : {1000, 33'000})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
@@ -522,6 +542,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // several threads the leaves are hashed by the persistent
             // worker pool, in whatever order the workers finish -- and the
             // digest must still equal the inline sequential reference.
+            //
+            // 48 full chunks is well past the pool-start threshold, giving the
+            // persistent pool real work; the 5-byte tail adds a partial chunk.
+            // As with Y, the size drives path selection and the fill
+            // coefficients are arbitrary (odd multiplier => full period); no KAT
+            // depends on Z -- it is only checked against its own inline digest.
             std::vector<std::byte> Z(48 * chunk_size + 5);
             for (int i = 0; i < std::ssize(Z); ++i)
             {

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
+# pylint: disable=invalid-name
+
 """Independent implementation of SPEC.md, verified against tests/KAT.txt.
 
 This is a from-scratch Python implementation of the Castella permutation,
@@ -216,6 +218,8 @@ class CompressCastella:
 
 # ---- The tree mode
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
 def tree_digest(make_node, extract, chunk_size: int, cv_len: int,
                 msg: bytes, out: int) -> bytes:
     chunks = [msg[i:i + chunk_size] for i in range(0, len(msg), chunk_size)]

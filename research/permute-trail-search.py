@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
+# pylint: disable=invalid-name
+
 """Search for actual differential characteristics in Castella::permute (SAT/SMT).
 
 permute-min-active-sboxes.py proves LOWER bounds on the number of active AES
@@ -207,6 +209,7 @@ def self_test() -> None:
 # ------------------------------------------------------- stage A: patterns
 
 
+# pylint: disable=too-many-locals
 def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
     """Return (solver, layers, final_state) of Boolean activity variables.
 
@@ -303,6 +306,8 @@ class Instantiation:
     weight minimization and cluster enumeration).
     """
 
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     def __init__(self, num_blocks: int, num_rounds: int, pattern: list,
                  encoding: str = "witness"):
         self.solver = z3.Solver()
@@ -315,6 +320,7 @@ class Instantiation:
                  for i in range(num_blocks)]
         self.input_state = state
         layer = 0
+        # pylint: disable=too-many-nested-blocks
         for t in range(num_rounds):
             for a in range(AES_NUM_ROUNDS):
                 pat = pattern[layer]
@@ -406,6 +412,7 @@ class Instantiation:
                  for v in block] for block in state]
 
 
+# pylint: disable=too-many-locals
 def verify_trail(num_blocks: int, num_rounds: int, input_diff: list,
                  model, inst: Instantiation) -> None:
     """Re-propagate the model's difference in Python and check every layer."""
@@ -450,6 +457,9 @@ def hex_state(state_bytes: list) -> str:
 # ------------------------------------------------- differential clustering
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-positional-arguments
 def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
                      input_diff: list, output_diff: list, max_trails: int,
                      timeout_ms: int, encoding: str) -> None:
@@ -508,6 +518,9 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
 # ------------------------------------------------------------------- main
 
 
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Bit-level differential characteristic search in "

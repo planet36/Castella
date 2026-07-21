@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
+# pylint: disable=invalid-name
+
 """Count the minimum number of differentially active AES S-boxes in Castella::permute.
 
 This is a word-level (byte-granular) truncated-differential MILP model in the
@@ -92,6 +94,7 @@ def transpose_map(num_blocks: int) -> dict:
     return mapping
 
 
+# pylint: disable=too-many-locals
 def build_model(num_blocks: int, num_rounds: int,
                 aes_num_rounds: int) -> pulp.LpProblem:
     prob = pulp.LpProblem(

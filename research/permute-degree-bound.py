@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
+# pylint: disable=invalid-name
+
 """Bound the algebraic degree of Castella::permute, round by round.
 
 This applies the Boura-Canteaut-De Canniere degree bound for iterated

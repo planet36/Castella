@@ -16,7 +16,7 @@ static_assert(std::endian::native == std::endian::little,
               "little-endian host required (integer length encodings and "
               "round-constant serialization use native byte order)");
 
-#if defined(__x86_64__) && defined(__AES__)
+#if defined(__x86_64__) && defined(__SSE2__)
 
 #include <immintrin.h>
 

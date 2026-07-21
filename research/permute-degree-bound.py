@@ -226,8 +226,8 @@ def main() -> None:
     print()
     print(f"Forward degree < {n - 1} through {reach_layers} AES layers "
           f"(= {reach_rounds:.2f} Castella rounds).")
-    print(f"The inverse S-box has the same delta_i and gamma, so a "
-          f"Boura-Canteaut zero-sum built from the middle reaches at most")
+    print("The inverse S-box has the same delta_i and gamma, so a "
+          "Boura-Canteaut zero-sum built from the middle reaches at most")
     print(f"  {reach_layers} + {reach_layers} = {total_reach_layers} AES rounds "
           f"= {total_reach_layers / AES_NUM_ROUNDS:.2f} Castella rounds.")
     print(f"Default permutation: 6 Castella rounds = {AES_NUM_ROUNDS * 6} AES "

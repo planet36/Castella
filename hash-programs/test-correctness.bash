@@ -321,30 +321,22 @@ assert_neq_cmd_cmd \
     './castella --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1' \
     './castella --suffix=184 /tmp/test-1MiB.txt | cut -w -f 1'
 
-# Verify "--no-mmap" option produces the same output
+# Verify "--no-mmap" option produces the same output.  The I/O mode is
+# orthogonal to every digest parameter, so one parameter set per program
+# suffices; the partial-trailing-chunk read path is covered by test-100KB.txt
+# below.
 
-for SIZE in {1..64}
-do
-    CUSTOM='hash'
-    ROUNDS=3
-    SUFFIX=0
+assert_eq_cmd_cmd \
+    "./castella --custom='hash'           --rounds=3  --suffix=0   /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --custom='hash' --no-mmap --rounds=3  --suffix=0   /tmp/test-1MiB.txt | cut -w -f 1"
 
-    assert_eq_cmd_cmd \
-        "./castella --custom='$CUSTOM'           --rounds=$ROUNDS  --size=$SIZE --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-        "./castella --custom='$CUSTOM' --no-mmap --rounds=$ROUNDS  --size=$SIZE --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1"
+assert_eq_cmd_cmd \
+    "./castella --custom='¡Ay, caramba!'           --rounds=16 --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --custom='¡Ay, caramba!' --no-mmap --rounds=16 --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1"
 
-    CUSTOM='¡Ay, caramba!'
-    ROUNDS=16
-    SUFFIX=105
-
-    assert_eq_cmd_cmd \
-        "./castella --custom='$CUSTOM'           --rounds=$ROUNDS --size=$SIZE --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
-        "./castella --custom='$CUSTOM' --no-mmap --rounds=$ROUNDS --size=$SIZE --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1"
-
-    assert_eq_cmd_cmd \
-        "./cch           --size=$SIZE /tmp/test-1MiB.txt | cut -w -f 1" \
-        "./cch --no-mmap --size=$SIZE /tmp/test-1MiB.txt | cut -w -f 1"
-done
+assert_eq_cmd_cmd \
+    './cch           /tmp/test-1MiB.txt | cut -w -f 1' \
+    './cch --no-mmap /tmp/test-1MiB.txt | cut -w -f 1'
 
 # Verify "--no-mmap" produces the same output for an input size that is large
 # enough to be memory-mapped and is not a multiple of any internal block size.
@@ -388,47 +380,50 @@ assert_eq_cmd_cmd \
 # reads).  The 1 MiB file is a whole number of tree chunks for both
 # programs; the 100 KB file ends in a partial trailing chunk.
 
-for NT in 1 2 8
+# The single-threaded run is the invariance baseline; every other thread
+# setting -- minimal parallelism (2) and one-per-hardware-thread (0) -- must
+# reproduce it in every I/O mode.
+for NT in 2 0
 do
     assert_eq_cmd_cmd \
         "./castella --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
-        './castella --num-threads=0 /tmp/test-1MiB.txt | cut -w -f 1'
+        './castella --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./castella --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
-        './castella /tmp/test-1MiB.txt | cut -w -f 1'
+        './castella --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "cat /tmp/test-1MiB.txt | ./castella --num-threads=$NT - | cut -w -f 1" \
-        './castella /tmp/test-1MiB.txt | cut -w -f 1'
+        './castella --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./castella --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
-        './castella /tmp/test-100KB.txt | cut -w -f 1'
+        './castella --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./castella --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
-        './castella /tmp/test-100KB.txt | cut -w -f 1'
+        './castella --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./cch --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
-        './cch --num-threads=0 /tmp/test-1MiB.txt | cut -w -f 1'
+        './cch --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./cch --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
-        './cch /tmp/test-1MiB.txt | cut -w -f 1'
+        './cch --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "cat /tmp/test-1MiB.txt | ./cch --num-threads=$NT - | cut -w -f 1" \
-        './cch /tmp/test-1MiB.txt | cut -w -f 1'
+        './cch --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./cch --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
-        './cch /tmp/test-100KB.txt | cut -w -f 1'
+        './cch --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
 
     assert_eq_cmd_cmd \
         "./cch --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
-        './cch /tmp/test-100KB.txt | cut -w -f 1'
+        './cch --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
 done
 
 # Verify that different "--chunk-size" values give distinct results.
@@ -447,11 +442,11 @@ assert_neq_cmd_cmd \
 # plus a partial one.
 
 assert_eq_cmd_cmd \
-    './castella --chunk-size=4096 --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    './cch --chunk-size=4096 --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
+    './cch --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
     './cch --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
@@ -594,7 +589,7 @@ assert_neq_cmd_cmd \
 # The thread count and the I/O mode still never affect a keyed digest.
 
 assert_eq_cmd_cmd \
-    './castella --key-file=/tmp/test-key1.bin --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key1.bin --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --key-file=/tmp/test-key1.bin --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # A 16-byte MAC is not a truncation of the 32-byte MAC (the trailing

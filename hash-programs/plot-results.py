@@ -46,6 +46,10 @@ with open(args.FILE, newline='', encoding='utf-8') as f:
 
 y_axis_col = args.column
 
+if y_axis_col not in reader.fieldnames:
+    parser.error(f"{args.FILE}: no {y_axis_col!r} column "
+                 f"(have: {', '.join(reader.fieldnames)})")
+
 xlabel = x_axis_col.removeprefix('parameter_').title()
 ylabel = y_axis_col.title() + ' Time (ms)'
 

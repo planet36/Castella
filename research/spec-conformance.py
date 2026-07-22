@@ -125,6 +125,8 @@ def encode_string(x: bytes) -> bytes:
 # ---- The Castella duplex
 
 class Duplex:
+    """Castella duplex/sponge, mirroring Castella::Duplex from the C++ library."""
+
     def __init__(self, C: int, num_rounds: int, suffix: int,
                  N: bytes, S: bytes):
         assert C % 2 == 0 and 2 <= C <= 8
@@ -175,6 +177,8 @@ class Duplex:
 # ---- Compress-Castella (non-cryptographic)
 
 class CompressCastella:
+    """Compress-Castella non-cryptographic compression node (see cch.hpp)."""
+
     def __init__(self, mix_rate: int):
         assert mix_rate == 0 or 1 <= mix_rate <= 2048
         self.mix_rate = mix_rate

@@ -691,7 +691,7 @@ is_valid_digest_size(const std::vector<std::byte>& digest) noexcept
 
 /// Parse a --tag-format line (which carries its own digest-relevant options)
 [[nodiscard]] bool
-parse_tag_line(std::string_view s, check_line& out)
+parse_tagged_line(std::string_view s, check_line& out)
 {
     if (!consume_prefix(s, "castella (chunk-size="))
         return false;
@@ -745,7 +745,7 @@ parse_tag_line(std::string_view s, check_line& out)
 * of the line is also accepted.
 */
 [[nodiscard]] bool
-parse_plain_line(std::string_view s, check_line& out)
+parse_untagged_line(std::string_view s, check_line& out)
 {
     const auto space_pos = s.find(' ');
 
@@ -797,11 +797,11 @@ verify_check_line(const std::string_view line, check_totals& totals)
 {
     check_line parsed;
 
-    if (!parse_tag_line(line, parsed))
+    if (!parse_tagged_line(line, parsed))
     {
         parsed = {}; // a failed tag parse may have partially filled it
 
-        if (!parse_plain_line(line, parsed))
+        if (!parse_untagged_line(line, parsed))
         {
             ++totals.num_malformed;
             return;

@@ -1,6 +1,10 @@
-# Castella: A heavyweight AES-based permutation function
+# Castella: A <q>heavyweight</q> AES-based permutation and the hash functions built on it
 
-This C++ library implements a heavyweight permutation function using AES CPU instructions, along with higher-level constructions built on it.
+This C++ library implements a <q>heavyweight</q> permutation function using AES CPU instructions, plus a duplex/sponge, parallel tree hashing, a keyed MAC, and a PRNG on top.
+
+<q>Heavyweight</q> is the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography): a wide 256-byte state and a hardware AES round function, not a small-state [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) design.  It describes the design, not the speed — the [tree hashes rival, and in one case roughly double, multithreaded `b3sum`](#is-this-as-fast-as-b3sum) on page-cache-hot files.
+
+> **Status.**  Castella is a personal research project — a permutation and hash design that has not been standardized, externally reviewed, or cryptanalyzed by anyone but its author.  **Do not use it where security matters.**  See [SPEC.md](SPEC.md) and its [security claims and non-claims](SPEC.md#security-claims-and-non-claims).
 
 ## The Castella Permutation Function
 
@@ -20,7 +24,7 @@ The round constants are the successive states of a 128-bit [Galois LFSR](https:/
 
 The round constants are used as AES round keys.  A distinct round constant is used for every combination of permutation round, AES round, and state block, so no two blocks ever apply the same transformation.  The generator is deliberately unrelated to the AES round function so that the round constants share no structure with it.
 
-The round constants are generated at compile time.  Their number equals `Castella::NUM_ROUNDS_MAX × Castella::AES_NUM_ROUNDS × Castella::B_MAX`.  Embiggen the values as needed.
+The round constants are generated at compile time.  Their number equals `Castella::NUM_ROUNDS_MAX × Castella::AES_NUM_ROUNDS × Castella::B_MAX`.  Raise those bounds if you need a larger instance.
 
 ## The Castella Duplex Construction
 
@@ -90,6 +94,8 @@ A byte-stream hash is inherently sequential, so a single duplex can never use mo
 
 [`Castella::DuplexTree`](include/castella-duplex-tree.hpp) is the tree instantiated with `Castella::Duplex` nodes.  (The [`cch` hash program](hash-programs/cch.cpp) uses a second instantiation over a faster non-cryptographic compression node.)
 
+The [`castella` command-line program](hash-programs/castella.cpp) wraps `DuplexTree` and adds a keyed **MAC mode** (`--key-file`; KMAC's structure at tree scale).  For the higher-level SP 800-185 constructions built directly on a single `Duplex` — cSHAKE-, KMAC-, TupleHash-, and ParallelHash-like functions — see the [`examples/`](examples/) programs.
+
 ### VAES Optimizations
 
 On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), two execution-level optimizations apply (neither ever affects a digest):
@@ -98,6 +104,15 @@ On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), tw
 * **Leaf batching.**  Both tree hashes process adjacent leaf chunks **two at a time on one thread**.  `DuplexTree` packs two duplex states into the two 128-bit lanes of ymm registers ([`Castella::DuplexX2`](include/castella-duplex-x2.hpp)), where VAES applies an independent AES round per lane and the AVX2 unpack network transposes both 16×16 byte matrices at once without mixing the lanes ([`Castella::permute_x2`](include/castella-permute.hpp)); one paired permutation measures ~1.7× faster than two sequential (register-resident) permutations ([research/permute\_x2-benchmark.cpp](research/permute_x2-benchmark.cpp)).  The `cch` tree instead interleaves two nodes' compression chains in one loop ([`compress_castella_hash_x2`](include/cch-x2.hpp)) — a single cch node is latency-bound, so the second state's chains fill the idle AES slots (a modest ~1.1× on pinned runs, measured by [research/simd\_compress-two-state-benchmark.cpp](research/simd_compress-two-state-benchmark.cpp); see the findings in [research/README.md](research/README.md)).  Pairing applies on every parallel path: batch workers, the inline (single-threaded) path, and the streaming pipeline, whose pool workers claim up to two adjacent ring slots per wake-up (streamed `castella --no-mmap` input at 2 threads reaches the producer-bound floor that previously needed 4).
 
 All of these ratios are machine-dependent.  To reproduce them, build `research/` (see [Building](#building)) and run `bash run-benchmarks.bash` there — it pins each benchmark to core 0 and saves raw results to `research/results/`.  Benchmark on an otherwise idle machine.
+
+## Performance
+
+<q>Heavyweight</q> does not mean slow.  On a modern x86-64 Linux system, with VAES leaf batching and multiple threads:
+
+* **[`castella`](hash-programs/castella.cpp)** — the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp) — roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files; some minimal-round configurations beat `b2sum`, `sha1sum`, and `md5sum`.
+* **[`cch`](hash-programs/cch.cpp)** — the same tree over faster non-cryptographic nodes — beats fully-multithreaded `b3sum` by about **2×** on the same files, and single-threaded roughly matches [XXH3](https://github.com/cyan4973/xxhash).
+
+These figures are machine-dependent; reproduce them with [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash) (it uses [hyperfine](https://github.com/sharkdp/hyperfine)).  See the [speed FAQ](#is-this-as-fast-as-b3sum) for the fuller picture.
 
 ## Dependencies
 
@@ -132,8 +147,12 @@ I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them
 
 ### Why <q>heavyweight</q>?
 
-1) It's the opposite of lightweight.  The state size is _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
-2) It uses dedicated AES instructions instead of only [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) operations.
+It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography) — the family of designs (Ascon and friends) built for constrained devices out of a small state and cheap [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) operations.  Castella goes the other way on both axes:
+
+1) **A large state.**  _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
+2) **A hardware round function.**  It uses dedicated AES instructions instead of only ARX operations.
+
+<q>Heavyweight</q> describes the design, not the speed: it assumes a CPU with an AES unit and spends it freely, so the [tree hashes are fast](#is-this-as-fast-as-b3sum).
 
 ### Is this as fast as [b3sum](https://github.com/BLAKE3-team/BLAKE3)?
 
@@ -170,6 +189,10 @@ If the unit of the capacity was _bytes_ instead of blocks, the value would have 
 | `research/` | Programs for empirically determining optimal parameters; benchmarks |
 | `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |
 | `http-prng-service/` | HTTP server exposing a Castella-backed PRNG via `/absorb` and `/squeeze` endpoints |
+
+## License
+
+Castella is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/) (`MPL-2.0`); every source file carries an SPDX header.
 
 ## References
 

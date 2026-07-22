@@ -447,11 +447,11 @@ assert_neq_cmd_cmd \
 # plus a partial one.
 
 assert_eq_cmd_cmd \
-    './castella --chunk-size=4096 --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --chunk-size=4096 --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_eq_cmd_cmd \
-    './cch --chunk-size=4096 --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './cch --chunk-size=4096 --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
     './cch --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
@@ -584,7 +584,7 @@ assert_eq_cmd_str \
 # A keyed digest differs from the unkeyed digest, and differs per key.
 
 assert_neq_cmd_cmd \
-    './castella /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella                               /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | cut -w -f 1'
 
 assert_neq_cmd_cmd \
@@ -594,7 +594,7 @@ assert_neq_cmd_cmd \
 # The thread count and the I/O mode still never affect a keyed digest.
 
 assert_eq_cmd_cmd \
-    './castella --key-file=/tmp/test-key1.bin --num-threads=8 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --key-file=/tmp/test-key1.bin --num-threads=8           /tmp/test-100KB.txt | cut -w -f 1' \
     './castella --key-file=/tmp/test-key1.bin --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
 
 # A 16-byte MAC is not a truncation of the 32-byte MAC (the trailing

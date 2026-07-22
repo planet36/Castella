@@ -293,6 +293,17 @@ assert_neq_cmd_cmd \
     './castella --size=16 /tmp/test-1MiB.txt | cut -w -f 1' \
     './castella --size=32 /tmp/test-1MiB.txt | cut -w -f 1'
 
+# When "--rounds" is omitted, the default tracks the digest size: SIZE > 48
+# (capacity C = 8) defaults to 8 rounds, not 6 (SPEC.md "Margin rationale").
+
+assert_eq_cmd_cmd \
+    './castella --size=64 /tmp/test-1MiB.txt | cut -w -f 1' \
+    './castella --size=64 --rounds=8 /tmp/test-1MiB.txt | cut -w -f 1'
+
+assert_neq_cmd_cmd \
+    './castella --size=64 /tmp/test-1MiB.txt | cut -w -f 1' \
+    './castella --size=64 --rounds=6 /tmp/test-1MiB.txt | cut -w -f 1'
+
 # Verify that different "--suffix" values give distinct results.
 
 assert_neq_cmd_cmd \

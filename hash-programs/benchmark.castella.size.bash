@@ -7,11 +7,11 @@ test -x castella || exit
 # shellcheck source=benchmark-common.bash
 source ./benchmark-common.bash
 
-# Vary --size
+# Vary --size.  Maintain --rounds because, if not given, it varies based on --size.
 CSV="${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv"
 "${PIN_CMD[@]}" hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "$CSV" \
     --parameter-scan SIZE 8 64 --parameter-step-size 8 \
-    "./castella --size={SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt" || exit
+    "./castella --rounds=6 --size={SIZE} --num-threads=${NUM_THREADS} /tmp/test.txt" || exit
 
 printf 'Exported results: %q\n' "$CSV"

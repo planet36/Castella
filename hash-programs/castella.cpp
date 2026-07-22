@@ -27,6 +27,7 @@
 #include <fstream>
 #include <getopt.h>
 #include <limits>
+#include <optional>
 #include <print>
 #include <span>
 #include <stdexcept>
@@ -59,9 +60,16 @@ inline constexpr int key_size_max = 4096;
 // {{{ default values for options
 inline constexpr int default_input_suffix = 1;
 
-inline constexpr int default_num_rounds = 6;
-static_assert(default_num_rounds >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
-static_assert(default_num_rounds <= Castella::NUM_ROUNDS_MAX);
+// The minimum claimed round counts (SPEC.md "Margin rationale"): capacity
+// C <= 6 needs R >= 6; C = 8 (digests 49..64 bytes) needs R >= 8.  When
+// --rounds is not given, the default is derived from the digest size so the
+// program's out-of-box instances are always claimed (see
+// get_necessary_num_rounds).
+inline constexpr int num_rounds_claimed_small = 6;
+inline constexpr int num_rounds_claimed_large = 8;
+static_assert(num_rounds_claimed_small >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
+static_assert(num_rounds_claimed_large <= Castella::NUM_ROUNDS_MAX);
+static_assert(num_rounds_claimed_small <= num_rounds_claimed_large);
 
 inline constexpr int min_num_bytes_to_squeeze = 1;
 inline constexpr int max_num_bytes_to_squeeze =
@@ -84,7 +92,11 @@ inline constexpr int default_num_threads = 0;
 // {{{ options
 auto input_suffix = default_input_suffix;
 
-auto num_rounds = default_num_rounds;
+// Unset until --rounds is parsed; when unset, the round count is derived
+// per digest size at each use site (see resolve_num_rounds).  Left
+// unresolved here so a --check run can derive the right count for each
+// checkfile line's own digest length, not the command line's --size.
+std::optional<int> num_rounds_given;
 
 auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
 
@@ -133,6 +145,24 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes)
     C += (C % 2) != 0; // add 1 if odd
 
     return C;
+}
+
+/// The minimum claimed round count for a digest of \a digest_size_bytes bytes
+/** \see SPEC.md's "Margin rationale" (and \c num_rounds_claimed_small) for details. */
+[[nodiscard]] static inline int
+get_necessary_num_rounds(const int digest_size_bytes) noexcept
+{
+    return num_digest_bytes_to_capacity_blocks(digest_size_bytes) <= 6
+               ? num_rounds_claimed_small
+               : num_rounds_claimed_large;
+}
+
+/// Get the explicit number of rounds (if --rounds was given), else use
+/// \a digest_size_bytes to get the minimum claimed round count
+[[nodiscard]] static inline int
+resolve_num_rounds(const int digest_size_bytes) noexcept
+{
+    return num_rounds_given.value_or(get_necessary_num_rounds(digest_size_bytes));
 }
 
 /// Print the version information.
@@ -213,7 +243,10 @@ print_usage()
     std::println("        Specify the number of rounds to perform in the Castella permutation function.");
     std::println("        The security claim (SPEC.md) covers only rounds >= 6, or >= 8 when");
     std::println("        SIZE > 48; fewer rounds are reduced-round targets (CHALLENGES.md).");
-    std::println("        (default={}) (minimum={}) (maximum={})", default_num_rounds,
+    std::println("        When omitted, the default tracks the claim: {} rounds for SIZE <= 48,",
+                 num_rounds_claimed_small);
+    std::println("        {} for SIZE > 48.", num_rounds_claimed_large);
+    std::println("        (minimum={}) (maximum={})",
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
@@ -351,7 +384,7 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_ROUNDS:
-            num_rounds = parse_option_int(optarg,
+            num_rounds_given = parse_option_int(optarg,
                                            Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
                                            Castella::NUM_ROUNDS_MAX, "--rounds");
             break;
@@ -747,7 +780,10 @@ parse_plain_line(std::string_view s, check_line& out)
         out.path = s;
     }
 
-    out.rounds = num_rounds;
+    // An untagged line does not carry its rounds; when --rounds is not on
+    // the check command line, derive it from this line's own digest length (not
+    // the command line's --size, which is irrelevant in --check mode).
+    out.rounds = resolve_num_rounds(static_cast<int>(std::ssize(out.expected_digest)));
     out.suffix = input_suffix;
     out.custom = customization_str;
     out.chunk_size_bytes = chunk_size;
@@ -841,6 +877,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         return exit_status;
     }
+
+    // Fixed for every path in this run (the output size does not vary here).
+    const int num_rounds = resolve_num_rounds(num_bytes_to_squeeze);
 
     for (const auto& path : paths)
     {

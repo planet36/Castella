@@ -53,7 +53,7 @@
 namespace Castella
 {
 
-/// A heavyweight customizable duplex/sponge construction class
+/// A customizable duplex/sponge construction based on the Castella permutation
 // {{{
 /**
 * ## _CSF-0.1.pdf_

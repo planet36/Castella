@@ -31,7 +31,7 @@ using block_t = uint8x16_t;
 template <size_t N>
 using arr_blocks = simd_arr_t<N>;
 
-#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+#if defined(__x86_64__) && defined(__AVX__)
 
 /// A lane-paired block: block \c i of two independent states, one per 128-bit lane
 using block_x2_t = uint8x16x2_t;

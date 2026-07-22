@@ -70,7 +70,7 @@ private:
 
     /// The input buffers, one per lane; always at the same fill level
     /**
-    * Sized for the largest possible rate (no per-object allocation, unlike
+    * Sized for the largest possible rate (no per-object allocation, like
     * \c Duplex); only the first \c R blocks are used.
     */
     arr_blocks<Duplex::R_MAX> input_blocks_a_{};

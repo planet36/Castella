@@ -35,6 +35,7 @@ XTIME = bytes(((x << 1) ^ 0x1B) & 0xFF if x & 0x80 else x << 1 for x in range(25
 
 
 def aesenc(block: bytes, key: bytes) -> bytes:
+    """Apply one AES encryption round (AESENC semantics) with round key."""
     # SubBytes
     b = bytes(SBOX[x] for x in block)
     # ShiftRows (column-major layout: byte index = 4*col + row; row r
@@ -61,6 +62,7 @@ MASK64 = (1 << 64) - 1
 
 
 def lfsr_step(l0: int, l1: int) -> tuple[int, int]:
+    """Advance the 128-bit Galois LFSR (GCM polynomial) by one step."""
     carry = l1 >> 63
     l1 = ((l1 << 1) | (l0 >> 63)) & MASK64
     l0 = ((l0 << 1) ^ (carry * 0x87)) & MASK64
@@ -93,6 +95,7 @@ RC, CCH_INIT = make_round_constants()
 # ---- The Castella permutation
 
 def permute(state: list[bytes], n: int) -> list[bytes]:
+    """Apply n rounds of the Castella permutation to the 16-block state."""
     assert len(state) == 16 and 0 <= n <= 16
     for r in range(16 - n, 16):
         for aes_r in range(3):
@@ -105,20 +108,24 @@ def permute(state: list[bytes], n: int) -> list[bytes]:
 # ---- Integer encodings (little-endian, unlike SP 800-185)
 
 def byte_width(x: int) -> int:
+    """Return the minimum number of bytes needed to hold x (at least 1)."""
     return max(1, (x.bit_length() + 7) // 8)
 
 
 def left_encode(x: int) -> bytes:
+    """Encode x as a width byte followed by the little-endian value."""
     w = byte_width(x)
     return bytes([w]) + x.to_bytes(w, "little")
 
 
 def right_encode(x: int) -> bytes:
+    """Encode x as the little-endian value followed by a width byte."""
     w = byte_width(x)
     return x.to_bytes(w, "little") + bytes([w])
 
 
 def encode_string(x: bytes) -> bytes:
+    """Prefix x with its left-encoded byte length."""
     return left_encode(len(x)) + x
 
 
@@ -154,6 +161,7 @@ class Duplex:
         self.buf.clear()
 
     def add(self, data: bytes):
+        """Absorb data bytes, permuting whenever the rate fills."""
         for byte in data:
             self.buf.append(byte)
             if len(self.buf) == 16 * self.R:
@@ -168,6 +176,7 @@ class Duplex:
         self._absorb_and_permute()
 
     def squeeze(self, n: int) -> bytes:
+        """Append the suffix, pad, permute, and return the first n bytes."""
         assert 0 <= n <= 16 * self.R
         self.add(bytes([self.suffix]))
         self._pad_and_permute()
@@ -204,12 +213,14 @@ class CompressCastella:
                 self.absorbs_since_mix = 0
 
     def add(self, data: bytes):
+        """Absorb data bytes, compressing whenever a 256-byte block fills."""
         for byte in data:
             self.buf.append(byte)
             if len(self.buf) == 256:
                 self._absorb_block()
 
     def digest(self, n: int) -> bytes:
+        """Pad, compress, finalize with a permutation, return n bytes."""
         assert 0 <= n <= 64
         i = 0
         while len(self.buf) < 256:  # padding bytes 0, 1, 2, ...
@@ -226,6 +237,7 @@ class CompressCastella:
 # pylint: disable=too-many-positional-arguments
 def tree_digest(make_node, extract, chunk_size: int, cv_len: int,
                 msg: bytes, out: int) -> bytes:
+    """Compute the two-level tree-mode digest of msg."""
     chunks = [msg[i:i + chunk_size] for i in range(0, len(msg), chunk_size)]
     if not chunks:
         chunks = [b""]
@@ -249,10 +261,12 @@ def tree_digest(make_node, extract, chunk_size: int, cv_len: int,
 # ---- KAT verification
 
 def kat_msg(msglen: int) -> bytes:
+    """Build the KAT message of the given length (msg[i] = i mod 256)."""
     return bytes(i & 0xFF for i in range(msglen))
 
 
 def verify_kat_file(path: str) -> int:
+    """Verify every KAT in the file; return 0 on full success, 1 otherwise."""
     num_verified = 0
     num_failed = 0
     with open(path, encoding="ascii") as file:

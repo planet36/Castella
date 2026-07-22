@@ -78,6 +78,7 @@ BLOCK_BYTES = 16
 # AES ShiftRows: output byte (row, col) comes from input byte (row, (col+row)%4).
 # Byte index within a block = 4*col + row (AES column-major order).
 def shift_rows_src(byte_idx: int) -> int:
+    """Return the input byte index that ShiftRows moves to byte_idx."""
     col, row = divmod(byte_idx, 4)
     return 4 * ((col + row) % 4) + row
 
@@ -85,6 +86,7 @@ def shift_rows_src(byte_idx: int) -> int:
 # simd_transpose: byte k of word j of block i -> byte k of word i of block j,
 # where a word is 16/N bytes.  Returns {(block, byte): (block, byte)}.
 def transpose_map(num_blocks: int) -> dict:
+    """Map each (block, byte) to its destination under simd_transpose."""
     word_size = BLOCK_BYTES // num_blocks
     mapping = {}
     for i in range(num_blocks):
@@ -97,6 +99,7 @@ def transpose_map(num_blocks: int) -> dict:
 # pylint: disable=too-many-locals
 def build_model(num_blocks: int, num_rounds: int,
                 aes_num_rounds: int) -> pulp.LpProblem:
+    """Build the MILP whose optimum is the minimum active S-box count."""
     prob = pulp.LpProblem(
         f"castella_min_active_sboxes_N{num_blocks}_r{num_rounds}",
         pulp.LpMinimize)
@@ -145,6 +148,7 @@ def build_model(num_blocks: int, num_rounds: int,
 
 
 def main() -> None:
+    """Parse arguments and solve the MILP for each round count."""
     parser = argparse.ArgumentParser(
         description="Minimum differentially active AES S-boxes in "
                     "Castella::permute (truncated-differential MILP)")

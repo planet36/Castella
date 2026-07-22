@@ -163,6 +163,7 @@ AES_NUM_ROUNDS = 3  # AES rounds per Castella round (Castella::AES_NUM_ROUNDS)
 
 
 def run_self_test() -> None:
+    """Validate the S-box degrees and the known AES integral distinguisher."""
     d_fwd = sbox_deltas(SBOX)
     d_inv = sbox_deltas(INV_SBOX)
     assert d_fwd[1] == 7 and d_inv[1] == 7, "AES S-box degree must be 7"
@@ -180,6 +181,7 @@ def run_self_test() -> None:
 
 
 def main() -> None:
+    """Parse arguments and report the algebraic-degree bounds."""
     parser = argparse.ArgumentParser(
         description="Algebraic-degree upper bound for Castella::permute "
                     "(Boura-Canteaut-De Canniere)")

@@ -92,6 +92,7 @@ KNOWN_MIN_ACTIVE = {
 
 
 def make_sbox() -> list:
+    """Build the AES S-box (GF(2^8) inverse composed with the affine map)."""
     # Multiplicative inverse in GF(2^8) mod 0x11B, then the AES affine map.
     def gf_mul(a: int, b: int) -> int:
         p = 0
@@ -122,6 +123,7 @@ SBOX = make_sbox()
 
 
 def make_ddt() -> list:
+    """Build the S-box difference distribution table DDT[din][dout]."""
     ddt = [[0] * 256 for _ in range(256)]
     for x in range(256):
         for din in range(256):
@@ -144,6 +146,7 @@ DDT_ALLOWED = [[b for b in range(256) if DDT[a][b] != 0]
 
 
 def xtime(a: int) -> int:
+    """Multiply a by x in GF(2^8) mod the AES polynomial 0x11B."""
     a <<= 1
     return (a ^ 0x1B) & 0xFF if a & 0x100 else a
 
@@ -152,11 +155,13 @@ def xtime(a: int) -> int:
 # Byte index within a block = 4*col + row (AES column-major order), matching
 # permute-min-active-sboxes.py and the aesenc byte order.
 def shift_rows_src(byte_idx: int) -> int:
+    """Return the input byte index that ShiftRows moves to byte_idx."""
     col, row = divmod(byte_idx, 4)
     return 4 * ((col + row) % 4) + row
 
 
 def mix_column(col: list) -> list:
+    """Apply the AES MixColumns transform to one 4-byte column."""
     a0, a1, a2, a3 = col
     return [xtime(a0) ^ xtime(a1) ^ a1 ^ a2 ^ a3,
             a0 ^ xtime(a1) ^ xtime(a2) ^ a2 ^ a3,
@@ -165,6 +170,7 @@ def mix_column(col: list) -> list:
 
 
 def aes_round_zero_key(state: list) -> list:
+    """Apply one AESENC round with a zero round key to a 16-byte state."""
     # aesenc order: ShiftRows, SubBytes, MixColumns, AddRoundKey (key = 0).
     sr = [state[shift_rows_src(b)] for b in range(BLOCK_BYTES)]
     sb = [SBOX[v] for v in sr]
@@ -177,6 +183,7 @@ def aes_round_zero_key(state: list) -> list:
 # simd_transpose: byte k of word j of block i -> byte k of word i of block j,
 # where a word is 16/N bytes.  Returns {(block, byte): (block, byte)}.
 def transpose_map(num_blocks: int) -> dict:
+    """Map each (block, byte) to its destination under simd_transpose."""
     word_size = BLOCK_BYTES // num_blocks
     mapping = {}
     for i in range(num_blocks):
@@ -196,6 +203,7 @@ AESENC_VECTORS = [
 
 
 def self_test() -> None:
+    """Sanity-check the S-box, DDT, and AES round model against known values."""
     assert SBOX[0x00] == 0x63 and SBOX[0x53] == 0xED and SBOX[0xFF] == 0x16
     assert all(v in (0, 2, 4) for din in range(1, 256) for v in DDT[din])
     assert all(sum(DDT[din]) == 256 for din in range(256))
@@ -256,6 +264,7 @@ def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
 
 
 def extract_pattern(model, layers: list, final_state: list) -> list:
+    """Read the Boolean activity pattern out of a solved z3 model."""
     def truth(v) -> bool:
         return z3.is_true(model.eval(v, model_completion=True))
 
@@ -265,6 +274,7 @@ def extract_pattern(model, layers: list, final_state: list) -> list:
 
 
 def pattern_blocking_clause(layers: list, pattern: list):
+    """Return a clause that forbids the solver from repeating pattern."""
     lits = []
     for layer, playe in zip(layers, pattern):
         for block, pblock in zip(layer, playe):
@@ -277,6 +287,7 @@ def pattern_blocking_clause(layers: list, pattern: list):
 
 
 def bv_table_lookup(x, table: list):
+    """Build a z3 bit-vector expression indexing table by the 8-bit value x."""
     expr = z3.BitVecVal(table[255], 8)
     for v in range(254, -1, -1):
         expr = z3.If(x == z3.BitVecVal(v, 8), z3.BitVecVal(table[v], 8), expr)
@@ -284,11 +295,13 @@ def bv_table_lookup(x, table: list):
 
 
 def z3_xtime(a):
+    """z3 bit-vector version of xtime (GF(2^8) multiply by x)."""
     return (a << 1) ^ z3.If(z3.Extract(7, 7, a) == 1,
                             z3.BitVecVal(0x1B, 8), z3.BitVecVal(0, 8))
 
 
 def z3_mix_column(col: list) -> list:
+    """z3 bit-vector version of the AES MixColumns transform."""
     a0, a1, a2, a3 = col
     return [z3_xtime(a0) ^ z3_xtime(a1) ^ a1 ^ a2 ^ a3,
             a0 ^ z3_xtime(a1) ^ z3_xtime(a2) ^ a2 ^ a3,
@@ -387,11 +400,13 @@ class Instantiation:
         self.output_state = state
 
     def add_weight_bound(self, max_weight: int) -> None:
+        """Constrain the trail's differential weight to at most max_weight."""
         # weight = 7*n - n6, so weight <= W  <=>  n6 >= 7*n - W.
         n6_min = 7 * len(self.sboxes) - max_weight
         self.solver.add(z3.PbGe([(w6, 1) for w6 in self.weight6], n6_min))
 
     def model_weight(self, model) -> int:
+        """Compute the exact differential weight of a solved trail."""
         weight = 0
         n6 = 0
         for din_v, dout_v in self.sboxes:
@@ -408,6 +423,7 @@ class Instantiation:
         return weight
 
     def model_bytes(self, model, state: list) -> list:
+        """Evaluate a state's bit-vector bytes into concrete integers."""
         return [[model.eval(v, model_completion=True).as_long()
                  for v in block] for block in state]
 
@@ -450,6 +466,7 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: list,
 
 
 def hex_state(state_bytes: list) -> str:
+    """Format a state's blocks as space-separated hex strings."""
     return " ".join("".join(f"{v:02x}" for v in block)
                     for block in state_bytes)
 
@@ -522,6 +539,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
 def main() -> None:
+    """Parse arguments and run the differential-characteristic search."""
     parser = argparse.ArgumentParser(
         description="Bit-level differential characteristic search in "
                     "Castella::permute (upper bounds on best-trail weight)")

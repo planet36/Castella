@@ -193,7 +193,9 @@ def transpose_map(num_blocks: int) -> dict:
     return mapping
 
 
-# aesenc(x, 0) vectors dumped from _mm_aesenc_si128 (x86-64, 2026-07-19).
+# Known-answer (input, output) pairs for one AES round with a zero round key,
+# captured from the _mm_aesenc_si128 hardware instruction on x86-64
+# (2026-07-19); self_test() checks this file's Python AES model against them.
 AESENC_VECTORS = [
     ("00000000000000000000000000000000", "63636363636363636363636363636363"),
     ("000102030405060708090a0b0c0d0e0f", "6a6a5c452c6d3351b0d95d61279c215c"),

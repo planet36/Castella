@@ -167,7 +167,7 @@ print_usage()
     std::println("  -c, --check");
     std::println("        Read digest lines from each FILE (or standard input) and verify them.");
     std::println("        Both output formats are accepted.  A --tag line carries the");
-    std::println("        digest-relevant options itself; for a default-format line, --chunk-size,");
+    std::println("        digest-relevant options itself; for an untagged line, --chunk-size,");
     std::println("        --custom, --rounds, and --suffix must be given the same values that");
     std::println("        produced it.  The output size is inferred from the digest length.");
     std::println("        Keyed digests verify only with the same --key-file (digest lines never");
@@ -705,7 +705,7 @@ parse_tag_line(std::string_view s, check_line& out)
     return is_valid_digest_size(out.expected_digest);
 }
 
-/// Parse a default-format line (digest, two spaces, FILE)
+/// Parse an untagged line (digest, two spaces, FILE)
 /**
 * The digest-relevant options are taken from the command line.  The FILE
 * is shell-quoted (what this program emits); a bare FILE spanning the rest

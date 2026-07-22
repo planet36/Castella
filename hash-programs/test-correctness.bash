@@ -478,8 +478,8 @@ assert_eq_cmd_str \
 # Verify the "--check" and "--tag" modes: digests produced by each program
 # must verify with the same program, in both output formats.
 
-# Default-format round trip (the checkfile is read from standard input).
-# For default-format lines, the digest-relevant options are taken from the
+# Untagged round trip (the checkfile is read from standard input).
+# For untagged lines, the digest-relevant options are taken from the
 # check command line (the defaults, here).
 
 assert_eq_cmd_str \
@@ -490,7 +490,7 @@ assert_eq_cmd_str \
     './cch /tmp/test-100KB.txt | ./cch --check -' \
     "'/tmp/test-100KB.txt': OK"
 
-# Default-format round trip with non-default digest-relevant options, which
+# Untagged round trip with non-default digest-relevant options, which
 # must be repeated at check time.  (--size is inferred from the digest
 # length, so it is not repeated.)
 

@@ -599,6 +599,7 @@ def main() -> None:
 
     best = None  # (weight, optimal?, input_diff, output_diff, pattern_no,
     #               pattern)
+    best_weight = None  # weight of `best`; scalar so it is never subscripted
 
     for pattern_no in range(1, args.patterns + 1):
         t0 = time.monotonic()
@@ -663,9 +664,10 @@ def main() -> None:
                 break
 
         output_diff = inst.model_bytes(model, inst.output_state)
-        if best is None or weight < best[0]:
+        if best_weight is None or weight < best_weight:
             best = (weight, optimal, input_diff, output_diff, pattern_no,
                     pattern)
+            best_weight = weight
 
     if best is None:
         print("no bit-level realizable trail found in the searched patterns")

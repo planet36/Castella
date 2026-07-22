@@ -18,6 +18,7 @@ Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 """
 
 import sys
+from functools import partial
 
 # ---- AES round (AESENC semantics: SubBytes, ShiftRows, MixColumns, XOR key)
 
@@ -265,6 +266,17 @@ def kat_msg(msglen: int) -> bytes:
     return bytes(i & 0xFF for i in range(msglen))
 
 
+def _duplex_from_kat(f: dict) -> Duplex:
+    """Build a Duplex node from the parsed KAT fields."""
+    return Duplex(int(f["C"]), int(f["rounds"]), int(f["suffix"]),
+                  bytes.fromhex(f["fn"]), bytes.fromhex(f["custom"]))
+
+
+def _cch_from_kat(f: dict) -> CompressCastella:
+    """Build a CompressCastella node from the parsed KAT fields."""
+    return CompressCastella(int(f["mix"]))
+
+
 def verify_kat_file(path: str) -> int:
     """Verify every KAT in the file; return 0 on full success, 1 otherwise."""
     num_verified = 0
@@ -286,18 +298,12 @@ def verify_kat_file(path: str) -> int:
                 node.add(msg)
                 actual = node.squeeze(out)
             elif typ == "tree":
-                def make_node(f=f):
-                    return Duplex(int(f["C"]), int(f["rounds"]),
-                                  int(f["suffix"]), bytes.fromhex(f["fn"]),
-                                  bytes.fromhex(f["custom"]))
-                actual = tree_digest(make_node,
+                actual = tree_digest(partial(_duplex_from_kat, f),
                                      lambda node, n: node.squeeze(n),
                                      int(f["chunk"]), 16 * int(f["C"]),
                                      msg, out)
             elif typ == "cchtree":
-                def make_node(f=f):
-                    return CompressCastella(int(f["mix"]))
-                actual = tree_digest(make_node,
+                actual = tree_digest(partial(_cch_from_kat, f),
                                      lambda node, n: node.digest(n),
                                      int(f["chunk"]), 64, msg, out)
             else:

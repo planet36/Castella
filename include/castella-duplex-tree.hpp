@@ -37,8 +37,8 @@ struct DuplexTreeNodePolicy final
 {
     using node_type = Duplex;
 
-    /// Duplex nodes (~3.3 GiB/s per core) hash far slower than a chunk can
-    /// be shipped to a pool worker, so the streaming pipeline pays off.
+    /// Duplex nodes hash far slower than a chunk can be shipped to a pool
+    /// worker, so the streaming pipeline pays off.
     static constexpr bool USE_STREAMING_POOL = true;
 
     int capacity_blocks;

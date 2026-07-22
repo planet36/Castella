@@ -65,9 +65,9 @@ namespace Castella
 *     buffered by the calling thread, so a pool worker must pull each
 *     freshly written (producer-cache-resident) chunk across cores; that
 *     transfer only pays off when hashing a chunk costs clearly more than
-*     shipping it (true for \c Duplex at ~3.3 GiB/s per core, false for
-*     \c compress_castella_hash at ~15 GiB/s per core, where the pool
-*     measured *slower* than hashing inline).  When false, streamed
+*     shipping it (true for the slower \c Duplex, false for the much
+*     faster \c compress_castella_hash, where the pool measured *slower*
+*     than hashing inline).  When false, streamed
 *     chunks are hashed inline and only the one-shot batch path -- whose
 *     workers read clean caller memory directly, with no cross-core
 *     handoff -- parallelizes.  Like every threading knob, this NEVER
@@ -228,14 +228,13 @@ struct HashTree
     // {{{
     /**
     * Empirically chosen (benchmark.castella.chunk-size.bash and
-    * benchmark.cch.chunk-size.bash, 512 MiB input, 2026-07-18):
-    * throughput climbs until the per-leaf fixed overhead (state init,
-    * role prefix, padding, finalizing permutation) and per-chunk
-    * dispatch overhead are amortized, then plateaus.  64 KiB sits at or
-    * within a few percent of the plateau for both node types (for cch
-    * nodes, the best multithreaded scaling -- ~63 GiB/s -- was also at
-    * 64 KiB), while files of a few hundred KiB still parallelize.  A
-    * derived tree may shadow this with a default suited to its node.
+    * benchmark.cch.chunk-size.bash): throughput climbs until the per-leaf
+    * fixed overhead (state init, role prefix, padding, finalizing
+    * permutation) and per-chunk dispatch overhead are amortized, then
+    * plateaus.  64 KiB sits at or within a few percent of the plateau for
+    * both node types (for cch nodes, the best multithreaded scaling was
+    * also at 64 KiB), while files of a few hundred KiB still parallelize.
+    * A derived tree may shadow this with a default suited to its node.
     */
     // }}}
     static constexpr int DEFAULT_CHUNK_SIZE = 65'536;

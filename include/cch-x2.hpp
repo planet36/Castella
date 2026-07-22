@@ -32,8 +32,8 @@
 * per-chunk critical path (3 chained \c vaesenc latencies) exceeds the
 * per-chunk AES throughput cost and leaves the AES units partly idle.
 * Interleaving a second state's chains in the same bulk loop fills those
-* idle slots -- measured 1.23-1.37x over hashing the two inputs
-* sequentially (see research/simd_compress-two-state-benchmark.cpp).
+* idle slots -- measured faster than hashing the two inputs sequentially
+* (see research/simd_compress-two-state-benchmark.cpp).
 *
 * This class simply owns two ordinary nodes and drives their (private)
 * absorb machinery in one interleaved bulk loop, so the initial state,

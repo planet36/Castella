@@ -27,10 +27,10 @@ struct compress_castella_tree_node_policy final
 {
     using node_type = compress_castella_hash<>;
 
-    /// cch nodes (~15 GiB/s per core) hash a streamed chunk faster than it
-    /// can be shipped to a pool worker (the pool measured ~2.6x *slower*
-    /// than inline hashing), so streamed chunks are hashed inline; only
-    /// the one-shot batch path parallelizes.
+    /// cch nodes hash a streamed chunk faster than it can be shipped to a
+    /// pool worker (the pool measured *slower* than inline hashing), so
+    /// streamed chunks are hashed inline; only the one-shot batch path
+    /// parallelizes.
     static constexpr bool USE_STREAMING_POOL = false;
 
     int mix_rate;
@@ -66,15 +66,15 @@ struct compress_castella_tree_node_policy final
     * \c HAS_PAIRED_LEAF): adjacent full leaf chunks are hashed two at a
     * time on one thread by interleaving the two nodes' compression chains
     * in one bulk loop (see \c compress_castella_hash_x2 for why that
-    * pays; measured 1.23-1.37x by
+    * pays; measured faster by
     * research/simd_compress-two-state-benchmark.cpp).
     *
     * Guarded by the VAES flags even though the pair class itself is
     * portable, because the win exists only under VAES codegen: 256-bit
     * aesenc gives one state just 8 independent 3-deep chains (latency
     * left to fill), while 128-bit codegen already runs 16 chains per
-    * state and the pair measures 0.86-1.15x in the compute-bound regimes
-    * -- a wash at best, a real loss at worst (see the non-VAES findings
+    * state and the pair is a wash at best, a real loss at worst in the
+    * compute-bound regimes (see the non-VAES findings
     * in research/README.md).  Execution-level only; NEVER affects the
     * digest.
     */

@@ -71,7 +71,9 @@ import argparse
 import os
 import sys
 
-import pulp
+# Optional third-party MILP solver (see module docstring); may be absent when
+# linting, so silence the import-error rather than making it a hard dependency.
+import pulp  # pylint: disable=import-error
 
 BLOCK_BYTES = 16
 

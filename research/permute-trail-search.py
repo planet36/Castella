@@ -586,7 +586,8 @@ def main() -> None:
         if num_active is None:
             sys.exit("no known MILP minimum for this -N/-r; pass -A")
 
-    sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
     timeout_ms = int(args.time_limit * 1000)
     print(f"N={args.num_blocks} blocks, r={args.rounds} rounds, "
           f"target active S-boxes A={num_active}")

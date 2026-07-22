@@ -176,7 +176,8 @@ def main() -> None:
     args = parser.parse_args()
 
     # Solves can take many minutes; show progress even when stdout is a file.
-    sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
 
     print(f"N={args.num_blocks} blocks, "
           f"{args.aes_rounds} AES rounds per Castella round")

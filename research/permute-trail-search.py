@@ -498,7 +498,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
             inst.solver.add(
                 inst.output_state[i][b] == z3.BitVecVal(output_diff[i][b], 8))
 
-    weights = []
+    weights: list[int] = []
     complete = False
     t0 = time.monotonic()
     while len(weights) < max_trails:

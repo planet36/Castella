@@ -561,9 +561,10 @@ read_key_file(const std::string& path, const int max_size_bytes)
         errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
 
     std::vector<std::byte> key;
-    // Not a protocol constant -- just enough for typical key sizes
-    // (e.g., 32 or 64 bytes) without reallocation.
-    key.reserve(64);
+    // Reserve the whole permitted size up front so the buffer never
+    // reallocates: a growing key would otherwise strand un-scrubbed copies
+    // of earlier prefixes in freed heap (only the final buffer is zeroized).
+    key.reserve(to_unsigned(max_size_bytes));
 
     char c = 0;
     while (file.get(c))

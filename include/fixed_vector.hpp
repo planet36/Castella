@@ -99,10 +99,10 @@ private:
         }
     }
 
-    /// True if \a R is a sized, contiguous range of exactly \c T.
+    /// True if \a R is a sized, contiguous range of \c T.
     /**
     * Such a range is handed to the \c std::span overload for its bulk copy.  Overload
-    * resolution will not do this on its own: for e.g. \c std::vector<T> the \c R&& template is
+    * resolution will not do this on its own: for example \c std::vector<T> the \c R&& template is
     * an exact match while the \c std::span overload needs a user-defined conversion, so the
     * template wins and the bulk path is dead code for callers who do not hand-write a span.
     */
@@ -113,10 +113,10 @@ private:
 
     /// \pre \a rg satisfies \c is_bulk_appendable_.
     template <typename R>
+    requires is_bulk_appendable_<R>
     [[nodiscard]] static constexpr std::span<const T> as_span_(R& rg)
     {
-        return std::span<const T>{std::ranges::data(rg),
-                                  static_cast<std::size_t>(std::ranges::size(rg))};
+        return std::span{rg};
     }
 
     /// Zero \a n bytes at \a p with stores the compiler must not optimize away.
@@ -202,7 +202,7 @@ public:
         size_ = count;
     }
 
-    /// Copy the elements of \a spn (\c size()==spn.size()).
+    /// Copy the elements of \a spn (\c size()==std::size(spn)).
     /// \throws std::bad_alloc if \a spn does not fit in \c max_size().
     constexpr explicit fixed_vector(const std::span<const T> spn) { append_range(spn); }
 
@@ -286,7 +286,7 @@ public:
             throw std::bad_alloc{};
 
         if (count > size())
-            (void)std::ranges::fill(data() + size(), data() + count, value);
+            (void)std::ranges::fill(end(), data() + count, value);
 
         size_ = count;
     }
@@ -435,7 +435,7 @@ public:
         else
         {
             if (remaining_space() != 0)
-                zero_explicit_(static_cast<void*>(data() + size()), remaining_space() * sizeof(T));
+                zero_explicit_(static_cast<void*>(end()), remaining_space() * sizeof(T));
         }
     }
 
@@ -525,6 +525,7 @@ public:
     * \sa https://cppreference.com/w/cpp/container/inplace_vector/try_append_range.html
     */
     [[nodiscard]] constexpr bool try_append_range(const std::span<const T> spn)
+        noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
         if (std::size(spn) > remaining_space())
             return false;
@@ -570,6 +571,7 @@ public:
     }
 
     [[nodiscard]] constexpr bool try_append_range(const std::initializer_list<T> il)
+        noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
         return try_append_range(std::span<const T>{std::data(il), std::size(il)});
     }
@@ -793,12 +795,14 @@ public:
     }
 
     [[nodiscard]] constexpr bool operator==(const fixed_vector& rhs) const
+        noexcept(noexcept(std::declval<const T&>() == std::declval<const T&>()))
     requires std::equality_comparable<T>
     {
         return std::ranges::equal(span(), rhs.span());
     }
 
     [[nodiscard]] constexpr auto operator<=>(const fixed_vector& rhs) const
+        noexcept(noexcept(std::declval<const T&>() <=> std::declval<const T&>()))
     requires std::three_way_comparable<T>
     {
         return std::lexicographical_compare_three_way(begin(), end(), rhs.begin(), rhs.end());

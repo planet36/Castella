@@ -7,6 +7,7 @@
 #include "check_utils.hpp"
 #include "fd-utils.h"
 #include "fnv.hpp"
+#include "mmap_sigbus_guard.hpp"
 #include "parse_int.hpp"
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
@@ -383,12 +384,18 @@ process_file(const std::string& path, auto& hash_obj)
         // The whole mapping is added in one call, which is what lets a
         // compress_castella_tree hash object take its one-shot batch path:
         // the file's chunks are hashed in place (no copying) by its worker
-        // threads.  add() can throw (mutex failure, allocation failure, or
-        // a worker thread's exception propagating out of the tree), so the
+        // threads.  add() can throw (mutex failure, allocation failure, or a
+        // worker thread's exception propagating out of the tree), so the
         // mapping is released on that path too before the exception
-        // propagates.
+        // propagates.  The scoped_region guard turns a concurrent truncation
+        // (SIGBUS on a worker) into a clean error, and unpublishes the region
+        // on scope exit; add() joins all workers before returning, so no
+        // thread touches the mapping afterwards.
         try
         {
+            const mmap_sigbus::scoped_region guard{
+                mmap_addr, static_cast<size_t>(file_size), quote_shell_always(path)};
+
             hash_obj.add(mmap_addr, file_size);
         }
         catch (...)

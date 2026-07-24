@@ -345,12 +345,15 @@ public:
 
     /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form; null pointers are a no-op.
+    * The raw-data form; a null \a data_a or \a data_b is a no-op,
+    * ignoring \a len.
     *
     * \param data_a the input data for duplex A
     * \param data_b the input data for duplex B
     * \param len the size (in bytes) of BOTH inputs
-    * \pre \a len is 0 if \a data_a or \a data_b is null
+    * \note A null pointer with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     void add(const void* data_a, const void* data_b, const size_t len) noexcept
     {

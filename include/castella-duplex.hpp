@@ -833,11 +833,13 @@ public:
     /// \copydoc add(std::span<const std::byte>)
     /**
     * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as an empty span.
+    * is treated as an empty span, ignoring \a len.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \note A null \a data with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     Duplex& add(const void* data, size_t len)
     {
@@ -885,12 +887,23 @@ public:
 
     /// \copydoc add_left_encoded(std::span<const std::byte>)
     /**
+    * The raw-data form: equivalent to the byte-span form; a null \a data
+    * is treated as a span with null data, which absorbs nothing -- not
+    * even left_encode(0) -- ignoring \a len.
+    *
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \note A null \a data with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     Duplex& add_left_encoded(const void* data, size_t len)
     {
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         if (data == nullptr)
             return add_left_encoded(std::span<const std::byte>{});
 
@@ -930,12 +943,23 @@ public:
 
     /// \copydoc add_right_encoded(std::span<const std::byte>)
     /**
+    * The raw-data form: equivalent to the byte-span form; a null \a data
+    * is treated as a span with null data, which absorbs nothing -- not
+    * even right_encode(0) -- ignoring \a len.
+    *
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \note A null \a data with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     Duplex& add_right_encoded(const void* data, size_t len)
     {
+#if defined(DEBUG)
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
         if (data == nullptr)
             return add_right_encoded(std::span<const std::byte>{});
 

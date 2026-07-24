@@ -455,11 +455,13 @@ public:
     /// \copydoc add(std::span<const std::byte>)
     /**
     * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as an empty span.
+    * is treated as an empty span, ignoring \a len.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
-    * \pre \a len is 0 if \a data is null
+    * \note A null \a data with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     compress_castella_hash& add(const void* data, size_t len)
     {

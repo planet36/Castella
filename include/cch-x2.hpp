@@ -195,12 +195,15 @@ public:
 
     /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form; null pointers are a no-op.
+    * The raw-data form; a null \a data_a or \a data_b is a no-op,
+    * ignoring \a len.
     *
     * \param data_a the input data for node A
     * \param data_b the input data for node B
     * \param len the size (in bytes) of BOTH inputs
-    * \pre \a len is 0 if \a data_a or \a data_b is null
+    * \note A null pointer with a nonzero \a len is well defined -- nothing
+    *       is absorbed -- but is almost certainly a caller bug, so a
+    *       \c -DDEBUG build asserts on it.
     */
     void add(const void* data_a, const void* data_b, const size_t len)
     {
@@ -211,9 +214,9 @@ public:
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
 
-        // A null pointer implies len == 0 (a documented precondition,
-        // checked only by the DEBUG asserts above), so there is nothing
-        // to absorb, and returning early behaves the same as substituting
+        // A null pointer means there is nothing to absorb (len is ignored;
+        // the DEBUG asserts above flag a nonzero one as a likely caller
+        // bug), and returning early behaves the same as substituting
         // two empty spans -- without ever forming a span from a null
         // pointer.  The single-node shim (compress_castella_hash::add)
         // substitutes an empty span instead of returning because its span

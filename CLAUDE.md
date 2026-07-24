@@ -31,6 +31,11 @@ make everything
 make BUILD=debug
 make BUILD=debug test
 
+# The whole suite under the sanitizers, with the mandatory clean first and with UBSan
+# set to fail rather than only print. Leaves the sanitizer binaries in place, so run
+# `make clean` before building for release again.
+make test-san
+
 # Lint (uses clang-tidy) / clean — both recurse into every subdirectory
 make lint
 make clean

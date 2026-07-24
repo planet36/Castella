@@ -131,6 +131,7 @@ The top-level Makefile recurses into the subdirectories:
 * `make test` — build and run every test suite (the fixed tests, the KAT file checker, the randomized equivalence tests, and the hash programs' correctness script)
 * `make everything` — additionally build `research/` (needs [google-benchmark](https://github.com/google/benchmark)) and `http-prng-service/` (needs [spdlog](https://github.com/gabime/spdlog); `httplib.h` is committed in-tree, re-downloaded by the Makefile only if missing)
 * `make BUILD=debug` — build with [ASan](https://github.com/google/sanitizers/wiki/AddressSanitizer) and [UBSan](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html) instead of `-O3 -flto=auto`, and with the internal assertions enabled (see `config.mk`).  `BUILD` is a variable rather than a target, so it applies to whatever goals are given: `make BUILD=debug test` and `make BUILD=debug everything` are debug builds throughout.  Run `make clean` first when switching between release and debug — the two use the same binary names.
+* `make test-san` — run every test suite under the sanitizers, doing the `make clean` that switching build types requires: it cleans, builds `BUILD=debug`, and runs the suites with UBSan set to fail rather than only report.  The sanitizer binaries are left in place afterward, so `make clean` again before building for release.
 * `make clean`, `make lint` — recurse into every subdirectory
 
 Each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets.

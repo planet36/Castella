@@ -30,6 +30,16 @@ test: hash-programs tests
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for the spec-conformance check'; exit 1; }
 	cd research && python3 spec-conformance.py
 
+# Build and run every test suite under the sanitizers (BUILD=debug, see config.mk).
+# halt_on_error makes UBSan exit nonzero instead of only printing a diagnostic.
+# Release and debug builds share binary names, so clean first, and the sanitizer
+# binaries are left in place afterward for debugging.
+test-san: export ASAN_OPTIONS = detect_stack_use_after_return=1:strict_string_checks=1
+test-san: export UBSAN_OPTIONS = print_stacktrace=1:halt_on_error=1
+test-san:
+	$(MAKE) clean
+	$(MAKE) BUILD=debug test
+
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $< -o $@ $(LDLIBS)
@@ -47,7 +57,7 @@ endif
 	-for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
-.PHONY: all everything test clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)
+.PHONY: all everything test test-san clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)
 
 # https://www.gnu.org/software/make/manual/html_node/Special-Targets.html#index-removing-targets-on-failure
 .DELETE_ON_ERROR:

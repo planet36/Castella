@@ -338,6 +338,16 @@ private:
     */
     std::vector<std::byte> chunk_buf_;
 
+    /// How far plaintext has ever reached into \c chunk_buf_
+    /**
+    * The largest size() the buffer has held, not a limit (that is
+    * CHUNK_SIZE).  size() shrinks to 0 on every flush, so it does not bound
+    * the plaintext; this high-water mark does.  Bounding the wipe by it
+    * rather than by capacity() keeps a large --chunk-size from faulting in
+    * its whole (untouched) reservation to hash a short message.
+    */
+    size_t chunk_buf_max_used_ = 0;
+
     /// The number of chunks handed to the tree so far
     /**
     * Also the index of the chunk currently accumulating in \c chunk_buf_.
@@ -693,23 +703,41 @@ private:
         return cv;
     }
 
-    /// Securely wipe a byte vector's entire allocation
+    /// Securely wipe the first \a wipe_len bytes of a byte vector's allocation
     // {{{
     /**
     * Every buffer this class holds carries message plaintext, so it is
-    * wiped before release.  Growing size() to span the whole allocation
-    * first (resize() to the current capacity never reallocates and
-    * value-initializes any tail) clears plaintext an earlier, larger chunk
-    * may have left in [size(), capacity()) while keeping the wipe within
+    * wiped before release.  \a wipe_len must cover every byte ever written:
+    * plaintext reaches past size(), which drops to 0 on a flush, leaving
+    * remnants of an earlier chunk in [size(), wipe_len).  Growing size() to
+    * span that region first (a resize() within the current capacity never
+    * reallocates and value-initializes the tail) keeps the wipe within
     * [0, size()) -- inside the vector's object model (writing past size()
     * trips AddressSanitizer's container-overflow check).  For a full chunk
-    * (size() == capacity()) the resize is a no-op.
+    * the resize is a no-op.
+    *
+    * A caller that has written the whole allocation passes capacity(); one
+    * that may not have (\c chunk_buf_, whose capacity is the caller-chosen
+    * CHUNK_SIZE) passes its high-water mark, so an outsized chunk size costs
+    * only address space, not resident pages.
     */
     // }}}
+    static void zeroize_(std::vector<std::byte>& v, const size_t wipe_len)
+    {
+#if defined(DEBUG)
+        assert(wipe_len <= v.capacity());
+#endif
+
+        if (wipe_len > std::size(v))
+            v.resize(wipe_len);
+
+        explicit_bzero(std::data(v), std::size(v));
+    }
+
+    /// Securely wipe a byte vector's entire allocation
     static void zeroize_(std::vector<std::byte>& v)
     {
-        v.resize(v.capacity());
-        explicit_bzero(std::data(v), std::size(v));
+        zeroize_(v, v.capacity());
     }
 
     /// The number of slots in the pipeline ring
@@ -1537,6 +1565,9 @@ private:
             chunk_buf_.insert(chunk_buf_.end(), std::data(src),
                               std::data(src) + num_bytes_to_add);
 
+            // The only place plaintext enters chunk_buf_.
+            chunk_buf_max_used_ = std::max(chunk_buf_max_used_, chunk_buf_.size());
+
             src = src.subspan(num_bytes_to_add);
         }
     }
@@ -1639,9 +1670,9 @@ protected:
         stop_pool_();
 
         // The chunk buffer holds message plaintext (including remnants of
-        // earlier, larger chunks beyond size()); wipe the whole allocation.
+        // earlier chunks beyond size()); wipe everything ever written.
         // (Each node zeroizes itself.)
-        zeroize_(chunk_buf_);
+        zeroize_(chunk_buf_, chunk_buf_max_used_);
     }
 
 private:

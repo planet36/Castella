@@ -268,6 +268,7 @@ private:
     void add_(std::span<const std::byte> src)
     {
 #if defined(DEBUG)
+        assert(!input_bytes_.is_full());
         assert(!has_been_finalized_);
 #endif
 

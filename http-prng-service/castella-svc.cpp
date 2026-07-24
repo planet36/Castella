@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
+#include <latch>
 #include <memory>
 #include <mutex>
 #include <numeric>
@@ -72,6 +73,12 @@ std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initializatio
 * When `consec_bytes_sqzd ≥ max_consec_bytes_sqzd`, \c cv will awaken to get entropy.
 */
 std::remove_const_t<decltype(max_consec_bytes_sqzd)> consec_bytes_sqzd = 0;
+
+/// Released once entropy has been added to the \c hash_obj
+/**
+* Entropy must be added before any connections are accepted.
+*/
+std::latch first_entropy_added{1};
 
 /// Get the default number of bytes to squeeze
 [[nodiscard]] int
@@ -188,6 +195,8 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
 
     const auto pred = [] { return consec_bytes_sqzd >= max_consec_bytes_sqzd; };
 
+    bool is_first_add = true;
+
     while (!token.stop_requested())
     {
         std::unique_lock lock{cv_mtx};
@@ -209,6 +218,12 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         }
 
         consec_bytes_sqzd = 0;
+
+        if (is_first_add)
+        {
+            is_first_add = false;
+            first_entropy_added.count_down();
+        }
 
         entropy_buf.fill(std::byte{0}); // zeroize
 
@@ -386,6 +401,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         errx(EXIT_FAILURE, "svr.bind_to_port(\"%s\", %d) failed", host.c_str(), port);
     }
+
+    // Block until entropy was added to the hash_obj.
+    // (getentropy failure exits the process, so this cannot hang.)
+    first_entropy_added.wait();
+    // Now ready to accept connections.
 
     // Run the server on a separate thread.
     std::jthread server_thread(

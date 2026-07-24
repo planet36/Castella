@@ -2,6 +2,14 @@
 
 An HTTP server that exposes `/absorb` and `/squeeze` endpoints backed by a Castella duplex PRNG, periodically reseeded from the OS (`getentropy`).
 
+## Trust model
+
+The service is **one shared pool with no caller isolation**.  Every client of the port reads and writes the same duplex state: `/absorb` mutates the state that other callers' `/squeeze` requests later draw from, and nothing distinguishes one caller from another.  This is by design for a local pool — it is not a per-caller randomness source like `getrandom(2)` or `/dev/urandom`, and it is not multi-tenant.
+
+The default `HOST` keeps it on the loopback interface.  Bind it elsewhere only if every process that can reach that address is trusted.
+
+The service does not begin accepting requests until it has absorbed entropy from `getentropy(3)`, so a client is never served from the initial state — which is derived only from the public constants in [config.h](config.h).
+
 ## Dependencies
 
 [spdlog](https://github.com/gabime/spdlog) (header-only use) must be installed.

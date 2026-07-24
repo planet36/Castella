@@ -183,6 +183,9 @@ print_usage()
     std::println("");
 
     std::println("Compute the Castella tree hash.");
+    std::println("Castella is a personal research project: not standardized, externally");
+    std::println("reviewed, or cryptanalyzed by anyone but its author (see SPEC.md); do not");
+    std::println("use it where security matters.");
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 

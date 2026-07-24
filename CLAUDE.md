@@ -22,12 +22,23 @@ make test
 # http-prng-service (requires spdlog; downloads httplib.h if missing)
 make everything
 
+# Sanitizer build (ASan+UBSan). BUILD is a variable, not a goal, so it applies to
+# whatever goals are given. There is deliberately no `debug` target: a goal cannot
+# modify the other goals, whereas a command-line variable propagates to every
+# sub-make. Run `make clean` first when switching between release and debug: the two
+# share binary names, so make otherwise considers the existing binaries up to date
+# and silently builds nothing.
+make BUILD=debug
+make BUILD=debug test
+
 # Lint (uses clang-tidy) / clean — both recurse into every subdirectory
 make lint
 make clean
 ```
 
-Compiler flags come from the shared `config.mk` (included by every Makefile): `-std=c++23 -O3 -flto=auto` plus, per architecture, `-march=x86-64-v3 -maes -mvaes` (x86-64) or `-march=armv8-a+aes` (aarch64). No external libraries are linked by default.
+Compiler flags come from the shared `config.mk` (included by every Makefile): `-std=c++23 -O3 -flto=auto` plus, per architecture, `-march=x86-64-v3 -maes -mvaes` (x86-64) or `-march=armv8-a+aes` (aarch64). No external libraries are linked by default. `BUILD=debug` replaces `-O3 -flto=auto` with `-Og -g3 -fhardened -fsanitize=address -fsanitize=undefined`, and defines `DEBUG` (enabling the internal assertions) plus the `_GLIBCXX_DEBUG` family.
+
+Note that UBSan recovers by default: it prints a diagnostic and still exits 0. Set `UBSAN_OPTIONS=halt_on_error=1` when a sanitizer finding should fail the run.
 
 ## Architecture
 

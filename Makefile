@@ -47,7 +47,7 @@ endif
 
 lint:
 ifneq ($(strip $(SRCS)),)
-	-clang-tidy --quiet $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
+	-clang-tidy --quiet $(SRCS) -- $(CPPFLAGS) $(LINT_CPPFLAGS) $(CXXFLAGS)
 endif
 	-for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 

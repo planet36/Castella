@@ -32,7 +32,7 @@ clean:
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 
 lint: $(HTTPLIB_H)
-	-clang-tidy --quiet --exclude-header-filter=$(HTTPLIB_H) $(SRCS) -- $(CPPFLAGS) $(CXXFLAGS)
+	-clang-tidy --quiet --exclude-header-filter=$(HTTPLIB_H) $(SRCS) -- $(CPPFLAGS) $(LINT_CPPFLAGS) $(CXXFLAGS)
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
 .PHONY: all clean lint

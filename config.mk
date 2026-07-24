@@ -39,6 +39,10 @@ else
     $(error Unknown BUILD=$(BUILD); use "release" (default) or "debug")
 endif
 
+# Cannot re-use all the debug flags because clang does not support -fhardened.
+# See https://github.com/llvm/llvm-project/issues/122687
+LINT_CPPFLAGS = -DDEBUG -UNDEBUG
+
 #LDFLAGS =
 
 #LDLIBS =

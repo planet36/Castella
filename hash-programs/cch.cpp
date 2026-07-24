@@ -19,7 +19,6 @@
 #include <fcntl.h>
 #include <format>
 #include <getopt.h>
-#include <limits>
 #include <print>
 #include <span>
 #include <stdexcept>

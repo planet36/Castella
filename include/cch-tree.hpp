@@ -14,7 +14,6 @@
 #include "cch.hpp"
 #include "cch-x2.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <span>
 #include <vector>

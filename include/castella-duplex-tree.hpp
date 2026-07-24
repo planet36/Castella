@@ -17,7 +17,6 @@
 #include "castella-duplex-x2.hpp"
 #include "castella-hash-tree.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <span>
 #include <string>

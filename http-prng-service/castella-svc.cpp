@@ -32,7 +32,6 @@
 #include <latch>
 #include <memory>
 #include <mutex>
-#include <numeric>
 #include <print>
 #include <span>
 #include <string>

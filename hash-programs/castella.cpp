@@ -1,15 +1,12 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#include "as_byte_span.hpp"
-#include "byte_width.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"
 #include "encode.hpp"
 #include "fd-utils.h"
-#include "fixed_vector.hpp"
 #include "fnv.hpp"
 #include "mmap_sigbus_guard.hpp"
 #include "parse_int.hpp"
@@ -18,7 +15,6 @@
 #include "unique_fd.hpp"
 
 #include <algorithm>
-#include <concepts>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>

@@ -42,6 +42,10 @@
 *   - Array elements are never explicitly destroyed.
 *   - \c operator[] is unchecked and \b capacity-based: an index in [\c size(), \c capacity())
 *     legitimately reads a live element.  \c at() is the only bounds-checked accessor.
+*   - \c capacity() is a \b run-time value in [0, \a N], not the template parameter.  It starts
+*     at \a N and is moved by \c reserve(), which shrinks as well as grows; \a N is reported by
+*     \c max_size().  Capacity bounds every space check, but the storage is always the whole
+*     \c std::array<T, N>, so no slot is ever (de)allocated, constructed, or destroyed.
 *
 * Like \c std::inplace_vector, capacity overflow throws \c std::bad_alloc and the \c try_* /
 * \c unchecked_* families are provided -- though the \c try_* members return \c bool here
@@ -54,7 +58,7 @@
 * \c dynamic_fixed_vector the same bound is instead required for correctness: its storage is
 * raw bytes from the aligned \c ::operator \c new, which a smaller \a Align would under-align.
 *
-* \invariant \c size() \c <= \c capacity(), which is \a N.
+* \invariant \c size() \c <= \c capacity() \c <= \c max_size(), which is \a N.
 * \invariant \c data() is never null: the storage is an in-place \c std::array member, so there
 * is no empty state that lacks a block (hence none of the null handling in the heap-backed
 * siblings' \c data()).
@@ -74,6 +78,7 @@ class fixed_vector
 {
 private:
     std::size_t size_{};
+    std::size_t capacity_{N};
     alignas(Align) std::array<T, N> data_{};
 
     constexpr void check_idx_(const std::size_t i) const
@@ -82,7 +87,9 @@ private:
             throw std::out_of_range("fixed_vector: index >= size");
     }
 
-    /// \pre \a spn does not overlap this vector's storage.
+    /**
+    * \pre \a spn does not overlap this vector's storage.
+    */
     constexpr void common_append_range_(const std::span<const T> spn)
     {
         (void)std::ranges::copy(spn, end());
@@ -111,7 +118,9 @@ private:
         std::ranges::contiguous_range<R> && std::ranges::sized_range<R> &&
         std::same_as<std::ranges::range_value_t<R>, T>;
 
-    /// \pre \a rg satisfies \c is_bulk_appendable_.
+    /**
+    * \pre \a rg satisfies \c is_bulk_appendable_.
+    */
     template <typename R>
     requires is_bulk_appendable_<R>
     [[nodiscard]] static constexpr std::span<const T> as_span_(R& rg)
@@ -166,13 +175,17 @@ public:
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    /// \note Not unconditionally \c noexcept: the in-place \c std::array<T, N> member
-    /// value-initializes all \a N elements on this path, and \c std::default_initializable<T>
-    /// does not require that construction be non-throwing.
+    /**
+    * \note Not unconditionally \c noexcept: the in-place \c std::array<T, N> member
+    * value-initializes all \a N elements on this path, and \c std::default_initializable<T>
+    * does not require that construction be non-throwing.
+    */
     constexpr fixed_vector() noexcept(std::is_nothrow_default_constructible_v<T>) = default;
-    /// \note Copy and move are member-wise (defaulted): moving a trivially copyable \c T leaves
-    /// the source unchanged, \b not emptied -- unlike the heap-backed siblings, whose move
-    /// construction empties it.
+    /**
+    * \note Copy and move are member-wise (defaulted): moving a trivially copyable \c T leaves
+    * the source unchanged, \b not emptied -- unlike the heap-backed siblings, whose move
+    * construction empties it.
+    */
     fixed_vector(const fixed_vector&) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
     fixed_vector(fixed_vector&&) noexcept(std::is_nothrow_move_constructible_v<T>) = default;
     fixed_vector& operator=(const fixed_vector&) noexcept(std::is_nothrow_copy_assignable_v<T>) = default;
@@ -180,7 +193,9 @@ public:
     ~fixed_vector() = default;
 
     /// Create \a count elements equal to \a value (\c size()==count).
-    /// \throws std::bad_alloc if \a count > \c max_size().
+    /**
+    * \throws std::bad_alloc if \a count > \c max_size().
+    */
     constexpr explicit fixed_vector(const std::size_t count, const T& value)
     {
         resize(count, value);
@@ -189,8 +204,8 @@ public:
     /// Create \a count value-initialized elements (\c size()==count).
     /**
     * \note This creates elements, unlike the heap-backed siblings' \c X(n), which reserves
-    * capacity \a n and starts empty.  Capacity here is already \a N, so the argument can only
-    * mean the size.
+    * capacity \a n and starts empty.  Capacity is already \a N at construction, so the argument
+    * can only mean the size; use \c reserve() to lower the capacity afterward.
     * \throws std::bad_alloc if \a count > \c max_size().
     */
     constexpr explicit fixed_vector(const std::size_t count)
@@ -203,11 +218,15 @@ public:
     }
 
     /// Copy the elements of \a spn (\c size()==std::size(spn)).
-    /// \throws std::bad_alloc if \a spn does not fit in \c max_size().
+    /**
+    * \throws std::bad_alloc if \a spn does not fit in \c max_size().
+    */
     constexpr explicit fixed_vector(const std::span<const T> spn) { append_range(spn); }
 
     /// Copy the elements of <code>[first, last)</code>.
-    /// \throws std::bad_alloc if the source does not fit in \c max_size().
+    /**
+    * \throws std::bad_alloc if the source does not fit in \c max_size().
+    */
     template <std::input_iterator It, std::sentinel_for<It> S>
     constexpr explicit fixed_vector(It first, S last)
     {
@@ -215,7 +234,9 @@ public:
     }
 
     /// Copy \a count elements starting at \a first (\c size()==count).
-    /// \throws std::bad_alloc if \a count > \c max_size().
+    /**
+    * \throws std::bad_alloc if \a count > \c max_size().
+    */
     template <std::input_iterator It>
     constexpr explicit fixed_vector(It first, const std::size_t count)
     {
@@ -223,11 +244,15 @@ public:
     }
 
     /// Copy the elements of \a il (\c size()==il.size()).
-    /// \throws std::bad_alloc if \a il does not fit in \c max_size().
+    /**
+    * \throws std::bad_alloc if \a il does not fit in \c max_size().
+    */
     constexpr fixed_vector(const std::initializer_list<T> il) { append_range(il); }
 
     /// Copy the elements of \a rg.
-    /// \throws std::bad_alloc if the source does not fit in \c max_size().
+    /**
+    * \throws std::bad_alloc if the source does not fit in \c max_size().
+    */
     template <std::ranges::input_range R>
     constexpr explicit fixed_vector(std::from_range_t, R&& rg)
     {
@@ -240,10 +265,12 @@ public:
         return *this;
     }
 
-    /// Swap the sizes and all \c max_size() array slots (not just the live elements).
+    /// Swap the sizes, the capacities, and all \c max_size() array slots (not just the live
+    /// elements).
     constexpr void swap(fixed_vector& other) noexcept(std::is_nothrow_swappable_v<T>)
     {
         std::swap(size_, other.size_);
+        std::swap(capacity_, other.capacity_);
         std::swap(data_, other.data_);
     }
 
@@ -253,20 +280,29 @@ public:
         a.swap(b);
     }
 
-    [[nodiscard]] static constexpr std::size_t capacity() noexcept { return N; }
+    /// Get the current capacity, which is in [0, \a N] and moved by \c reserve().
+    [[nodiscard]] constexpr std::size_t capacity() const noexcept { return capacity_; }
 
+    /// Get \a N, the number of array slots -- the capacity \c reserve() may not exceed.
     [[nodiscard]] static constexpr std::size_t max_size() noexcept { return N; }
 
     [[nodiscard]] constexpr std::size_t size() const noexcept { return size_; }
 
-    [[nodiscard]] constexpr std::size_t remaining_space() const noexcept
+    /// Get the amount of reserved unused space (i.e., between \c size() and \c capacity())
+    [[nodiscard]] constexpr std::size_t reserved_unused() const noexcept
     {
-        return max_size() - size();
+        return capacity() - size();
+    }
+
+    /// Get the amount of unreserved space (i.e., between \c capacity() and \c max_size())
+    [[nodiscard]] constexpr std::size_t unreserved() const noexcept
+    {
+        return max_size() - capacity();
     }
 
     [[nodiscard]] constexpr bool is_empty() const noexcept { return size() == 0; }
 
-    [[nodiscard]] constexpr bool is_full() const noexcept { return size() == max_size(); }
+    [[nodiscard]] constexpr bool is_full() const noexcept { return size() == capacity(); }
 
     /**
     * \note Does not destroy elements.
@@ -274,15 +310,43 @@ public:
     */
     constexpr void clear() noexcept { size_ = 0; }
 
+    /// Set the capacity to \a new_cap, the limit that every space check consults.
+    /**
+    * Growing leaves the newly reserved slots [old \c capacity(), \a new_cap) untouched: they are
+    * alive either way, holding whatever was last written there (\c T{} if never written).
+    * Shrinking below \c size() truncates \c size() to \a new_cap; the excess elements stay alive
+    * (nothing is destroyed) and are readable again once the capacity is grown back.
+    *
+    * No storage is (de)allocated on either path -- the \c std::array<T, N> member is the storage
+    * regardless of the capacity -- so this is O(1).
+    *
+    * \note Unlike \c std::vector::reserve, this shrinks as well as grows.
+    * \post <code>capacity() == new_cap && size() <= capacity()</code>
+    * \throws std::bad_alloc if \a new_cap > \c max_size().
+    */
+    constexpr void reserve(const std::size_t new_cap)
+    {
+        if (new_cap > max_size())
+            throw std::bad_alloc{};
+
+        if (new_cap < size())
+            size_ = new_cap;
+
+        capacity_ = new_cap;
+    }
+
     /// Resize to \a count elements
     /**
     * Growing assigns \a value to the new elements; shrinking leaves the removed ones alive and
     * unchanged (nothing is destroyed).
+    * \note Bounded by \c capacity(), like every other space check -- growing past it throws
+    * rather than reserving; \c reserve() is the only member that changes the capacity.
+    * \throws std::bad_alloc if \a count > \c capacity().
     * \sa https://cppreference.com/w/cpp/container/inplace_vector/resize.html
     */
     constexpr void resize(const std::size_t count, const T& value)
     {
-        if (count > max_size())
+        if (count > capacity())
             throw std::bad_alloc{};
 
         if (count > size())
@@ -339,7 +403,9 @@ public:
         unchecked_emplace_back(std::forward<Args>(args)...);
     }
 
-    /// \sa https://cppreference.com/w/cpp/container/inplace_vector/try_emplace_back.html
+    /**
+    * \sa https://cppreference.com/w/cpp/container/inplace_vector/try_emplace_back.html
+    */
     template <class... Args>
     requires std::constructible_from<T, Args...> && std::assignable_from<T&, T>
     [[nodiscard]] constexpr bool try_emplace_back(Args&&... args)
@@ -396,14 +462,16 @@ public:
     }
 
     /**
-    * Fill all \c max_size() elements with \a value and set \c size() to \c max_size().
-    * \sa https://cppreference.com/w/cpp/container/array/fill.html
+    * Fill all \c capacity() elements with \a value and set \c size() to \c capacity().
+    * \note Stops at \c capacity(), not \c max_size(): the unreserved slots are outside the
+    * container's window and are left alone.
+    * \sa https://cppreference.com/w/cpp/algorithm/ranges/fill
     */
     constexpr void fill_capacity(const T& value)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
-        data_.fill(value);
-        size_ = max_size();
+        (void)std::ranges::fill(data(), data() + capacity(), value);
+        size_ = capacity();
     }
 
     /**
@@ -416,26 +484,53 @@ public:
         (void)std::ranges::fill(span(), value);
     }
 
-    /// Zeroize the reserved tail elements [\c size(), \c max_size()); \c size() is unchanged.
+    /// Zeroize the reserved tail elements [\c size(), \c capacity()); \c size() is unchanged.
     /**
     * Each tail element stays alive; its object representation is set to all-zero bytes (for
     * scalar \c T, the value-initialized value).  At run time the stores happen even if nothing
-    * reads the tail afterward, so \c clear() followed by this scrubs the whole array -- for
-    * sensitive contents, where a plain fill is a dead store the optimizer may elide.  During
-    * constant evaluation, where there is no memory to scrub, the tail is value-assigned.
+    * reads the tail afterward, so \c clear() followed by this scrubs everything up to
+    * \c capacity() -- for sensitive contents, where a plain fill is a dead store the optimizer
+    * may elide.  During constant evaluation, where there is no memory to scrub, the tail is
+    * value-assigned.
+    * \note This covers only [\c size(), \c capacity()); the slots beyond a reduced capacity are
+    * \c zeroize_unreserved()'s half.  \c clear() plus both calls scrubs the whole array.
     */
-    constexpr void zeroize_remaining_space() noexcept
+    constexpr void zeroize_reserved_unused() noexcept
     requires std::is_trivially_copyable_v<T>
     {
         if consteval
         {
-            for (std::size_t i = size(); i < max_size(); ++i)
+            for (std::size_t i = size(); i < capacity(); ++i)
                 data_[i] = T{};
         }
         else
         {
-            if (remaining_space() != 0)
-                zero_explicit_(static_cast<void*>(end()), remaining_space() * sizeof(T));
+            if (reserved_unused() != 0)
+                zero_explicit_(static_cast<void*>(end()), reserved_unused() * sizeof(T));
+        }
+    }
+
+    /// Zeroize the unreserved slots [\c capacity(), \c max_size()); \c size() is unchanged.
+    /**
+    * The other half of \c zeroize_reserved_unused(), covering the slots that a \c reserve()
+    * shrink put outside the container's window.  Those slots stay alive and may still hold what
+    * they held while they were reserved, so scrubbing sensitive contents needs this call too;
+    * it is a no-op while \c capacity() \c == \c max_size().  Same guarantees as the reserved
+    * half: non-elidable stores at run time, value-assignment during constant evaluation.
+    */
+    constexpr void zeroize_unreserved() noexcept
+    requires std::is_trivially_copyable_v<T>
+    {
+        if consteval
+        {
+            for (std::size_t i = capacity(); i < max_size(); ++i)
+                data_[i] = T{};
+        }
+        else
+        {
+            if (unreserved() != 0)
+                zero_explicit_(static_cast<void*>(data() + capacity()),
+                               unreserved() * sizeof(T));
         }
     }
 
@@ -445,7 +540,7 @@ public:
     */
     constexpr void append_range(const std::span<const T> spn)
     {
-        if (std::size(spn) > remaining_space())
+        if (std::size(spn) > reserved_unused())
             throw std::bad_alloc{};
 
         common_append_range_(spn);
@@ -463,7 +558,7 @@ public:
     {
         if constexpr (std::sized_sentinel_for<S, It>)
         {
-            if (static_cast<std::size_t>(last - first) > remaining_space())
+            if (static_cast<std::size_t>(last - first) > reserved_unused())
                 throw std::bad_alloc{};
         }
 
@@ -476,7 +571,7 @@ public:
     template <std::input_iterator It>
     constexpr void append_range(It first, const std::size_t count)
     {
-        if (count > remaining_space())
+        if (count > reserved_unused())
             throw std::bad_alloc{};
 
         common_append_range_(first, count);
@@ -502,7 +597,7 @@ public:
         }
         else if constexpr (std::ranges::sized_range<R>)
         {
-            if (std::ranges::size(rg) > remaining_space())
+            if (std::ranges::size(rg) > reserved_unused())
                 throw std::bad_alloc{};
 
             // The size check above covers every element, so skip the per-element repeat.
@@ -527,7 +622,7 @@ public:
     [[nodiscard]] constexpr bool try_append_range(const std::span<const T> spn)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
     {
-        if (std::size(spn) > remaining_space())
+        if (std::size(spn) > reserved_unused())
             return false;
 
         common_append_range_(spn);
@@ -547,7 +642,7 @@ public:
     {
         if constexpr (std::sized_sentinel_for<S, It>)
         {
-            if (static_cast<std::size_t>(last - first) > remaining_space())
+            if (static_cast<std::size_t>(last - first) > reserved_unused())
                 return false;
         }
 
@@ -563,7 +658,7 @@ public:
     template <std::input_iterator It>
     [[nodiscard]] constexpr bool try_append_range(It first, const std::size_t count)
     {
-        if (count > remaining_space())
+        if (count > reserved_unused())
             return false;
 
         common_append_range_(first, count);
@@ -592,7 +687,7 @@ public:
         }
         else if constexpr (std::ranges::sized_range<R>)
         {
-            if (std::ranges::size(rg) > remaining_space())
+            if (std::ranges::size(rg) > reserved_unused())
                 return false;
 
             // The size check above covers every element, so skip the per-element repeat.
@@ -667,8 +762,10 @@ public:
         return span();
     }
 
-    /// \note No \c std::assume_aligned<Align> is needed, unlike the heap-backed siblings: the
-    /// array is a member of an \c alignas(Align) object, so the compiler derives the alignment.
+    /**
+    * \note No \c std::assume_aligned<Align> is needed, unlike the heap-backed siblings: the
+    * array is a member of an \c alignas(Align) object, so the compiler derives the alignment.
+    */
     [[nodiscard]] constexpr T* data() noexcept { return std::data(data_); }
 
     [[nodiscard]] constexpr const T* data() const noexcept { return std::data(data_); }
@@ -715,6 +812,9 @@ public:
     * \pre \a i < \c capacity()
     * \note Unchecked and capacity-based: an index in [size(), capacity()) is a valid read,
     * since every capacity slot holds a live element.  \c at() is the bounds-checked accessor.
+    * \note The bound is the \e current capacity: after a \c reserve() shrink, an index in
+    * [capacity(), max_size()) is out of contract even though the slot is still alive.  Grow the
+    * capacity back to reach it.
     */
     [[nodiscard]] constexpr T& operator[](const std::size_t i) noexcept
     {

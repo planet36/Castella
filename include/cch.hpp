@@ -208,7 +208,8 @@ private:
     {
         explicit_bzero(std::data(state_), sizeof(state_));
         input_bytes_.clear();
-        input_bytes_.zeroize_remaining_space();
+        input_bytes_.zeroize_reserved_unused();
+        input_bytes_.zeroize_unreserved();
         absorbs_since_mix_ = 0;
         has_been_finalized_ = false;
     }
@@ -274,7 +275,7 @@ private:
         if (!input_bytes_.is_empty())
         {
             const size_t num_bytes_to_add =
-                std::min(input_bytes_.remaining_space(), std::size(src));
+                std::min(input_bytes_.reserved_unused(), std::size(src));
 
             input_bytes_.append_range(src.first(num_bytes_to_add));
 

@@ -97,8 +97,8 @@ public:
         // The lockstep invariants: identical parameters, identical schedule.
         assert(node_a_.mix_rate_ == node_b_.mix_rate_);
         assert(node_a_.absorbs_since_mix_ == node_b_.absorbs_since_mix_);
-        assert(node_a_.input_bytes_.remaining_space() ==
-               node_b_.input_bytes_.remaining_space());
+        assert(node_a_.input_bytes_.reserved_unused() ==
+               node_b_.input_bytes_.reserved_unused());
 #endif
 
         // First, add to the partially filled input buffers.
@@ -106,7 +106,7 @@ public:
         if (!node_a_.input_bytes_.is_empty())
         {
             const size_t num_bytes_to_add =
-                std::min(node_a_.input_bytes_.remaining_space(), std::size(src_a));
+                std::min(node_a_.input_bytes_.reserved_unused(), std::size(src_a));
 
             node_a_.input_bytes_.append_range(src_a.first(num_bytes_to_add));
             node_b_.input_bytes_.append_range(src_b.first(num_bytes_to_add));

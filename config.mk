@@ -23,6 +23,13 @@ else
     $(error Unsupported architecture: $(ARCH))
 endif
 
+# The linter's flags replace CPPFLAGS and CXXFLAGS.
+# DEBUG assertions should be enabled, but -DDEBUG is optional in CPPFLAGS.
+LINT_CPPFLAGS = -I $(ROOT)include -DDEBUG -UNDEBUG
+# Immediately assign this before unnecessary and incompatible options are added to CXXFLAGS.
+# clang does not support -fhardened. (See <https://github.com/llvm/llvm-project/issues/122687>)
+LINT_CXXFLAGS := $(CXXFLAGS)
+
 # Build type: release (default) or debug
 # Run `make clean` before switching between release and debug.
 BUILD ?= release
@@ -38,10 +45,6 @@ else ifeq ($(BUILD), debug)
 else
     $(error Unknown BUILD=$(BUILD); use "release" (default) or "debug")
 endif
-
-# Cannot re-use all the debug flags because clang does not support -fhardened.
-# See https://github.com/llvm/llvm-project/issues/122687
-LINT_CPPFLAGS = -DDEBUG -UNDEBUG
 
 #LDFLAGS =
 

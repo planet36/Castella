@@ -36,12 +36,12 @@ BUILD ?= release
 ifeq ($(BUILD), release)
     CXXFLAGS += -O3 -flto=auto
 else ifeq ($(BUILD), debug)
-    CXXFLAGS += -Og -g3
-    CXXFLAGS += -fhardened
-    CXXFLAGS += -fsanitize=address -fsanitize=undefined
     CPPFLAGS += -DDEBUG -UNDEBUG
     CPPFLAGS += -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_GLIBCXX_SANITIZE_VECTOR
     # _FORTIFY_SOURCE=3 and _GLIBCXX_ASSERTIONS are enabled by -fhardened
+    CXXFLAGS += -Og -g3
+    CXXFLAGS += -fhardened
+    CXXFLAGS += -fsanitize=address -fsanitize=undefined
 else
     $(error Unknown BUILD=$(BUILD); use "release" (default) or "debug")
 endif

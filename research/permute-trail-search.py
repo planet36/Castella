@@ -88,6 +88,31 @@ KNOWN_MIN_ACTIVE = {
     (2, 4): 80, (4, 4): 90, (8, 4): 135, (16, 4): 225,
 }
 
+
+def positive_int(s: str) -> int:
+    """argparse type: an integer >= 1."""
+    value = int(s)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {value}")
+    return value
+
+
+def positive_float(s: str) -> float:
+    """argparse type: a float > 0."""
+    value = float(s)
+    if value <= 0:
+        raise argparse.ArgumentTypeError(f"must be > 0, got {value}")
+    return value
+
+
+def nonnegative_int(s: str) -> int:
+    """argparse type: an integer >= 0."""
+    value = int(s)
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be >= 0, got {value}")
+    return value
+
+
 # ---------------------------------------------------------------- AES pieces
 
 
@@ -550,23 +575,25 @@ def main() -> None:
     parser.add_argument("-N", "--num-blocks", type=int, default=16,
                         choices=(2, 4, 8, 16),
                         help="number of state blocks (default: %(default)s)")
-    parser.add_argument("-r", "--rounds", type=int, default=2,
+    parser.add_argument("-r", "--rounds", type=positive_int, default=2,
                         help="Castella rounds (default: %(default)s)")
-    parser.add_argument("-A", "--active", type=int, default=None,
+    parser.add_argument("-A", "--active", type=positive_int, default=None,
                         help="target total active S-boxes (default: the "
                              "proven MILP minimum for -N/-r)")
-    parser.add_argument("--patterns", type=int, default=8,
+    parser.add_argument("--patterns", type=positive_int, default=8,
                         help="max activity patterns to try "
                              "(default: %(default)s)")
     parser.add_argument("--no-minimize", action="store_true",
                         help="stop at the first weight per pattern")
-    parser.add_argument("-t", "--time-limit", type=float, default=600.0,
+    parser.add_argument("-t", "--time-limit", type=positive_float,
+                        default=600.0,
                         help="time limit per solver call, in seconds "
                              "(default: %(default)s)")
     parser.add_argument("--print-trail", action="store_true",
                         help="print the input/output differences of the "
                              "best trail")
-    parser.add_argument("--cluster", type=int, default=0, metavar="M",
+    parser.add_argument("--cluster", type=nonnegative_int, default=0,
+                        metavar="M",
                         help="after the search, enumerate up to M "
                              "characteristics sharing the best trail's "
                              "input/output differential (default: off)")

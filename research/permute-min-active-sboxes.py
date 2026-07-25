@@ -191,25 +191,22 @@ def main() -> None:
                                    threads=args.threads)
         prob.solve(solver)
 
-        status = pulp.LpStatus[prob.status]
-        if status == "Optimal":
+        # Only sol_status proves optimality: when CBC stops on the time limit
+        # with an integer incumbent, PuLP rewrites prob.status to Optimal and
+        # records the distinction in sol_status alone.
+        if prob.sol_status == pulp.LpSolutionOptimal:
             a_min = round(prob.objective.value())
             print(f"{r:>6}  {a_min:>18}  2^-{6 * a_min:<8}  optimal")
             continue
 
-        # Time limit hit.  CBC may leave a fractional LP solution behind;
-        # only an all-integer solution is a genuine incumbent, and even then
-        # it is only an upper bound on the minimum, so it does NOT yield a
-        # valid DP bound.
-        vals = [v.value() for v in prob.variables()]
-        is_incumbent = (all(x is not None for x in vals)
-                        and all(abs(x - round(x)) < 1e-6 for x in vals))
-        if is_incumbent:
+        # Time limit hit.  An incumbent is only an upper bound on the minimum,
+        # so it does NOT yield a valid DP bound.
+        if prob.sol_status == pulp.LpSolutionIntegerFeasible:
             print(f"{r:>6}  {round(prob.objective.value()):>18}  {'n/a':>10}  "
-                  f"NOT proven ({status}); incumbent is an upper bound only")
+                  "NOT proven; incumbent is an upper bound only")
         else:
             print(f"{r:>6}  {'?':>18}  {'n/a':>10}  "
-                  f"{status}; no integer solution found within the time limit")
+                  f"{pulp.LpStatus[prob.status]}; no integer solution found")
 
 
 if __name__ == "__main__":

@@ -106,10 +106,10 @@ def _anf_degree(truth: list[int]) -> int:
     f = truth[:]
     for i in range(B):
         step = 1 << i
-        for base in range(0, 256, step << 1):
+        for base in range(0, 1 << B, step << 1):
             for j in range(base, base + step):
                 f[j + step] ^= f[j]
-    return max((m.bit_count() for m in range(256) if f[m]), default=0)
+    return max((m.bit_count() for m in range(1 << B) if f[m]), default=0)
 
 
 def sbox_deltas(table: list[int]) -> list[int]:
@@ -119,7 +119,7 @@ def sbox_deltas(table: list[int]) -> list[int]:
         best = 0
         for bits in combinations(range(B), k):
             truth = [int(all((table[x] >> b) & 1 for b in bits))
-                     for x in range(256)]
+                     for x in range(1 << B)]
             best = max(best, _anf_degree(truth))
         delta[k] = best
     return delta

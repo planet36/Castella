@@ -23,7 +23,6 @@ parser.add_argument(
 
 parser.add_argument(
         '-c', '--column',
-        type=str,
         choices=['mean', 'median', 'min', 'max'],
         default='median',
         help='The results column to plot for the Y-axis (default: median)'
@@ -31,7 +30,6 @@ parser.add_argument(
 
 parser.add_argument(
         'FILE',
-        type=str,
         help='The CSV results file'
         )
 

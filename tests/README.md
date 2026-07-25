@@ -5,6 +5,8 @@
 | tests.cpp | Fixed correctness tests and the pinned KATs (below) |
 | kat.cpp | Verify (or regenerate) the machine-readable KAT file |
 | equivalence-tests.cpp | Randomized digest-equivalence tests for the tree hashes |
+| duplex-diff-fuzz.py | Differential fuzzer: random programs of `Castella::Duplex` calls must agree with the independent spec model |
+| duplex-diff-driver.cpp | Replays a `duplex-diff-fuzz.py` call script against `Castella::Duplex` (not run directly) |
 
 ### `kat` and KAT.txt
 
@@ -16,6 +18,17 @@
 ### `equivalence-tests`
 
 The digest of a tree hash is a function of the node parameters, tree geometry, and input bytes only — never the `add()` granularity, thread count, or parallel path.  `equivalence-tests` hammers that contract with randomized inputs at adversarial sizes (chunk boundaries, the streaming-pool start threshold, the paired-leaf index-width fallback, plus random lengths): for each size, the single-threaded one-shot digest is the reference, and every combination of {one-shot, randomly split adds} × {thread counts} must reproduce it.  The seed is printed (and can be passed as an argument) so failures reproduce.
+
+### `duplex-diff-fuzz`
+
+Every `duplex` line in KAT.txt is the same shape — construct, one `add`, one `squeeze` — so the KAT file pins the algorithm but leaves most of the `Castella::Duplex` API untouched.  This fuzzer covers the rest: it generates random programs of `add` / `add_left_encoded` / `add_right_encoded` / `apply_padding_rule` / `squeeze_bytes` calls over random constructor parameters, replays each one against the `Duplex` in [research/spec-conformance.py](../research/spec-conformance.py) (imported directly, so there is no second copy of the model to drift), and diffs every squeeze against `duplex-diff-driver`, which interprets the same script.  Split and streamed adds, both encoding entry points (no KAT drives either), explicit padding, and successive squeezes are all reachable only this way.
+
+A *program* is one generated unit of work — constructor parameters plus a call sequence ending in at least one squeeze — so it is not one comparison: a program yields as many comparisons as it has squeezes, which is why the summary counts both.  The whole run is batched through one driver process, because the pure-Python model is the slow side.  `make test` runs it at the default seed and program count; pass `--seed` to explore new programs, exactly as with `equivalence-tests`.
+
+* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (nonzero exit status on any divergence).
+* `python3 duplex-diff-fuzz.py -n 5000 --seed 0x1234` runs a longer, different sweep.
+
+Two `Castella::Duplex` conveniences that the specification does not describe are deliberately avoided rather than modelled, since they are C++ API behavior rather than digest behavior: `squeeze_bytes(n)` clamps *n* where the model asserts the range, and the raw-span `add_left_encoded`/`add_right_encoded` forms treat a null data pointer as a no-op.
 
 ### `tests`
 

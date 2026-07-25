@@ -61,8 +61,11 @@ if y_axis_col not in reader.fieldnames:
 xlabel = x_axis_col.removeprefix('parameter_').title()
 ylabel = y_axis_col.title() + ' Time (ms)'
 
-x_data = [float(row[x_axis_col]) for row in rows]
-y_data = [float(row[y_axis_col]) * 1000 for row in rows] # convert from seconds to milliseconds
+try:
+    x_data = [float(row[x_axis_col]) for row in rows]
+    y_data = [float(row[y_axis_col]) * 1000 for row in rows] # convert from seconds to milliseconds
+except (TypeError, ValueError) as e:
+    parser.error(f"{args.FILE}: malformed numeric data: {e}")
 
 plt.scatter(x_data, y_data)
 

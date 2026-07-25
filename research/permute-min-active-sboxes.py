@@ -104,10 +104,10 @@ def shift_rows_src(byte_idx: int) -> int:
 
 # simd_transpose: byte k of word j of block i -> byte k of word i of block j,
 # where a word is 16/N bytes.  Returns {(block, byte): (block, byte)}.
-def transpose_map(num_blocks: int) -> dict:
+def transpose_map(num_blocks: int) -> dict[tuple[int, int], tuple[int, int]]:
     """Map each (block, byte) to its destination under simd_transpose."""
     word_size = BLOCK_BYTES // num_blocks
-    mapping = {}
+    mapping: dict[tuple[int, int], tuple[int, int]] = {}
     for i in range(num_blocks):
         for b in range(BLOCK_BYTES):
             j, k = divmod(b, word_size)
@@ -123,7 +123,7 @@ def build_model(num_blocks: int, num_rounds: int,
         f"castella_min_active_sboxes_N{num_blocks}_r{num_rounds}",
         pulp.LpMinimize)
 
-    def new_state(tag: str) -> list:
+    def new_state(tag: str) -> list[list[pulp.LpVariable]]:
         return [[pulp.LpVariable(f"{tag}_{i}_{b}", cat="Binary")
                  for b in range(BLOCK_BYTES)]
                 for i in range(num_blocks)]

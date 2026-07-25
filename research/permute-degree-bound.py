@@ -168,8 +168,13 @@ def run_self_test() -> None:
     d_inv = sbox_deltas(INV_SBOX)
     assert d_fwd[1] == 7 and d_inv[1] == 7, "AES S-box degree must be 7"
     assert all(d_fwd[i] == 7 for i in range(1, 8)), "AES delta_i must be 7 for i<8"
+    assert all(d_inv[i] == 7 for i in range(1, 8)), \
+        "inverse AES delta_i must be 7 for i<8"
     assert d_fwd[8] == 8 and d_inv[8] == 8, "product of all 8 coords is degree 8"
     assert gamma_of(d_fwd) == 7.0, "AES S-box gamma must be 7"
+    # The reported zero-sum reach doubles the forward reach on this basis.
+    assert gamma_of(d_inv) == gamma_of(d_fwd), \
+        "inverse S-box gamma must match the forward gamma"
 
     # AES-128 validation: the classic integral (Square) distinguisher covers
     # 3 rounds; degree must be < 127 through round 3 and reach 127 at round 4.

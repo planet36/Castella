@@ -141,6 +141,13 @@ def build_model(num_blocks: int, num_rounds: int,
             # Every byte entering this AES round passes through SubBytes.
             sbox_layers.append(pulp.lpSum(v for block in state for v in block))
 
+            # Nothing after the last S-box layer can affect the objective:
+            # the bytes it produces appear in no other constraint, so the
+            # MixColumns below is satisfiable whatever enters it.  (The
+            # transpose that follows creates no variables either way.)
+            if t == num_rounds - 1 and a == aes_num_rounds - 1:
+                break
+
             nxt = new_state(f"x{t}_{a}")
             for i in range(num_blocks):
                 u = state[i]

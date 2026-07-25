@@ -80,6 +80,15 @@ import z3
 BLOCK_BYTES = 16
 AES_NUM_ROUNDS = 3
 
+# The nested shapes this program passes around, all indexed [i][b] by block
+# and byte within a block (Layers and Pattern add a leading S-box layer).
+# z3 ships no py.typed, so its element types document rather than check;
+# Pattern and StateBytes are pure Python and are checked.
+Layers = list[list[list[z3.BoolRef]]]      # activity variables
+Pattern = list[list[list[bool]]]           # a solved Layers
+StateBytes = list[list[int]]               # a solved difference
+BitVecState = list[list[z3.BitVecRef]]     # difference variables
+
 # Proven MILP optima (research/README.md, "minimum active S-boxes", a=3).
 KNOWN_MIN_ACTIVE = {
     (2, 1): 9, (4, 1): 9, (8, 1): 9, (16, 1): 9,
@@ -117,7 +126,7 @@ def nonnegative_int(s: str) -> int:
 # ---------------------------------------------------------------- AES pieces
 
 
-def make_sbox() -> list:
+def make_sbox() -> list[int]:
     """Build the AES S-box (GF(2^8) inverse composed with the affine map)."""
     # Multiplicative inverse in GF(2^8) mod 0x11B, then the AES affine map.
     def gf_mul(a: int, b: int) -> int:
@@ -148,7 +157,7 @@ def make_sbox() -> list:
 SBOX = make_sbox()
 
 
-def make_ddt() -> list:
+def make_ddt() -> list[list[int]]:
     """Build the S-box difference distribution table DDT[din][dout]."""
     ddt = [[0] * 256 for _ in range(256)]
     for x in range(256):
@@ -186,7 +195,7 @@ def shift_rows_src(byte_idx: int) -> int:
     return 4 * ((col + row) % 4) + row
 
 
-def mix_column(col: list) -> list:
+def mix_column(col: list[int]) -> list[int]:
     """Apply the AES MixColumns transform to one 4-byte column."""
     a0, a1, a2, a3 = col
     return [xtime(a0) ^ xtime(a1) ^ a1 ^ a2 ^ a3,
@@ -195,7 +204,7 @@ def mix_column(col: list) -> list:
             xtime(a0) ^ a0 ^ a1 ^ a2 ^ xtime(a3)]
 
 
-def aes_round_zero_key(state: list) -> list:
+def aes_round_zero_key(state: list[int]) -> list[int]:
     """Apply one AESENC round with a zero round key to a 16-byte state."""
     # aesenc order: ShiftRows, SubBytes, MixColumns, AddRoundKey (key = 0).
     sr = [state[shift_rows_src(b)] for b in range(BLOCK_BYTES)]
@@ -208,7 +217,7 @@ def aes_round_zero_key(state: list) -> list:
 
 # simd_transpose: byte k of word j of block i -> byte k of word i of block j,
 # where a word is 16/N bytes.  Returns {(block, byte): (block, byte)}.
-def transpose_map(num_blocks: int) -> dict:
+def transpose_map(num_blocks: int) -> dict[tuple[int, int], tuple[int, int]]:
     """Map each (block, byte) to its destination under simd_transpose."""
     word_size = BLOCK_BYTES // num_blocks
     mapping = {}
@@ -246,7 +255,8 @@ def self_test() -> None:
 
 
 # pylint: disable=too-many-locals
-def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
+def build_pattern_solver(num_blocks: int, num_rounds: int,
+                         num_active: int) -> tuple[z3.Solver, Layers]:
     """Return (solver, layers) of Boolean activity variables.
 
     layers[t*AES_NUM_ROUNDS + a][i][b] is the activity of byte b of block i
@@ -258,7 +268,7 @@ def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
     """
     s = z3.Solver()
 
-    def new_state(tag: str) -> list:
+    def new_state(tag: str) -> list[list[z3.BoolRef]]:
         return [[z3.Bool(f"{tag}_{i}_{b}") for b in range(BLOCK_BYTES)]
                 for i in range(num_blocks)]
 
@@ -295,7 +305,7 @@ def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
     return s, layers
 
 
-def extract_pattern(model, layers: list) -> list:
+def extract_pattern(model, layers: Layers) -> Pattern:
     """Read the Boolean activity pattern out of a solved z3 model."""
     def truth(v) -> bool:
         return z3.is_true(model.eval(v, model_completion=True))
@@ -303,7 +313,7 @@ def extract_pattern(model, layers: list) -> list:
     return [[[truth(v) for v in block] for block in layer] for layer in layers]
 
 
-def pattern_blocking_clause(layers: list, pattern: list):
+def pattern_blocking_clause(layers: Layers, pattern: Pattern) -> z3.BoolRef:
     """Return a clause that forbids the solver from repeating pattern."""
     # strict: the clause must cover every variable the pattern constrains,
     # or blocking one pattern would also discard unexamined variants of it.
@@ -318,7 +328,7 @@ def pattern_blocking_clause(layers: list, pattern: list):
 # -------------------------------------------------- stage B: instantiation
 
 
-def bv_table_lookup(x, table: list):
+def bv_table_lookup(x: z3.BitVecRef, table: list[int]) -> z3.BitVecRef:
     """Build a z3 bit-vector expression indexing table by the 8-bit value x."""
     expr = z3.BitVecVal(table[255], 8)
     for v in range(254, -1, -1):
@@ -326,13 +336,13 @@ def bv_table_lookup(x, table: list):
     return expr
 
 
-def z3_xtime(a):
+def z3_xtime(a: z3.BitVecRef) -> z3.BitVecRef:
     """z3 bit-vector version of xtime (GF(2^8) multiply by x)."""
     return (a << 1) ^ z3.If(z3.Extract(7, 7, a) == 1,
                             z3.BitVecVal(0x1B, 8), z3.BitVecVal(0, 8))
 
 
-def z3_mix_column(col: list) -> list:
+def z3_mix_column(col: list[z3.BitVecRef]) -> list[z3.BitVecRef]:
     """z3 bit-vector version of the AES MixColumns transform."""
     a0, a1, a2, a3 = col
     return [z3_xtime(a0) ^ z3_xtime(a1) ^ a1 ^ a2 ^ a3,
@@ -353,7 +363,7 @@ class Instantiation:
 
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
-    def __init__(self, num_blocks: int, num_rounds: int, pattern: list,
+    def __init__(self, num_blocks: int, num_rounds: int, pattern: Pattern,
                  encoding: str = "witness"):
         self.solver = z3.Solver()
         self.sboxes = []        # (din_var, dout_var) in S-box order
@@ -452,14 +462,14 @@ class Instantiation:
         assert n6_z3 <= n6, "w6 marked on a non-DDT=4 transition"
         return weight
 
-    def model_bytes(self, model, state: list) -> list:
+    def model_bytes(self, model, state: BitVecState) -> StateBytes:
         """Evaluate a state's bit-vector bytes into concrete integers."""
         return [[model.eval(v, model_completion=True).as_long()
                  for v in block] for block in state]
 
 
 # pylint: disable=too-many-locals
-def verify_trail(num_blocks: int, num_rounds: int, input_diff: list,
+def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
                  model, inst: Instantiation) -> None:
     """Re-propagate the model's difference in Python and check every layer."""
     tmap = transpose_map(num_blocks)
@@ -497,7 +507,7 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: list,
         "output difference mismatch"
 
 
-def hex_state(state_bytes: list) -> str:
+def hex_state(state_bytes: StateBytes) -> str:
     """Format a state's blocks as space-separated hex strings."""
     return " ".join("".join(f"{v:02x}" for v in block)
                     for block in state_bytes)
@@ -509,8 +519,9 @@ def hex_state(state_bytes: list) -> str:
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-positional-arguments
-def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
-                     input_diff: list, output_diff: list, max_trails: int,
+def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
+                     input_diff: StateBytes, output_diff: StateBytes,
+                     max_trails: int,
                      timeout_ms: int, encoding: str) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 

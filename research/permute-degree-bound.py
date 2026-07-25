@@ -162,8 +162,11 @@ def zero_sum_reach_layers(bounds: list[int], n: int) -> int:
 AES_NUM_ROUNDS = 3  # AES rounds per Castella round (Castella::AES_NUM_ROUNDS)
 
 
-def run_self_test() -> None:
-    """Validate the S-box degrees and the known AES integral distinguisher."""
+def run_self_test() -> list[int]:
+    """Validate the S-box degrees and the known AES integral distinguisher.
+
+    Returns the forward delta_i, so the caller need not recompute them.
+    """
     d_fwd = sbox_deltas(SBOX)
     d_inv = sbox_deltas(INV_SBOX)
     assert d_fwd[1] == 7 and d_inv[1] == 7, "AES S-box degree must be 7"
@@ -183,6 +186,7 @@ def run_self_test() -> None:
     assert aes[3] >= 127, "AES round-4 degree bound must reach 127"
     assert zero_sum_reach_layers(aes, 128) == 3, \
         "AES zero-sum reach must be 3 rounds (matches the Square distinguisher)"
+    return d_fwd
 
 
 def main() -> None:
@@ -194,12 +198,11 @@ def main() -> None:
                         help="run the S-box and AES-validation checks and exit")
     args = parser.parse_args()
 
-    run_self_test()
+    delta = run_self_test()
     if args.self_test:
         print("self-test OK")
         return
 
-    delta = sbox_deltas(SBOX)
     gamma = gamma_of(delta)
     print(f"AES S-box: delta_i = {delta[1:]}  (i = 1..{B})")
     print(f"gamma = max_i (B-i)/(B-delta_i) = {gamma:g}")

@@ -126,4 +126,4 @@ When reviewing C/C++ code, check for: memory leaks, include audit issues, API co
 
 - `C_MIN ≤ capacity_blocks ≤ C_MAX` (C_MIN=2, C_MAX=B/2=8); `capacity_blocks` must be even
 - `NUM_ROUNDS_MIN ≤ num_rounds ≤ NUM_ROUNDS_MAX`
-- `squeeze_bytes(n)` requires `n ≤ get_rate_size_bytes()`
+- `squeeze_bytes(n)` clamps `n` to `[0, get_rate_size_bytes()]` rather than rejecting it — a C++ convenience (documented on the member and pinned by `tests/tests.cpp`); `SPEC.md` defines `squeeze(n)` only for `0 ≤ n ≤ 16R`, so out-of-range `n` is outside the spec, not an alternate contract

@@ -87,6 +87,7 @@ The `squeeze_bytes` member function performs the following:
 3. Return the first _n_ bytes of the outer state as a `std::vector<std::byte>`, where _n_ is an integer in the interval `[0, get_rate_size_bytes()]`.
     * Typical values of _n_ are 32, 48, or 64.
     * The default value of _n_ is `get_capacity_size_bytes() / 2`.
+    * An _n_ outside that interval is **clamped** into it rather than rejected, so a too-large _n_ yields `get_rate_size_bytes()` bytes and a negative _n_ yields none.  Steps 1 and 2 still happen either way, so any call advances the state.  This leniency is a convenience of the C++ API: the specification defines `squeeze(n)` only for `0 ≤ n ≤ 16R`.
 
 ## Tree Hashing
 

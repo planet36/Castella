@@ -515,11 +515,12 @@ public:
     * \c std::ssize(dst) bytes of the finalized state into the
     * caller-provided buffer instead of allocating a vector.
     *
-    * \param dst the destination buffer; its size must not exceed
-    *        \c get_max_digest_size_bytes()
+    * \param dst the destination buffer
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \note The size of \a dst is clamped to \c get_max_digest_size_bytes().
+    * \note The size of \a dst is clamped to \c get_max_digest_size_bytes(), as
+    *       \a n is in \c final_digest_bytes(int); anything past that is left
+    *       untouched.
     */
     // }}}
     compress_castella_hash& final_digest_to(std::span<std::byte> dst)

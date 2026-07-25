@@ -1117,11 +1117,11 @@ public:
     * of the outer state into the caller-provided buffer instead of allocating
     * a vector.
     *
-    * \param dst the destination buffer; its size must not exceed
-    *        \c get_rate_size_bytes()
+    * \param dst the destination buffer
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \note The size of \a dst is clamped to \c get_rate_size_bytes().
+    * \note The size of \a dst is clamped to \c get_rate_size_bytes(), as \a n
+    *       is in \c squeeze_bytes(int); anything past that is left untouched.
     * \note Like \c squeeze_bytes, the input suffix and padding are added
     *       before squeezing, even if \a dst is empty.
     */

@@ -371,15 +371,15 @@ A single characteristic is not a differential: DP(Δ<sub>in</sub> → Δ<sub>out
 | trail weight | meaning | count | contribution to DP |
 |--------------|---------|-------|--------------------|
 | 54 | all 9 boxes at 2<sup>−6</sup> | 1 | 2<sup>−54.00</sup> |
-| 59 | 4 boxes at 2<sup>−6</sup> | 70 | 2<sup>−52.87</sup> |
-| 62 | 1 box at 2<sup>−6</sup> | 8 | 2<sup>−59.00</sup> |
-| 63 | all boxes at 2<sup>−7</sup> | 768 | 2<sup>−53.42</sup> |
+| 59 | 4 boxes at 2<sup>−6</sup> | 69 | 2<sup>−52.89</sup> |
+| 62 | 1 box at 2<sup>−6</sup> | 6 | 2<sup>−59.42</sup> |
+| 63 | all boxes at 2<sup>−7</sup> | 972 | 2<sup>−53.08</sup> |
 
-* **847 characteristics** share this differential; summing gives **DP = 2<sup>−51.8</sup>**, versus 2<sup>−54</sup> for the single best trail — a clustering gain of about **2.2 bits**.
-* **The best trail is not the dominant contributor.**  The 70 weight-59 characteristics together (2<sup>−52.9</sup>) outweigh the single weight-54 optimum, and the 768 weight-63 characteristics add another 2<sup>−53.4</sup>.  This is the concrete reason a single-characteristic bound is _necessary but not sufficient_: a swarm of mediocre trails can dominate one excellent one.  Here the effect is directly measured rather than assumed.
+* **1048 characteristics** share this differential; summing gives **DP = 2<sup>−51.7</sup>**, versus 2<sup>−54</sup> for the single best trail — a clustering gain of about **2.3 bits**.
+* **The best trail is not the dominant contributor.**  The 69 weight-59 characteristics together (2<sup>−52.9</sup>) outweigh the single weight-54 optimum, and the 972 weight-63 characteristics add another 2<sup>−53.1</sup>.  This is the concrete reason a single-characteristic bound is _necessary but not sufficient_: a swarm of mediocre trails can dominate one excellent one.  Here the effect is directly measured rather than assumed.
 * **The gain is small and bounded.**  The achievable count of maximum-probability (2<sup>−6</sup>) boxes is quantized to {0, 1, 4, 9} — a rigidity the two MixColumns layers impose on the super-box — which is _why_ the clustering stays near 2 bits instead of exploding.  Two bits against the per-two-round idealized margin of 270 is immaterial.
 
-The measurement covers one differential within one activity pattern, so 2<sup>−51.8</sup> is a lower-bound estimate of that differential's total DP (other patterns could contribute), and it is a single differential, not the maximum over all differentials.  It is a data point, not a proof of the differential-hull bound — the maximum expected differential probability over many rounds remains out of reach of exact enumeration and is left to the security claim's margin rather than computed here.
+The measurement covers one differential within one activity pattern, so 2<sup>−51.7</sup> is a lower-bound estimate of that differential's total DP (other patterns could contribute), and it is a single differential, not the maximum over all differentials.  Which weight-54 differential the search lands on is a solver choice, and different ones cluster differently — an earlier run reached a differential with 847 characteristics summing to 2<sup>−51.8</sup>, the same picture a tenth of a bit away.  It is a data point, not a proof of the differential-hull bound — the maximum expected differential probability over many rounds remains out of reach of exact enumeration and is left to the security claim's margin rather than computed here.
 
 ### Scope
 

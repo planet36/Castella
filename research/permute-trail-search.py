@@ -84,10 +84,10 @@ AES_NUM_ROUNDS = 3
 # and byte within a block (Layers and Pattern add a leading S-box layer).
 # z3 ships no py.typed, so its element types document rather than check;
 # Pattern and StateBytes are pure Python and are checked.
-Layers = list[list[list[z3.BoolRef]]]      # activity variables
-Pattern = list[list[list[bool]]]           # a solved Layers
-StateBytes = list[list[int]]               # a solved difference
-BitVecState = list[list[z3.BitVecRef]]     # difference variables
+type Layers = list[list[list[z3.BoolRef]]]      # activity variables
+type Pattern = list[list[list[bool]]]           # a solved Layers
+type StateBytes = list[list[int]]               # a solved difference
+type BitVecState = list[list[z3.BitVecRef]]     # difference variables
 
 # Proven MILP optima (research/README.md, "minimum active S-boxes", a=3).
 KNOWN_MIN_ACTIVE = {

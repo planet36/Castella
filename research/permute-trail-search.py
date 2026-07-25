@@ -73,6 +73,8 @@ import argparse
 import sys
 import time
 from collections import Counter
+from collections.abc import Sequence
+from itertools import batched
 from math import log2
 
 import z3
@@ -195,7 +197,7 @@ def shift_rows_src(byte_idx: int) -> int:
     return 4 * ((col + row) % 4) + row
 
 
-def mix_column(col: list[int]) -> list[int]:
+def mix_column(col: Sequence[int]) -> list[int]:
     """Apply the AES MixColumns transform to one 4-byte column."""
     a0, a1, a2, a3 = col
     return [xtime(a0) ^ xtime(a1) ^ a1 ^ a2 ^ a3,
@@ -210,8 +212,8 @@ def aes_round_zero_key(state: list[int]) -> list[int]:
     sr = [state[shift_rows_src(b)] for b in range(BLOCK_BYTES)]
     sb = [SBOX[v] for v in sr]
     out = []
-    for c in range(4):
-        out += mix_column(sb[4 * c:4 * c + 4])
+    for col in batched(sb, 4):
+        out += mix_column(col)
     return out
 
 
@@ -283,11 +285,10 @@ def build_pattern_solver(num_blocks: int, num_rounds: int,
             layers.append(state)
             nxt = new_state(f"x{t}_{a}")
             for i in range(num_blocks):
-                u = state[i]
+                sr = [state[i][shift_rows_src(b)] for b in range(BLOCK_BYTES)]
                 v = nxt[i]
-                for c in range(4):
-                    col_in = [u[shift_rows_src(4 * c + q)] for q in range(4)]
-                    col_out = [v[4 * c + q] for q in range(4)]
+                for col_in, col_out in zip(batched(sr, 4), batched(v, 4),
+                                           strict=True):
                     active = z3.Or(col_in)
                     s.add(active == z3.Or(col_out))
                     s.add(z3.Implies(
@@ -342,7 +343,7 @@ def z3_xtime(a: z3.BitVecRef) -> z3.BitVecRef:
                             z3.BitVecVal(0x1B, 8), z3.BitVecVal(0, 8))
 
 
-def z3_mix_column(col: list[z3.BitVecRef]) -> list[z3.BitVecRef]:
+def z3_mix_column(col: Sequence[z3.BitVecRef]) -> list[z3.BitVecRef]:
     """z3 bit-vector version of the AES MixColumns transform."""
     a0, a1, a2, a3 = col
     return [z3_xtime(a0) ^ z3_xtime(a1) ^ a1 ^ a2 ^ a3,
@@ -420,8 +421,8 @@ class Instantiation:
                         self.weight6.append(w6)
                         dout_bytes.append(dout)
                     block_out = []
-                    for c in range(4):
-                        block_out += z3_mix_column(dout_bytes[4 * c:4 * c + 4])
+                    for col in batched(dout_bytes, 4):
+                        block_out += z3_mix_column(col)
                     nxt.append(block_out)
                 state = nxt
                 layer += 1
@@ -494,8 +495,8 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
                     assert DDT[din][dout] > 0
                     dout_bytes.append(dout)
                 block_out = []
-                for c in range(4):
-                    block_out += mix_column(dout_bytes[4 * c:4 * c + 4])
+                for col in batched(dout_bytes, 4):
+                    block_out += mix_column(col)
                 nxt.append(block_out)
             state = nxt
         nxt = [[0] * BLOCK_BYTES for _ in range(num_blocks)]

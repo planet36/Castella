@@ -554,14 +554,18 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
     if not weights:
         print("cluster: no trails (unexpected -- the best trail is one)")
         return
-    dp = sum(2.0 ** -w for w in weights)
+    # Sum relative to the lightest trail: 2.0**-w flushes to zero past
+    # w = 1074, which log2 then rejects.  A=243 at r=5 already floors the
+    # weight at 1458, so the direct sum is not merely a theoretical loss.
+    best = min(weights)
+    dp_log2 = log2(sum(2.0 ** -(w - best) for w in weights)) - best
     hist = " ".join(f"{w}:{n}" for w, n in sorted(Counter(weights).items()))
     print(f"cluster: {len(weights)} trail(s) for this differential within "
           f"this pattern ({'complete' if complete else 'INCOMPLETE'}, "
           f"{elapsed:.1f}s)")
     print(f"cluster: weight histogram {{weight:count}}: {hist}")
-    print(f"cluster: DP(differential | pattern) = 2^{log2(dp):.2f} vs "
-          f"best single trail 2^-{min(weights)}")
+    print(f"cluster: DP(differential | pattern) = 2^{dp_log2:.2f} vs "
+          f"best single trail 2^-{best}")
 
 
 # ------------------------------------------------------------------- main

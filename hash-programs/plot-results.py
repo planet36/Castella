@@ -43,6 +43,9 @@ with open(args.FILE, newline='', encoding='utf-8') as f:
     if not reader.fieldnames:
         parser.error(f"{args.FILE}: empty or missing header row")
     x_axis_col = reader.fieldnames[-1] # The parameter that varied is the last column.
+    if not x_axis_col.startswith('parameter_'):
+        parser.error(f"{args.FILE}: last column {x_axis_col!r} is not a 'parameter_*' "
+                     f"column; this CSV has no swept parameter to plot against")
 
 y_axis_col = args.column
 

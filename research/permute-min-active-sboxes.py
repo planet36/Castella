@@ -77,6 +77,23 @@ import pulp  # pylint: disable=import-error
 
 BLOCK_BYTES = 16
 
+
+def positive_int(s: str) -> int:
+    """argparse type: an integer >= 1."""
+    value = int(s)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {value}")
+    return value
+
+
+def positive_float(s: str) -> float:
+    """argparse type: a float > 0."""
+    value = float(s)
+    if value <= 0:
+        raise argparse.ArgumentTypeError(f"must be > 0, got {value}")
+    return value
+
+
 # AES ShiftRows: output byte (row, col) comes from input byte (row, (col+row)%4).
 # Byte index within a block = 4*col + row (AES column-major order).
 def shift_rows_src(byte_idx: int) -> int:
@@ -157,16 +174,16 @@ def main() -> None:
     parser.add_argument("-N", "--num-blocks", type=int, default=16,
                         choices=(2, 4, 8, 16),
                         help="number of state blocks (default: %(default)s)")
-    parser.add_argument("-a", "--aes-rounds", type=int, default=3,
+    parser.add_argument("-a", "--aes-rounds", type=positive_int, default=3,
                         help="AES rounds per Castella round "
                              "(default: %(default)s)")
-    parser.add_argument("--min-rounds", type=int, default=1,
+    parser.add_argument("--min-rounds", type=positive_int, default=1,
                         help="first Castella round count to solve "
                              "(default: %(default)s)")
-    parser.add_argument("-r", "--max-rounds", type=int, default=4,
+    parser.add_argument("-r", "--max-rounds", type=positive_int, default=4,
                         help="last Castella round count to solve "
                              "(default: %(default)s)")
-    parser.add_argument("-t", "--time-limit", type=float, default=600.0,
+    parser.add_argument("-t", "--time-limit", type=positive_float, default=600.0,
                         help="solver time limit per round count, in seconds "
                              "(default: %(default)s)")
     parser.add_argument("--threads", type=int, default=os.cpu_count(),

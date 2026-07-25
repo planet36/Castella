@@ -95,7 +95,7 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 
 - GCC 14+ (C++23 features used; clang++ not supported)
 - x86-64 with AES-NI (`-maes`), or ARM64 with ARM Crypto extensions
-- Compile with `-DDEBUG` to enable internal assertions
+- Compile with `-DDEBUG` to enable internal assertions (`BUILD=debug` does). They assert internal invariants — plus the narrow contracts of the unchecked `fixed_vector` accessors, which have checked counterparts — never user input, which is validated by throwing in every build. Being compiled out at release, they are a debugging aid, not a guard anything may rely on.
 
 ## Workflow Rules
 

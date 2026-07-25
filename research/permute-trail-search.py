@@ -520,6 +520,10 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
     differential's probability restricted to this activity pattern -- a
     LOWER-bound estimate of DP(differential), and exact for the pattern if
     the enumeration completes.
+
+    timeout_ms bounds each solver call AND the enumeration as a whole;
+    stopping early only reports fewer trails, marked INCOMPLETE, which the
+    lower-bound reading already allows for.
     """
     inst = Instantiation(num_blocks, num_rounds, pattern, encoding)
     inst.solver.set("timeout", timeout_ms)
@@ -534,6 +538,12 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: list,
     complete = False
     t0 = time.monotonic()
     while len(weights) < max_trails:
+        # timeout_ms bounds one check(); this bounds the whole enumeration,
+        # which would otherwise run max_trails of them back to back.
+        if (time.monotonic() - t0) * 1000 >= timeout_ms:
+            print(f"cluster enumeration hit the time limit after "
+                  f"{len(weights)} trails")
+            break
         res = inst.solver.check()
         if res == z3.unsat:
             complete = True
@@ -594,7 +604,8 @@ def main() -> None:
                         help="stop at the first weight per pattern")
     parser.add_argument("-t", "--time-limit", type=positive_float,
                         default=600.0,
-                        help="time limit per solver call, in seconds "
+                        help="time limit per solver call, in seconds; also "
+                             "caps the --cluster enumeration as a whole "
                              "(default: %(default)s)")
     parser.add_argument("--print-trail", action="store_true",
                         help="print the input/output differences of the "

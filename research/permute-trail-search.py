@@ -477,8 +477,10 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: list,
                         continue
                     din_v, dout_v = inst.sboxes[k]
                     k += 1
-                    assert model.eval(din_v).as_long() == din
-                    dout = model.eval(dout_v).as_long()
+                    assert model.eval(
+                        din_v, model_completion=True).as_long() == din
+                    dout = model.eval(
+                        dout_v, model_completion=True).as_long()
                     assert DDT[din][dout] > 0
                     dout_bytes.append(dout)
                 block_out = []

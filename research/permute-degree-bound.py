@@ -71,7 +71,7 @@ B = 8  # AES S-box bit width
 
 # ------------------------------------------------------------ AES S-box
 
-def _make_sbox() -> list:
+def _make_sbox() -> list[int]:
     def gf_mul(a: int, b: int) -> int:
         p = 0
         while b:
@@ -101,7 +101,7 @@ for _x in range(256):
     INV_SBOX[SBOX[_x]] = _x
 
 
-def _anf_degree(truth: list) -> int:
+def _anf_degree(truth: list[int]) -> int:
     """Algebraic degree of a Boolean function on B variables (Mobius)."""
     f = truth[:]
     for i in range(B):
@@ -112,7 +112,7 @@ def _anf_degree(truth: list) -> int:
     return max((m.bit_count() for m in range(256) if f[m]), default=0)
 
 
-def sbox_deltas(table: list) -> list:
+def sbox_deltas(table: list[int]) -> list[int]:
     """delta[i] = max degree of a product of any i output coordinates, i=1..B."""
     delta = [0] * (B + 1)
     for k in range(1, B + 1):
@@ -125,7 +125,7 @@ def sbox_deltas(table: list) -> list:
     return delta
 
 
-def gamma_of(delta: list) -> float:
+def gamma_of(delta: list[int]) -> float:
     """gamma = max_{1<=i<=B-1} (B - i) / (B - delta_i)."""
     return max((B - i) / (B - delta[i]) for i in range(1, B)
                if delta[i] < B)
@@ -134,7 +134,7 @@ def gamma_of(delta: list) -> float:
 # ------------------------------------------------------ the degree bound
 
 def degree_after_layers(n: int, gamma: float, sbox_deg: int,
-                        num_layers: int) -> list:
+                        num_layers: int) -> list[int]:
     """Per-layer upper bound on deg, starting from a single S-box layer."""
     bounds = []
     d = min(sbox_deg, n - 1)  # first S-box layer: degree = S-box degree
@@ -145,7 +145,7 @@ def degree_after_layers(n: int, gamma: float, sbox_deg: int,
     return bounds
 
 
-def zero_sum_reach_layers(bounds: list, n: int) -> int:
+def zero_sum_reach_layers(bounds: list[int], n: int) -> int:
     """Largest number of layers with degree bound <= n-2 (a nontrivial
     zero-sum needs a cube of dimension <= n-1, i.e. degree <= n-2)."""
     reach = 0

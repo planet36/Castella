@@ -109,7 +109,7 @@ def _anf_degree(truth: list) -> int:
         for base in range(0, 256, step << 1):
             for j in range(base, base + step):
                 f[j + step] ^= f[j]
-    return max((bin(m).count("1") for m in range(256) if f[m]), default=0)
+    return max((m.bit_count() for m in range(256) if f[m]), default=0)
 
 
 def sbox_deltas(table: list) -> list:

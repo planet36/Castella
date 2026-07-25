@@ -37,17 +37,20 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-with open(args.FILE, newline='', encoding='utf-8') as f:
-    reader = csv.DictReader(f)
-    rows = list(reader)
-    if not reader.fieldnames:
-        parser.error(f"{args.FILE}: empty or missing header row")
-    x_axis_col = reader.fieldnames[-1] # The parameter that varied is the last column.
-    if not x_axis_col.startswith('parameter_'):
-        parser.error(f"{args.FILE}: last column {x_axis_col!r} is not a 'parameter_*' "
-                     f"column; this CSV has no swept parameter to plot against")
-    if not rows:
-        parser.error(f"{args.FILE}: no data rows")
+try:
+    with open(args.FILE, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+        if not reader.fieldnames:
+            parser.error(f"{args.FILE}: empty or missing header row")
+        x_axis_col = reader.fieldnames[-1] # The parameter that varied is the last column.
+        if not x_axis_col.startswith('parameter_'):
+            parser.error(f"{args.FILE}: last column {x_axis_col!r} is not a 'parameter_*' "
+                         f"column; this CSV has no swept parameter to plot against")
+        if not rows:
+            parser.error(f"{args.FILE}: no data rows")
+except OSError as e:
+    parser.error(f"{args.FILE}: {e.strerror}")
 
 y_axis_col = args.column
 

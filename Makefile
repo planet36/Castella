@@ -25,7 +25,7 @@ $(SUBDIRS) $(EXTRA_SUBDIRS):
 
 # Build and run every test suite
 test: hash-programs tests
-	cd tests && ./tests && ./kat && ./equivalence-tests
+	cd tests && ./tests && ./kat && ./equivalence-tests && ./permute-equivalence
 	cd hash-programs && bash test-correctness.bash
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for the spec-conformance checks'; exit 1; }
 	cd research && python3 spec-conformance.py

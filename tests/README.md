@@ -5,6 +5,7 @@
 | tests.cpp | Fixed correctness tests and the pinned KATs (below) |
 | kat.cpp | Verify (or regenerate) the machine-readable KAT file |
 | equivalence-tests.cpp | Randomized digest-equivalence tests for the tree hashes |
+| permute-equivalence.cpp | The folded (VAES) permutation must equal the generic one, bit for bit |
 | duplex-diff-fuzz.py | Differential fuzzer: random programs of `Castella::Duplex` calls must agree with the independent spec model |
 | duplex-diff-driver.cpp | Replays a `duplex-diff-fuzz.py` call script against `Castella::Duplex` (not run directly) |
 
@@ -18,6 +19,12 @@
 ### `equivalence-tests`
 
 The digest of a tree hash is a function of the node parameters, tree geometry, and input bytes only — never the `add()` granularity, thread count, or parallel path.  `equivalence-tests` hammers that contract with randomized inputs at adversarial sizes (chunk boundaries, the streaming-pool start threshold, the paired-leaf index-width fallback, plus random lengths): for each size, the single-threaded one-shot digest is the reference, and every combination of {one-shot, randomly split adds} × {thread counts} must reproduce it.  The seed is printed (and can be passed as an argument) so failures reproduce.
+
+### `permute-equivalence`
+
+`Castella::permute` dispatches to `Castella::permute_folded` (the folded, register-resident implementation, x86-64 with VAES only) or to `Castella::permute_generic` (everywhere else).  The two must be bit-identical, or every digest here would depend on which path the build selected.  Before this program that relationship was guarded only transitively — a folded build reproduces the same KATs that the generic pure-Python model produces — so no single build ever ran both paths and compared them.  This one does, over random states, for every supported state size (2, 4, 8, 16 blocks) and every round count from 0 to `NUM_ROUNDS_MAX`.  The seed is printed (and can be passed as an argument) so failures reproduce.
+
+A build without the folded path (no VAES, or not x86-64) still runs it, but `permute` *is* `permute_generic` there, so the comparison is a tautology; the program says which case it is rather than claiming coverage it does not have.
 
 ### `duplex-diff-fuzz`
 

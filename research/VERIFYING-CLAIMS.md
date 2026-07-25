@@ -104,6 +104,14 @@ sh run-research.sh    # includes permute_inv-verify, permute_x2-verify, duplex_x
 
 plus the randomized equivalence tests in `make test`.  Expected: every verify program reports zero mismatches (`permute_inv-verify` also round-trips the folded forward path through the unchanged generic inverse).
 
+`Castella::permute_folded` against `Castella::permute_generic` is the one comparison that runs both paths in a single build, so it does not depend on the KATs as an intermediary:
+
+```bash
+cd ../tests && make permute-equivalence && ./permute-equivalence
+```
+
+Expected: `passed: 2176 comparisons of permute_folded against permute_generic` (every supported state size × every round count × 32 random states).  It is also run by `make test`; on a build without VAES it reports that `permute` *is* `permute_generic` there, so the comparison proves nothing.
+
 ## 9. The PRNG forward-secrecy non-claim
 
 Nothing to verify — it is a non-claim, documented so nobody assumes otherwise.  The fact making it necessary (that `P` is invertible) is demonstrated by `permute_inv-verify` in §8.

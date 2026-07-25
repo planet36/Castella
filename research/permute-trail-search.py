@@ -221,10 +221,14 @@ def self_test() -> None:
 
 # pylint: disable=too-many-locals
 def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
-    """Return (solver, layers, final_state) of Boolean activity variables.
+    """Return (solver, layers) of Boolean activity variables.
 
     layers[t*AES_NUM_ROUNDS + a][i][b] is the activity of byte b of block i
-    at the entry of that S-box layer (pre-ShiftRows).
+    at the entry of that S-box layer (pre-ShiftRows).  The state after the
+    last transpose feeds no S-box layer, so it is not part of the pattern:
+    its activity is a free choice the branch-number constraints leave open,
+    and constraining it would only shrink the search space (see
+    Instantiation).
     """
     s = z3.Solver()
 
@@ -262,25 +266,25 @@ def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int):
 
     all_sbox_vars = [v for layer in layers for block in layer for v in block]
     s.add(z3.PbEq([(v, 1) for v in all_sbox_vars], num_active))
-    return s, layers, state
+    return s, layers
 
 
-def extract_pattern(model, layers: list, final_state: list) -> list:
+def extract_pattern(model, layers: list) -> list:
     """Read the Boolean activity pattern out of a solved z3 model."""
     def truth(v) -> bool:
         return z3.is_true(model.eval(v, model_completion=True))
 
-    pat = [[[truth(v) for v in block] for block in layer] for layer in layers]
-    pat.append([[truth(v) for v in block] for block in final_state])
-    return pat
+    return [[[truth(v) for v in block] for block in layer] for layer in layers]
 
 
 def pattern_blocking_clause(layers: list, pattern: list):
     """Return a clause that forbids the solver from repeating pattern."""
+    # strict: the clause must cover every variable the pattern constrains,
+    # or blocking one pattern would also discard unexamined variants of it.
     lits = []
-    for layer, playe in zip(layers, pattern):
-        for block, pblock in zip(layer, playe):
-            for v, pv in zip(block, pblock):
+    for layer, playe in zip(layers, pattern, strict=True):
+        for block, pblock in zip(layer, playe, strict=True):
+            for v, pv in zip(block, pblock, strict=True):
                 lits.append(v if pv else z3.Not(v))
     return z3.Not(z3.And(lits))
 
@@ -391,14 +395,12 @@ class Instantiation:
                 nxt[j][b2] = state[i][b]
             state = nxt
 
-        # Final-state activity (after the last transpose) must match too.
-        pat = pattern[layer]
-        for i in range(num_blocks):
-            for b in range(BLOCK_BYTES):
-                if pat[i][b]:
-                    self.solver.add(state[i][b] != zero)
-                else:
-                    self.solver.add(state[i][b] == zero)
+        # The state after the last transpose feeds no S-box layer, so its
+        # activity cannot change the active-S-box count: leave it free.  The
+        # truncated model does not determine it either (a column entering
+        # MixColumns with several active bytes admits many active output
+        # patterns), so pinning it to one arbitrary stage-A choice would test
+        # a single variant and, via the blocking clause, discard the rest.
         self.output_state = state
 
     def add_weight_bound(self, max_weight: int) -> None:
@@ -596,7 +598,7 @@ def main() -> None:
     print(f"idealized lower bound: weight >= {6 * num_active} "
           f"(DP <= 2^-{6 * num_active})")
 
-    pat_solver, layers, final_state = build_pattern_solver(
+    pat_solver, layers = build_pattern_solver(
         args.num_blocks, args.rounds, num_active)
     pat_solver.set("timeout", timeout_ms)
 
@@ -616,7 +618,7 @@ def main() -> None:
             print(f"[pattern {pattern_no}] stage A gave up "
                   f"({res}, {ta:.1f}s); try a larger -t")
             break
-        pattern = extract_pattern(pat_solver.model(), layers, final_state)
+        pattern = extract_pattern(pat_solver.model(), layers)
         pat_solver.add(pattern_blocking_clause(layers, pattern))
         print(f"[pattern {pattern_no}] activity pattern found ({ta:.1f}s)")
 

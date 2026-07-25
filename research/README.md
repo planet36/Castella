@@ -125,7 +125,7 @@ Interpretation:
 
 ## Findings: the folded permute wins at every state size (2026-07-17)
 
-When the folded (register-resident) `Castella::permute` was generalized from _N_ = 16 to all supported _N_, only _N_ = 16 had been measured (~1.7×).  `permute_folded-benchmark.cpp` compares the folded path against a copy of the generic path it replaced.  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (ratios are generic ÷ folded; compare only within this table):
+When the folded (register-resident) `Castella::permute` was generalized from _N_ = 16 to all supported _N_, only _N_ = 16 had been measured (~1.7×).  `permute_folded-benchmark.cpp` compares the folded path against the generic one it replaced (`Castella::permute_generic`).  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (ratios are generic ÷ folded; compare only within this table):
 
 (To keep the default run short, the benchmark now registers only _N_ = 16; the decision this table records is settled, and _N_ < 16 is research-only.  To reproduce the other rows, uncomment the _N_ = 2, 4, 8 blocks in the benchmark's `main()`.)
 

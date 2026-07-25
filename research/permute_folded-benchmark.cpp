@@ -6,18 +6,17 @@
 * \file
 * \author Steven Ward
 *
-* On x86-64 with VAES, \c Castella::permute runs every supported state size
-* in the folded representation, so the generic path it replaced is no longer
-* reachable there.  \c permute_generic below is a verbatim copy of that
-* path (the \c #else branch of \c Castella::permute; keep them in sync) so
-* the two can be compared:
+* On x86-64 with VAES, \c Castella::permute dispatches to
+* \c Castella::permute_folded for every supported state size, so the generic
+* path it replaced is unreachable there -- but it is still defined, as
+* \c Castella::permute_generic (the implementation \c permute uses on targets
+* without VAES), so the two can be called side by side:
 *
 *   - generic<N>: AES on 256-bit pairs of blocks, then the 128-bit
 *     transpose network -- the state round-trips through memory every
 *     round, and each 256-bit AES load spans two 128-bit transpose stores
 *     (defeating store-to-load forwarding)
-*   - folded<N>: one call to \c Castella::permute (fold, N/2 ymm-resident
-*     rounds, unfold)
+*   - folded<N>: fold, N/2 ymm-resident rounds, unfold
 *
 * Benchmarks are registered generic/folded adjacent per (N, num_rounds) so
 * environmental drift affects both sides of each ratio equally.  The
@@ -34,21 +33,8 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstdlib>
 #include <format>
-#include <span>
 #include <string>
 #include <thread>
-
-/// The pre-folding generic path of \c Castella::permute (copied from its \c #else branch)
-template <size_t N>
-static void
-permute_generic(Castella::arr_blocks<N>& state, const int num_rounds) noexcept
-{
-    for (const auto& rc : std::span{Castella::round_constants}.last(num_rounds))
-    {
-        aes_enc_arr<Castella::AES_NUM_ROUNDS>(state, rc);
-        simd_transpose(state);
-    }
-}
 
 template <size_t N>
 void
@@ -63,7 +49,7 @@ BM_permute_generic(benchmark::State& BM_state, const int num_rounds)
     {
         // This code gets timed
 
-        permute_generic<N>(state, num_rounds);
+        Castella::permute_generic<N>(state, num_rounds);
     }
 
     // This is to prevent the compiler from eliding the work above.
@@ -83,7 +69,7 @@ BM_permute_folded(benchmark::State& BM_state, const int num_rounds)
     {
         // This code gets timed
 
-        Castella::permute(state, num_rounds);
+        Castella::permute_folded<N>(state, num_rounds);
     }
 
     // This is to prevent the compiler from eliding the work above.

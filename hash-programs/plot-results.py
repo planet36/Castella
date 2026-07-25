@@ -46,6 +46,8 @@ with open(args.FILE, newline='', encoding='utf-8') as f:
     if not x_axis_col.startswith('parameter_'):
         parser.error(f"{args.FILE}: last column {x_axis_col!r} is not a 'parameter_*' "
                      f"column; this CSV has no swept parameter to plot against")
+    if not rows:
+        parser.error(f"{args.FILE}: no data rows")
 
 y_axis_col = args.column
 

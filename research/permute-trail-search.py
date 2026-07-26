@@ -253,6 +253,31 @@ def self_test() -> None:
             f"AES round model mismatch for input {hex_in}"
 
 
+# --------------------------------------------------------- solver plumbing
+
+
+def configure_solver(s: z3.Solver, timeout_ms: int,
+                     max_memory_mb: int | None) -> None:
+    """Apply the run-wide time and memory limits to one solver."""
+    s.set("timeout", timeout_ms)
+    if max_memory_mb is not None:
+        # Solver-level, so exceeding it yields `unknown` from check() with
+        # reason_unknown() == 'max. memory exceeded'.  z3's global
+        # memory_max_size is not a solver parameter and is not a graceful
+        # stop; this is, and the callers already handle a non-sat result.
+        s.set("max_memory", max_memory_mb)
+
+
+def check_status(s: z3.Solver, res: z3.CheckSatResult) -> str:
+    """Render a check() result, naming z3's reason for an `unknown`.
+
+    A timeout and a --max-memory abort are both `unknown` and call for
+    different fixes, so the reason is worth printing.
+    """
+    reason = s.reason_unknown() if res == z3.unknown else ""
+    return f"{res}: {reason}" if reason else str(res)
+
+
 # ------------------------------------------------------- stage A: patterns
 
 
@@ -523,7 +548,8 @@ def hex_state(state_bytes: StateBytes) -> str:
 def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      input_diff: StateBytes, output_diff: StateBytes,
                      max_trails: int,
-                     timeout_ms: int, encoding: str) -> None:
+                     timeout_ms: int, max_memory_mb: int | None,
+                     encoding: str) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 
     Builds a fresh instantiation of the pattern, pins the input and output
@@ -534,11 +560,12 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     the enumeration completes.
 
     timeout_ms bounds each solver call AND the enumeration as a whole;
-    stopping early only reports fewer trails, marked INCOMPLETE, which the
-    lower-bound reading already allows for.
+    max_memory_mb, if given, stops a call the same way.  Stopping early
+    only reports fewer trails, marked INCOMPLETE, which the lower-bound
+    reading already allows for.
     """
     inst = Instantiation(num_blocks, num_rounds, pattern, encoding)
-    inst.solver.set("timeout", timeout_ms)
+    configure_solver(inst.solver, timeout_ms, max_memory_mb)
     for i in range(num_blocks):
         for b in range(BLOCK_BYTES):
             inst.solver.add(
@@ -561,7 +588,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
             complete = True
             break
         if res != z3.sat:
-            print(f"cluster enumeration gave up ({res}) after "
+            print(f"cluster enumeration gave up "
+                  f"({check_status(inst.solver, res)}) after "
                   f"{len(weights)} trails")
             break
         model = inst.solver.model()
@@ -619,6 +647,11 @@ def main() -> None:
                         help="time limit per solver call, in seconds; also "
                              "caps the --cluster enumeration as a whole "
                              "(default: %(default)s)")
+    parser.add_argument("-M", "--max-memory", type=positive_int, default=None,
+                        metavar="MB",
+                        help="memory limit per solver call, in MB; the call "
+                             "returns 'unknown' instead of the process being "
+                             "OOM-killed (default: no limit)")
     parser.add_argument("--print-trail", action="store_true",
                         help="print the input/output differences of the "
                              "best trail")
@@ -657,7 +690,7 @@ def main() -> None:
 
     pat_solver, layers = build_pattern_solver(
         args.num_blocks, args.rounds, num_active)
-    pat_solver.set("timeout", timeout_ms)
+    configure_solver(pat_solver, timeout_ms, args.max_memory)
 
     best = None  # (weight, optimal?, input_diff, output_diff, pattern_no,
     #               pattern)
@@ -672,8 +705,11 @@ def main() -> None:
                   f"with A={num_active} ({ta:.1f}s)")
             break
         if res != z3.sat:
+            hint = ("raise -M or free memory"
+                    if "memory" in pat_solver.reason_unknown()
+                    else "try a larger -t")
             print(f"[pattern {pattern_no}] stage A gave up "
-                  f"({res}, {ta:.1f}s); try a larger -t")
+                  f"({check_status(pat_solver, res)}, {ta:.1f}s); {hint}")
             break
         pattern = extract_pattern(pat_solver.model(), layers)
         pat_solver.add(pattern_blocking_clause(layers, pattern))
@@ -681,7 +717,7 @@ def main() -> None:
 
         inst = Instantiation(args.num_blocks, args.rounds, pattern,
                              args.encoding)
-        inst.solver.set("timeout", timeout_ms)
+        configure_solver(inst.solver, timeout_ms, args.max_memory)
         t0 = time.monotonic()
         res = inst.solver.check()
         tb = time.monotonic() - t0
@@ -691,7 +727,7 @@ def main() -> None:
             continue
         if res != z3.sat:
             print(f"[pattern {pattern_no}] stage B gave up "
-                  f"({res}, {tb:.1f}s)")
+                  f"({check_status(inst.solver, res)}, {tb:.1f}s)")
             continue
 
         model = inst.solver.model()
@@ -722,7 +758,8 @@ def main() -> None:
                 break
             else:
                 print(f"[pattern {pattern_no}] minimization gave up "
-                      f"({res}, {tb:.1f}s); weight {weight} stands")
+                      f"({check_status(inst.solver, res)}, {tb:.1f}s); "
+                      f"weight {weight} stands")
                 break
 
         output_diff = inst.model_bytes(model, inst.output_state)
@@ -747,7 +784,7 @@ def main() -> None:
     if args.cluster > 0:
         cluster_estimate(args.num_blocks, args.rounds, pattern,
                          input_diff, output_diff, args.cluster, timeout_ms,
-                         args.encoding)
+                         args.max_memory, args.encoding)
 
 
 if __name__ == "__main__":

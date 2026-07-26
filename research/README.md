@@ -408,6 +408,7 @@ Notes:
 
 * Pick the encoding by the task.  For the _r_ = 1 minimization and the cluster enumeration (refutation-heavy: prove nothing lighter exists), `--encoding rows` is required — the default `witness` returns `unknown` on those.  For _r_ ≥ 2, where the goal is to *find* a low-weight trail rather than prove optimality, `witness` is the one that succeeds (at _r_ = 2 `rows` gets stuck at its all-2<sup>−7</sup> first solution).
 * `-t` is the per-solver-call time limit.  Neither the _r_ = 2 nor the _r_ = 3 minimization finished within 60 min on this machine; the reported 313 and 928 are the best trails found, not proven minima, and a longer limit may or may not tighten them.  Expect run-to-run variation in which trail is found (313/314/315 at _r_ = 2).
+* `-M` caps memory per solver call, in MB.  Exceeding it ends that call with `unknown` and the reason `max. memory exceeded`, which the run reports and carries on from, instead of the process being OOM-killed — worth setting for anything long enough to be worth losing.  The `unknown` reason also distinguishes this from a time limit, which reports `timeout` (or `canceled` when it lands inside the minimization loop).
 * `-A` overrides the target active-S-box count (default: the proven MILP optimum for _N_/_r_ embedded in the script); the two must stay in sync with the MILP table above if `AES_NUM_ROUNDS` ever changes.
 * Raw solver logs are not kept; the tables above are the record (as with the other findings sections).
 

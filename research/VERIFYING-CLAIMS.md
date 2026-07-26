@@ -153,14 +153,14 @@ python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
 # r=1: the bound is proven tight, and the optimal differential's full cluster
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
 
-# r=2: witness finds the low-weight trails; minimization then reports 'unknown' (timeout)
-python3 permute-trail-search.py -r 2 --patterns 1 -t 3600 --encoding witness
+# r=2: a first trail confirming the ceiling (~40 s wall, ~3 s of it solving)
+python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --encoding rows --no-minimize
 
-# r=3: same shape, ~25 min to the first trail (then the same timeout)
-python3 permute-trail-search.py -r 3 --patterns 1 -t 3600 --encoding witness
+# r=3: same shape, one round further (~2 min wall)
+python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --encoding rows --no-minimize
 ```
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the reproducible part; the count and total are not, because which weight-54 differential the search lands on is a solver choice and each clusters slightly differently (an earlier run found 847 summing to 2<sup>−51.8</sup>).  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail, not an exact match.  r=2 finds a realizable trail and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 302], not solved (which trail a run lands on is solver luck: runs have returned 302, 313, 314 and 315; only the bracket is guaranteed).  r=3 is the same shape, bracketed in [798, 928] by a found trail of weight 928.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the reproducible part; the count and total are not, because which weight-54 differential the search lands on is a solver choice and each clusters slightly differently (an earlier run found 847 summing to 2<sup>−51.8</sup>).  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail, not an exact match.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum.  r=3 is the same shape: this command returns 929, one bit above the recorded 928 ceiling, which a longer `--encoding witness` run reached; the bracket stays [798, 928].  Which trail a run lands on is solver luck (r=2 runs have returned 302, 313, 314 and 315), so only the brackets are guaranteed.  Dropping `--no-minimize` reproduces the other half of the claim — the minimization reports `unknown` at r=2 and r=3 however long it is given, which is *why* these are ceilings rather than minima; budget several GiB and an hour per round count for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-choice lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 
 ## 14. Rebound-attack resistance is an argument — read it
 

@@ -40,6 +40,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_DRIVER = HERE / "duplex-diff-driver"
@@ -50,7 +51,7 @@ DEFAULT_SEED = 0x436173_74656C6C
 SEED_MAX = 2**64  # exclusive, matching equivalence-tests' uint64_t seed
 
 
-def positive_int(s):
+def positive_int(s: str) -> int:
     """argparse type: an integer >= 1."""
     value = int(s)
     if value < 1:
@@ -58,7 +59,7 @@ def positive_int(s):
     return value
 
 
-def seed_arg(s):
+def seed_arg(s: str) -> int:
     """Parse a seed: decimal or 0x-prefixed, within [0, 2**64)."""
     try:
         value = int(s, 0)
@@ -69,7 +70,7 @@ def seed_arg(s):
     return value
 
 
-def load_model():
+def load_model() -> ModuleType:
     """Import spec-conformance.py (its hyphen blocks a plain import)."""
     spec = importlib.util.spec_from_file_location("spec_conformance", MODEL_PATH)
     if spec is None or spec.loader is None:
@@ -109,6 +110,27 @@ ABSORB_OPS = ("add", "addle", "addre", "addlei", "addrei", "pad")
 type Op = tuple[str | bytes | int, ...]
 
 
+def op_name(op: Op) -> str:
+    """The name of an op, which is always its first element."""
+    name = op[0]
+    assert isinstance(name, str)
+    return name
+
+
+def op_bytes(op: Op) -> bytes:
+    """The byte-string operand of an op that carries one."""
+    operand = op[1]
+    assert isinstance(operand, bytes)  # the op name fixes the operand type
+    return operand
+
+
+def op_int(op: Op) -> int:
+    """The integer operand of an op that carries one."""
+    operand = op[1]
+    assert isinstance(operand, int)
+    return operand
+
+
 @dataclass(frozen=True)
 class Program:
     """One generated program: constructor parameters plus a list of ops."""
@@ -122,12 +144,12 @@ class Program:
     ops: list[Op]
 
 
-def gen_bytes(rng, n):
+def gen_bytes(rng: random.Random, n: int) -> bytes:
     """Build n pseudorandom bytes."""
     return rng.randbytes(n)
 
 
-def gen_len(rng, rate):
+def gen_len(rng: random.Random, rate: int) -> int:
     """Pick a byte-string length, biased to the interesting boundaries."""
     if rng.random() < 0.65:
         return rng.choice((0, 1, 2, 15, 16, 17, 127, 128,
@@ -137,7 +159,7 @@ def gen_len(rng, rate):
     return rng.randrange(0, 2 * rate + 2)
 
 
-def gen_squeeze_len(rng, C):
+def gen_squeeze_len(rng: random.Random, C: int) -> int:
     """Pick a squeeze length within [0, rate]; the C++ clamp is out of scope."""
     rate = 16 * (16 - C)
     if rng.random() < 0.5:
@@ -145,7 +167,7 @@ def gen_squeeze_len(rng, C):
     return rng.randrange(0, rate + 1)
 
 
-def gen_program(rng, prog_id):
+def gen_program(rng: random.Random, prog_id: str) -> Program:
     """Generate one random program."""
     C = rng.choice(CAPACITIES)
     rate = 16 * (16 - C)
@@ -154,7 +176,7 @@ def gen_program(rng, prog_id):
     N = gen_bytes(rng, rng.choice((0, 0, 1, 7, 8, 16, 32)))
     S = gen_bytes(rng, rng.choice((0, 0, 1, 7, 8, 16, 32)))
 
-    ops = []
+    ops: list[Op] = []
     for _ in range(rng.randint(1, 7)):
         op = rng.choice(ABSORB_OPS)
         if op in ("addlei", "addrei"):
@@ -175,44 +197,46 @@ def gen_program(rng, prog_id):
 
 # ---- The two sides
 
-def hex_field(data):
+def hex_field(data: bytes) -> str:
     """Render a byte string as a script field ("-" when empty)."""
     return data.hex() if data else "-"
 
 
-def script_lines(program):
+def script_lines(program: Program) -> list[str]:
     """Render a program as driver script lines."""
     new_op = (f"new {program.C} {program.rounds} {program.suffix} "
               f"{hex_field(program.N)} {hex_field(program.S)}")
     lines = [f"program {program.prog_id}", new_op]
     for op in program.ops:
-        if op[0] == "pad":
+        name = op_name(op)
+        if name == "pad":
             lines.append("pad")
-        elif op[0] in ("addlei", "addrei", "squeeze"):
-            lines.append(f"{op[0]} {op[1]}")
+        elif name in ("addlei", "addrei", "squeeze"):
+            lines.append(f"{name} {op_int(op)}")
         else:
-            lines.append(f"{op[0]} {hex_field(op[1])}")
+            lines.append(f"{name} {hex_field(op_bytes(op))}")
     return lines
 
 
-def run_model(program):
+def run_model(program: Program) -> list[str]:
     """Replay a program against the Python model; return the squeeze digests."""
     duplex = model.Duplex(program.C, program.rounds, program.suffix,
                           program.N, program.S)
-    digests = []
+    digests: list[str] = []
 
     for op in program.ops:
-        name = op[0]
+        name = op_name(op)
         if name == "add":
-            duplex.add(op[1])
+            duplex.add(op_bytes(op))
         elif name == "addle":
-            duplex.add(model.encode_string(op[1]))
+            duplex.add(model.encode_string(op_bytes(op)))
         elif name == "addre":
-            duplex.add(op[1] + model.right_encode(len(op[1])))
+            data = op_bytes(op)
+            duplex.add(data + model.right_encode(len(data)))
         elif name == "addlei":
-            duplex.add(model.left_encode(op[1]))
+            duplex.add(model.left_encode(op_int(op)))
         elif name == "addrei":
-            duplex.add(model.right_encode(op[1]))
+            duplex.add(model.right_encode(op_int(op)))
         elif name == "pad":
             # The C++ apply_padding_rule() is public, but the model keeps its
             # pad10*1 step internal (it is called by __init__ and squeeze), so
@@ -220,14 +244,14 @@ def run_model(program):
             # point of the op: explicit padding is otherwise untested.
             duplex._pad_and_permute()  # pylint: disable=protected-access
         elif name == "squeeze":
-            digests.append(duplex.squeeze(op[1]).hex())
+            digests.append(duplex.squeeze(op_int(op)).hex())
         else:
             raise ValueError(f"unknown op {name!r}")
 
     return digests
 
 
-def annotate_driver_error(message, script):
+def annotate_driver_error(message: str, script: str) -> str:
     """Quote the script line a driver "line N:" error refers to, if any."""
     match = re.search(r"^error: line ([0-9]+):", message, re.MULTILINE)
     if match is None:
@@ -241,7 +265,7 @@ def annotate_driver_error(message, script):
     return f"{message}\n    {lines[lineno - 1]}"
 
 
-def run_driver(driver, script):
+def run_driver(driver: Path, script: str) -> dict[str, list[str]]:
     """Run every program through one driver process; return per-program digests."""
     try:
         proc = subprocess.run([str(driver)], input=script, capture_output=True,
@@ -253,7 +277,7 @@ def run_driver(driver, script):
         sys.exit(f"{driver} failed ({proc.returncode}): "
                  f"{annotate_driver_error(proc.stderr.strip(), script)}")
 
-    results = {}
+    results: dict[str, list[str]] = {}
     prog_id = None
     for line in proc.stdout.splitlines():
         head, _, rest = line.partition(" ")
@@ -270,7 +294,7 @@ def run_driver(driver, script):
     return results
 
 
-def report_failure(program, expected, got):
+def report_failure(program: Program, expected: list[str], got: list[str]) -> None:
     """Print a diverging program: its script, then every differing squeeze."""
     print(f"FAILED: program {program.prog_id}:")
     for line in script_lines(program):
@@ -283,7 +307,7 @@ def report_failure(program, expected, got):
         print(f"    squeeze count: model = {len(expected)}, driver = {len(got)}")
 
 
-def main():
+def main() -> int:
     """Generate programs, run both sides, and report any divergence."""
     parser = argparse.ArgumentParser(
         description="Differential fuzzer for Castella::Duplex vs the SPEC.md model.")

@@ -389,7 +389,7 @@ Consistent with the MILP section: this covers differential (and, symmetrically, 
 
 ### Reproducing
 
-Dependencies: Python 3 and the z3 solver (Arch: `python-z3-solver`; elsewhere `pip install z3-solver`).  z3 solves single-threaded, so independent round counts can run in parallel.
+Dependencies: Python 3 and the z3 solver (Arch: `python-z3-solver`; elsewhere `pip install z3-solver`).  z3 solves single-threaded, so independent round counts can run in parallel — but memory, not cores, is the limit.  On this machine a single _r_ = 3 `witness` run reached 6.3 GiB resident and was still growing when the OOM killer took it, so budget several GiB per concurrent run and more for larger _r_.  The cost scales with `-t` as well as with _r_: the minimization loop adds a tighter weight bound and re-checks against one persistent solver, so clauses and learned lemmas accumulate for the whole budget.  `--no-minimize` caps that, which is another reason to pass it when only a first trail is wanted.
 
 ```bash
 python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, <0.1 s

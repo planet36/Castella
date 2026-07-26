@@ -48,6 +48,14 @@ DEFAULT_SEED = 0x436173_74656C6C
 SEED_MAX = 2**64  # exclusive, matching equivalence-tests' uint64_t seed
 
 
+def positive_int(s):
+    """argparse type: an integer >= 1."""
+    value = int(s)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {value}")
+    return value
+
+
 def seed_arg(s):
     """Parse a seed: decimal or 0x-prefixed, within [0, 2**64)."""
     try:
@@ -251,7 +259,7 @@ def main():
     """Generate programs, run both sides, and report any divergence."""
     parser = argparse.ArgumentParser(
         description="Differential fuzzer for Castella::Duplex vs the SPEC.md model.")
-    parser.add_argument("-n", "--num-programs", type=int, default=200,
+    parser.add_argument("-n", "--num-programs", type=positive_int, default=200,
                         help="number of programs to generate (default: 200)")
     parser.add_argument("--seed", type=seed_arg, default=DEFAULT_SEED,
                         help="PRNG seed, decimal or 0x-prefixed "

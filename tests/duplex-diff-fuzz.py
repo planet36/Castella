@@ -82,7 +82,15 @@ model = load_model()
 
 # ---- Program generation
 
-CAPACITIES = (2, 4, 6, 8)  # C_MIN..C_MAX, even
+# The full legal parameter ranges, mirrored by hand from the headers -- C_MIN
+# and C_MAX in castella-duplex.hpp, NUM_ROUNDS_MIN<16>() and NUM_ROUNDS_MAX in
+# castella-permute.hpp, whose comment invites raising it.  Nothing here can
+# import them, and widening one there fails no test: it just leaves the fuzzer
+# covering less than the library allows.  spec-conformance.py asserts the same
+# bounds and needs the same edit.
+CAPACITIES = (2, 4, 6, 8)  # even
+ROUNDS_MIN = 3
+ROUNDS_MAX = 16
 
 # Values straddling every byte_width transition reachable in a uint64_t.  The
 # integer encodings absorb only byte_width(x) + 1 bytes, so these are free.
@@ -137,7 +145,7 @@ def gen_program(rng, prog_id):
     """Generate one random program."""
     C = rng.choice(CAPACITIES)
     rate = 16 * (16 - C)
-    rounds = rng.randint(3, 16)
+    rounds = rng.randint(ROUNDS_MIN, ROUNDS_MAX)
     suffix = rng.choice((0, 0x01, 0x1F, 0x80, 0xFF, rng.randrange(256)))
     N = gen_bytes(rng, rng.choice((0, 0, 1, 7, 8, 16, 32)))
     S = gen_bytes(rng, rng.choice((0, 0, 1, 7, 8, 16, 32)))

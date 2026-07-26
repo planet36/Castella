@@ -124,7 +124,7 @@ class Program:
 
 def gen_bytes(rng, n):
     """Build n pseudorandom bytes."""
-    return bytes(rng.randrange(256) for _ in range(n))
+    return rng.randbytes(n)
 
 
 def gen_len(rng, rate):

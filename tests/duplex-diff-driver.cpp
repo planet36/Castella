@@ -33,6 +33,7 @@
 #include "as_byte_span.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
+#include "parse_int.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -45,6 +46,8 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
+#include <type_traits>
 
 /// Convert a hexadecimal character to its nibble value
 /**
@@ -111,14 +114,45 @@ hex_to_bytes(const std::string_view hex)
 }
 
 /// Read one whitespace-delimited field, or throw
+/**
+* Integer fields go through \c parse_int rather than \c operator>>, which for
+* an unsigned \a T silently wraps a negative value and stops at the first
+* character it cannot use -- so "-1" and "1.5" would be accepted as 2^64-1 and
+* 1.  \c parse_int rejects both, and separates a malformed field from one that
+* is merely out of range, so the message names the actual problem instead of
+* reporting every failure as a missing field.
+*
+* \tparam T the field's type: \c std::string for a token, otherwise an integer
+* \param iss the line being interpreted
+* \param what the field's name, for the error message
+* \return the field's value
+* \exception std::invalid_argument if the field is absent, malformed, or out
+*            of range for \a T
+*/
 template <typename T>
 [[nodiscard]] static T
 read_field(std::istringstream& iss, const char* const what)
 {
-    T value{};
-    if (!(iss >> value))
+    std::string token;
+    if (!(iss >> token))
         throw std::invalid_argument(std::string("missing field: ") + what);
-    return value;
+
+    if constexpr (std::is_same_v<T, std::string>)
+    {
+        return token;
+    }
+    else
+    {
+        const auto value = parse_int<T>(token);
+        if (!value)
+        {
+            const auto* const why = (value.error() == std::errc::result_out_of_range)
+                                        ? "field out of range: "
+                                        : "malformed field: ";
+            throw std::invalid_argument(why + std::string(what) + " = " + token);
+        }
+        return *value;
+    }
 }
 
 int

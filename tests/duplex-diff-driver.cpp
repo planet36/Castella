@@ -146,6 +146,10 @@ main()
 
             if (op == "program")
             {
+                // Every program declares its own duplex.  Without this, a
+                // program missing its "new" would silently continue the
+                // previous one and report its digests under the new id.
+                duplex.reset();
                 std::println("program {}", read_field<std::string>(iss, "id"));
                 continue;
             }

@@ -25,7 +25,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed) and first-order differential clustering | executable (solver) | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2 and r=3 bracketed) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
@@ -155,9 +155,12 @@ python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --clust
 
 # r=2: witness finds the low-weight trails; minimization then reports 'unknown' (timeout)
 python3 permute-trail-search.py -r 2 --patterns 1 -t 3600 --encoding witness
+
+# r=3: same shape, ~25 min to the first trail (then the same timeout)
+python3 permute-trail-search.py -r 3 --patterns 1 -t 3600 --encoding witness
 ```
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the reproducible part; the count and total are not, because which weight-54 differential the search lands on is a solver choice and each clusters slightly differently (an earlier run found 847 summing to 2<sup>−51.8</sup>).  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail, not an exact match.  r=2 finds a realizable trail near weight 313 and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 313], not solved (the exact value depends on solver luck: runs have returned 313, 314 and 315; only the bracket is guaranteed).  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the reproducible part; the count and total are not, because which weight-54 differential the search lands on is a solver choice and each clusters slightly differently (an earlier run found 847 summing to 2<sup>−51.8</sup>).  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail, not an exact match.  r=2 finds a realizable trail near weight 313 and reports `unknown` on the minimization — the best-trail weight is bracketed in [270, 313], not solved (the exact value depends on solver luck: runs have returned 313, 314 and 315; only the bracket is guaranteed).  r=3 is the same shape, bracketed in [798, 928] by a found trail of weight 928.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-asymmetry lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 
 ## 14. Rebound-attack resistance is an argument — read it
 
@@ -176,4 +179,4 @@ Expected: the self-test passes (it asserts δ_1..7 = 7, γ = 7, and that the sam
 
 ## 16. Evidence pending
 
-A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely) and trail tightness at r ≥ 2 (the §13 r=2 minimization is only bracketed; r ≥ 3 exact search is intractable): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument; the algebraic-degree upper bound to §15.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely) and trail tightness at r ≥ 2 (the §13 r=2 and r=3 minimizations both time out, leaving only brackets; no r ≥ 4 search has been run): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument; the algebraic-degree upper bound to §15.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

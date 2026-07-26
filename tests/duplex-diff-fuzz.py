@@ -105,30 +105,9 @@ ABSORB_OPS = ("add", "addle", "addre", "addlei", "addrei", "pad")
 
 
 # One op: its name, then the operand it takes -- bytes, an integer, or nothing.
-# The name fixes the arity, but no tuple type can say so and still allow the
-# op[1] that reading an operand needs, so the length stays variable.
-type Op = tuple[str | bytes | int, ...]
-
-
-def op_name(op: Op) -> str:
-    """The name of an op, which is always its first element."""
-    name = op[0]
-    assert isinstance(name, str)
-    return name
-
-
-def op_bytes(op: Op) -> bytes:
-    """The byte-string operand of an op that carries one."""
-    operand = op[1]
-    assert isinstance(operand, bytes)  # the op name fixes the operand type
-    return operand
-
-
-def op_int(op: Op) -> int:
-    """The integer operand of an op that carries one."""
-    operand = op[1]
-    assert isinstance(operand, int)
-    return operand
+# The name fixes the arity, and the two sides destructure rather than index, so
+# each shape can be spelled out and a malformed op fails to type-check here.
+type Op = tuple[str] | tuple[str, bytes] | tuple[str, int]
 
 
 @dataclass(frozen=True)
@@ -208,13 +187,15 @@ def script_lines(program: Program) -> list[str]:
               f"{hex_field(program.N)} {hex_field(program.S)}")
     lines = [f"program {program.prog_id}", new_op]
     for op in program.ops:
-        name = op_name(op)
-        if name == "pad":
-            lines.append("pad")
-        elif name in ("addlei", "addrei", "squeeze"):
-            lines.append(f"{name} {op_int(op)}")
-        else:
-            lines.append(f"{name} {hex_field(op_bytes(op))}")
+        match op:
+            case ("pad",):
+                lines.append("pad")
+            case (("addlei" | "addrei" | "squeeze") as name, int() as value):
+                lines.append(f"{name} {value}")
+            case (("add" | "addle" | "addre") as name, bytes() as data):
+                lines.append(f"{name} {hex_field(data)}")
+            case _:
+                raise ValueError(f"unrenderable op {op!r}")
     return lines
 
 
@@ -225,28 +206,28 @@ def run_model(program: Program) -> list[str]:
     digests: list[str] = []
 
     for op in program.ops:
-        name = op_name(op)
-        if name == "add":
-            duplex.add(op_bytes(op))
-        elif name == "addle":
-            duplex.add(model.encode_string(op_bytes(op)))
-        elif name == "addre":
-            data = op_bytes(op)
-            duplex.add(data + model.right_encode(len(data)))
-        elif name == "addlei":
-            duplex.add(model.left_encode(op_int(op)))
-        elif name == "addrei":
-            duplex.add(model.right_encode(op_int(op)))
-        elif name == "pad":
-            # The C++ apply_padding_rule() is public, but the model keeps its
-            # pad10*1 step internal (it is called by __init__ and squeeze), so
-            # there is no public counterpart to drive.  Reaching in is the
-            # point of the op: explicit padding is otherwise untested.
-            duplex._pad_and_permute()  # pylint: disable=protected-access
-        elif name == "squeeze":
-            digests.append(duplex.squeeze(op_int(op)).hex())
-        else:
-            raise ValueError(f"unknown op {name!r}")
+        match op:
+            case ("add", bytes() as data):
+                duplex.add(data)
+            case ("addle", bytes() as data):
+                duplex.add(model.encode_string(data))
+            case ("addre", bytes() as data):
+                duplex.add(data + model.right_encode(len(data)))
+            case ("addlei", int() as value):
+                duplex.add(model.left_encode(value))
+            case ("addrei", int() as value):
+                duplex.add(model.right_encode(value))
+            case ("pad",):
+                # The C++ apply_padding_rule() is public, but the model keeps
+                # its pad10*1 step internal (it is called by __init__ and
+                # squeeze), so there is no public counterpart to drive.
+                # Reaching in is the point of the op: explicit padding is
+                # otherwise untested.
+                duplex._pad_and_permute()  # pylint: disable=protected-access
+            case ("squeeze", int() as value):
+                digests.append(duplex.squeeze(value).hex())
+            case _:
+                raise ValueError(f"unknown op {op!r}")
 
     return digests
 

@@ -12,6 +12,7 @@
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 
+#include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>

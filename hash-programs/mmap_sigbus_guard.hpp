@@ -31,9 +31,9 @@
 #pragma once
 
 #include <atomic>
-#include <csignal>
 #include <cstddef>
 #include <cstdlib>
+#include <signal.h>
 #include <string>
 #include <unistd.h>
 

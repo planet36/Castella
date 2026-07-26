@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <unistd.h>
 #include <vector>

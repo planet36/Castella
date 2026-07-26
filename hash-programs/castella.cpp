@@ -15,6 +15,7 @@
 #include "unique_fd.hpp"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>

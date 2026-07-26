@@ -35,6 +35,7 @@
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

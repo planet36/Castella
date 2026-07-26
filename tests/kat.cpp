@@ -38,6 +38,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <fstream>

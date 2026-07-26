@@ -18,6 +18,7 @@
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>

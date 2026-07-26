@@ -35,6 +35,7 @@ Usage: python3 duplex-diff-fuzz.py [-n PROGRAMS] [--seed SEED] [--driver PATH]
 import argparse
 import importlib.util
 import random
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -214,6 +215,20 @@ def run_model(program):
     return digests
 
 
+def annotate_driver_error(message, script):
+    """Quote the script line a driver "line N:" error refers to, if any."""
+    match = re.search(r"^error: line ([0-9]+):", message, re.MULTILINE)
+    if match is None:
+        return message
+
+    lines = script.splitlines()
+    lineno = int(match[1])
+    if not 1 <= lineno <= len(lines):
+        return message
+
+    return f"{message}\n    {lines[lineno - 1]}"
+
+
 def run_driver(driver, script):
     """Run every program through one driver process; return per-program digests."""
     try:
@@ -223,7 +238,8 @@ def run_driver(driver, script):
         sys.exit(f"cannot run {driver}: {e}\nBuild it with: make {DEFAULT_DRIVER.name}")
 
     if proc.returncode != 0:
-        sys.exit(f"{driver} failed ({proc.returncode}): {proc.stderr.strip()}")
+        sys.exit(f"{driver} failed ({proc.returncode}): "
+                 f"{annotate_driver_error(proc.stderr.strip(), script)}")
 
     results = {}
     prog_id = None

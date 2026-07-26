@@ -38,6 +38,7 @@ import random
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -102,20 +103,23 @@ INT_VALUES = (0, 1, 2, 127, 128, 254, 255, 256, 257, 65535, 65536, 65537,
 ABSORB_OPS = ("add", "addle", "addre", "addlei", "addrei", "pad")
 
 
+# One op: its name, then the operand it takes -- bytes, an integer, or nothing.
+# The name fixes the arity, but no tuple type can say so and still allow the
+# op[1] that reading an operand needs, so the length stays variable.
+type Op = tuple[str | bytes | int, ...]
+
+
+@dataclass(frozen=True)
 class Program:
     """One generated program: constructor parameters plus a list of ops."""
 
-    # pylint: disable=too-few-public-methods
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
-    def __init__(self, prog_id, C, rounds, suffix, N, S, ops):
-        self.prog_id = prog_id
-        self.C = C
-        self.rounds = rounds
-        self.suffix = suffix
-        self.N = N
-        self.S = S
-        self.ops = ops
+    prog_id: str
+    C: int
+    rounds: int
+    suffix: int
+    N: bytes
+    S: bytes
+    ops: list[Op]
 
 
 def gen_bytes(rng, n):

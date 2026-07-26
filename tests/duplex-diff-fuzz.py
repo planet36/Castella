@@ -289,6 +289,8 @@ def main():
         got = actual.get(program.prog_id)
 
         if got is None:
+            if show_progress:
+                print()  # close the pending \r line before the report
             print(f"FAILED: program {program.prog_id}: no driver output")
             num_failed += 1
             continue
@@ -297,6 +299,8 @@ def main():
             num_checked += len(expected)
         else:
             num_failed += 1
+            if show_progress:
+                print()  # close the pending \r line before the report
             report_failure(program, expected, got)
 
         if show_progress:

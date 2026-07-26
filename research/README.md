@@ -385,7 +385,7 @@ The measurement covers one differential within one activity pattern, so 2<sup>�
 
 ### Scope
 
-Consistent with the MILP section: this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers, and the reduced-round instances (_r_ = 1, 2) are validation and calibration points — where full bit diffusion is not yet reached (`NUM_ROUNDS_MIN<16>()` = 3) and no security is claimed — not standalone security statements.  See [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) for how these results feed the claim.
+Consistent with the MILP section: this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers, and the reduced-round instances (_r_ = 1, 2, 3) are validation and calibration points — no security is claimed at any of them (`R*` is 6, or 8 at `C` = 8), and at _r_ = 1, 2 full bit diffusion is not even reached (`NUM_ROUNDS_MIN<16>()` = 3) — not standalone security statements.  See [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) for how these results feed the claim.
 
 ### Reproducing
 

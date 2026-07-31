@@ -128,6 +128,10 @@ def nonnegative_int(s: str) -> int:
 # ---------------------------------------------------------------- AES pieces
 
 
+class SelfTestError(Exception):
+    """The S-box, DDT, or AES round model disagrees with a known value."""
+
+
 def make_sbox() -> list[int]:
     """Build the AES S-box (GF(2^8) inverse composed with the affine map)."""
     # Multiplicative inverse in GF(2^8) mod 0x11B, then the AES affine map.
@@ -174,7 +178,9 @@ DDT = make_ddt()
 DDT4_OUT = [0] * 256
 for _din in range(1, 256):
     _fours = [d for d in range(256) if DDT[_din][d] == 4]
-    assert len(_fours) == 1, "AES DDT: expected exactly one 4 per row"
+    if len(_fours) != 1:
+        raise SelfTestError(f"AES DDT row {_din:#04x} has {len(_fours)} "
+                            f"entries equal to 4, expected exactly one")
     DDT4_OUT[_din] = _fours[0]
 
 # For each nonzero din, the douts with DDT[din][dout] != 0 (127 each).
@@ -242,15 +248,34 @@ AESENC_VECTORS = [
 
 
 def self_test() -> None:
-    """Sanity-check the S-box, DDT, and AES round model against known values."""
-    assert SBOX[0x00] == 0x63 and SBOX[0x53] == 0xED and SBOX[0xFF] == 0x16
-    assert all(v in (0, 2, 4) for din in range(1, 256) for v in DDT[din])
-    assert all(sum(DDT[din]) == 256 for din in range(256))
+    """Sanity-check the S-box, DDT, and AES round model against known values.
+
+    Raises SelfTestError on any mismatch.  Deliberately not `assert`: this
+    runs on every invocation, not only under --self-test, and an
+    assert-based version would pass vacuously under `python3 -O`.
+    """
+    for din, want in ((0x00, 0x63), (0x53, 0xED), (0xFF, 0x16)):
+        if SBOX[din] != want:
+            raise SelfTestError(f"S-box: S[{din:#04x}] is {SBOX[din]:#04x}, "
+                                f"expected {want:#04x}")
+    for din in range(1, 256):
+        for dout, entry in enumerate(DDT[din]):
+            if entry not in (0, 2, 4):
+                raise SelfTestError(
+                    f"DDT[{din:#04x}][{dout:#04x}] is {entry}, expected "
+                    f"0, 2 or 4")
+    for din in range(256):
+        total = sum(DDT[din])
+        if total != 256:
+            raise SelfTestError(f"DDT row {din:#04x} sums to {total}, "
+                                f"expected 256")
     for hex_in, hex_out in AESENC_VECTORS:
         state = list(bytes.fromhex(hex_in))
-        expect = list(bytes.fromhex(hex_out))
-        assert aes_round_zero_key(state) == expect, \
-            f"AES round model mismatch for input {hex_in}"
+        got = aes_round_zero_key(state)
+        if got != list(bytes.fromhex(hex_out)):
+            raise SelfTestError(
+                f"AES round model mismatch for input {hex_in}: got "
+                f"{bytes(got).hex()}, expected {hex_out}")
 
 
 # --------------------------------------------------------- solver plumbing
@@ -352,6 +377,10 @@ def pattern_blocking_clause(layers: Layers, pattern: Pattern) -> z3.BoolRef:
 
 
 # -------------------------------------------------- stage B: instantiation
+
+
+class TrailVerificationError(Exception):
+    """A solver model failed an independent check against the DDT."""
 
 
 def bv_table_lookup(x: z3.BitVecRef, table: list[int]) -> z3.BitVecRef:
@@ -475,17 +504,23 @@ class Instantiation:
         """Compute the exact differential weight of a solved trail."""
         weight = 0
         n6 = 0
-        for din_v, dout_v in self.sboxes:
+        for idx, (din_v, dout_v) in enumerate(self.sboxes):
             din = model.eval(din_v, model_completion=True).as_long()
             dout = model.eval(dout_v, model_completion=True).as_long()
             entry = DDT[din][dout]
-            assert entry in (2, 4), "model S-box transition outside the DDT"
+            if entry not in (2, 4):
+                raise TrailVerificationError(
+                    f"S-box {idx}: transition {din:#04x} -> {dout:#04x} is "
+                    f"outside the DDT (entry {entry})")
             weight += 6 if entry == 4 else 7
             n6 += entry == 4
         n6_z3 = sum(z3.is_true(model.eval(w6, model_completion=True))
                     for w6 in self.weight6)
         # w6 is one-sided, so the model may under-mark weight-6 transitions.
-        assert n6_z3 <= n6, "w6 marked on a non-DDT=4 transition"
+        if n6_z3 > n6:
+            raise TrailVerificationError(
+                f"w6 marked on a non-DDT=4 transition: z3 marks {n6_z3} "
+                f"weight-6 S-boxes but only {n6} have DDT entry 4")
         return weight
 
     def model_bytes(self, model, state: BitVecState) -> StateBytes:
@@ -497,12 +532,17 @@ class Instantiation:
 # pylint: disable=too-many-locals
 def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
                  model, inst: Instantiation) -> None:
-    """Re-propagate the model's difference in Python and check every layer."""
+    """Re-propagate the model's difference in Python and check every layer.
+
+    Raises TrailVerificationError if any layer disagrees with the model.
+    Deliberately not `assert`: this check is what makes a reported trail
+    evidence rather than a solver claim, so it must survive `python3 -O`.
+    """
     tmap = transpose_map(num_blocks)
     state = [list(block) for block in input_diff]
     k = 0
-    for _t in range(num_rounds):
-        for _a in range(AES_NUM_ROUNDS):
+    for rnd in range(num_rounds):
+        for aes_rnd in range(AES_NUM_ROUNDS):
             nxt = []
             for i in range(num_blocks):
                 dout_bytes = []
@@ -513,11 +553,20 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
                         continue
                     din_v, dout_v = inst.sboxes[k]
                     k += 1
-                    assert model.eval(
-                        din_v, model_completion=True).as_long() == din
+                    din_model = model.eval(
+                        din_v, model_completion=True).as_long()
+                    if din_model != din:
+                        raise TrailVerificationError(
+                            f"round {rnd}, AES round {aes_rnd}, block {i}, "
+                            f"byte {b}: re-propagated input difference "
+                            f"{din:#04x} but the model has {din_model:#04x}")
                     dout = model.eval(
                         dout_v, model_completion=True).as_long()
-                    assert DDT[din][dout] > 0
+                    if DDT[din][dout] == 0:
+                        raise TrailVerificationError(
+                            f"round {rnd}, AES round {aes_rnd}, block {i}, "
+                            f"byte {b}: S-box transition {din:#04x} -> "
+                            f"{dout:#04x} is impossible (DDT entry 0)")
                     dout_bytes.append(dout)
                 block_out = []
                 for col in batched(dout_bytes, 4):
@@ -528,9 +577,15 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
         for (i, b), (j, b2) in tmap.items():
             nxt[j][b2] = state[i][b]
         state = nxt
-    assert k == len(inst.sboxes), "not every S-box was consumed"
-    assert state == inst.model_bytes(model, inst.output_state), \
-        "output difference mismatch"
+    if k != len(inst.sboxes):
+        raise TrailVerificationError(
+            f"consumed {k} S-boxes but the model constrains "
+            f"{len(inst.sboxes)}")
+    output_diff = inst.model_bytes(model, inst.output_state)
+    if state != output_diff:
+        raise TrailVerificationError(
+            f"output difference mismatch: re-propagated "
+            f"{hex_state(state)}, model has {hex_state(output_diff)}")
 
 
 def hex_state(state_bytes: StateBytes) -> str:

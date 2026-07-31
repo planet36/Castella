@@ -159,8 +159,8 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --encoding rows --no-mi
 # r=3: same shape, one round further (~2 min wall)
 python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --encoding rows --no-minimize
 
-# r=4: same again (~3 min wall).  --encoding rows is not optional here: the same
-# run under the default witness encoding finds no trail in 30 min.
+# r=4: same again (~3 min wall).  rows (the default) is not optional here: the
+# same run under --encoding witness finds no trail in 30 min.
 python3 permute-trail-search.py -r 4 --patterns 1 -t 1800 --encoding rows --no-minimize -M 4000
 ```
 

@@ -410,16 +410,18 @@ class Instantiation:
     """Bit-level model of one activity pattern.
 
     encoding "witness": dout == S[x ^ din] ^ S[x] with an existential x
-    (two 256-way ITE table lookups; fast at finding solutions).
+    (two 256-way ITE table lookups; compact to build, but nearly opaque
+    to unit propagation).
     encoding "rows": one implication per DDT row, din == a -> dout in
-    allowed(a) (larger, but propagates better on UNSAT-heavy queries:
-    weight minimization and cluster enumeration).
+    allowed(a) (a much larger model, but it propagates well: faster to a
+    first trail at every round count measured, and the only encoding that
+    completes weight minimization and cluster enumeration).  The default.
     """
 
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
     def __init__(self, num_blocks: int, num_rounds: int, pattern: Pattern,
-                 encoding: str = "witness"):
+                 encoding: str = "rows"):
         self.solver = z3.Solver()
         self.sboxes = []        # (din_var, dout_var) in S-box order
         self.weight6 = []       # Bool: this S-box took the DDT=4 transition
@@ -716,10 +718,11 @@ def main() -> None:
                              "characteristics sharing the best trail's "
                              "input/output differential (default: off)")
     parser.add_argument("--encoding", choices=("witness", "rows"),
-                        default="witness",
+                        default="rows",
                         help="S-box DDT encoding (default: %(default)s; "
-                             "'rows' is slower to build but stronger on "
-                             "minimization/enumeration)")
+                             "'rows' takes longer to build but propagates "
+                             "far better, and is the faster route to a "
+                             "trail at every round count measured)")
     parser.add_argument("--self-test", action="store_true",
                         help="run the model self-tests and exit")
     args = parser.parse_args()

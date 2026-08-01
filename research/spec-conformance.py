@@ -19,6 +19,7 @@ Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 
 import sys
 from functools import partial
+from typing import NoReturn
 
 # Every check below raises rather than asserts: `python3 -O` strips
 # asserts, and tests/duplex-diff-fuzz.py relies on the parameter bounds
@@ -314,6 +315,21 @@ def kat_msg(msglen: int) -> bytes:
     return bytes(i & 0xFF for i in range(msglen))
 
 
+class KatFields(dict):
+    """The key=value fields of one KAT line, naming the line on any error."""
+
+    def __init__(self, lineno: int, tokens: list[str]):
+        for tok in tokens:
+            if "=" not in tok:
+                raise ValueError(
+                    f"line {lineno}: field {tok!r} is not key=value")
+        super().__init__(tok.split("=", 1) for tok in tokens)
+        self.lineno = lineno
+
+    def __missing__(self, key: str) -> NoReturn:
+        raise ValueError(f"line {self.lineno}: missing field {key!r}")
+
+
 def _duplex_from_kat(f: dict) -> Duplex:
     """Build a Duplex node from the parsed KAT fields."""
     return Duplex(int(f["C"]), int(f["rounds"]), int(f["suffix"]),
@@ -335,7 +351,7 @@ def verify_kat_file(path: str) -> int:
             if not line or line.startswith("#"):
                 continue
             typ, *rest = line.split()
-            f = dict(tok.split("=", 1) for tok in rest)
+            f = KatFields(lineno, rest)
             msg = kat_msg(int(f["msglen"]))
             out = int(f["out"])
             expected = f["digest"]

@@ -14,13 +14,67 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <print>
+#include <source_location>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+namespace {
+
+int num_passed = 0;
+int num_failed = 0;
+
+/// Report one checked expectation
+/**
+* A failure does not end the run, so one invocation reports every mismatch
+* rather than only the first, and \c main exits nonzero if any check failed.
+*
+* \param ok whether the expectation held
+* \param what the expectation, for the failure message
+* \param loc the call site
+*/
+void
+check(const bool ok,
+      const std::string_view what,
+      const std::source_location loc = std::source_location::current())
+{
+    if (ok)
+    {
+        ++num_passed;
+        return;
+    }
+
+    ++num_failed;
+    std::println("FAILED: {}:{}: {}", loc.file_name(), loc.line(), what);
+}
+
+/// Report one hex digest checked against its expected value
+/**
+* \param result the computed digest, as hex
+* \param expected the expected digest, as hex
+* \param loc the call site
+*/
+void
+check_hex(const std::string_view result,
+          const std::string_view expected,
+          const std::source_location loc = std::source_location::current())
+{
+    if (result == expected)
+    {
+        ++num_passed;
+        return;
+    }
+
+    ++num_failed;
+    std::println("FAILED: {}:{}: digest mismatch\n  expected {}\n  actual   {}",
+                 loc.file_name(), loc.line(), expected, result);
+}
+
+} // namespace
 
 /// ParallelHash-like construction over \c Castella::Duplex (SP 800-185 Section 6)
 /**
@@ -132,7 +186,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -180,7 +234,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -215,7 +269,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -273,7 +327,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -312,7 +366,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -351,7 +405,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -390,7 +444,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
+            check_hex(result, expected_result);
         }
     }
 
@@ -457,9 +511,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -515,9 +569,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -573,9 +627,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -631,9 +685,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -695,9 +749,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -748,9 +802,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(digest_bytes != digest_bytes_2);
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(digest_bytes != digest_bytes_2, "digests differ");
         }
     }
 
@@ -800,10 +854,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(std::ranges::equal(
-                digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))));
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(std::ranges::equal(
+                      digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
+                  "the shorter digest is a prefix of the longer one");
         }
     }
 
@@ -853,12 +908,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         if (validate)
         {
-            assert(result == expected_result);
-            assert(result_2 == expected_result_2);
-            assert(std::ranges::equal(
-                digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))));
+            check_hex(result, expected_result);
+            check_hex(result_2, expected_result_2);
+            check(std::ranges::equal(
+                      digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
+                  "the shorter digest is a prefix of the longer one");
         }
     }
 
-    return 0;
+    std::println("{} passed, {} failed", num_passed, num_failed);
+
+    return num_failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

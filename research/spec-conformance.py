@@ -51,8 +51,11 @@ XTIME = bytes(((x << 1) ^ 0x1B) & 0xFF if x & 0x80 else x << 1 for x in range(25
 
 def aesenc(block: bytes, key: bytes) -> bytes:
     """Apply one AES encryption round (AESENC semantics) with round key."""
+    if len(key) != 16:
+        raise ModelInvariantError(
+            f"aesenc: round key is {len(key)} bytes, expected 16")
     # SubBytes
-    b = bytes(SBOX[x] for x in block)
+    b = block.translate(SBOX)
     # ShiftRows (column-major layout: byte index = 4*col + row; row r
     # rotates left by r)
     s = bytearray(16)
@@ -68,7 +71,8 @@ def aesenc(block: bytes, key: bytes) -> bytes:
         out[c + 1] = s0 ^ XTIME[s1] ^ XTIME[s2] ^ s2 ^ s3
         out[c + 2] = s0 ^ s1 ^ XTIME[s2] ^ XTIME[s3] ^ s3
         out[c + 3] = XTIME[s0] ^ s0 ^ s1 ^ s2 ^ XTIME[s3]
-    return bytes(o ^ k for o, k in zip(out, key, strict=True))
+    # AddRoundKey, as a single 128-bit XOR
+    return (int.from_bytes(out) ^ int.from_bytes(key)).to_bytes(16)
 
 
 # ---- Round constants (128-bit Galois LFSR, GCM polynomial)

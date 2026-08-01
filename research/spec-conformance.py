@@ -18,9 +18,10 @@ Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 """
 
 import sys
+from collections.abc import Callable, Iterator
 from functools import partial
 from pathlib import Path
-from typing import NoReturn
+from typing import NoReturn, Protocol
 
 # Every check below raises rather than asserts: `python3 -O` strips
 # asserts, and tests/duplex-diff-fuzz.py relies on the parameter bounds
@@ -83,7 +84,7 @@ def lfsr_step(l0: int, l1: int) -> tuple[int, int]:
     return l0, l1
 
 
-def lfsr_stream():
+def lfsr_stream() -> Iterator[bytes]:
     """Yield the LFSR states (as 16-byte blocks), 128 steps apart."""
     seed = b"expand 16-byte c"
     l0 = int.from_bytes(seed[0:8], "little")
@@ -94,7 +95,7 @@ def lfsr_stream():
             l0, l1 = lfsr_step(l0, l1)
 
 
-def make_round_constants():
+def make_round_constants() -> tuple[list[list[list[bytes]]], list[bytes]]:
     """RC[r][aes_r][i] for 16 rounds x 3 AES rounds x 16 blocks, and the
     16 Compress-Castella initial-state blocks that follow them."""
     gen = lfsr_stream()
@@ -174,7 +175,7 @@ class Duplex:
         self.add(encode_string(S))
         self._pad_and_permute()
 
-    def _absorb_and_permute(self):
+    def _absorb_and_permute(self) -> None:
         if len(self.buf) != 16 * self.R:
             raise ModelInvariantError(
                 f"Duplex absorb: buffer holds {len(self.buf)} bytes, "
@@ -186,14 +187,14 @@ class Duplex:
         self.state = permute(state, self.num_rounds)
         self.buf.clear()
 
-    def add(self, data: bytes):
+    def add(self, data: bytes) -> None:
         """Absorb data bytes, permuting whenever the rate fills."""
         for byte in data:
             self.buf.append(byte)
             if len(self.buf) == 16 * self.R:
                 self._absorb_and_permute()
 
-    def _pad_and_permute(self):
+    def _pad_and_permute(self) -> None:
         if len(self.buf) >= 16 * self.R:  # never full here
             raise ModelInvariantError(
                 f"Duplex pad: buffer holds {len(self.buf)} bytes, expected "
@@ -231,17 +232,14 @@ class CompressCastella:
         self.absorbs_since_mix = 0
         self.has_been_finalized = False
 
-    def _absorb_block(self):
+    def _absorb_block(self) -> None:
         if len(self.buf) != 256:
             raise ModelInvariantError(
                 f"cch compress: buffer holds {len(self.buf)} bytes, "
                 f"expected 256")
-        self.state = [
-            aesenc(aesenc(aesenc(self.buf[16 * i:16 * i + 16], self.state[i]),
-                          self.buf[16 * i:16 * i + 16]),
-                   self.state[i])
-            for i in range(16)
-        ]
+        m = [bytes(self.buf[16 * i:16 * i + 16]) for i in range(16)]
+        self.state = [aesenc(aesenc(aesenc(m[i], s), m[i]), s)
+                      for i, s in enumerate(self.state)]
         self.buf.clear()
         if self.mix_rate > 0:
             self.absorbs_since_mix += 1
@@ -249,7 +247,7 @@ class CompressCastella:
                 self.state = permute(self.state, 3)
                 self.absorbs_since_mix = 0
 
-    def add(self, data: bytes):
+    def add(self, data: bytes) -> None:
         """Absorb data bytes, compressing whenever a 256-byte block fills.
 
         Finalization prevents further updates.  The check is
@@ -284,10 +282,25 @@ class CompressCastella:
 
 # ---- The tree mode
 
+# A one-method protocol is the point, not too few methods.
+# pylint: disable-next=too-few-public-methods
+class TreeNode(Protocol):
+    """All the tree needs of a node: it absorbs bytes.
+
+    Extraction is not here -- Duplex squeezes and CompressCastella
+    digests -- so tree_digest takes it as a separate callable.
+    """
+
+    def add(self, data: bytes) -> None:
+        """Absorb data bytes."""
+
+
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
-def tree_digest(make_node, extract, chunk_size: int, cv_len: int,
-                msg: bytes, out: int) -> bytes:
+def tree_digest[NodeT: TreeNode](make_node: Callable[[], NodeT],
+                                 extract: Callable[[NodeT, int], bytes],
+                                 chunk_size: int, cv_len: int,
+                                 msg: bytes, out: int) -> bytes:
     """Compute the two-level tree-mode digest of msg."""
     chunks = [msg[i:i + chunk_size] for i in range(0, len(msg), chunk_size)]
     if not chunks:
@@ -322,7 +335,7 @@ def kat_msg(msglen: int) -> bytes:
     return bytes(i & 0xFF for i in range(msglen))
 
 
-class KatFields(dict):
+class KatFields(dict[str, str]):
     """The key=value fields of one KAT line, naming the line on any error."""
 
     def __init__(self, lineno: int, tokens: list[str]):
@@ -337,13 +350,13 @@ class KatFields(dict):
         raise ValueError(f"line {self.lineno}: missing field {key!r}")
 
 
-def _duplex_from_kat(f: dict) -> Duplex:
+def _duplex_from_kat(f: dict[str, str]) -> Duplex:
     """Build a Duplex node from the parsed KAT fields."""
     return Duplex(int(f["C"]), int(f["rounds"]), int(f["suffix"]),
                   bytes.fromhex(f["fn"]), bytes.fromhex(f["custom"]))
 
 
-def _cch_from_kat(f: dict) -> CompressCastella:
+def _cch_from_kat(f: dict[str, str]) -> CompressCastella:
     """Build a CompressCastella node from the parsed KAT fields."""
     return CompressCastella(int(f["mix"]))
 

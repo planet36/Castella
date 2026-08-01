@@ -287,7 +287,7 @@ assert perf claims from reading code (per repo's own accuracy rule).
       chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       `mix_rate` 0 and 1 and 2048. Add any missing.
 - [ ] **Cross-oracle CI.** Is `research/spec-conformance.py` run by `make test` or only
-      manually (~6 s)? If manual, it can silently rot — recommend wiring it in.
+      manually (a few seconds)? If manual, it can silently rot — recommend wiring it in.
 - [ ] **Negative tests.** Constraint violations (odd/oob `capacity_blocks`, oob `num_rounds`,
       `squeeze` past rate, oversized key) — are they asserted to fail?
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions. The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in  `castella-duplex.hpp`. `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` (~6 s) — keep spec, KAT file, and conformance script in agreement whenever a digest format changes.
+Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions. The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in  `castella-duplex.hpp`. `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` — keep spec, KAT file, and conformance script in agreement whenever a digest format changes.
 
 ## Build Commands
 

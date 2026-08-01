@@ -227,7 +227,7 @@ research/README.md — consolidate, don't duplicate; the guide should be a table
 |---|---|---|
 | trail bounds (diff. + linear) | `permute-min-active-sboxes.py` | Python 3 + PuLP; the exact command set and the `optimal` vs. `NOT proven` interpretation rules already in research/README.md (including the AES 1/5/9/25 validation run) |
 | full diffusion at r=3 | `permute-num_rounds`, `permute-num_rounds-avalanche_matrix` | `make` in `research/`, `sh run-research.sh` |
-| spec ⇄ implementation agreement | `spec-conformance.py` + `tests/KAT.txt` | Python 3, ~6 s |
+| spec ⇄ implementation agreement | `spec-conformance.py` + `tests/KAT.txt` | Python 3 |
 | mode/implementation equivalence (x2, folded, inverse) | `*-verify.cpp`, `equivalence-tests` | `make test`, `make` in `research/` |
 | generic-bound arithmetic (§3) | pencil and paper | derivations written out in SPEC.md |
 | new §5 items | each new tool ships with its README entry | same pattern: dependencies, commands, interpretation, expected output |

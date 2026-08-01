@@ -1633,6 +1633,14 @@ protected:
         has_been_finalized_ = true;
     }
 
+private:
+    // Only \c Derived may construct and destroy the base.  Private (rather
+    // than protected) plus this friendship is what makes the CRTP
+    // self-referential: without it, any class could derive from
+    // HashTree<P, D> *without being D*, and derived_()'s
+    // static_cast<Derived&> would be a cast to an unrelated type.
+    friend Derived;
+
     /// ctor (only a derived tree constructs the base)
     // {{{
     /**
@@ -1659,7 +1667,7 @@ protected:
         absorb_role_prefix_(final_node_, ROLE_FINAL_NODE);
     }
 
-    /// dtor (protected: this class is only used as a CRTP base)
+    /// dtor (private: this class is only used as a CRTP base)
     ~HashTree()
     {
         // Destroying an unfinalized object may leave workers parked on the
@@ -1675,7 +1683,6 @@ protected:
         zeroize_(chunk_buf_, chunk_buf_max_used_);
     }
 
-private:
     [[nodiscard]] Derived& derived_() noexcept
     {
         return static_cast<Derived&>(*this);

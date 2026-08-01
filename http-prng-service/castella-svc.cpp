@@ -31,11 +31,13 @@
 #include <memory>
 #include <mutex>
 #include <print>
-#include <signal.h>
+// POSIX sigaction, sigset_t, pthread_sigmask, sigwait -- not in <csignal>
+#include <signal.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <string.h>
+// POSIX strsignal -- not in <cstring>
+#include <string.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 #include <string_view>
 #include <sys/resource.h>
 #include <thread>

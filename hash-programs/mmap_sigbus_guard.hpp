@@ -33,6 +33,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdlib>
+// POSIX sigaction, siginfo_t, SA_SIGINFO -- not in <csignal>
 #include <signal.h>
 #include <string>
 #include <unistd.h>

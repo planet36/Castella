@@ -60,6 +60,14 @@ constexpr std::string_view kat_function_name = "Castella";
 /// The customization string of every generated duplex/tree KAT
 constexpr std::string_view kat_customization_str = "KAT";
 
+/// How many KATs \c generate() emits, and so how many KAT.txt holds
+/**
+* Checked only for the default file, so a truncated or partly written one
+* cannot report success on what it did hold.  Update it deliberately when
+* the sweeps in \c generate() change.
+*/
+constexpr int64_t EXPECTED_KATS = 58;
+
 /// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
 make_msg(const int len)
@@ -360,11 +368,16 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
 
 /// Verify every KAT in the file at \a path
 /**
+* \param path the KAT file to read
+* \param expect_count if set, the number of KATs the file must hold; a
+*        file holding fewer is a failure rather than a success on what it
+*        did hold
 * \return the program exit status: \c EXIT_SUCCESS only if the file was
-*         readable, held at least one KAT, and every KAT matched
+*         readable, held at least one KAT, held \a expect_count of them
+*         when that is set, and every KAT matched
 */
 [[nodiscard]] int
-verify(const char* path)
+verify(const char* path, const std::optional<int64_t> expect_count = std::nullopt)
 {
     std::ifstream file(path, std::ios::binary);
 
@@ -444,7 +457,25 @@ verify(const char* path)
 
     std::println("{}: {} KATs verified, {} failed", path, num_verified, num_failed);
 
-    return ((num_failed == 0) && (num_verified > 0)) ? EXIT_SUCCESS : EXIT_FAILURE;
+    if (num_failed > 0)
+        return EXIT_FAILURE;
+
+    if (!expect_count.has_value())
+        return (num_verified > 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+    if (num_verified != *expect_count)
+    {
+        // Keep the summary above this line: stdout is block-buffered when
+        // redirected, so without the flush it would appear after it.
+        (void)std::fflush(stdout);
+        std::println(stderr,
+                     "{}: expected {} KATs, verified {} -- the file is "
+                     "incomplete, or EXPECTED_KATS is stale",
+                     path, *expect_count, num_verified);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 // }}}
@@ -461,5 +492,11 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
-    return verify((argc > 1) ? argv[1] : "KAT.txt");
+    // An explicit path means "check this file, whatever is in it", which
+    // keeps the program usable on a hand-built or partial KAT file.  Only
+    // the unattended default carries the count expectation.
+    if (argc > 1)
+        return verify(argv[1]);
+
+    return verify("KAT.txt", EXPECTED_KATS);
 }

@@ -207,7 +207,7 @@ static void
 flip_equal_blocks(bytes_t& b)
 {
     // flip one bit of the shared block value, i.e. the same bit in every block
-    const auto j = arc4random_uniform(B);
+    const auto j = static_cast<int>(arc4random_uniform(B));
     const uint8_t bit = 1U << arc4random_uniform(8);
     for (int i = 0; i < B; ++i)
         mat(b, i, j) ^= bit;
@@ -228,7 +228,7 @@ random_constant_byte_blocks()
 static void
 flip_constant_byte_blocks(bytes_t& b)
 {
-    const auto i = arc4random_uniform(B);
+    const auto i = static_cast<int>(arc4random_uniform(B));
     const uint8_t bit = 1U << arc4random_uniform(8);
     for (int j = 0; j < B; ++j)
         mat(b, i, j) ^= bit;
@@ -248,8 +248,8 @@ random_symmetric()
 static void
 flip_symmetric(bytes_t& b)
 {
-    const auto i = arc4random_uniform(B);
-    const auto j = arc4random_uniform(B);
+    const auto i = static_cast<int>(arc4random_uniform(B));
+    const auto j = static_cast<int>(arc4random_uniform(B));
     const uint8_t bit = 1U << arc4random_uniform(8);
     mat(b, i, j) ^= bit;
     if (i != j) // i == j flips one byte; a second XOR would cancel it

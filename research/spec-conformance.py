@@ -19,6 +19,7 @@ Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 
 import sys
 from functools import partial
+from pathlib import Path
 from typing import NoReturn
 
 # Every check below raises rather than asserts: `python3 -O` strips
@@ -386,5 +387,8 @@ def verify_kat_file(path: str) -> int:
 
 
 if __name__ == "__main__":
+    # Relative to this file, not the working directory, so the script
+    # runs from anywhere.
+    DEFAULT_KAT = Path(__file__).resolve().parent.parent / "tests" / "KAT.txt"
     sys.exit(verify_kat_file(sys.argv[1] if len(sys.argv) > 1
-                             else "../tests/KAT.txt"))
+                             else str(DEFAULT_KAT)))

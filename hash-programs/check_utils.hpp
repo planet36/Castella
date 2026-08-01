@@ -205,7 +205,7 @@ struct check_totals final
 */
 template <typename VerifyLine>
 [[nodiscard]] int
-run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine&& verify_line)
+run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine verify_line)
 {
     check_totals totals;
     bool every_checkfile_ok = true;

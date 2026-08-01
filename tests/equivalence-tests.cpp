@@ -128,7 +128,7 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
 
 } // namespace
 
-int main(int argc, char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     uint64_t seed = UINT64_C(0x436173'74656c6c); // "Castell"
 

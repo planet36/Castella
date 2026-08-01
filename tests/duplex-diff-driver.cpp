@@ -156,8 +156,7 @@ read_field(std::istringstream& iss, const char* const what)
     }
 }
 
-int
-main()
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     // Speeds up the getline loop below.  Output goes through std::println (C
     // stdio) and nothing else reads stdin, so decoupling std::cin is safe.

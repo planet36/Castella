@@ -102,7 +102,7 @@ check_state_size(std::mt19937_64& rng)
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
-int main(int argc, char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     uint64_t seed = UINT64_C(0x436173'74656c6c); // "Castell"
 

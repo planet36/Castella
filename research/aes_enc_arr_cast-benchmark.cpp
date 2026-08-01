@@ -226,8 +226,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 #include <cstdio>
 
-int
-main()
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     (void)std::fputs("This benchmark is for x86_64 VAES only", stderr);
     return 1;

@@ -50,7 +50,7 @@ Expected: `../tests/KAT.txt: 58 KATs verified, 0 failed`, exit status 0, in seco
 make test                       # at the repository root
 ```
 
-Runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the 85-assertion CLI script (which includes the keyed-MAC round trips), and finally the spec-conformance script above.  Expected: every suite reports success.  (The conformance step needs `python3`; `make test` fails with a clear message if it is missing.)
+Runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 85-assertion CLI script (which includes the keyed-MAC round trips), and finally the spec-conformance script above.  Expected: every suite reports success.  (The Python steps need `python3`; `make test` fails with a clear message if it is missing.)
 
 ## 3. Full bit diffusion at 3 rounds
 

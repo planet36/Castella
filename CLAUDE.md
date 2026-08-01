@@ -8,15 +8,22 @@ Castella is a collection of header-only C++ libraries and programs built around 
 
 ## Build Commands
 
-A top-level Makefile recurses into the subdirectories; each subdirectory also has its own Makefile with the same targets.
+A top-level Makefile recurses into the subdirectories; each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests`, `examples`, `hash-programs`, `research`) add `test`, so one directory can be worked on in isolation (`make -C tests test`). `http-prng-service` has no tests and so no `test` target.
 
 ```bash
 # Build examples, hash-programs, and tests (any root *.cpp scratch files too)
 make
 
-# Build and run every test suite (tests, kat, equivalence-tests, permute-equivalence,
-# test-correctness.bash, research/spec-conformance.py, and tests/duplex-diff-fuzz.py —
-# the last two need python3)
+# Build and run every test suite, by delegating to each subdirectory's own `test`
+# target in turn: tests (tests, kat, equivalence-tests, permute-equivalence,
+# duplex-diff-fuzz.py), examples, hash-programs (test-correctness.bash), and
+# research (spec-conformance.py). The two Python steps need python3, and each is
+# guarded by a check at the front of its recipe.
+#
+# research's `test` deliberately does NOT depend on its `all`: the benchmarks
+# there link google-benchmark, which is why research is in EXTRA_SUBDIRS, but the
+# conformance script is pure Python. Adding the prerequisite for symmetry would
+# make `make test` require google-benchmark everywhere.
 make test
 
 # Additionally build research (requires google-benchmark) and
@@ -85,7 +92,7 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 ### Subprojects
 
 - **`include/`** — The header-only library and its shared helpers; the sole `-I` root (`config.mk`), so every subproject includes these by bare filename (which is why headers can move within `include/` without touching most `#include` lines). Core algorithm and API (detailed above): `castella-permute.hpp`, `castella-duplex.hpp`, `castella-hash-tree.hpp`, `castella-duplex-tree.hpp`, `castella-duplex-x2.hpp`, and the cch tree (`cch.hpp`, `cch-tree.hpp`, `cch-x2.hpp`) over the `simd_compress.hpp` compression node. Supporting primitives: `aes_enc.hpp` (AES-round wrappers incl. `aes_enc_arr`), `simd_transpose.hpp`, `simd_types.hpp`, `simd_load.hpp` (16-byte SIMD load overloads), `lfsr.hpp` (round-constant LFSR), `encode.hpp` (SP 800-185 `left_encode`/`right_encode` etc.), `byte_width.hpp`. General utilities: `as_byte_span.hpp`, `bytes_to_hex.hpp`, `fixed_vector.hpp`, `in_range.hpp`, `narrow_cast.hpp`, `to_unsigned.hpp`, `parse_int.hpp`, `quote_shell_always.hpp`. Headers used only by the hash programs (`check_utils.hpp`, `fd-utils.h`, `fnv.hpp`, `mmap_sigbus_guard.hpp` — a SIGBUS guard that turns a concurrent truncation of an mmap'd file into a clean error instead of a crash, `unique_fd.hpp`) instead live in `hash-programs/`.
-- **`examples/`** — Demonstrates hash (cSHAKE-like), MAC (KMAC/KMACXOF-like), TupleHash(XOF)-like, and ParallelHash(XOF)-like usage with hardcoded expected outputs (assertions verify correctness). Includes helpers from `include/`: `bytes_to_hex.hpp`, `encode.hpp`, `quote_shell_always.hpp`, `to_unsigned.hpp`.
+- **`examples/`** — Demonstrates hash (cSHAKE-like), MAC (KMAC/KMACXOF-like), TupleHash(XOF)-like, and ParallelHash(XOF)-like usage against hardcoded expected outputs. Run by `make test`, and a real test rather than a demo: the 31 expectations go through `check()`/`check_hex()`, which tally instead of terminating, so one run reports every mismatch with its file, line, and the expected/actual digests; it ends with `N passed, M failed`, compares the total against `EXPECTED_CHECKS` (so a deleted example cannot pass quietly, as with `EXPECTED_KATS` in `tests/kat.cpp`), and exits nonzero on either failure. **Do not remove the `#define DEBUG 1` / `#undef NDEBUG` preamble at the top of `examples.cpp`** — it is not there for this file's own checks (which no longer use `assert`) but to arm the library's internal assertions, which `include/*.hpp` gate on `#if defined(DEBUG)`: 51 assertion sites in this translation unit, 0 under `-DNDEBUG`. The same preamble appears in 11 of the 26 `research/*.cpp` for the same reason. Includes helpers from `include/`: `bytes_to_hex.hpp`, `encode.hpp`, `quote_shell_always.hpp`, `to_unsigned.hpp`.
 - **`tests/`** — Five test programs. `tests.cpp`: fixed correctness tests (multi-block input, `squeeze_bytes(0)`, clamping, constructor constraint violations, successive squeeze distinctness) and the pinned Duplex/DuplexTree KATs. `kat.cpp` + `KAT.txt`: machine-readable KAT file (58 vectors: duplex/tree/cchtree lines, message pattern `msg[i] = i mod 256`); `./kat` verifies it, `./kat --generate > KAT.txt` regenerates (only on a deliberate format change). `equivalence-tests.cpp`: randomized digest-equivalence tests — for adversarial input lengths (chunk boundaries, pool-start threshold, leaf-index 255/256 width fallback, random), one-shot and randomly split adds across thread counts must reproduce the single-threaded reference for DuplexTree and compress_castella_tree; seeded (seed printed and settable via argv). `permute-equivalence.cpp`: `permute<N>` vs `permute_generic<N>` in one build, over random states for every N and every round count 0..NUM_ROUNDS_MAX — the folded-VAES path's only direct guard (elsewhere it is guarded transitively through the KATs); on a build without the folded path the two are the same function and the program says so. `duplex-diff-fuzz.py` + `duplex-diff-driver.cpp`: differential fuzzer for the `Duplex` API against `research/spec-conformance.py` (imported via `importlib`, so the model is never copied) — random programs of `add`/`add_left_encoded`/`add_right_encoded`/`apply_padding_rule`/`squeeze_bytes` over random parameters, replayed through a stdin script interpreter and diffed squeeze by squeeze; covers what the one-shape duplex KATs cannot (split adds, both encoding entry points, explicit padding, successive squeezes). Fixed default seed so `make test` is deterministic; `--seed`/`-n` for longer sweeps. Two C++-only conveniences are deliberately steered around, not modelled: the `squeeze_bytes` clamp and the null-data-span no-op in the raw `add_*_encoded` forms.
 - **`research/`** — Standalone programs for empirically determining optimal AES round counts and permutation round counts; includes benchmarks.
 - **`http-prng-service/`** — HTTP server (using cpp-httplib) exposing a PRNG endpoint. Periodically reseeds from the OS (`getentropy`). `config.h` controls capacity, rounds, and reseed parameters.

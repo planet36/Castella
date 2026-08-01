@@ -341,8 +341,7 @@ def verify_kat_file(path: str) -> int:
             expected = f["digest"]
 
             if typ == "duplex":
-                node = Duplex(int(f["C"]), int(f["rounds"]), int(f["suffix"]),
-                              bytes.fromhex(f["fn"]), bytes.fromhex(f["custom"]))
+                node = _duplex_from_kat(f)
                 node.add(msg)
                 actual = node.squeeze(out)
             elif typ == "tree":

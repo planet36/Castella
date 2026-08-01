@@ -41,6 +41,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
+#include <exception>
 #include <fstream>
 #include <optional>
 #include <print>
@@ -430,8 +431,17 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         if (!expected.has_value())
             errx(EXIT_FAILURE, "%s: line %d: malformed KAT line", path, lineno);
 
-        const auto actual = recompute_kat_line(
-            type, fields, static_cast<int>(std::ssize(*expected)));
+        std::optional<std::vector<std::byte>> actual;
+
+        try
+        {
+            actual = recompute_kat_line(
+                type, fields, static_cast<int>(std::ssize(*expected)));
+        }
+        catch (const std::exception& e)
+        {
+            errx(EXIT_FAILURE, "%s: line %d: %s", path, lineno, e.what());
+        }
 
         if (!actual.has_value())
             errx(EXIT_FAILURE, "%s: line %d: malformed KAT line", path, lineno);

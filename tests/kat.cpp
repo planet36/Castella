@@ -482,6 +482,7 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
 
 } // namespace
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;

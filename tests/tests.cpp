@@ -343,6 +343,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             };
 
             std::vector<std::vector<std::byte>> digests;
+            digests.reserve(std::size(lens));
             for (const auto len : lens)
             {
                 digests.push_back(tree_digest(X_sp.first(len)));

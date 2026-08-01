@@ -23,13 +23,12 @@ everything: all $(EXTRA_SUBDIRS)
 $(SUBDIRS) $(EXTRA_SUBDIRS):
 	$(MAKE) -C $@
 
-# Build and run every test suite
-test: hash-programs tests
-	cd tests && ./tests && ./kat && ./equivalence-tests && ./permute-equivalence
-	cd hash-programs && bash test-correctness.bash
-	@command -v python3 >/dev/null || { echo 'make test: python3 is required for the spec-conformance checks'; exit 1; }
-	cd research && python3 spec-conformance.py
-	cd tests && python3 duplex-diff-fuzz.py
+# Build and run every test suite.  Each subdirectory's own `test` target builds
+# what it needs and runs from its own directory.
+test:
+	$(MAKE) -C tests test
+	$(MAKE) -C hash-programs test
+	$(MAKE) -C research test
 
 # Build and run every test suite under the sanitizers (BUILD=debug, see config.mk).
 # halt_on_error makes UBSan exit nonzero instead of only printing a diagnostic.

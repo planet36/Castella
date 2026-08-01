@@ -27,6 +27,7 @@ $(SUBDIRS) $(EXTRA_SUBDIRS):
 # what it needs and runs from its own directory.
 test:
 	$(MAKE) -C tests test
+	$(MAKE) -C examples test
 	$(MAKE) -C hash-programs test
 	$(MAKE) -C research test
 

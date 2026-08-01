@@ -32,17 +32,17 @@
 
 /// One trial: random pieces (equal lengths, different contents) then digests
 void
-test_cch_x2(const int mix_rate, const size_t max_piece_len, const uint32_t max_num_pieces)
+test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_pieces)
 {
     compress_castella_hash<> hash_a{mix_rate};
     compress_castella_hash<> hash_b{mix_rate};
     compress_castella_hash_x2<> pair{mix_rate};
 
-    const auto num_pieces = arc4random_uniform(max_num_pieces + 1);
+    const auto num_pieces = static_cast<int>(arc4random_uniform(max_num_pieces + 1));
 
-    for (uint32_t piece = 0; piece < num_pieces; ++piece)
+    for (int piece = 0; piece < num_pieces; ++piece)
     {
-        const auto len = arc4random_uniform(static_cast<uint32_t>(max_piece_len + 1));
+        const auto len = static_cast<int>(arc4random_uniform(max_piece_len + 1));
 
         std::vector<std::byte> bytes_a(len);
         std::vector<std::byte> bytes_b(len);

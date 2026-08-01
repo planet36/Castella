@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <print>
 #include <source_location>
@@ -27,6 +28,14 @@ namespace {
 
 int num_passed = 0;
 int num_failed = 0;
+
+/// How many checks a complete run makes
+/**
+* Checked after the summary, so an example that was removed or that stopped
+* short cannot report success on the checks that did run.  Update it
+* deliberately when examples are added or removed.
+*/
+constexpr int EXPECTED_CHECKS = 31;
 
 /// Report one checked expectation
 /**
@@ -871,5 +880,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     std::println("{} passed, {} failed", num_passed, num_failed);
 
-    return num_failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    if (num_failed > 0)
+        return EXIT_FAILURE;
+
+    if (num_passed != EXPECTED_CHECKS)
+    {
+        // Keep the summary above this line: stdout is block-buffered when
+        // redirected, so without the flush it would appear after it.
+        (void)std::fflush(stdout);
+        std::println(stderr,
+                     "expected {} checks, made {} -- an example is missing, or "
+                     "EXPECTED_CHECKS is stale",
+                     EXPECTED_CHECKS, num_passed);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

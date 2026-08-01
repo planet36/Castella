@@ -311,6 +311,12 @@ def tree_digest(make_node, extract, chunk_size: int, cv_len: int,
 
 # ---- KAT verification
 
+# How many vectors tests/KAT.txt holds.  Checked only for that file, so a
+# truncated or partly written one cannot report success on what it did
+# read.  Update it deliberately when `kat --generate` changes the sweeps.
+EXPECTED_KATS = 58
+
+
 def kat_msg(msglen: int) -> bytes:
     """Build the KAT message of the given length (msg[i] = i mod 256)."""
     return bytes(i & 0xFF for i in range(msglen))
@@ -342,8 +348,12 @@ def _cch_from_kat(f: dict) -> CompressCastella:
     return CompressCastella(int(f["mix"]))
 
 
-def verify_kat_file(path: str) -> int:
-    """Verify every KAT in the file; return 0 on full success, 1 otherwise."""
+def verify_kat_file(path: str, expect_count: int | None = None) -> int:
+    """Verify every KAT in the file; return 0 on full success, 1 otherwise.
+
+    If expect_count is given, the file must hold exactly that many
+    vectors: verifying fewer is a failure, not a success on a short file.
+    """
     num_verified = 0
     num_failed = 0
     with open(path, encoding="ascii") as file:
@@ -383,12 +393,21 @@ def verify_kat_file(path: str) -> int:
             print(f"\rline {lineno}: {num_verified} verified", end="",
                   flush=True)
     print(f"\r{path}: {num_verified} KATs verified, {num_failed} failed")
-    return 0 if (num_failed == 0 and num_verified > 0) else 1
+    if num_failed > 0:
+        return 1
+    if expect_count is None:
+        return 0 if num_verified > 0 else 1
+    if num_verified != expect_count:
+        print(f"{path}: expected {expect_count} KATs, verified {num_verified}"
+              " -- the file is incomplete, or EXPECTED_KATS is stale")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
     # Relative to this file, not the working directory, so the script
     # runs from anywhere.
     DEFAULT_KAT = Path(__file__).resolve().parent.parent / "tests" / "KAT.txt"
-    sys.exit(verify_kat_file(sys.argv[1] if len(sys.argv) > 1
-                             else str(DEFAULT_KAT)))
+    if len(sys.argv) > 1:
+        sys.exit(verify_kat_file(sys.argv[1]))
+    sys.exit(verify_kat_file(str(DEFAULT_KAT), EXPECTED_KATS))

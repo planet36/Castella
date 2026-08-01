@@ -197,6 +197,7 @@ class CompressCastella:
                       for blk in CCH_INIT]
         self.buf = bytearray()
         self.absorbs_since_mix = 0
+        self.has_been_finalized = False
 
     def _absorb_block(self):
         assert len(self.buf) == 256
@@ -214,21 +215,33 @@ class CompressCastella:
                 self.absorbs_since_mix = 0
 
     def add(self, data: bytes):
-        """Absorb data bytes, compressing whenever a 256-byte block fills."""
+        """Absorb data bytes, compressing whenever a 256-byte block fills.
+
+        Finalization prevents further updates.  The check is
+        unconditional, so an empty data raises too (as in cch.hpp).
+        """
+        if self.has_been_finalized:
+            raise RuntimeError("CompressCastella.add: state is finalized")
         for byte in data:
             self.buf.append(byte)
             if len(self.buf) == 256:
                 self._absorb_block()
 
     def digest(self, n: int) -> bytes:
-        """Pad, compress, finalize with a permutation, return n bytes."""
+        """Pad, compress, finalize with a permutation, return n bytes.
+
+        Finalization happens on the first call only, so repeated
+        extraction is idempotent (unlike a duplex squeeze).
+        """
         assert 0 <= n <= 64
-        i = 0
-        while len(self.buf) < 256:  # padding bytes 0, 1, 2, ...
-            self.buf.append(i & 0xFF)
-            i += 1
-        self._absorb_block()
-        self.state = permute(self.state, 4)
+        if not self.has_been_finalized:
+            i = 0
+            while len(self.buf) < 256:  # padding bytes 0, 1, 2, ...
+                self.buf.append(i & 0xFF)
+                i += 1
+            self._absorb_block()
+            self.state = permute(self.state, 4)
+            self.has_been_finalized = True
         return b"".join(self.state)[:n]
 
 

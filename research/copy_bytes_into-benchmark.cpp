@@ -43,7 +43,7 @@ void copy_bytes_into_copy_n(std::span<const std::byte> src, std::span<std::byte>
     // src size <= dst size
 
     // NOLINTNEXTLINE(llvm-use-ranges,modernize-use-ranges)
-    (void)std::copy_n(std::data(src), std::size(src), std::begin(dst));
+    (void)std::copy_n(std::data(src), std::ssize(src), std::begin(dst));
 }
 
 // https://cppreference.com/cpp/algorithm/ranges/copy
@@ -69,7 +69,7 @@ void copy_bytes_into_ranges_n(std::span<const std::byte> src, std::span<std::byt
     }
     // src size <= dst size
 
-    (void)std::ranges::copy_n(std::begin(src), std::size(src), std::begin(dst));
+    (void)std::ranges::copy_n(std::begin(src), std::ssize(src), std::begin(dst));
 }
 
 // https://cppreference.com/cpp/string/byte/memcpy

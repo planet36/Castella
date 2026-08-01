@@ -157,8 +157,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    constexpr bool validate = true;
-
     // basic example
     {
         constexpr int capacity_blocks = 4;
@@ -184,10 +182,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     /*
@@ -232,10 +227,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     {
@@ -267,10 +259,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     // NOTE: The keys in the MAC examples below are only for illustration!
@@ -325,10 +314,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     {
@@ -364,10 +350,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     {
@@ -403,10 +386,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     {
@@ -442,10 +422,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-        }
+        check_hex(result, expected_result);
     }
 
     /*
@@ -509,12 +486,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     {
@@ -567,12 +541,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     {
@@ -625,12 +596,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     {
@@ -683,12 +651,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     /*
@@ -747,12 +712,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     {
@@ -800,12 +762,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(digest_bytes != digest_bytes_2, "digests differ");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(digest_bytes != digest_bytes_2, "digests differ");
     }
 
     {
@@ -852,14 +811,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(std::ranges::equal(
-                      digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
-                  "the shorter digest is a prefix of the longer one");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(std::ranges::equal(
+                  digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
+              "the shorter digest is a prefix of the longer one");
     }
 
     {
@@ -906,14 +862,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result_2);
 
-        if (validate)
-        {
-            check_hex(result, expected_result);
-            check_hex(result_2, expected_result_2);
-            check(std::ranges::equal(
-                      digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
-                  "the shorter digest is a prefix of the longer one");
-        }
+        check_hex(result, expected_result);
+        check_hex(result_2, expected_result_2);
+        check(std::ranges::equal(
+                  digest_bytes_2, std::span{digest_bytes}.first(std::size(digest_bytes_2))),
+              "the shorter digest is a prefix of the longer one");
     }
 
     std::println("{} passed, {} failed", num_passed, num_failed);

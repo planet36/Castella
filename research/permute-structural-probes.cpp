@@ -437,7 +437,7 @@ probe_round_constants()
         // unit is a whole Castella round (48 = AES_NUM_ROUNDS x 16 blocks of
         // constants), so only whole-round shifts are relevant.
         constexpr int per_round = Castella::AES_NUM_ROUNDS * Castella::B_MAX;
-        const int num_rounds = std::ssize(flat) / per_round;
+        const auto num_rounds = static_cast<int>(std::ssize(flat)) / per_round;
         int num_affine_shifts = 0;
         for (int s = 1; s < num_rounds; ++s)
         {

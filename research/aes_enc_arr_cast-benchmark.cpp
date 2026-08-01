@@ -228,8 +228,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    (void)std::fputs("This benchmark is for x86_64 VAES only", stderr);
-    return 1;
+    (void)std::puts("skipped: requires x86-64 with VAES");
+    return 0;
 }
 
 #endif

@@ -321,7 +321,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             constexpr int piece_size = 1000;
             for (int off = 0; off < std::ssize(X_sp); off += piece_size)
             {
-                tree2.add(X_sp.subspan(off, std::min<int>(piece_size, std::ssize(X_sp) - off)));
+                const auto len = std::min<std::ptrdiff_t>(piece_size, std::ssize(X_sp) - off);
+                tree2.add(X_sp.subspan(off, len));
             }
             assert(tree2.squeeze_bytes() == expected);
         }
@@ -530,7 +531,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                           4);
                 for (int off = 0; off < std::ssize(Y_sp); off += piece_size)
                 {
-                    tree.add(Y_sp.subspan(off, std::min<int>(piece_size, std::ssize(Y_sp) - off)));
+                    const auto len = std::min<std::ptrdiff_t>(piece_size, std::ssize(Y_sp) - off);
+                    tree.add(Y_sp.subspan(off, len));
                 }
                 assert(tree.squeeze_bytes() == expected);
             }
@@ -572,8 +574,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                               chunk_size, num_threads);
                     for (int off = 0; off < std::ssize(Z_sp); off += piece_size)
                     {
-                        tree.add(
-                            Z_sp.subspan(off, std::min<int>(piece_size, std::ssize(Z_sp) - off)));
+                        const auto len =
+                            std::min<std::ptrdiff_t>(piece_size, std::ssize(Z_sp) - off);
+                        tree.add(Z_sp.subspan(off, len));
                     }
                     assert(tree.squeeze_bytes() == expected);
                 }

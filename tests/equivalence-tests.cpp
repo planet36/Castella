@@ -106,11 +106,11 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
 
             auto tree = make_tree(num_threads);
 
-            int offset = 0;
+            std::ptrdiff_t offset = 0;
             while (offset < std::ssize(input))
             {
-                const int piece_len =
-                    std::min<int>(piece_len_dist(rng), std::ssize(input) - offset);
+                const auto piece_len =
+                    std::min<std::ptrdiff_t>(piece_len_dist(rng), std::ssize(input) - offset);
                 tree.add(input.subspan(offset, piece_len));
                 offset += piece_len;
             }

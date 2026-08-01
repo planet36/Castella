@@ -65,7 +65,7 @@ def aesenc(block: bytes, key: bytes) -> bytes:
         out[c + 1] = s0 ^ XTIME[s1] ^ XTIME[s2] ^ s2 ^ s3
         out[c + 2] = s0 ^ s1 ^ XTIME[s2] ^ XTIME[s3] ^ s3
         out[c + 3] = XTIME[s0] ^ s0 ^ s1 ^ s2 ^ XTIME[s3]
-    return bytes(o ^ k for o, k in zip(out, key))
+    return bytes(o ^ k for o, k in zip(out, key, strict=True))
 
 
 # ---- Round constants (128-bit Galois LFSR, GCM polynomial)
@@ -223,7 +223,7 @@ class CompressCastella:
                              f"expected 0 or 1 <= mix_rate <= 2048")
         self.mix_rate = mix_rate
         mix_block = (mix_rate & 0xFFFF).to_bytes(2, "little") * 8
-        self.state = [bytes(a ^ b for a, b in zip(blk, mix_block))
+        self.state = [bytes(a ^ b for a, b in zip(blk, mix_block, strict=True))
                       for blk in CCH_INIT]
         self.buf = bytearray()
         self.absorbs_since_mix = 0

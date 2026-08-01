@@ -20,6 +20,17 @@ Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
 import sys
 from functools import partial
 
+# Every check below raises rather than asserts: `python3 -O` strips
+# asserts, and tests/duplex-diff-fuzz.py relies on the parameter bounds
+# here to catch drift against the ones it mirrors by hand.  Parameter
+# violations raise ValueError, matching the std::invalid_argument the
+# C++ throws for the same conditions.
+
+
+class ModelInvariantError(Exception):
+    """An internal invariant of this model does not hold (a bug in this file)."""
+
+
 # ---- AES round (AESENC semantics: SubBytes, ShiftRows, MixColumns, XOR key)
 
 SBOX = bytes.fromhex(
@@ -97,7 +108,11 @@ RC, CCH_INIT = make_round_constants()
 
 def permute(state: list[bytes], n: int) -> list[bytes]:
     """Apply n rounds of the Castella permutation to the 16-block state."""
-    assert len(state) == 16 and 0 <= n <= 16
+    if len(state) != 16:
+        raise ModelInvariantError(
+            f"permute: state has {len(state)} blocks, expected 16")
+    if not 0 <= n <= 16:
+        raise ValueError(f"permute: n is {n}, expected 0 <= n <= 16")
     for r in range(16 - n, 16):
         for aes_r in range(3):
             state = [aesenc(state[i], RC[r][aes_r][i]) for i in range(16)]
@@ -137,8 +152,13 @@ class Duplex:
 
     def __init__(self, C: int, num_rounds: int, suffix: int,
                  N: bytes, S: bytes):
-        assert C % 2 == 0 and 2 <= C <= 8
-        assert 3 <= num_rounds <= 16
+        if C % 2 != 0:
+            raise ValueError(f"Duplex: C is odd ({C})")
+        if not 2 <= C <= 8:
+            raise ValueError(f"Duplex: C is {C}, expected 2 <= C <= 8")
+        if not 3 <= num_rounds <= 16:
+            raise ValueError(f"Duplex: num_rounds is {num_rounds}, "
+                             f"expected 3 <= num_rounds <= 16")
         self.C = C
         self.R = 16 - C
         self.num_rounds = num_rounds
@@ -153,7 +173,10 @@ class Duplex:
         self._pad_and_permute()
 
     def _absorb_and_permute(self):
-        assert len(self.buf) == 16 * self.R
+        if len(self.buf) != 16 * self.R:
+            raise ModelInvariantError(
+                f"Duplex absorb: buffer holds {len(self.buf)} bytes, "
+                f"expected the full rate of {16 * self.R}")
         flat = bytearray(b"".join(self.state))
         for k in range(16 * self.R):
             flat[k] ^= self.buf[k]
@@ -169,7 +192,10 @@ class Duplex:
                 self._absorb_and_permute()
 
     def _pad_and_permute(self):
-        assert len(self.buf) < 16 * self.R  # never full here
+        if len(self.buf) >= 16 * self.R:  # never full here
+            raise ModelInvariantError(
+                f"Duplex pad: buffer holds {len(self.buf)} bytes, expected "
+                f"fewer than the rate ({16 * self.R})")
         self.buf.append(0x01)
         while len(self.buf) < 16 * self.R:
             self.buf.append(0x00)
@@ -178,7 +204,9 @@ class Duplex:
 
     def squeeze(self, n: int) -> bytes:
         """Append the suffix, pad, permute, and return the first n bytes."""
-        assert 0 <= n <= 16 * self.R
+        if not 0 <= n <= 16 * self.R:
+            raise ValueError(f"Duplex.squeeze: n is {n}, expected "
+                             f"0 <= n <= {16 * self.R}")
         self.add(bytes([self.suffix]))
         self._pad_and_permute()
         return b"".join(self.state)[:n]
@@ -190,7 +218,9 @@ class CompressCastella:
     """Compress-Castella non-cryptographic compression node (see cch.hpp)."""
 
     def __init__(self, mix_rate: int):
-        assert mix_rate == 0 or 1 <= mix_rate <= 2048
+        if mix_rate != 0 and not 1 <= mix_rate <= 2048:
+            raise ValueError(f"CompressCastella: mix_rate is {mix_rate}, "
+                             f"expected 0 or 1 <= mix_rate <= 2048")
         self.mix_rate = mix_rate
         mix_block = (mix_rate & 0xFFFF).to_bytes(2, "little") * 8
         self.state = [bytes(a ^ b for a, b in zip(blk, mix_block))
@@ -200,7 +230,10 @@ class CompressCastella:
         self.has_been_finalized = False
 
     def _absorb_block(self):
-        assert len(self.buf) == 256
+        if len(self.buf) != 256:
+            raise ModelInvariantError(
+                f"cch compress: buffer holds {len(self.buf)} bytes, "
+                f"expected 256")
         self.state = [
             aesenc(aesenc(aesenc(self.buf[16 * i:16 * i + 16], self.state[i]),
                           self.buf[16 * i:16 * i + 16]),
@@ -233,7 +266,9 @@ class CompressCastella:
         Finalization happens on the first call only, so repeated
         extraction is idempotent (unlike a duplex squeeze).
         """
-        assert 0 <= n <= 64
+        if not 0 <= n <= 64:
+            raise ValueError(f"CompressCastella.digest: n is {n}, expected "
+                             f"0 <= n <= 64")
         if not self.has_been_finalized:
             i = 0
             while len(self.buf) < 256:  # padding bytes 0, 1, 2, ...

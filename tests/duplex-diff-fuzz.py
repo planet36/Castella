@@ -88,8 +88,8 @@ model = load_model()
 # and C_MAX in castella-duplex.hpp, NUM_ROUNDS_MIN<16>() and NUM_ROUNDS_MAX in
 # castella-permute.hpp, whose comment invites raising it.  Nothing here can
 # import them, and widening one there fails no test: it just leaves the fuzzer
-# covering less than the library allows.  spec-conformance.py asserts the same
-# bounds and needs the same edit.
+# covering less than the library allows.  spec-conformance.py raises
+# ValueError on the same bounds and needs the same edit.
 CAPACITIES = (2, 4, 6, 8)  # even
 ROUNDS_MIN = 3
 ROUNDS_MAX = 16

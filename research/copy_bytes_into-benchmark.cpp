@@ -28,6 +28,7 @@ void copy_bytes_into_copy(std::span<const std::byte> src, std::span<std::byte> d
     }
     // src size <= dst size
 
+    // NOLINTNEXTLINE(llvm-use-ranges,modernize-use-ranges)
     (void)std::copy(std::begin(src), std::end(src), std::begin(dst));
 }
 
@@ -41,6 +42,7 @@ void copy_bytes_into_copy_n(std::span<const std::byte> src, std::span<std::byte>
     }
     // src size <= dst size
 
+    // NOLINTNEXTLINE(llvm-use-ranges,modernize-use-ranges)
     (void)std::copy_n(std::data(src), std::size(src), std::begin(dst));
 }
 

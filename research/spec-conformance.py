@@ -361,6 +361,25 @@ def _cch_from_kat(f: dict[str, str]) -> CompressCastella:
     return CompressCastella(int(f["mix"]))
 
 
+def kat_digest(typ: str, f: KatFields) -> bytes:
+    """Compute the digest that one parsed KAT line calls for."""
+    msg = kat_msg(int(f["msglen"]))
+    out = int(f["out"])
+    if typ == "duplex":
+        node = _duplex_from_kat(f)
+        node.add(msg)
+        return node.squeeze(out)
+    if typ == "tree":
+        return tree_digest(partial(_duplex_from_kat, f),
+                           lambda node, n: node.squeeze(n),
+                           int(f["chunk"]), 16 * int(f["C"]), msg, out)
+    if typ == "cchtree":
+        return tree_digest(partial(_cch_from_kat, f),
+                           lambda node, n: node.digest(n),
+                           int(f["chunk"]), 64, msg, out)
+    raise ValueError(f"line {f.lineno}: unknown KAT type {typ!r}")
+
+
 def verify_kat_file(path: str, expect_count: int | None = None) -> int:
     """Verify every KAT in the file; return 0 on full success, 1 otherwise.
 
@@ -369,6 +388,7 @@ def verify_kat_file(path: str, expect_count: int | None = None) -> int:
     """
     num_verified = 0
     num_failed = 0
+    show_progress = sys.stdout.isatty()  # the \r line only helps a terminal
     with open(path, encoding="ascii") as file:
         for lineno, line in enumerate(file, 1):
             line = line.strip()
@@ -376,36 +396,24 @@ def verify_kat_file(path: str, expect_count: int | None = None) -> int:
                 continue
             typ, *rest = line.split()
             f = KatFields(lineno, rest)
-            msg = kat_msg(int(f["msglen"]))
-            out = int(f["out"])
             expected = f["digest"]
-
-            if typ == "duplex":
-                node = _duplex_from_kat(f)
-                node.add(msg)
-                actual = node.squeeze(out)
-            elif typ == "tree":
-                actual = tree_digest(partial(_duplex_from_kat, f),
-                                     lambda node, n: node.squeeze(n),
-                                     int(f["chunk"]), 16 * int(f["C"]),
-                                     msg, out)
-            elif typ == "cchtree":
-                actual = tree_digest(partial(_cch_from_kat, f),
-                                     lambda node, n: node.digest(n),
-                                     int(f["chunk"]), 64, msg, out)
-            else:
-                raise ValueError(f"line {lineno}: unknown KAT type {typ!r}")
+            actual = kat_digest(typ, f)
 
             if actual.hex() == expected:
                 num_verified += 1
             else:
                 num_failed += 1
+                if show_progress:
+                    print()  # close the pending \r line before the report
                 print(f"FAILED: line {lineno}:")
                 print(f"    expected digest = {expected}")
                 print(f"    actual digest   = {actual.hex()}")
-            print(f"\rline {lineno}: {num_verified} verified", end="",
-                  flush=True)
-    print(f"\r{path}: {num_verified} KATs verified, {num_failed} failed")
+            if show_progress:
+                print(f"\rline {lineno}: {num_verified} verified", end="",
+                      flush=True)
+    # The summary is longer than any counter, so from column 0 it covers it.
+    erase = "\r" if show_progress else ""
+    print(f"{erase}{path}: {num_verified} KATs verified, {num_failed} failed")
     if num_failed > 0:
         return 1
     if expect_count is None:

@@ -397,14 +397,25 @@ ceiling at 7.7 GiB. This covers what KAT.txt structurally cannot (split adds, bo
 
 Ordered by what would most change the documentation:
 
-1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 on 2026-08-02, and it changed the
-   documented bounds.** The dual bound reached 126.630 at 55 min and 127.554 at 90 min, so
-   A(3) ≥ 128 is proven and the true value is 128 or 129. Two lessons carried into §10.6:
-   an unchanged incumbent says nothing about whether more time would prove a cell, because
-   proving is a dual-side question; and the dual bound is worth recording from any
-   timed-out run, since it is a valid lower bound whether or not the gap closes (the
-   script now reports it). Still to do: the same `-v` run at **r=4**, whose dual bound has
-   never been observed — the "stalled at 165 twice" reading is about its incumbent only.
+1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 and r=4 on 2026-08-02; it changed the
+   r=3 bounds and settled r=4 the other way.** At r=3 the dual bound reached 126.630 at
+   55 min and 127.554 at 90 min, so A(3) ≥ 128 is proven and the true value is 128 or 129
+   — a 1% gap. At r=4, 90 minutes reached only 93.883, a 76% gap and *weaker* than the 137
+   superadditivity gives for free, so the solver contributes nothing at that round count.
+
+   **Neither method dominates, and which one wins flips between adjacent round counts.**
+   Superadditivity strengthens as r grows (it composes an increasingly good A(3) with
+   A(1)); CBC weakens, since each round adds layers to a relaxation already struggling.
+   Record both and take the max — and note the script reports only its own instance's
+   bound, so at r=4 it prints `A in [94, 165]` while the documented floor is the larger
+   137.
+
+   Three lessons carried into §10.6: an unchanged incumbent says nothing about whether
+   more time would prove a cell, because proving is a dual-side question; the dual bound
+   is worth recording from any timed-out run, since it is valid whether or not the gap
+   closes; and the bound moves in **discrete jumps** (flat for thousands of nodes, then a
+   step when a cut round lands), so two consecutive samples predict nothing — read the
+   endpoint, not the trend.
 2. **`permute-trail-search.py -r 5` with a smaller `-A`.** Newly possible: 243 is now known
    to be an incumbent rather than a proven optimum, so smaller targets are legitimate, and
    r = 3/r = 4 showed that asking for the right smaller target converts an intractable

@@ -297,3 +297,129 @@ in the sense this plan promises.
    (§5.8). Each lands with its reproduction commands and updates the claimed-instances
    margin rationale (§4.3) if it moves the best-attacked-rounds number.
 6. README/FAQ/--help updates last, once the SPEC.md sections are stable.
+
+## 10. Re-derivation runbook (the standing procedure)
+
+Every figure in this repository's cryptanalysis sections came out of one of five Python
+programs. This section is the procedure for re-deriving all of them, so a future session
+can refresh the docs without reconstructing what to run or why. It was written from a
+full re-derivation on 2026-08-01/02 that took ~13 hours of machine time on 8 threads and
+**refuted two published figures** — so treat this as maintenance that is expected to find
+things, not a formality.
+
+Timings and peak memory below are from that run (8 threads, 7.7 GiB, no swap). Every
+command is sized to finish inside one hour; `-t` is the limit **per round count**, so
+solve one cell at a time with `--min-rounds R -r R` when the budget matters.
+
+### 10.1 Cheap and deterministic — run these first (< 1 min total)
+
+| Command | Purpose | Expected |
+|---|---|---|
+| `python3 research/spec-conformance.py` | SPEC.md is complete and unambiguous: an independent from-the-spec model reproduces every KAT | `58 KATs verified, 0 failed`, 4.2 s |
+| `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the AES Square-distinguisher validation | `self-test OK` |
+| `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 8 AES rounds = 2.67 Castella rounds |
+| `python3 research/permute-trail-search.py --self-test` | S-box/DDT/aesenc model checks | `self-test OK` |
+| `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
+| `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 25 s |
+
+`<pulp>` is `~/.venvs/pulp/bin/python3` (PuLP does not install into the system Python on
+Arch; `python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp`).
+
+### 10.2 MILP: minimum active S-boxes
+
+**Read the `status` column on every row.** Only `optimal` is a lower bound and hence a
+security bound; `NOT proven` is an incumbent, which bounds the minimum from *above*. Two
+figures recorded from incumbents (A(16,3) = 133, A(16,4) = 225) stood for a month before
+being refuted. Re-verification is **one-directional**: a re-run *below* the recorded value
+refutes it, one *above* proves nothing.
+
+```bash
+# Table 1 (a = 3).  N=2 and N=4 prove everywhere; N=8 proves through r=3 only.
+<pulp> research/permute-min-active-sboxes.py -N 2 -a 3 -r 4                       # 44 s,  all proven
+<pulp> research/permute-min-active-sboxes.py -N 4 -a 3 -r 4                       # 2m15,  all proven
+<pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 3 -t 600
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 4 -r 4 -t 3300 # 55m, incumbent 165
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 3300 # 55m, incumbent 129
+
+# r = 5, one cell at a time
+<pulp> research/permute-min-active-sboxes.py -N 2  -a 3 --min-rounds 5 -r 5 -t 3300 # 12m, PROVEN 101
+<pulp> research/permute-min-active-sboxes.py -N 4  -a 3 --min-rounds 5 -r 5 -t 3300 # 38m, PROVEN 114
+<pulp> research/permute-min-active-sboxes.py -N 8  -a 3 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 182
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 293
+
+# Table 2 (N = 16, varying a).  Feeds the AES_NUM_ROUNDS = 3 argument.
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 2 -r 2 -t 900  # 12 s, PROVEN 25
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 3 -r 4 -t 1650 # 28m, r=3 PROVEN 105, r=4 incumbent 200
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 450
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 6 -r 6 -t 3300 # 55m, incumbent 452
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 2 -r 2 -t 900  # 1m,  PROVEN 50
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 3 -r 4 -t 1650 # 55m, incumbents 75, 100
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 125
+```
+
+### 10.3 Bit-level trail search
+
+```bash
+cd research
+python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --cluster 5000            # 56 s,  99 MB; weight 54 proven + cluster 1048 / 2^-51.66
+python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # 38 s, 276 MB; weight 302
+python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # weight 903 against A=129
+python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize --print-trail -M 4000  # weight 1154 against A=165
+python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000    # 55m, stage A times out — no result
+```
+
+`-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
+in 0.7 s but times out on `-A 120` after 900 s; at r = 4 `-A 165` takes 34 s and `-A 150`
+times out. These probes establish "≤ X" well and "> X" not at all.
+
+### 10.4 Deep differential fuzz
+
+```bash
+python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 639947 squeezes
+```
+
+~150 programs/s, linear in `-n`; memory grows with the run, so 400 k is near the practical
+ceiling at 7.7 GiB. This covers what KAT.txt structurally cannot (split adds, both
+`*_encoded` entry points, explicit padding, successive squeezes).
+
+### 10.5 Not yet run — the highest-value additions
+
+Ordered by what would most change the documentation:
+
+1. **`-v` on an unproven MILP cell, to read CBC's duality gap.** This is the missing
+   *diagnostic*, and it should come before any decision to spend longer limits: it is the
+   only thing that distinguishes "a few more hours would prove it" from "this formulation
+   never will". Run it on `-N 16 -a 3 --min-rounds 3 -r 3` first, that being the smallest
+   unproven N=16 cell and the one feeding SPEC.md.
+2. **`permute-trail-search.py -r 5` with a smaller `-A`.** Newly possible: 243 is now known
+   to be an incumbent rather than a proven optimum, so smaller targets are legitimate, and
+   r = 3/r = 4 showed that asking for the right smaller target converts an intractable
+   search into seconds. This is the only route to a first r = 5 ceiling.
+3. **Minimization (drop `--no-minimize`) at r = 3 and r = 4 against the new targets 129
+   and 165.** Never attempted at the corrected targets; would tighten the 903 and 1154
+   ceilings.
+4. **`--patterns 8` at r = 3 and r = 4 on the new targets**, mirroring the r = 2 sweep, to
+   confirm realizability is not a quirk of the first pattern reached.
+5. **A bisection between A = 129 and A = 165 at r = 4** (150 timed out; 140 untried) to
+   narrow the ceiling on A itself.
+6. **`-N 16 -a 3 --min-rounds 6 -r 6`** — never attempted at any limit; would extend the
+   table and the superadditive floors.
+7. **`hash-programs/plot-results.py`** — excluded from the 2026-08 re-derivation because it
+   is a viewer, not a measurement, and requires first generating CSVs with the
+   `benchmark.*.bash` scripts. No documented number depends on it.
+
+### 10.6 Resource notes
+
+* **Memory is not the constraint.** Across all 28 runs of the 2026-08 re-derivation the
+  peak was 1.5 GB (the fuzzer) and no solver run exceeded 892 MB, against 7.7 GiB
+  available. The 6.38 GiB figure recorded elsewhere came from the `witness` encoding,
+  which `rows` (now the default) replaces at ~1/7th the memory. More RAM would buy
+  *parallelism* — z3 is single-threaded, so 7 of 8 cores idle during every trail search —
+  and deeper fuzz sweeps, not the ability to solve anything currently out of reach.
+* **Longer time limits are unproven as a fix, and the evidence cuts both ways.** At
+  N=16 r=3 more time did improve the incumbent (133 at 600 s → 129 at 3300 s), so the
+  primal side was still moving. At N=16 r=4 it did not (165 at both 1800 s and 3300 s),
+  and at N=8 r=4 it did not (135 at both 600 s and 3300 s). None of this speaks to the
+  *dual* bound, which is what proving actually requires — hence item 1 in §10.5. Do not
+  raise limits blindly; measure the gap first.

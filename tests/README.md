@@ -32,8 +32,10 @@ Every `duplex` line in KAT.txt is the same shape — construct, one `add`, one `
 
 A *program* is one generated unit of work — constructor parameters plus a call sequence ending in at least one squeeze — so it is not one comparison: a program yields as many comparisons as it has squeezes, which is why the summary counts both.  The whole run is batched through one driver process, because the pure-Python model is the slow side.  `make test` runs it at the default seed and program count; pass `--seed` to explore new programs, exactly as with `equivalence-tests`.
 
-* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (nonzero exit status on any divergence).
+* `python3 duplex-diff-fuzz.py` verifies the default 200 programs — 331 squeezes, ~1.6 s (nonzero exit status on any divergence).
 * `python3 duplex-diff-fuzz.py -n 5000 --seed 0x1234` runs a longer, different sweep.
+
+The deepest sweep run to date found no divergence: `-n 400000 --seed 0x1` verified **639 947 squeezes** in 40 min (2026-08-02).  Throughput is ~150 programs/s and scales linearly, so size a sweep from that; memory grows with the run and reached 1.5 GB at 400 k programs.
 
 Two `Castella::Duplex` conveniences that the specification does not describe are deliberately avoided rather than modelled, since they are C++ API behavior rather than digest behavior: `squeeze_bytes(n)` clamps *n* where the model asserts the range, and the raw-span `add_left_encoded`/`add_right_encoded` forms treat a null data pointer as a no-op.
 

@@ -8,9 +8,14 @@
 permute-min-active-sboxes.py proves LOWER bounds on the number of active AES
 S-boxes (a byte-level relaxation).  This program searches for real,
 bit-instantiated characteristics, giving UPPER bounds on the best-trail
-weight.  The gap between 6*A (the idealized lower bound: every active S-box
-at the maximum DDT probability 4/256 = 2^-6) and the best weight found here
-measures how tight the byte-level bound is ("trail tightness").
+weight.  The gap between 6*A (every active S-box at the maximum DDT
+probability 4/256 = 2^-6) and the best weight found here measures how tight
+the byte-level bound is ("trail tightness").
+
+That reading requires A to be a *proven* MILP optimum.  Where the MILP only
+reached an incumbent -- N=16 at r >= 3, as of 2026-08-02 -- 6*A is not a
+lower bound on anything, and a trail found against it is a ceiling with no
+floor beneath it.  The program says which case it is on startup.
 
 Model (two stages, both in z3)
 ------------------------------
@@ -18,7 +23,9 @@ Stage A -- activity pattern: the same byte-granular truncated-differential
 model as permute-min-active-sboxes.py (SubBytes preserves activity;
 ShiftRows/transpose re-index; MixColumns has branch number 5 and is
 invertible), expressed as SAT with a cardinality constraint fixing the total
-number of active S-boxes to a target A (default: the proven MILP optimum).
+number of active S-boxes to a target A (default: the best known MILP figure
+for -N/-r -- a proven optimum where one exists, otherwise an incumbent, which
+makes 6*A a target rather than a floor; see PROVEN_MIN_ACTIVE below).
 
 Stage B -- bit-level instantiation of one pattern: each active byte becomes
 an 8-bit bitvector difference.  An S-box transition (din -> dout) is encoded
@@ -91,14 +98,25 @@ type Pattern = list[list[list[bool]]]           # a solved Layers
 type StateBytes = list[list[int]]               # a solved difference
 type BitVecState = list[list[z3.BitVecRef]]     # difference variables
 
-# Proven MILP optima (research/README.md, "minimum active S-boxes", a=3).
-KNOWN_MIN_ACTIVE = {
+# Best known active-S-box counts (research/README.md, "minimum active
+# S-boxes", a=3).  PROVEN_MIN_ACTIVE holds converged MILP optima: for these,
+# 6*A is a genuine lower bound on the trail weight.  UNPROVEN_MIN_ACTIVE holds
+# the best known incumbents, which bound the minimum from ABOVE -- targeting
+# one still yields a real characteristic (an upper bound on the best weight),
+# but 6*A is NOT a floor and must not be reported as one.
+PROVEN_MIN_ACTIVE = {
     (2, 1): 9, (4, 1): 9, (8, 1): 9, (16, 1): 9,
     (2, 2): 40, (4, 2): 45, (8, 2): 45, (16, 2): 45,
-    (2, 3): 59, (4, 3): 66, (8, 3): 91, (16, 3): 133,
-    (2, 4): 80, (4, 4): 90, (8, 4): 135, (16, 4): 225,
-    (16, 5): 243,
+    (2, 3): 59, (4, 3): 66, (8, 3): 91,
+    (2, 4): 80, (4, 4): 90,
+    (2, 5): 101, (4, 5): 114,
 }
+
+UNPROVEN_MIN_ACTIVE = {
+    (16, 3): 129, (8, 4): 135, (16, 4): 165, (8, 5): 182, (16, 5): 243,
+}
+
+KNOWN_MIN_ACTIVE = PROVEN_MIN_ACTIVE | UNPROVEN_MIN_ACTIVE
 
 
 def positive_int(s: str) -> int:
@@ -693,7 +711,7 @@ def main() -> None:
                         help="Castella rounds (default: %(default)s)")
     parser.add_argument("-A", "--active", type=positive_int, default=None,
                         help="target total active S-boxes (default: the "
-                             "proven MILP minimum for -N/-r)")
+                             "best known MILP figure for -N/-r)")
     parser.add_argument("--patterns", type=positive_int, default=8,
                         help="max activity patterns to try "
                              "(default: %(default)s)")
@@ -733,18 +751,28 @@ def main() -> None:
         return
 
     num_active = args.active
+    key = (args.num_blocks, args.rounds)
     if num_active is None:
-        num_active = KNOWN_MIN_ACTIVE.get((args.num_blocks, args.rounds))
+        num_active = KNOWN_MIN_ACTIVE.get(key)
         if num_active is None:
-            sys.exit("no known MILP minimum for this -N/-r; pass -A")
+            sys.exit("no known active-S-box count for this -N/-r; pass -A")
+
+    # 6*A is a floor only when A is a converged MILP optimum.  Against an
+    # incumbent -- or any hand-passed -A -- it is just the target's arithmetic.
+    proven = PROVEN_MIN_ACTIVE.get(key) == num_active
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(line_buffering=True)
     timeout_ms = int(args.time_limit * 1000)
     print(f"N={args.num_blocks} blocks, r={args.rounds} rounds, "
           f"target active S-boxes A={num_active}")
-    print(f"idealized lower bound: weight >= {6 * num_active} "
-          f"(DP <= 2^-{6 * num_active})")
+    if proven:
+        print(f"idealized lower bound: weight >= {6 * num_active} "
+              f"(DP <= 2^-{6 * num_active})")
+    else:
+        print(f"6*A = {6 * num_active}, but A={num_active} is NOT a proven "
+              "MILP optimum for this -N/-r, so this is NOT a lower bound; "
+              "any trail found below is a ceiling with no floor under it")
 
     pat_solver, layers = build_pattern_solver(
         args.num_blocks, args.rounds, num_active)
@@ -834,8 +862,8 @@ def main() -> None:
     print(f"\nbest characteristic found: weight {weight} "
           f"(DP = 2^-{weight}), pattern {pattern_no}"
           f"{', optimal for its pattern' if optimal else ''}")
-    print(f"gap above the idealized bound 6*A = {6 * num_active}: "
-          f"{weight - 6 * num_active}")
+    print(f"gap above {'the idealized bound' if proven else '(unproven)'} "
+          f"6*A = {6 * num_active}: {weight - 6 * num_active}")
     if args.print_trail:
         print(f"input difference:  {hex_state(input_diff)}")
         print(f"output difference: {hex_state(output_diff)}")

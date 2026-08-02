@@ -25,7 +25,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Trail tightness (r=1 bound proven tight; r=2, r=3 and r=4 bracketed) and first-order differential clustering | executable (solver) | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed; r=3 and r=4 ceilings only, no proven floor) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
@@ -156,15 +156,18 @@ python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --clust
 # r=2: a first trail confirming the ceiling (~40 s wall, ~3 s of it solving)
 python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --encoding rows --no-minimize
 
-# r=3: same shape, one round further (~2 min wall)
-python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --encoding rows --no-minimize
-
-# r=4: same again (~3 min wall).  rows (the default) is not optional here: the
-# same run under --encoding witness finds no trail in 30 min.
-python3 permute-trail-search.py -r 4 --patterns 1 -t 1800 --encoding rows --no-minimize -M 4000
+# r=3 and r=4.  The built-in targets are now the smallest activity patterns
+# known to exist (129 and 165), which are incumbents rather than proven optima
+# -- the script says so on startup and reports the result as a ceiling.
+python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize -M 4000
+python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize -M 4000
 ```
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the reproducible part; the count and total are not, because which weight-54 differential the search lands on is a solver choice and each clusters slightly differently (an earlier run found 847 summing to 2<sup>−51.8</sup>).  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail, not an exact match.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum.  r=3 is the same shape: this command returns 929, one bit above the recorded 928 ceiling, which a longer `--encoding witness` run reached; the bracket stays [798, 928].  r=4 returns weight 1573, the ceiling of the bracket [1350, 1573] — the round count's only known ceiling, and reproduced byte-for-byte across two runs here.  Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314 and 315), so only the brackets are guaranteed.  Dropping `--no-minimize` reproduces the other half of the claim — the minimization reports `unknown` at r=2 and r=3 however long it is given, which is *why* these are ceilings rather than minima (measured both ways at r=2: `witness` to 60 min and `rows` to 30 min, both `unknown`; at r=4 it has not been attempted, so 1573 is a ceiling for the same reason one round down); budget several GiB and an hour per round count for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.  Both the tightness result and the clustering measurement are conservative for the claim (real trails sit at or above the MILP floor, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-choice lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part; the count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall) but that is a property of the deterministic variable ordering, not a promise — which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum, and the **only** round count above 1 that still has one.
+
+r=3 and r=4 are **ceilings with no floor**.  The commands above return weight 903 and 1154 respectively — real characteristics, each re-propagated in Python and checked against the DDT — but the 6·A floors these used to be paired with (798 and 1350) came from MILP figures that have since been refuted, so nothing bounds these from below.  Note that 1154 is *below* 1350, the number earlier revisions published as a proven lower bound for r=4: that bracket never contained the true value.  Do not restore a floor at either round count without a converged MILP solve (status `optimal`) to justify it.
+
+Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314 and 315), so only the r ≤ 2 bracket is guaranteed.  Dropping `--no-minimize` reproduces the other half of the r=2 claim — the minimization reports `unknown` however long it is given (measured both ways: `witness` to 60 min and `rows` to 30 min), which is *why* 302 is a ceiling rather than a minimum; budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.  The tightness and clustering results remain conservative for the claim (where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-choice lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 
 ## 14. Rebound-attack resistance is an argument — read it
 

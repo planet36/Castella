@@ -355,7 +355,7 @@ Notes:
 
 * `-t` is the time limit **per round count** (seconds, default 600).  `--threads` defaults to all cores.
 * Each row is solved independently, so a single row can be recomputed with `--min-rounds R -r R`.
-* Solve times range from seconds (_r_ ≤ 2, or small _N_) to tens of minutes (_N_ = 16, _r_ ≥ 3) on 8 threads.  At _N_ = 16 nothing above _r_ = 2 has ever proven, at any limit tried up to 55 minutes.
+* Solve times range from seconds (_r_ ≤ 2, or small _N_) to tens of minutes (_N_ = 16, _r_ ≥ 3) on 8 threads.  At _N_ = 16 only _r_ = 3 has ever proven above _r_ = 2, and it needed 72 minutes plus the `gapAbs` trick below; _r_ = 4 and _r_ = 5 have not proven at any limit tried up to 55 minutes.
 * **A longer `-t` is not reliably the fix.**  At _N_ = 16, _a_ = 3, _r_ = 4 the incumbent was 165 at both 1800 s and 3300 s: CBC finds that solution quickly and then spends the whole remaining budget failing to close the duality gap.  When the incumbent stops moving, the outstanding work is all on the dual side, and more time on the same formulation is unlikely to pay.
 * Output is line-buffered, so a long run redirected to a file can be watched with `tail -f`.
 
@@ -450,8 +450,8 @@ python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --clust
 python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --encoding rows \
     --no-minimize --print-trail -M 4000
 
-# r = 3: weight 903, ~8 s of solving.  The target A=129 is an incumbent, not a
-# proven optimum, so the result is a ceiling with no floor — the script says so.
+# r = 3: weight 903, ~8 s of solving.  A(3)=129 is a proven optimum, so this one
+# has a real floor (774) under it — the script prints it without a warning.
 python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --encoding rows \
     --no-minimize --print-trail -M 4000
 

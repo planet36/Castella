@@ -25,7 +25,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Trail tightness (r=1 bound proven tight; r=2 bracketed; r=3 and r=4 ceilings only, no proven floor) and first-order differential clustering | executable (solver) | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2 and r=3 bracketed, r=3 on a solved floor; r=4 a ceiling over a superadditive floor) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
@@ -69,11 +69,13 @@ The MILP model proves lower bounds on differentially active AES S-boxes per char
 # validation: r=1 is pure AES; must print the published bounds 1, 5, 9, 25
 for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done
 
-# the claimed floors: expect A = 45 (r=2), 133 (r=3), 225 (r=4), each 'optimal'
+# the claimed floors.  Expect A = 45 at r=2, 'optimal'; A = 129 at r=3 and
+# A = 165 at r=4, both 'NOT proven' at this limit.  r=3 does converge, but it
+# needs -t 7200 (72 min) -- run that cell on its own with --min-rounds 3 -r 3.
 python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 2 -r 4 -t 1800
 ```
 
-Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: two figures that stood in these documents for a month (`N=16, a=3` at r=3 and r=4) were timed-out incumbents recorded as optima, and both were later refuted by cheaper patterns.  At `N=16` only r ≤ 2 has ever proven on this machine, at any limit up to 55 minutes; a larger `-t` is not a reliable fix, since at r=4 the incumbent was identical at 1800 s and 3300 s.
+Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: two figures that stood in these documents for a month (`N=16, a=3` at r=3 and r=4) were timed-out incumbents recorded as optima, and both were later refuted by cheaper patterns.  At `N=16` only r ≤ 3 has ever proven on this machine, and r=3 needed 72 minutes plus the `gapAbs` stopping rule (the objective is integral, so the incumbent is optimal once the dual bound passes incumbent − 1; the script now always passes it).  Above that, a larger `-t` is not a reliable fix: proving is a dual-side question, and the incumbent's stability says nothing about it — at r=4 the incumbent was identical at 1800 s and 3300 s.
 
 ## 5. Three AES rounds per Castella round
 
@@ -163,9 +165,9 @@ python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize -M 4000
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize -M 4000
 ```
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part; the count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall) but that is a property of the deterministic variable ordering, not a promise — which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum, and the **only** round count above 1 that still has one.
+Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part; the count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall) but that is a property of the deterministic variable ordering, not a promise — which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum.
 
-r=3 and r=4 are **ceilings with no floor**.  The commands above return weight 903 and 1154 respectively — real characteristics, each re-propagated in Python and checked against the DDT — but the 6·A floors these used to be paired with (798 and 1350) came from MILP figures that have since been refuted, so nothing bounds these from below.  Note that 1154 is *below* 1350, the number earlier revisions published as a proven lower bound for r=4: that bracket never contained the true value.  Do not restore a floor at either round count without a converged MILP solve (status `optimal`) to justify it.
+The commands above return weight 903 at r=3 and 1154 at r=4 — real characteristics, each re-propagated in Python and checked against the DDT — but the two round counts are bounded from below by different things.  r=3 has a **solved floor**: A(3) = 129 converged on 2026-08-02 (§4), so 6·A = 774 is a genuine lower bound.  r=4 has **no solved floor**; the only bound under its trail is the superadditive A(4) ≥ A(1) + A(3) = 138, i.e. 828.  The 6·A floors the two used to be paired with (798 and 1350) came from MILP figures that have since been refuted — and note that 1154 is *below* 1350, the number earlier revisions published as a proven lower bound for r=4: that bracket never contained the true value.  Do not restore a solved floor at r=4 without a converged MILP solve (status `optimal`) to justify it.
 
 Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314 and 315), so only the r ≤ 2 bracket is guaranteed.  Dropping `--no-minimize` reproduces the other half of the r=2 claim — the minimization reports `unknown` however long it is given (measured both ways: `witness` to 60 min and `rows` to 30 min), which is *why* 302 is a ceiling rather than a minimum; budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.  The tightness and clustering results remain conservative for the claim (where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-choice lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 

@@ -68,8 +68,11 @@ Requires the PuLP package (pip install pulp), which bundles the CBC solver.
 """
 
 import argparse
+import math
 import os
+import re
 import sys
+import tempfile
 
 # Optional third-party MILP solver (see module docstring); may be absent when
 # linting, so silence the import-error rather than making it a hard dependency.
@@ -173,6 +176,23 @@ def build_model(num_blocks: int, num_rounds: int,
     return prob
 
 
+def read_dual_bound(log_path: str) -> float | None:
+    """CBC's best dual bound from its log, or None if it did not report one.
+
+    Branch and bound maintains a lower bound on the optimum throughout, so
+    this is valid whenever it appears -- including on a run that found no
+    integer solution at all.  An optimal run prints no such line, because
+    there the objective is the bound.
+    """
+    try:
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return None
+    match = re.search(r"^Lower bound:\s+(-?[\d.]+)", text, re.MULTILINE)
+    return float(match.group(1)) if match else None
+
+
 def main() -> None:
     """Parse arguments and solve the MILP for each round count."""
     parser = argparse.ArgumentParser(
@@ -210,10 +230,17 @@ def main() -> None:
 
     for r in range(args.min_rounds, args.max_rounds + 1):
         prob = build_model(args.num_blocks, r, args.aes_rounds)
-        solver = pulp.PULP_CBC_CMD(msg=args.verbose,
-                                   timeLimit=args.time_limit,
-                                   threads=args.threads)
-        prob.solve(solver)
+        with tempfile.TemporaryDirectory() as tmp:
+            # CBC writes its dual bound to the log and nowhere else: PuLP's
+            # command-line backend does not surface it (only the Windows
+            # COINMP path sets LpProblem.bestBound), so capture and parse it.
+            log_path = os.path.join(tmp, "cbc.log")
+            solver = pulp.PULP_CBC_CMD(msg=args.verbose,
+                                       timeLimit=args.time_limit,
+                                       threads=args.threads,
+                                       logPath=log_path)
+            prob.solve(solver)
+            dual = read_dual_bound(log_path)
 
         # Only sol_status proves optimality: when CBC stops on the time limit
         # with an integer incumbent, PuLP rewrites prob.status to Optimal and
@@ -223,11 +250,23 @@ def main() -> None:
             print(f"{r:>6}  {a_min:>18}  2^-{6 * a_min:<8}  optimal")
             continue
 
-        # Time limit hit.  An incumbent is only an upper bound on the minimum,
-        # so it does NOT yield a valid DP bound.
+        # Time limit hit.  The incumbent is an UPPER bound on the minimum and
+        # yields no DP bound -- but CBC's dual bound is a genuine LOWER bound
+        # on it at any point in the search, so report the DP bound from that.
+        a_low = math.ceil(dual) if dual is not None and dual > 0 else None
+        dp = f"2^-{6 * a_low}" if a_low is not None else "n/a"
+
         if prob.sol_status == pulp.LpSolutionIntegerFeasible:
-            print(f"{r:>6}  {round(prob.objective.value()):>18}  {'n/a':>10}  "
-                  "NOT proven; incumbent is an upper bound only")
+            incumbent = round(prob.objective.value())
+            if a_low is not None:
+                status = (f"NOT proven; A in [{a_low}, {incumbent}] -- "
+                          f"DP bound is from the lower end")
+            else:
+                status = "NOT proven; incumbent is an upper bound only"
+            print(f"{r:>6}  {incumbent:>18}  {dp:>10}  {status}")
+        elif a_low is not None:
+            print(f"{r:>6}  {'?':>18}  {dp:>10}  "
+                  f"no integer solution found, but A >= {a_low} is proven")
         else:
             print(f"{r:>6}  {'?':>18}  {'n/a':>10}  "
                   f"{pulp.LpStatus[prob.status]}; no integer solution found")

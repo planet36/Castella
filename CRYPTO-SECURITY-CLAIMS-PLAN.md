@@ -366,6 +366,10 @@ refutes it, one *above* proves nothing.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 2 -r 2 -t 900  # 1m,  PROVEN 50
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 3 -r 4 -t 1650 # 55m, incumbents 75, 100
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 125
+
+# r = 6.  Run 2026-08-02: 55m, 606 MB, incumbent 290 with a dual bound of 13.
+# The solver contributes nothing here; the floor is superadditive (258).
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 6 -r 6 -t 3300
 ```
 
 ### 10.3 Bit-level trail search
@@ -377,11 +381,28 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --no-minimize --print-t
 python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # weight 903 against A=129
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize --print-trail -M 4000  # weight 1154 against A=165
 python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000    # 55m, stage A times out — no result
+
+# The recorded r=3/r=4 ceilings come from sweeps, not single patterns (2026-08-02).
+python3 permute-trail-search.py -r 3 -A 129 --patterns 8 --no-minimize -t 600 -M 1200  # 19m, 865 MB; 8/8 realizable, best 891
+python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M 1200  # 21m, 858 MB; only 3/8 reachable, best 1153
+
+# r = 5 succeeds at narrow widths, where N=16 fails at every target (2026-08-02).
+python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # 2m, 626 MB; [606, 705]
+python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
 ```
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
 in 0.7 s but times out on `-A 120` after 900 s; at r = 4 `-A 165` takes 34 s and `-A 150`
-times out. These probes establish "≤ X" well and "> X" not at all.
+times out. These probes establish "≤ X" well and "> X" not at all — which is exactly why
+the r = 4 bisection (§10.5 item 5) returned nothing usable, and why five smaller targets at
+r = 5 (item 2) did not unstick that round count. **`-A` is only a lever where the true
+minimum is within reach of the search; it is not a difficulty dial.**
+
+The z3 runs are single-threaded, so on 8 cores several `-A` values can be probed in
+parallel — which is how items 2 and 5 were run, five and four at a time, each under
+`-M 1200`, with total resident memory staying near 2 GB. Read results **from the output
+files**, not from a runner's progress reporting: a probe that has printed nothing may still
+be inside its stage-A budget.
 
 ### 10.4 Deep differential fuzz
 
@@ -393,9 +414,11 @@ python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 63994
 ceiling at 7.7 GiB. This covers what KAT.txt structurally cannot (split adds, both
 `*_encoded` entry points, explicit padding, successive squeezes).
 
-### 10.5 Not yet run — the highest-value additions
+### 10.5 The queued additions — all run as of 2026-08-02
 
-Ordered by what would most change the documentation:
+Items 1–6 have now been executed; each entry records what it returned. Only item 7 remains
+unrun, and deliberately so. Ordered as originally queued, by what would most change the
+documentation:
 
 1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 and r=4 on 2026-08-02; it changed the
    r=3 bounds and settled r=4 the other way.** At r=3 the dual bound reached 126.630 at
@@ -419,19 +442,51 @@ Ordered by what would most change the documentation:
    closes; and the bound moves in **discrete jumps** (flat for thousands of nodes, then a
    step when a cut round lands), so two consecutive samples predict nothing — read the
    endpoint, not the trend.
-2. **`permute-trail-search.py -r 5` with a smaller `-A`.** Newly possible: 243 is now known
-   to be an incumbent rather than a proven optimum, so smaller targets are legitimate, and
-   r = 3/r = 4 showed that asking for the right smaller target converts an intractable
-   search into seconds. This is the only route to a first r = 5 ceiling.
-3. **Minimization (drop `--no-minimize`) at r = 3 and r = 4 against the new targets 129
-   and 165.** Never attempted at the corrected targets; would tighten the 903 and 1154
-   ceilings.
-4. **`--patterns 8` at r = 3 and r = 4 on the new targets**, mirroring the r = 2 sweep, to
-   confirm realizability is not a quirk of the first pattern reached.
-5. **A bisection between A = 129 and A = 165 at r = 4** (150 timed out; 140 untried) to
-   narrow the ceiling on A itself.
-6. **`-N 16 -a 3 --min-rounds 6 -r 6`** — never attempted at any limit; would extend the
-   table and the superadditive floors.
+2. ~~`permute-trail-search.py -r 5` with a smaller `-A`~~ — **done 2026-08-02; the
+   hypothesis is refuted.** Five targets straddling the window (`-A` 180, 195, 210, 225,
+   240, against a superadditive floor of 174 and an incumbent of 243) were run in parallel
+   at `-t 900`. All five gave up in stage A at exactly 900 s, indistinguishably from 243.
+   So the wall does not move with the cardinality's value, and `--encoding` cannot be the
+   variable either, since it only affects stage B.
+
+   **But the same search at narrower states works, which localizes the obstacle.** At
+   `-N 2` and `-N 4`, both at *proven* targets (101 and 114), stage A returns in 0.3 s and
+   0.6 s and the run brackets those permutations at **[606, 705]** and **[684, 791]** — the
+   first bracketed r = 5 results at any width, and both with sound floors. Five rounds is
+   not intrinsically beyond stage A; 16 blocks is. The `PbEq` constraint spans 3 840
+   booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose. Read with
+   r = 4 — where stage A clears the same constraint three times, then stalls on a fourth —
+   this is one continuous difficulty in width and depth, not a cliff at r = 5.
+3. ~~Minimization at r = 3 and r = 4~~ — **done 2026-08-02; null, and it inverts the
+   flag advice.** Both returned `unknown: canceled` after 1200 s, leaving 903 and 1154
+   standing. That extends "minimization never completes" from r = 2 to three round counts.
+   The useful finding is the cost comparison: given ~20 min each on the same r = 3
+   instance, minimizing pattern 1 moved the ceiling **0 bits** while item 4's sweep moved
+   it **12**. Finding a trail in a fresh pattern is satisfiability; minimizing within one
+   is refutation over that whole pattern. **Spend a ceiling budget on `--patterns`.**
+4. ~~`--patterns 8` at r = 3 and r = 4~~ — **done 2026-08-02; both ceilings improved.** At
+   r = 3 all 8 patterns are realizable (903, 903, 901, 895, **891**, 902, 901, 897; 19 min,
+   865 MB), so realizability is not a quirk of the first pattern, and the ceiling drops
+   903 → **891**. At r = 4 only **3 of 8** patterns were reachable — stage A could not
+   produce a fourth distinct 165-box pattern in 600 s after 50 s, 45 s and 16 s for the
+   first three — giving 1154, **1153**, 1153 and a ceiling of **1153**. `--patterns N` is
+   an upper request, not a promise.
+5. ~~A bisection between A = 129 and A = 165 at r = 4~~ — **done 2026-08-02; null.**
+   `-A` 140, 150, 155 and 160 all timed out in stage A at 900 s. This narrows nothing:
+   a stage-A timeout is `unknown`, not UNSAT, so it cannot push a floor up, and
+   `A(4) ≤ 165` stands. The only readable signal is where the cliff sits — 165 returns a
+   pattern in 50 s and everything from 160 down returns nothing in 900 s.
+6. ~~`-N 16 -a 3 --min-rounds 6 -r 6`~~ — **done 2026-08-02; a new bracket, from
+   superadditivity rather than from the solver.** 55 min, 606 MB: incumbent **290**, dual
+   bound **13**, `NOT proven`. The dual bound is worthless at this depth (a 96% gap,
+   against 76% at r = 4 and 1% at r = 3 — the decay is monotone), but the incumbent caps
+   A(6) from above and superadditivity supplies `A(6) ≥ A(3) + A(3) = 258`, so
+   **A(6) ∈ [258, 290]**, DP ≤ 2^−1548. That is the *narrowest* relative bracket above
+   r = 3 (12%, against 20% at r = 4 and 40% at r = 5) precisely because it composes the
+   solved A(3) with itself instead of padding with A(1).
+
+   One caution the run exposes: incumbent quality is not monotone in difficulty. This
+   machine's r = 5 run reached only 293 while this strictly harder r = 6 run reached 290.
 7. **`hash-programs/plot-results.py`** — excluded from the 2026-08 re-derivation because it
    is a viewer, not a measurement, and requires first generating CSVs with the
    `benchmark.*.bash` scripts. No documented number depends on it.

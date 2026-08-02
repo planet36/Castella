@@ -154,12 +154,20 @@ No round count can be *calculated* to "equal" SHA-3 — SHA-3's own margin is co
 (24 rounds vs. best practical collision attacks reaching ~6 rounds of the permutation).
 The honest procedure:
 
-1. **Floor from proven trail bounds.** From the MILP table (research/README.md, all
-   proven optimal for `N=16`, `a=3`): a claimed level of `b` bits needs every differential
-   characteristic below ~2^−2b; 6·A ≥ 2b is reached at **r=2** for b ≤ 135 (A=45, 2^−270),
-   **r=3** for b ≤ 399 (A=133, 2^−798), **r=4** for b ≤ 675 (A=225, 2^−1350) — so r=2, 3,
-   and 4 are the floors for the 128-, 256-, and 512-bit levels respectively. Linear trails: correlation ≤ 2^−3·A gives the same round floors. These are
-   necessary conditions only (single characteristics; no clustering/structural coverage).
+1. **Floor from proven trail bounds.** From the MILP table (research/README.md, `N=16`,
+   `a=3`): a claimed level of `b` bits needs every differential characteristic below
+   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved; above that the bounds
+   come from superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection),
+   giving A ≥ 54/90/99/135/144/180 at r = 3/4/5/6/7/8. So 6·A ≥ 2b is reached at
+   **r=2** for b ≤ 135, **r=4** for b ≤ 270, and **r=8** for b ≤ 540 — the floors for the
+   128-, 256-, and 512-bit levels respectively. The 512-bit level is the tight one: it is
+   claimed only at `C=8`, which runs `R*=8`, so the floor is met exactly rather than with
+   room to spare. Linear trails: correlation ≤ 2^−3·A gives the same round floors. These
+   are necessary conditions only (single characteristics; no clustering/structural
+   coverage).
+   *Superseded 2026-08-02:* this step previously read r=3 for b ≤ 399 (A=133) and r=4 for
+   b ≤ 675 (A=225). Both A values were timed-out solver incumbents mislabelled as optima
+   and have been refuted; the round floors above are the corrected ones.
 2. **Floor from diffusion.** Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
 3. **Margin against the unknown.** Adopt an explicit margin policy, e.g. *R\* ≥ 2× the

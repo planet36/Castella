@@ -16,7 +16,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 1 | The flat sponge claim (level `64·C` bits) | conjecture | not verifiable — falsifiable only by attack; §1 |
 | 2 | The spec, the C++, and the KAT file agree | executable | §2 |
 | 3 | Full bit diffusion of `P` needs 3 rounds | executable | §3 |
-| 4 | Trail bounds: A = 45/133/225 active S-boxes at r = 2/3/4 | executable (proven by solver) | §4 |
+| 4 | Trail bounds: A = 45 active S-boxes at r = 2 (solved); A ≥ 54/90/99 at r = 3/4/5 (derived by superadditivity) | executable (solver) + arithmetic | §4 |
 | 5 | 3 AES rounds per Castella round is the right count | executable (proven by solver) | §5 |
 | 6 | `R*`, the strengths table, and the SHA-3 mapping | arithmetic | §6 |
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
@@ -73,7 +73,7 @@ for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; do
 python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 2 -r 4 -t 1800
 ```
 
-Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and must be re-run with a larger `-t`.  The `N=16, r ≥ 3` instances take tens of minutes.
+Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: two figures that stood in these documents for a month (`N=16, a=3` at r=3 and r=4) were timed-out incumbents recorded as optima, and both were later refuted by cheaper patterns.  At `N=16` only r ≤ 2 has ever proven on this machine, at any limit up to 55 minutes; a larger `-t` is not a reliable fix, since at r=4 the incumbent was identical at 1800 s and 3300 s.
 
 ## 5. Three AES rounds per Castella round
 
@@ -183,4 +183,4 @@ Expected: the self-test passes (it asserts δ_1..7 = 7, γ = 7, and that the sam
 
 ## 16. Evidence pending
 
-A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely) and trail tightness at r ≥ 2 (the §13 r=2 and r=3 minimizations both time out and the r=4 one has not been attempted, leaving only brackets; at r = 5 a 30-minute probe timed out in stage A without even producing an activity pattern to instantiate, and r ≥ 6 has not been attempted, so those round counts have no ceiling and hence no bracket): planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument; the algebraic-degree upper bound to §15.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").
+A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely); trail tightness at r = 2 (the §13 minimization times out, leaving a bracket rather than a minimum); and, at r ≥ 3, a **solved** active-S-box bound — the MILP has never converged at N = 16 above r = 2, so the floors there are derived by superadditivity from A(1) and A(2) rather than solved, and are correspondingly loose (A(3) ≥ 54 against a pattern known to exist at 129).  r = 5 additionally has no ceiling: probes timed out in stage A at both 30 and 55 min without producing an activity pattern to instantiate, and r ≥ 6 has not been attempted.  Closing r ≥ 3 needs a stronger formulation, not a longer `-t`: the r=4 incumbent was unchanged between 1800 s and 3300 s.  Planned in [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5, no conclusive results yet.  (Slide analysis moved to §10, the affine-self-similarity screen; rebound to §14, a margin argument; the algebraic-degree upper bound to §15.)  Until a row moves out of this section, the corresponding gap is disclosed in SPEC.md's Evidence section ("necessary, not sufficient").

@@ -244,37 +244,50 @@ This is a **smoke test only**: passing means nothing cryptographically (any dece
 
 ### Results
 
-All values were **proven optimal** by the solver, except where noted.
+**Read the status column before using any value.**  Only a _proven_ optimum is a lower bound on the active S-box count, and only a lower bound yields a valid DP bound.  A solver that stops on its time limit holding a feasible solution reports an **incumbent**, which is an _upper_ bound on the minimum: it says a pattern that cheap exists, not that nothing cheaper does.  The two are marked here as:
+
+* **bold** — proven optimal (the solver closed its duality gap).  Yields a valid DP bound.
+* ≤ _n_ — best known incumbent, **not proven**.  Yields **no** DP bound; the true minimum is somewhere in (previous round's bound, _n_].
+
+Every value below was re-derived on 2026-08-01/02 with PuLP 3.3.2.  Where a re-run found a _cheaper_ feasible solution than the previously recorded figure, the old figure is struck through — it was never attainable as a minimum.
 
 Minimum active S-boxes with _a_ = 3 (the current `AES_NUM_ROUNDS`):
 
 | _r_ | _N_=2 | _N_=4 | _N_=8 | _N_=16 |
 |-----|-------|-------|-------|--------|
-| 1 | 9 | 9 | 9 | 9 |
-| 2 | 40 | 45 | 45 | 45 |
-| 3 | 59 | 66 | 91 | 133 |
-| 4 | 80 | 90 | 135 | 225 |
-| 5 | — | — | — | 243 |
+| 1 | **9** | **9** | **9** | **9** |
+| 2 | **40** | **45** | **45** | **45** |
+| 3 | **59** | **66** | **91** | ≤ 129 (was ~~133~~) |
+| 4 | **80** | **90** | ≤ 135 | ≤ 165 (was ~~225~~) |
+| 5 | **101** | **114** | ≤ 182 | ≤ 243 |
 
 Minimum active S-boxes for _N_ = 16, varying _a_:
 
 | _r_ | _a_=2 | _a_=3 | _a_=4 |
 |-----|-------|-------|-------|
-| 1 | 5 | 9 | 25 |
-| 2 | 25 | 45 | 50 |
-| 3 | 105 | 133 | 75 |
-| 4 | 200 | 225 | 100 |
-| 5 | not proven | 243 | — |
-| 6 | 340 | — | — |
+| 1 | **5** | **9** | **25** |
+| 2 | **25** | **45** | **50** |
+| 3 | **105** | ≤ 129 (was ~~133~~) | ≤ 75 |
+| 4 | ≤ 200 | ≤ 165 (was ~~225~~) | ≤ 100 |
+| 5 | ≤ 450 | ≤ 243 | ≤ 125 |
+| 6 | ≤ 340 | — | — |
+
+Two cells were **refuted** rather than merely left unproven: at _N_ = 16, _a_ = 3, CBC found feasible patterns with 129 active S-boxes at _r_ = 3 and 165 at _r_ = 4, below the 133 and 225 previously recorded as optima.  Both were independently confirmed by the SAT model in `permute-trail-search.py`, which not only reproduced the activity patterns but instantiated each at the bit level into a real characteristic (weight 903 and 1154, each re-verified against the AES DDT).  A characteristic that exists is not a modelling artifact, so the old figures cannot have been minima.
+
+The likely cause is historical: before commit 415bea8 (<q>Report only a proven optimum as optimal</q>) the script printed `optimal` for any run that ended holding an incumbent, because PuLP rewrites `prob.status` to `Optimal` on a time-limit stop and records the distinction in `sol_status` alone.  The values recorded then were incumbents mislabelled as optima.  Note the direction of that error: an inflated _A_ inflates 2<sup>−6·A</sup>, so stale data of this kind makes the bound look **stronger** than reality.
+
+Re-verification is one-directional.  A re-run that returns a value _below_ the recorded one refutes it; a re-run that returns a value _above_ it (as at _N_ = 16, _a_ = 3, _r_ = 5, where this machine reached only 293 against the recorded 243) proves nothing either way, since both are upper bounds.  Cells marked ≤ that were not refuted are therefore <q>unconfirmed</q>, not <q>wrong</q>.
 
 ### Conclusions
 
-* For _N_ = 16 with _a_ = 3, two rounds already bound every characteristic below 2<sup>−270</sup> (past the 2<sup>−256</sup> threshold); three rounds give 2<sup>−798</sup>.
-* The transpose is a much stronger mixing layer than its branch number (2) suggests: for _N_ = 16, activity grows superlinearly (~90 active S-boxes per round by _r_ = 3) because re-concentrating a difference into few blocks is prohibitively expensive.
-* _a_ = 4 is **strictly worse** than _a_ = 3 beyond _r_ = 2 despite 33% more AES work: its minimum is exactly 25·_r_.  The AES 4-round <q>hourglass</q> trail (1 → 4 → 16 → 4 → 1 active bytes) re-concentrates to a single byte before every transpose, so the transpose never engages.  The number of AES rounds between transposes must not allow cheap trails to exit narrow (in particular, not a multiple of 4).
+* For _N_ = 16 with _a_ = 3, two rounds already bound every characteristic below 2<sup>−270</sup>, past the 2<sup>−256</sup> threshold.  That is the only DP bound the solver itself proves at _N_ = 16; the former <q>three rounds give 2<sup>−798</sup></q> is withdrawn, since _A_ = 133 was refuted.  Higher round counts are still bounded, but by superadditivity rather than by a solve: _A_(_a_+_b_) ≥ _A_(_a_) + _A_(_b_) holds because `P` is a bijection, so from the proven _A_(1) = 9 and _A_(2) = 45 come _A_(3) ≥ 54 (DP ≤ 2<sup>−324</sup>), _A_(4) ≥ 90 (DP ≤ 2<sup>−540</sup>) and _A_(5) ≥ 99 (DP ≤ 2<sup>−594</sup>).
+* The transpose is a stronger mixing layer than its branch number (2) suggests: at _N_ = 16 the count reaches a proven 45 after two rounds against 40 at _N_ = 2, and the incumbents keep climbing faster than the small-_N_ columns (≤ 129 vs. a proven 59 at _r_ = 3).  The earlier <q>~90 active S-boxes per round</q> figure rested on the refuted 133 and 225, and the growth _rate_ at _N_ = 16 is no longer pinned down at all: only its _r_ ≤ 2 values are proven, and every value above that is an upper bound, which bounds the rate from above but not below.
+* By contrast the small-_N_ columns _are_ proven through _r_ = 5 and grow almost linearly — increments of 21, 21 and 21 for _N_ = 2 (59 → 80 → 101) and 21, 24, 24 for _N_ = 4 (66 → 90 → 114).
+* _a_ = 4 looks **worse** than _a_ = 3 beyond _r_ = 2 despite 33% more AES work: its incumbents follow exactly 25·_r_ (25, 50, ≤ 75, ≤ 100, ≤ 125).  The AES 4-round <q>hourglass</q> trail (1 → 4 → 16 → 4 → 1 active bytes) re-concentrates to a single byte before every transpose, so the transpose never engages.  The number of AES rounds between transposes must not allow cheap trails to exit narrow (in particular, not a multiple of 4).  The mechanism is structural and the closed form has held at every round count measured, but note that _r_ ≥ 3 here is unproven, so this is a strong regularity rather than a theorem.
 * _a_ = 3 avoids this: its cheapest trail (4 → 1 → 4) exits with a full active block, which the byte transpose scatters into all 16 blocks.
-* Since a transpose costs much more time than an AES round, configurations should be compared at equal _r_ (equal transposes), where _a_ = 3 matches or beats _a_ = 2 and _a_ = 4 at every proven point.  At an equal budget of 12 total AES rounds, _a_ = 2 (_r_ = 6) and _a_ = 3 (_r_ = 4) are a wash per transpose (≈56.7 vs. ≈56.3 active S-boxes) but _a_ = 2 spends 50% more transposes.  **`AES_NUM_ROUNDS` = 3 is the sweet spot.**
-* For _a_ = 3, _N_ = 16, growth flattens after _r_ = 4 (225 → 243), suggesting iterative trail structures of ~18–20 active S-boxes per round asymptotically — still ≥ 2<sup>−108</sup> additional DP per round.
+* Since a transpose costs much more time than an AES round, configurations should be compared at equal _r_ (equal transposes).  **The equal-AES-budget comparison this section used to make is withdrawn.**  It set _a_ = 2 at _r_ = 6 (340) against _a_ = 3 at _r_ = 4 (225) and called them a wash per transpose (≈56.7 vs. ≈56.3).  Both operands have since failed: 225 is refuted (≤ 165, giving ≈41.3 per transpose), and 340 is an unconfirmed incumbent this machine could not reach (it got 452).  Comparing a refuted number with an unconfirmed one yields nothing, and no proven pair of cells at a 12-AES-round budget exists to replace them.  `AES_NUM_ROUNDS` = 3 remains the shipped choice, but on the _a_ = 4 hourglass argument and the _r_ ≤ 2 proven values — **not** on a per-transpose tie that the data no longer supports.
+* The claim the round-count argument actually rests on is untouched: at _N_ = 16, _a_ = 3, two rounds give a **proven** 45 active S-boxes, hence DP ≤ 2<sup>−270</sup>, past the 2<sup>−256</sup> threshold.  That cell was re-proven optimal three times over (at _N_ = 4, _N_ = 8 and _N_ = 16) during the 2026-08-01/02 re-derivation.
+* Nothing is claimed about how activity grows beyond _r_ = 2 at _N_ = 16.  The earlier <q>growth flattens after _r_ = 4 (225 → 243)</q> reading is withdrawn with its inputs.
 * These results do not change the round-count recommendations for adversarial settings, which are driven by structural attacks that active-S-box counts do not address.
 
 ### Reproducing
@@ -301,27 +314,45 @@ Validation — must print 1, 5, 9, and 25 active S-boxes, the published AES boun
 for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done
 ```
 
-Table 1 (_a_ = 3, all state sizes):
+`-t` is the limit **per round count**, so a run spanning _k_ round counts can take _k_·`-t`.  Solve one cell at a time with `--min-rounds R -r R` when the budget matters — that is how the timings below were measured (2026-08-01/02, 8 threads).
+
+Table 1 (_a_ = 3, all state sizes).  The first three commands prove every cell they cover except _N_ = 8 at _r_ = 4:
 
 ```bash
-python3 permute-min-active-sboxes.py -N 2 -a 3 -r 4
-python3 permute-min-active-sboxes.py -N 4 -a 3 -r 4
-python3 permute-min-active-sboxes.py -N 8 -a 3 -r 4
-python3 permute-min-active-sboxes.py -N 16 -a 3 -r 5 -t 1800
+python3 permute-min-active-sboxes.py -N 2 -a 3 -r 4            # 44 s, all proven
+python3 permute-min-active-sboxes.py -N 4 -a 3 -r 4            # 2m15, all proven
+python3 permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600     # 13m30; r=4 does NOT prove
+
+# r = 5, one cell at a time.  N=2 and N=4 prove; N=8 and N=16 do not.
+python3 permute-min-active-sboxes.py -N 2  -a 3 --min-rounds 5 -r 5 -t 3300   # 12m,  proven 101
+python3 permute-min-active-sboxes.py -N 4  -a 3 --min-rounds 5 -r 5 -t 3300   # 38m,  proven 114
+python3 permute-min-active-sboxes.py -N 8  -a 3 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 182
+python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 293
 ```
 
-Table 2 (_N_ = 16, _a_ = 2 and _a_ = 4):
+The two refuted cells, and the limit of what more time buys — the _r_ = 4 incumbent was identical at 30 min and 55 min, so its primal side has converged and only the dual bound is outstanding:
 
 ```bash
-python3 permute-min-active-sboxes.py -N 16 -a 2 -r 6 -t 1800
-python3 permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 2 -r 4 -t 1800
+python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 3300   # 55m, incumbent 129
+python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 4 -r 4 -t 3300   # 55m, incumbent 165
+```
+
+Table 2 (_N_ = 16, _a_ = 2 and _a_ = 4).  Only _a_ = 2 at _r_ = 3 proves:
+
+```bash
+python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 3 -r 4 -t 1650   # 28m; r=3 proven 105, r=4 incumbent 200
+python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 450
+python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 6 -r 6 -t 3300   # 55m, incumbent 452
+python3 permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 3 -r 4 -t 1650   # 55m, incumbents 75 and 100
+python3 permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 125
 ```
 
 Notes:
 
 * `-t` is the time limit **per round count** (seconds, default 600).  `--threads` defaults to all cores.
 * Each row is solved independently, so a single row can be recomputed with `--min-rounds R -r R`.
-* Solve times range from seconds (_r_ ≤ 2, or small _N_) to tens of minutes (_N_ = 16, _r_ ≥ 3) on 8 threads.  The _a_ = 2, _r_ = 5 instance did not finish within 30 minutes.
+* Solve times range from seconds (_r_ ≤ 2, or small _N_) to tens of minutes (_N_ = 16, _r_ ≥ 3) on 8 threads.  At _N_ = 16 nothing above _r_ = 2 has ever proven, at any limit tried up to 55 minutes.
+* **A longer `-t` is not reliably the fix.**  At _N_ = 16, _a_ = 3, _r_ = 4 the incumbent was 165 at both 1800 s and 3300 s: CBC finds that solution quickly and then spends the whole remaining budget failing to close the duality gap.  When the incumbent stops moving, the outstanding work is all on the dual side, and more time on the same formulation is unlikely to pay.
 * Output is line-buffered, so a long run redirected to a file can be watched with `tail -f`.
 
 #### Processing the results
@@ -330,7 +361,7 @@ None needed: the script prints the finished table directly — unlike the benchm
 
 #### Interpreting the results
 
-* `min active S-boxes` (_A_) is the model optimum: a **proven lower bound** on the number of active AES S-boxes in every differential characteristic through _r_ rounds.  (The byte-level model is a relaxation of reality — see the assumptions above — which only makes the bound conservative.)
+* `min active S-boxes` (_A_) is the model optimum **only when the status column says `optimal`** — then it is a proven lower bound on the number of active AES S-boxes in every differential characteristic through _r_ rounds.  (The byte-level model is a relaxation of reality — see the assumptions above — which only makes the bound conservative.)  On a `NOT proven` row the same column holds an incumbent, which bounds the minimum from the opposite side and yields no security statement; the results tables above mark those with `≤`.
 * `DP bound` = 2<sup>−6·A</sup>: no differential characteristic through _r_ rounds has probability greater than this.  The same _A_ bounds linear trails: correlation ≤ 2<sup>−3·A</sup>.
 * The `status` column is what makes a row trustworthy:
     * `optimal` — the value is exact and proven; only these rows yield valid DP bounds.

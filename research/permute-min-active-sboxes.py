@@ -216,7 +216,10 @@ def main() -> None:
     parser.add_argument("--threads", type=int, default=os.cpu_count(),
                         help="solver threads (default: %(default)s)")
     parser.add_argument("-v", "--verbose", action="store_true",
-                        help="show solver output")
+                        help="keep CBC's log per round count in the working "
+                             "directory (cbc-N<N>-a<a>-r<r>.log) instead of a "
+                             "temporary file, so the duality gap can be "
+                             "watched live with tail -f")
     args = parser.parse_args()
 
     # Solves can take many minutes; show progress even when stdout is a file.
@@ -234,8 +237,14 @@ def main() -> None:
             # CBC writes its dual bound to the log and nowhere else: PuLP's
             # command-line backend does not surface it (only the Windows
             # COINMP path sets LpProblem.bestBound), so capture and parse it.
-            log_path = os.path.join(tmp, "cbc.log")
-            solver = pulp.PULP_CBC_CMD(msg=args.verbose,
+            # logPath *replaces* msg, so -v cannot also stream to stdout --
+            # instead keep the log where the user can watch it live.
+            if args.verbose:
+                log_path = f"cbc-N{args.num_blocks}-a{args.aes_rounds}-r{r}.log"
+                print(f"# CBC log: {log_path}  (watch with: tail -f {log_path})")
+            else:
+                log_path = os.path.join(tmp, "cbc.log")
+            solver = pulp.PULP_CBC_CMD(msg=False,
                                        timeLimit=args.time_limit,
                                        threads=args.threads,
                                        logPath=log_path)

@@ -156,11 +156,11 @@ The honest procedure:
 
 1. **Floor from proven trail bounds.** From the MILP table (research/README.md, `N=16`,
    `a=3`): a claimed level of `b` bits needs every differential characteristic below
-   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved. At r=3 CBC does not close
-   its duality gap, but its dual bound is a proven lower bound in its own right and gives
-   `A(3) ≥ 128`; above that, superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a
-   bijection) gives A ≥ 137/173 at r = 4/5. So 6·A ≥ 2b is reached at **r=2** for b ≤ 135,
-   **r=3** for b ≤ 384, and **r=5** for b ≤ 519 — the floors for the 128-, 256-, and
+   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved. At r=3 CBC closes its gap once told the
+   objective is integral, proving `A(3) = 129`; above that, superadditivity
+   (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection) gives A ≥ 138/174 at r = 4/5.
+   So 6·A ≥ 2b is reached at **r=2** for b ≤ 135,
+   **r=3** for b ≤ 387, and **r=5** for b ≤ 522 — the floors for the 128-, 256-, and
    512-bit levels respectively. Linear trails: correlation ≤ 2^−3·A gives the same round
    floors. These are necessary conditions only (single characteristics; no
    clustering/structural coverage).
@@ -350,7 +350,7 @@ refutes it, one *above* proves nothing.
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 3 -t 600
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 4 -r 4 -t 3300 # 55m, incumbent 165
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 3300 # 55m, incumbent 129
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 # 72m, PROVEN 129
 
 # r = 5, one cell at a time
 <pulp> research/permute-min-active-sboxes.py -N 2  -a 3 --min-rounds 5 -r 5 -t 3300 # 12m, PROVEN 101
@@ -399,16 +399,19 @@ Ordered by what would most change the documentation:
 
 1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 and r=4 on 2026-08-02; it changed the
    r=3 bounds and settled r=4 the other way.** At r=3 the dual bound reached 126.630 at
-   55 min and 127.554 at 90 min, so A(3) ≥ 128 is proven and the true value is 128 or 129
-   — a 1% gap. At r=4, 90 minutes reached only 93.883, a 76% gap and *weaker* than the 137
-   superadditivity gives for free, so the solver contributes nothing at that round count.
+   55 min and 127.554 at 90 min — a 1% gap — which led to **r=3 being closed outright**:
+   the objective is a sum of binary variables and so integral, meaning the incumbent is
+   optimal as soon as the dual bound passes incumbent − 1. Passing `gapAbs=0.99` lets CBC
+   stop there, and it proved **A(3) = 129** in 72 minutes having failed in 90 without it.
+   The script now always passes it. At r=4, 90 minutes reached only 93.883, a 76% gap and
+   *weaker* than the 138 superadditivity gives for free, so the solver contributes nothing
+   at that round count.
 
-   **Neither method dominates, and which one wins flips between adjacent round counts.**
-   Superadditivity strengthens as r grows (it composes an increasingly good A(3) with
-   A(1)); CBC weakens, since each round adds layers to a relaxation already struggling.
-   Record both and take the max — and note the script reports only its own instance's
-   bound, so at r=4 it prints `A in [94, 165]` while the documented floor is the larger
-   137.
+   **Where a solve is out of reach, neither remaining source dominates.** Superadditivity
+   strengthens as r grows (it composes an increasingly good A(3) with A(1)); CBC weakens,
+   since each round adds layers to a relaxation already struggling. Record both and take
+   the max — and note the script reports only its own instance's bound, so at r=4 it
+   prints `A in [94, 165]` while the documented floor is the larger 138.
 
    Three lessons carried into §10.6: an unchanged incumbent says nothing about whether
    more time would prove a cell, because proving is a dual-side question; the dual bound

@@ -244,9 +244,16 @@ def main() -> None:
                 print(f"# CBC log: {log_path}  (watch with: tail -f {log_path})")
             else:
                 log_path = os.path.join(tmp, "cbc.log")
+            # The objective is a sum of binary variables, so the optimum is an
+            # integer: once the dual bound exceeds incumbent - 1 the incumbent
+            # is provably optimal, and grinding the gap to 0 proves nothing
+            # further.  allowableGap = 0.99 lets CBC stop there.  This is what
+            # made N=16 r=3 tractable (proven in 72 min, having failed to close
+            # in 90 without it).
             solver = pulp.PULP_CBC_CMD(msg=False,
                                        timeLimit=args.time_limit,
                                        threads=args.threads,
+                                       gapAbs=0.99,
                                        logPath=log_path)
             prob.solve(solver)
             dual = read_dual_bound(log_path)

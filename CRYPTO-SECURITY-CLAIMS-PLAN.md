@@ -156,15 +156,20 @@ The honest procedure:
 
 1. **Floor from proven trail bounds.** From the MILP table (research/README.md, `N=16`,
    `a=3`): a claimed level of `b` bits needs every differential characteristic below
-   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved; above that the bounds
-   come from superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection),
-   giving A ≥ 54/90/99/135/144/180 at r = 3/4/5/6/7/8. So 6·A ≥ 2b is reached at
-   **r=2** for b ≤ 135, **r=4** for b ≤ 270, and **r=8** for b ≤ 540 — the floors for the
-   128-, 256-, and 512-bit levels respectively. The 512-bit level is the tight one: it is
-   claimed only at `C=8`, which runs `R*=8`, so the floor is met exactly rather than with
-   room to spare. Linear trails: correlation ≤ 2^−3·A gives the same round floors. These
-   are necessary conditions only (single characteristics; no clustering/structural
-   coverage).
+   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved. At r=3 CBC does not close
+   its duality gap, but its dual bound is a proven lower bound in its own right and gives
+   `A(3) ≥ 128`; above that, superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a
+   bijection) gives A ≥ 137/173 at r = 4/5. So 6·A ≥ 2b is reached at **r=2** for b ≤ 135,
+   **r=3** for b ≤ 384, and **r=5** for b ≤ 519 — the floors for the 128-, 256-, and
+   512-bit levels respectively. Linear trails: correlation ≤ 2^−3·A gives the same round
+   floors. These are necessary conditions only (single characteristics; no
+   clustering/structural coverage).
+
+   The 512-bit floor of r=5 is **not** an artifact of the missing solve, and cannot be
+   argued back down to r=4 by proving A(4) exactly. A feasible 165-box pattern is known to
+   exist at r=4, so A(4) ≤ 165 and 6·A(4) ≤ 990 < 1024 whatever the solver eventually
+   proves. Four rounds cannot support a 512-bit claim under this criterion.
+
    *Superseded 2026-08-02:* this step previously read r=3 for b ≤ 399 (A=133) and r=4 for
    b ≤ 675 (A=225). Both A values were timed-out solver incumbents mislabelled as optima
    and have been refuted; the round floors above are the corrected ones.
@@ -177,8 +182,13 @@ The honest procedure:
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances* —
    e.g. the current default `rounds=6` is exactly 2× the r=3 diffusion/trail floor for the
    256-bit level, but that rationale must be written down and revisited when §5 evidence
-   arrives (in particular the 512-bit level's r=4 trail floor argues for a higher `R*` at
-   `C=8`).
+   arrives. **The `C=8` instance is the one that does not currently satisfy the example
+   2× policy**: the 512-bit trail floor is r=5 (step 1), so 2× would be `R*=10` against
+   the shipped `R*=8`, a ratio of 1.6×. This is a margin question rather than a broken
+   claim — the 2× rule is offered as an example policy in step 3, not adopted as binding —
+   but it is now a sharper version of the concern flagged here when the floor was believed
+   to be r=4, and it should be settled explicitly rather than left implicit: either adopt
+   a policy the shipped parameters meet, or raise `R*` at `C=8`.
 
 Deliverable: a "Claimed instances" table in SPEC.md — `(C, R*, digest sizes)` per SHA-3
 equivalence row — with the margin rationale, plus a statement that other parameterizations
@@ -387,11 +397,14 @@ ceiling at 7.7 GiB. This covers what KAT.txt structurally cannot (split adds, bo
 
 Ordered by what would most change the documentation:
 
-1. **`-v` on an unproven MILP cell, to read CBC's duality gap.** This is the missing
-   *diagnostic*, and it should come before any decision to spend longer limits: it is the
-   only thing that distinguishes "a few more hours would prove it" from "this formulation
-   never will". Run it on `-N 16 -a 3 --min-rounds 3 -r 3` first, that being the smallest
-   unproven N=16 cell and the one feeding SPEC.md.
+1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 on 2026-08-02, and it changed the
+   documented bounds.** The dual bound reached 126.630 at 55 min and 127.554 at 90 min, so
+   A(3) ≥ 128 is proven and the true value is 128 or 129. Two lessons carried into §10.6:
+   an unchanged incumbent says nothing about whether more time would prove a cell, because
+   proving is a dual-side question; and the dual bound is worth recording from any
+   timed-out run, since it is a valid lower bound whether or not the gap closes (the
+   script now reports it). Still to do: the same `-v` run at **r=4**, whose dual bound has
+   never been observed — the "stalled at 165 twice" reading is about its incumbent only.
 2. **`permute-trail-search.py -r 5` with a smaller `-A`.** Newly possible: 243 is now known
    to be an incumbent rather than a proven optimum, so smaller targets are legitimate, and
    r = 3/r = 4 showed that asking for the right smaller target converts an intractable
@@ -417,9 +430,14 @@ Ordered by what would most change the documentation:
   which `rows` (now the default) replaces at ~1/7th the memory. More RAM would buy
   *parallelism* — z3 is single-threaded, so 7 of 8 cores idle during every trail search —
   and deeper fuzz sweeps, not the ability to solve anything currently out of reach.
-* **Longer time limits are unproven as a fix, and the evidence cuts both ways.** At
-  N=16 r=3 more time did improve the incumbent (133 at 600 s → 129 at 3300 s), so the
-  primal side was still moving. At N=16 r=4 it did not (165 at both 1800 s and 3300 s),
-  and at N=8 r=4 it did not (135 at both 600 s and 3300 s). None of this speaks to the
-  *dual* bound, which is what proving actually requires — hence item 1 in §10.5. Do not
-  raise limits blindly; measure the gap first.
+* **Longer time limits: measure the gap, do not guess.** The incumbent is a poor guide.
+  At N=16 r=4 it was unchanged between 1800 s and 3300 s, and at N=8 r=4 between 600 s and
+  3300 s, which reads as exhaustion — but the incumbent is the *primal* side and proving
+  is a dual-side question. The `-v` run at r=3 made the difference concrete: its incumbent
+  was likewise flat at 129 from 15 min onward, while its dual bound climbed 12.6 → 71.4 →
+  93.1 → 103.5 → 110.3 → 126.6. Same-looking run, opposite situation.
+* **The endgame is much slower than the approach.** That same r=3 dual bound advanced at
+  ~3.45 per 5 min through 55 min, then only 0.92 over the next 35 — a ~26× collapse that
+  left a 90-minute run 1.45 units short of closing. A linear extrapolation through the
+  last mile of a duality gap will be optimistic; budget accordingly, or accept the dual
+  bound as the deliverable rather than the closed gap.

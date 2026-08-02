@@ -480,14 +480,16 @@ The attacker therefore wants a **long inbound** (free rounds) and a **cheap outb
 
 ### The outbound cost is set by the transpose's steep active-S-box growth
 
-Using the proven MILP minimums `A(1)=9, A(2)=45, A(3)=133, A(4)=225` (all _N_ = 16, _a_ = 3), an outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`.  Because `A` grows superlinearly (the transpose makes activity superadditive: `A(a+b) ≥ A(a)+A(b)`), splitting lowers the guaranteed count, and for these values the most even split gives the smallest sum — the attacker's best case.  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
+An outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`, and the attacker picks the split minimizing that sum.  Only two MILP values are proven at _N_ = 16, _a_ = 3 — `A(1)=9` and `A(2)=45` — so the table below uses those plus what superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection) derives from them: `A(3) ≥ 54`, `A(4) ≥ 90`.  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
 
 | outbound rounds `r_out` | best split | min `A_out` | outbound cost `2^(6·A_out)` |
 |---|---|---|---|
 | 2 | 1 + 1 | 18 | 2^108 |
 | 3 | 1 + 2 | 54 | 2^324 |
-| 4 | 2 + 2 | 90 | 2^540 |
-| 5 | 2 + 3 | 178 | 2^1068 |
+| 4 | 1 + 3 | 63 | 2^378 |
+| 5 | 1 + 4 (ties 2 + 3) | 99 | 2^594 |
+
+These are weaker than the figures this section previously carried (2^540 at `r_out` = 4, 2^1068 at `r_out` = 5), which used `A(3)=133` and `A(4)=225` — both since refuted.  The change also moves *which* split is the attacker's best: with `A(3)` no longer assumed to be 133, the uneven `1 + 3` split becomes cheaper than `2 + 2` at `r_out` = 4, so the <q>most even split is the attacker's best case</q> rule stated here previously no longer holds and the minimization is done explicitly.
 
 ### Margin for the default 6-round permutation
 
@@ -495,11 +497,13 @@ Giving the attacker a free inbound of `r_in` rounds leaves `r_out = 6 − r_in`:
 
 | inbound `r_in` | reach | outbound rounds | outbound cost | vs. `C`=4 claim 2^256 |
 |---|---|---|---|---|
-| 2 | standard | 4 | 2^540 | safe by 2^284 |
+| 2 | standard | 4 | 2^378 | safe by 2^122 |
 | 3 | super-inbound (generous) | 3 | 2^324 | safe by 2^68 |
 | 4 | beyond any known technique | 2 | 2^108 | **would break** |
 
-So the default 6 rounds resist rebound with room to spare: even a generous **3-round** inbound leaves an outbound costing ≥ 2^324, above the 2^256 claimed level for `C` = 4 (and every smaller-capacity claim).  The margin erodes only if the inbound reaches **4 rounds** — twice the standard reach, and beyond any published rebound technique.  The higher-capacity instances are safer still: `C` = 8 (claim 2^512, run at `R*` = 8 rounds) survives a 3-round inbound with an outbound of ≥ 2^(6·178) = 2^1068, and even a 5-round inbound leaves 2^324.
+So the default 6 rounds resist rebound with room to spare: even a generous **3-round** inbound leaves an outbound costing ≥ 2^324, above the 2^256 claimed level for `C` = 4 (and every smaller-capacity claim).  The margin erodes only if the inbound reaches **4 rounds** — twice the standard reach, and beyond any published rebound technique.  Note that both surviving rows draw on `A(1)` and `A(2)` alone (the 3-round row via the `1 + 2` split, the 4-round row via `1 + 3` and the derived `A(3) ≥ 54`), so this conclusion rests entirely on the two MILP cells that are proven — it was not affected by the refutation of `A(3)` and `A(4)`, only made less generous.
+
+For `C` = 8 (claim 2^512, run at `R*` = 8 rounds) a 3-round inbound leaves `r_out` = 5 and an outbound of ≥ 2^594, safe by 2^82 — down from the 2^1068 previously claimed, and now a real rather than an enormous margin.  A 5-round inbound would leave `r_out` = 3 at 2^324, **below** that instance's 2^512 claim; the earlier text quoted the same 2^324 in a way that read as reassuring, which it is not at `C` = 8.
 
 The underlying reason is the transpose.  In AES itself the four-round "hourglass" trail re-concentrates a difference to one active byte, keeping active-S-box counts low over many rounds and giving rebound long, cheap outbounds; Castella's byte transpose scatters every full block across all 16 blocks (see the [`AES_NUM_ROUNDS` = 3 conclusion](#conclusions)), so activity grows superlinearly and outbounds become expensive after very few rounds — exactly the effect the numbers above quantify.
 

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 """Search for actual differential characteristics in Castella::permute (SAT/SMT).
 
@@ -38,6 +39,24 @@ DDT contains only the entries 0, 2, and 4; each row has exactly one 4).
 After a first solution, the weight is minimized by iteratively constraining
 weight <= best-1 until UNSAT (optimal for that pattern) or timeout.
 
+Cardinality encodings (--card-encoding, --weight-encoding)
+----------------------------------------------------------
+Both stages rest on a cardinality constraint: stage A fixes the active
+S-box count to A, stage B bounds the trail weight (equivalently, lower-bounds
+the number of weight-6 S-box transitions).  "pb" states each as one z3
+pseudo-Boolean; compact, but it propagates poorly at this width.
+"totalizer" instead builds a sorted-unary counter out of clauses, which
+propagates, and makes weight minimization incremental: the counter is built
+once and each tighter bound is a single unit literal, so the solver keeps
+what it learned under the previous bound.
+
+The two are separate flags because the two stages stall for unrelated
+reasons -- stage A on the width of the activity count, stage B on refuting a
+weight across coupled S-boxes -- so changing both at once cannot attribute
+an effect to either.  Changing --card-encoding also changes *which* pattern
+stage A returns, and hence which trail stage B lands on, so a stage-B
+comparison has to hold --card-encoding fixed.
+
 A pattern that is byte-level feasible need not be bit-level realizable
 (MixColumns imposes GF(2^8) relations the relaxation ignores); such patterns
 are blocked and the next one is tried, up to --patterns.
@@ -72,6 +91,7 @@ Usage
 -----
   python3 permute-trail-search.py [-N {2,4,8,16}] [-r ROUNDS] [-A ACTIVE]
       [--patterns P] [--no-minimize] [-t SECONDS] [--print-trail]
+      [--card-encoding {pb,totalizer}] [--weight-encoding {pb,totalizer}]
 
 Requires the z3-solver package (Arch: python-z3-solver).
 """
@@ -295,6 +315,82 @@ def self_test() -> None:
             raise SelfTestError(
                 f"AES round model mismatch for input {hex_in}: got "
                 f"{bytes(got).hex()}, expected {hex_out}")
+    totalizer_self_test()
+
+
+# pylint: disable=too-many-locals
+def totalizer_self_test(max_vars: int = 5) -> None:
+    """Check the totalizer against every assignment, for small widths.
+
+    Exhaustive rather than spot-checked: this encoding replaces the
+    constraint that defines what the whole search is searching for, so an
+    off-by-one in it would not fail loudly -- it would quietly move the
+    active-S-box target or the weight bound and report a wrong number.
+    Each of the three uses (exactly-k, the "le" family under an asserted
+    lower bound, the "ge" family under an asserted upper bound) is checked
+    against the true population count of every assignment, plus a truncated
+    counter, whose omitted high outputs are where truncation could go wrong.
+
+    Everything here is built in a private z3 context, so the declarations do
+    not reach the global one the search itself uses.  They otherwise shift
+    z3's default variable order and thus which model it returns: leaving them
+    global moved the r=1 cluster from 1048 characteristics to 1354 -- both
+    valid complete enumerations of their own differential, but the recorded
+    figure stops reproducing, which is not a price a self-test may charge.
+    """
+    ctx = z3.Context()
+
+    def expect(s: z3.Solver, lits: list[z3.BoolRef], bits: int,
+               want_sat: bool, what: str) -> None:
+        s.push()
+        s.add(*[v if bits >> i & 1 else z3.Not(v)
+                for i, v in enumerate(lits)])
+        got_sat = s.check() == z3.sat
+        s.pop()
+        if got_sat != want_sat:
+            raise SelfTestError(
+                f"totalizer {what}: assignment {bits:#b} of {len(lits)} "
+                f"({bits.bit_count()} true) is "
+                f"{'satisfiable' if got_sat else 'unsatisfiable'}, expected "
+                f"the opposite")
+
+    for n in range(1, max_vars + 1):
+        lits = [z3.Bool(f"st_{n}_{i}", ctx) for i in range(n)]
+        for k in range(n + 1):
+            eq_s = z3.Solver(ctx=ctx)
+            card_exactly(eq_s, lits, k, f"st_eq_{n}_{k}")
+            ge_s = z3.Solver(ctx=ctx)   # "le" family, asserted lower bound
+            if k >= 1:
+                counts = totalizer(ge_s, lits, n, f"st_ge_{n}_{k}", "le")
+                ge_s.add(counts[k - 1])
+            le_s = z3.Solver(ctx=ctx)   # "ge" family, asserted upper bound
+            if k < n:
+                counts = totalizer(le_s, lits, k + 1, f"st_le_{n}_{k}", "ge")
+                le_s.add(z3.Not(counts[k]))
+            for bits in range(1 << n):
+                popcount = bits.bit_count()
+                expect(eq_s, lits, bits, popcount == k, f"exactly {k}")
+                expect(ge_s, lits, bits, popcount >= k, f"at least {k}")
+                expect(le_s, lits, bits, popcount <= k, f"at most {k}")
+
+    # Truncation: outputs exist only up to `bound`, and the ones that do
+    # exist must still mean exactly "count > i".
+    n, bound = 6, 3
+    lits = [z3.Bool(f"st_tr_{i}", ctx) for i in range(n)]
+    trunc_s = z3.Solver(ctx=ctx)
+    counts = totalizer(trunc_s, lits, bound, "st_tr", "both")
+    if len(counts) != bound:
+        raise SelfTestError(f"truncated totalizer has {len(counts)} outputs, "
+                            f"expected {bound}")
+    for i, out in enumerate(counts):
+        for polarity in (True, False):
+            probe = z3.Solver(ctx=ctx)
+            probe.add(trunc_s.assertions())
+            probe.add(out if polarity else z3.Not(out))
+            for bits in range(1 << n):
+                expect(probe, lits, bits,
+                       (bits.bit_count() > i) == polarity,
+                       f"truncated output {i} = {polarity}")
 
 
 # --------------------------------------------------------- solver plumbing
@@ -312,6 +408,93 @@ def configure_solver(s: z3.Solver, timeout_ms: int,
         s.set("max_memory", max_memory_mb)
 
 
+CARD_ENCODINGS = ("pb", "totalizer")
+
+
+def totalizer(s: z3.Solver, lits: Sequence[z3.BoolRef], bound: int,
+              tag: str, families: str = "both") -> list[z3.BoolRef]:
+    """Encode a truncated totalizer counting how many of `lits` are true.
+
+    Returns o[0 .. m-1] with m = min(len(lits), bound), where o[i] means
+    "at least i+1 of lits are true".  Counts above `bound` are not
+    represented, which is what keeps the encoding O(len(lits) * bound)
+    instead of quadratic.
+
+    The merge clauses come in two families, and each supports asserting one
+    direction (Bailleux-Boufkhad):
+
+      "ge"  (l_a & r_b) -> o_{a+b}       -- Not(o[k]) then means AtMost(k)
+      "le"  (~l_{a+1} & ~r_{b+1}) -> ~o_{a+b+1}
+                                        -- o[k-1] then means AtLeast(k)
+
+    "both" gives the full equivalence o[i] <=> count > i, at twice the
+    clauses.  Emit only the family the caller asserts against.
+
+    Truncation stays sound because a merge clause is emitted only when its
+    output index is within the node's own truncated range: at a node whose
+    child was itself truncated, an omitted child literal can only occur at
+    an output index beyond the guard.
+
+    z3's PbEq/PbGe over the same literals is far more compact but barely
+    propagates; a totalizer derives the counter bounds by unit propagation
+    that the PB solver only reaches by search.
+    """
+    if families not in ("ge", "le", "both"):
+        raise ValueError(f"unknown clause families {families!r}")
+    if not lits:
+        return []
+    # Declare into the solver's own context, not z3's global one.  The
+    # self-test builds counters of its own, and z3's default variable order
+    # follows declaration order, so leaking those declarations into the
+    # global context would change which model every later search returns --
+    # measured: it moved the r=1 cluster from 1048 trails to 1354, on the
+    # untouched `pb` path.
+    ctx = s.ctx
+    node_no = 0
+
+    def build(sub: Sequence[z3.BoolRef]) -> list[z3.BoolRef]:
+        nonlocal node_no
+        if len(sub) == 1:
+            return list(sub)
+        mid = len(sub) // 2
+        left = build(sub[:mid])
+        right = build(sub[mid:])
+        m = min(len(left) + len(right), bound)
+        node_no += 1
+        out = [z3.Bool(f"{tag}_{node_no}_{c}", ctx) for c in range(1, m + 1)]
+        clauses = []
+        for a in range(len(left) + 1):
+            for b in range(len(right) + 1):
+                c = a + b
+                if families != "le" and 1 <= c <= m:
+                    ante = ([z3.Not(left[a - 1])] if a else []) \
+                        + ([z3.Not(right[b - 1])] if b else [])
+                    clauses.append(z3.Or([*ante, out[c - 1]]))
+                if families != "ge" and c + 1 <= m:
+                    ante = ([left[a]] if a < len(left) else []) \
+                        + ([right[b]] if b < len(right) else [])
+                    if ante:
+                        clauses.append(z3.Or([*ante, z3.Not(out[c])]))
+        s.add(*clauses)
+        return out
+
+    return build(list(lits))
+
+
+def card_exactly(s: z3.Solver, lits: Sequence[z3.BoolRef], k: int,
+                 tag: str) -> None:
+    """Constrain exactly k of lits to be true, via a totalizer."""
+    n = len(lits)
+    if k > n:
+        s.add(z3.BoolVal(False))
+        return
+    counts = totalizer(s, lits, k + 1, tag, "both")
+    if k > 0:
+        s.add(counts[k - 1])
+    if k < n:
+        s.add(z3.Not(counts[k]))
+
+
 def check_status(s: z3.Solver, res: z3.CheckSatResult) -> str:
     """Render a check() result, naming z3's reason for an `unknown`.
 
@@ -326,8 +509,9 @@ def check_status(s: z3.Solver, res: z3.CheckSatResult) -> str:
 
 
 # pylint: disable=too-many-locals
-def build_pattern_solver(num_blocks: int, num_rounds: int,
-                         num_active: int) -> tuple[z3.Solver, Layers]:
+def build_pattern_solver(num_blocks: int, num_rounds: int, num_active: int,
+                         card_encoding: str = "pb"
+                         ) -> tuple[z3.Solver, Layers]:
     """Return (solver, layers) of Boolean activity variables.
 
     layers[t*AES_NUM_ROUNDS + a][i][b] is the activity of byte b of block i
@@ -371,7 +555,10 @@ def build_pattern_solver(num_blocks: int, num_rounds: int,
         state = nxt
 
     all_sbox_vars = [v for layer in layers for block in layer for v in block]
-    s.add(z3.PbEq([(v, 1) for v in all_sbox_vars], num_active))
+    if card_encoding == "totalizer":
+        card_exactly(s, all_sbox_vars, num_active, "ca")
+    else:
+        s.add(z3.PbEq([(v, 1) for v in all_sbox_vars], num_active))
     return s, layers
 
 
@@ -440,10 +627,12 @@ class Instantiation:
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
     def __init__(self, num_blocks: int, num_rounds: int, pattern: Pattern,
-                 encoding: str = "rows"):
+                 encoding: str = "rows", weight_encoding: str = "pb"):
         self.solver = z3.Solver()
         self.sboxes = []        # (din_var, dout_var) in S-box order
         self.weight6 = []       # Bool: this S-box took the DDT=4 transition
+        self.weight_encoding = weight_encoding
+        self.n6_counts: list[z3.BoolRef] | None = None
         zero = z3.BitVecVal(0, 8)
         tmap = transpose_map(num_blocks)
 
@@ -519,7 +708,23 @@ class Instantiation:
         """Constrain the trail's differential weight to at most max_weight."""
         # weight = 7*n - n6, so weight <= W  <=>  n6 >= 7*n - W.
         n6_min = 7 * len(self.sboxes) - max_weight
-        self.solver.add(z3.PbGe([(w6, 1) for w6 in self.weight6], n6_min))
+        if self.weight_encoding != "totalizer":
+            self.solver.add(z3.PbGe([(w6, 1) for w6 in self.weight6], n6_min))
+            return
+        # The counter is built once, over every w6, and each tightening is
+        # then a single unit literal on it.  That is the point of doing this
+        # incrementally: minimization calls this in a loop with a decreasing
+        # bound, and asserting a unit keeps every clause the solver learned
+        # under the previous bound, where a fresh PbGe discards none of the
+        # work but adds a new constraint to digest each time.  Only the "le"
+        # family is needed, since the caller only ever asserts a lower bound.
+        if self.n6_counts is None:
+            self.n6_counts = totalizer(self.solver, self.weight6,
+                                       len(self.weight6), "n6", "le")
+        if n6_min > len(self.weight6):
+            self.solver.add(z3.BoolVal(False))
+        elif n6_min >= 1:
+            self.solver.add(self.n6_counts[n6_min - 1])
 
     def model_weight(self, model) -> int:
         """Compute the exact differential weight of a solved trail."""
@@ -625,7 +830,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      input_diff: StateBytes, output_diff: StateBytes,
                      max_trails: int,
                      timeout_ms: int, max_memory_mb: int | None,
-                     encoding: str, best_weight: int | None = None,
+                     encoding: str, weight_encoding: str,
+                     best_weight: int | None = None,
                      shell: int | None = None) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 
@@ -651,7 +857,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     only reports fewer trails, marked INCOMPLETE, which the lower-bound
     reading already allows for.
     """
-    inst = Instantiation(num_blocks, num_rounds, pattern, encoding)
+    inst = Instantiation(num_blocks, num_rounds, pattern, encoding,
+                         weight_encoding)
     configure_solver(inst.solver, timeout_ms, max_memory_mb)
     if shell is not None and best_weight is not None:
         inst.add_weight_bound(best_weight + shell)
@@ -771,6 +978,21 @@ def main() -> None:
                              "'rows' takes longer to build but propagates "
                              "far better, and is the faster route to a "
                              "trail at every round count measured)")
+    parser.add_argument("--card-encoding", choices=CARD_ENCODINGS,
+                        default="pb",
+                        help="encoding of the stage-A constraint fixing the "
+                             "active-S-box count to A (default: %(default)s; "
+                             "'totalizer' is much larger to build but "
+                             "propagates)")
+    parser.add_argument("--weight-encoding", choices=CARD_ENCODINGS,
+                        default="pb",
+                        help="encoding of the stage-B trail-weight bound "
+                             "(default: %(default)s; 'totalizer' also makes "
+                             "minimization incremental -- the counter is "
+                             "built once and each tighter bound is one unit "
+                             "literal).  Separate from --card-encoding "
+                             "because the two stages stall for different "
+                             "reasons, so they have to be varied separately")
     parser.add_argument("--self-test", action="store_true",
                         help="run the model self-tests and exit")
     args = parser.parse_args()
@@ -804,8 +1026,11 @@ def main() -> None:
               "MILP optimum for this -N/-r, so this is NOT a lower bound; "
               "any trail found below is a ceiling with no floor under it")
 
+    t0 = time.monotonic()
     pat_solver, layers = build_pattern_solver(
-        args.num_blocks, args.rounds, num_active)
+        args.num_blocks, args.rounds, num_active, args.card_encoding)
+    print(f"stage A model built with the {args.card_encoding} cardinality "
+          f"encoding ({time.monotonic() - t0:.1f}s)")
     configure_solver(pat_solver, timeout_ms, args.max_memory)
 
     best = None  # (weight, optimal?, input_diff, output_diff, pattern_no,
@@ -832,7 +1057,7 @@ def main() -> None:
         print(f"[pattern {pattern_no}] activity pattern found ({ta:.1f}s)")
 
         inst = Instantiation(args.num_blocks, args.rounds, pattern,
-                             args.encoding)
+                             args.encoding, args.weight_encoding)
         configure_solver(inst.solver, timeout_ms, args.max_memory)
         t0 = time.monotonic()
         res = inst.solver.check()
@@ -900,8 +1125,8 @@ def main() -> None:
     if args.cluster > 0:
         cluster_estimate(args.num_blocks, args.rounds, pattern,
                          input_diff, output_diff, args.cluster, timeout_ms,
-                         args.max_memory, args.encoding, weight,
-                         args.cluster_shell)
+                         args.max_memory, args.encoding, args.weight_encoding,
+                         weight, args.cluster_shell)
 
 
 if __name__ == "__main__":

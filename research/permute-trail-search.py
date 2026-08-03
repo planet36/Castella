@@ -108,12 +108,13 @@ PROVEN_MIN_ACTIVE = {
     (2, 1): 9, (4, 1): 9, (8, 1): 9, (16, 1): 9,
     (2, 2): 40, (4, 2): 45, (8, 2): 45, (16, 2): 45,
     (2, 3): 59, (4, 3): 66, (8, 3): 91, (16, 3): 129,
-    (2, 4): 80, (4, 4): 90,
-    (2, 5): 101, (4, 5): 114,
+    (2, 4): 80, (4, 4): 90, (16, 4): 165,
+    (2, 5): 101, (4, 5): 114, (16, 5): 234,
+    (16, 6): 270,
 }
 
 UNPROVEN_MIN_ACTIVE = {
-    (8, 4): 135, (16, 4): 165, (8, 5): 182, (16, 5): 243,
+    (8, 4): 135, (8, 5): 182,
 }
 
 KNOWN_MIN_ACTIVE = PROVEN_MIN_ACTIVE | UNPROVEN_MIN_ACTIVE
@@ -680,8 +681,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
         print("cluster: no trails (unexpected -- the best trail is one)")
         return
     # Sum relative to the lightest trail: 2.0**-w flushes to zero past
-    # w = 1074, which log2 then rejects.  A=243 at r=5 already floors the
-    # weight at 1458, so the direct sum is not merely a theoretical loss.
+    # w = 1074, which log2 then rejects.  A=234 at r=5 already floors the
+    # weight at 1404, so the direct sum is not merely a theoretical loss.
     best = min(weights)
     dp_log2 = log2(sum(2.0 ** -(w - best) for w in weights)) - best
     hist = " ".join(f"{w}:{n}" for w, n in sorted(Counter(weights).items()))

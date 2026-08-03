@@ -50,7 +50,7 @@ Run these commands:
 * `sh run-research.sh`
 * `bash run-benchmarks.bash`
 
-The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) package (which bundles the CBC solver):
+The MILP model requires Python 3 and the [PuLP](https://pypi.org/project/PuLP/) package (which bundles the CBC solver); install [highspy](https://pypi.org/project/highspy/) too, and the script will use HiGHS instead — see [Dependencies](#dependencies) for why that matters a great deal here:
 
 * `python3 permute-min-active-sboxes.py --help`
 
@@ -300,7 +300,8 @@ Re-verification is one-directional.  A re-run that returns a value _below_ the r
 #### Dependencies
 
 * Python 3
-* [PuLP](https://pypi.org/project/PuLP/) (bundles the CBC MILP solver; no other solver or license is needed)
+* [PuLP](https://pypi.org/project/PuLP/) (bundles the CBC MILP solver; no license is needed)
+* [highspy](https://pypi.org/project/highspy/) — **strongly recommended**, and the default when installed.  HiGHS is not a marginal improvement on this model: it proves _N_ = 16 at _r_ = 3 in **16 s** where CBC needs 72 min, and it closes _r_ = 4, 5 and 6, which CBC has never done at any limit.  Pass `--solver cbc` to force the bundled solver.
 
 pip refuses to install into the system Python on Arch, so use a virtual environment:
 

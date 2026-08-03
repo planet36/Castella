@@ -176,6 +176,27 @@ def build_model(num_blocks: int, num_rounds: int,
     return prob
 
 
+def highs_available() -> bool:
+    """True if PuLP can drive HiGHS (the highspy package is installed)."""
+    return "HiGHS" in pulp.listSolvers(onlyAvailable=True)
+
+
+def highs_dual_bound(prob: pulp.LpProblem) -> float | None:
+    """HiGHS's best dual bound, read from the live solver object.
+
+    PuLP's HiGHS backend is the in-process highspy API, not a command line:
+    it ignores logPath and never sets LpProblem.bestBound, but it does leave
+    the Highs object on lp.solverModel, and that carries the bound.
+    """
+    model = getattr(prob, "solverModel", None)
+    if model is None:
+        return None
+    try:
+        return float(model.getInfo().mip_dual_bound)
+    except (AttributeError, ValueError):
+        return None
+
+
 def read_dual_bound(log_path: str) -> float | None:
     """CBC's best dual bound from its log, or None if it did not report one.
 
@@ -215,11 +236,19 @@ def main() -> None:
                              "(default: %(default)s)")
     parser.add_argument("--threads", type=int, default=os.cpu_count(),
                         help="solver threads (default: %(default)s)")
+    parser.add_argument("--solver", choices=("highs", "cbc"),
+                        default="highs" if highs_available() else "cbc",
+                        help="MILP solver (default: %(default)s).  HiGHS is "
+                             "dramatically stronger on this model -- it closes "
+                             "N=16 r=4/5/6, which CBC never has -- but needs "
+                             "the highspy package; CBC ships with PuLP")
     parser.add_argument("-v", "--verbose", action="store_true",
-                        help="keep CBC's log per round count in the working "
-                             "directory (cbc-N<N>-a<a>-r<r>.log) instead of a "
-                             "temporary file, so the duality gap can be "
-                             "watched live with tail -f")
+                        help="with --solver cbc, keep CBC's log per round "
+                             "count in the working directory "
+                             "(cbc-N<N>-a<a>-r<r>.log) instead of a temporary "
+                             "file, so the duality gap can be watched live "
+                             "with tail -f; with --solver highs, stream the "
+                             "solver log to stdout")
     args = parser.parse_args()
 
     # Solves can take many minutes; show progress even when stdout is a file.
@@ -233,59 +262,75 @@ def main() -> None:
 
     for r in range(args.min_rounds, args.max_rounds + 1):
         prob = build_model(args.num_blocks, r, args.aes_rounds)
-        with tempfile.TemporaryDirectory() as tmp:
-            # CBC writes its dual bound to the log and nowhere else: PuLP's
-            # command-line backend does not surface it (only the Windows
-            # COINMP path sets LpProblem.bestBound), so capture and parse it.
-            # logPath *replaces* msg, so -v cannot also stream to stdout --
-            # instead keep the log where the user can watch it live.
-            if args.verbose:
-                log_path = f"cbc-N{args.num_blocks}-a{args.aes_rounds}-r{r}.log"
-                print(f"# CBC log: {log_path}  (watch with: tail -f {log_path})")
-            else:
-                log_path = os.path.join(tmp, "cbc.log")
-            # The objective is a sum of binary variables, so the optimum is an
-            # integer: once the dual bound exceeds incumbent - 1 the incumbent
-            # is provably optimal, and grinding the gap to 0 proves nothing
-            # further.  allowableGap = 0.99 lets CBC stop there.  This is what
-            # made N=16 r=3 tractable (proven in 72 min, having failed to close
-            # in 90 without it).
-            solver = pulp.PULP_CBC_CMD(msg=False,
-                                       timeLimit=args.time_limit,
-                                       threads=args.threads,
-                                       gapAbs=0.99,
-                                       logPath=log_path)
-            prob.solve(solver)
-            dual = read_dual_bound(log_path)
+        dual = solve_round(prob, args, r)
+        report_round(prob, r, dual)
 
-        # Only sol_status proves optimality: when CBC stops on the time limit
-        # with an integer incumbent, PuLP rewrites prob.status to Optimal and
-        # records the distinction in sol_status alone.
-        if prob.sol_status == pulp.LpSolutionOptimal:
-            a_min = round(prob.objective.value())
-            print(f"{r:>6}  {a_min:>18}  2^-{6 * a_min:<8}  optimal")
-            continue
 
-        # Time limit hit.  The incumbent is an UPPER bound on the minimum and
-        # yields no DP bound -- but CBC's dual bound is a genuine LOWER bound
-        # on it at any point in the search, so report the DP bound from that.
-        a_low = math.ceil(dual) if dual is not None and dual > 0 else None
-        dp = f"2^-{6 * a_low}" if a_low is not None else "n/a"
+# The objective is a sum of binary variables, so the optimum is an integer:
+# once the dual bound exceeds incumbent - 1 the incumbent is provably optimal,
+# and grinding the gap to 0 proves nothing further.  gapAbs = 0.99 lets a
+# solver stop there.  It is what made N=16 r=3 tractable under CBC (proven in
+# 72 min, having failed to close in 90 without it); HiGHS derives the same
+# thing itself ("Objective function is integral") and has closed r <= 6 with a
+# 0% gap, so there the tolerance has never been the binding stopping rule.
+GAP_ABS = 0.99
 
-        if prob.sol_status == pulp.LpSolutionIntegerFeasible:
-            incumbent = round(prob.objective.value())
-            if a_low is not None:
-                status = (f"NOT proven; A in [{a_low}, {incumbent}] -- "
-                          f"DP bound is from the lower end")
-            else:
-                status = "NOT proven; incumbent is an upper bound only"
-            print(f"{r:>6}  {incumbent:>18}  {dp:>10}  {status}")
-        elif a_low is not None:
-            print(f"{r:>6}  {'?':>18}  {dp:>10}  "
-                  f"no integer solution found, but A >= {a_low} is proven")
+
+def solve_round(prob: pulp.LpProblem, args: argparse.Namespace,
+                r: int) -> float | None:
+    """Solve one round count and return the solver's dual bound, or None."""
+    if args.solver == "highs":
+        prob.solve(pulp.HiGHS(msg=args.verbose, timeLimit=args.time_limit,
+                              threads=args.threads, gapAbs=GAP_ABS))
+        return highs_dual_bound(prob)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # CBC writes its dual bound to the log and nowhere else: PuLP's
+        # command-line backend does not surface it (only the Windows COINMP
+        # path sets LpProblem.bestBound), so capture and parse it.  logPath
+        # *replaces* msg, so -v cannot also stream to stdout -- instead keep
+        # the log where the user can watch it live.
+        if args.verbose:
+            log_path = f"cbc-N{args.num_blocks}-a{args.aes_rounds}-r{r}.log"
+            print(f"# CBC log: {log_path}  (watch with: tail -f {log_path})")
         else:
-            print(f"{r:>6}  {'?':>18}  {'n/a':>10}  "
-                  f"{pulp.LpStatus[prob.status]}; no integer solution found")
+            log_path = os.path.join(tmp, "cbc.log")
+        prob.solve(pulp.PULP_CBC_CMD(msg=False, timeLimit=args.time_limit,
+                                     threads=args.threads, gapAbs=GAP_ABS,
+                                     logPath=log_path))
+        return read_dual_bound(log_path)
+
+
+def report_round(prob: pulp.LpProblem, r: int, dual: float | None) -> None:
+    """Print one result row, distinguishing a proof from an incumbent."""
+    # Only sol_status proves optimality: when a solver stops on the time limit
+    # with an integer incumbent, PuLP rewrites prob.status to Optimal and
+    # records the distinction in sol_status alone.
+    if prob.sol_status == pulp.LpSolutionOptimal:
+        a_min = round(prob.objective.value())
+        print(f"{r:>6}  {a_min:>18}  2^-{6 * a_min:<8}  optimal")
+        return
+
+    # Time limit hit.  The incumbent is an UPPER bound on the minimum and
+    # yields no DP bound -- but the dual bound is a genuine LOWER bound on it
+    # at any point in the search, so report the DP bound from that.
+    a_low = math.ceil(dual) if dual is not None and dual > 0 else None
+    dp = f"2^-{6 * a_low}" if a_low is not None else "n/a"
+
+    if prob.sol_status == pulp.LpSolutionIntegerFeasible:
+        incumbent = round(prob.objective.value())
+        if a_low is not None:
+            status = (f"NOT proven; A in [{a_low}, {incumbent}] -- "
+                      f"DP bound is from the lower end")
+        else:
+            status = "NOT proven; incumbent is an upper bound only"
+        print(f"{r:>6}  {incumbent:>18}  {dp:>10}  {status}")
+    elif a_low is not None:
+        print(f"{r:>6}  {'?':>18}  {dp:>10}  "
+              f"no integer solution found, but A >= {a_low} is proven")
+    else:
+        print(f"{r:>6}  {'?':>18}  {'n/a':>10}  "
+              f"{pulp.LpStatus[prob.status]}; no integer solution found")
 
 
 if __name__ == "__main__":

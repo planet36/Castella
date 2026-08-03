@@ -19,6 +19,7 @@
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A) |
 | permute-trail-search.py | Bit-level SAT/SMT search (z3) for actual differential characteristics realizing the MILP-minimal activity patterns; reports the best-trail weight (an upper bound complementing the MILP lower bound) and, with `--cluster`, enumerates the characteristics sharing one differential |
+| trail-model-crossvalidate.py | Checks `permute-trail-search.py`'s model of `P` against `spec-conformance.py`'s KAT-verified implementation, by propagating the difference of random state pairs through both and comparing byte for byte at every round count |
 | permute-degree-bound.py | Bounds the algebraic degree of `Castella::permute` round by round (Boura–Canteaut–De Cannière), from the AES S-box's measured coordinate-product degrees; reports the reach of a degree-based zero-sum / integral distinguisher (validated against AES's 3-round Square distinguisher) |
 | spec-conformance.py | Independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone; verifies every digest in `tests/KAT.txt` (proving the specification is complete and unambiguous) |
 

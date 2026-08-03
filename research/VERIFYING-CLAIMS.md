@@ -154,6 +154,10 @@ The §4 MILP bounds are *lower* bounds on active S-boxes.  This row checks them 
 ```bash
 python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
 
+# The trail model IS a third implementation of P; this compares it with the
+# KAT-verified one in spec-conformance.py.  240 random state pairs, r=1..6.
+python3 trail-model-crossvalidate.py                 # ~3 min, no dependencies
+
 # r=1: the bound is proven tight, and the optimal differential's full cluster
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows --cluster 5000
 

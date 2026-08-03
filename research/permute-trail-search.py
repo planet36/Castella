@@ -824,12 +824,14 @@ def hex_state(state_bytes: StateBytes) -> str:
 
 
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-positional-arguments
 def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      input_diff: StateBytes, output_diff: StateBytes,
                      max_trails: int,
-                     timeout_ms: int, max_memory_mb: int | None,
+                     timeout_ms: int, total_timeout_ms: int,
+                     max_memory_mb: int | None,
                      encoding: str, weight_encoding: str,
                      best_weight: int | None = None,
                      shell: int | None = None) -> None:
@@ -843,7 +845,14 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     the enumeration completes.
 
     With `shell` set, only trails of weight <= best_weight + shell are
-    enumerated.  This matters above r = 1, where an unrestricted
+    enumerated.  `shell` may be NEGATIVE, which asks for trails lighter
+    than the one the search reported: its "best" is an upper bound on the
+    differential's lightest characteristic, not the lightest itself, and at
+    r = 2 the enumeration returned a weight-298 trail against a reported
+    best of 302.  A negative shell is how that gap gets probed, and finding
+    nothing under it is then an ordinary result rather than a surprise.
+
+    A shell matters above r = 1, where an unrestricted
     enumeration is worse than a sample: z3 returns arbitrary satisfying
     assignments, and at r = 2 those came back at weights 310-315 while the
     trail defining the differential weighs 302 -- so the partial sum missed
@@ -852,7 +861,11 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     which is a real (if partial) result rather than a lower bound of
     unknown quality.
 
-    timeout_ms bounds each solver call AND the enumeration as a whole;
+    timeout_ms bounds each solver call; total_timeout_ms bounds the
+    enumeration as a whole.  They are separate because tying them together
+    caps the enumeration at ONE call's worth of work -- with a single
+    budget, a request for many trails is unsatisfiable by construction as
+    soon as calls are slow, which is exactly the regime above r = 1.
     max_memory_mb, if given, stops a call the same way.  Stopping early
     only reports fewer trails, marked INCOMPLETE, which the lower-bound
     reading already allows for.
@@ -875,7 +888,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     while len(weights) < max_trails:
         # timeout_ms bounds one check(); this bounds the whole enumeration,
         # which would otherwise run max_trails of them back to back.
-        if (time.monotonic() - t0) * 1000 >= timeout_ms:
+        if (time.monotonic() - t0) * 1000 >= total_timeout_ms:
             print(f"cluster enumeration hit the time limit after "
                   f"{len(weights)} trails")
             break
@@ -898,7 +911,19 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     elapsed = time.monotonic() - t0
 
     if not weights:
-        print("cluster: no trails (unexpected -- the best trail is one)")
+        if shell is None or shell >= 0:
+            # The defining trail is itself inside any shell >= 0, so an
+            # empty result there means the solver failed to re-find a trail
+            # known to satisfy every constraint.
+            print("cluster: no trails (unexpected -- the best trail is one)")
+        elif complete:
+            print(f"cluster: no trails at weight <= {best_weight + shell} "
+                  f"(shell COMPLETE) -- nothing lighter than "
+                  f"{best_weight + shell + 1} realizes this differential in "
+                  f"this pattern")
+        else:
+            print(f"cluster: no trails at weight <= {best_weight + shell} "
+                  f"(shell INCOMPLETE, so this bounds nothing)")
         return
     # Sum relative to the lightest trail: 2.0**-w flushes to zero past
     # w = 1074, which log2 then rejects.  A=234 at r=5 already floors the
@@ -973,7 +998,7 @@ def main() -> None:
                         help="after the search, enumerate up to M "
                              "characteristics sharing the best trail's "
                              "input/output differential (default: off)")
-    parser.add_argument("--cluster-shell", type=nonnegative_int, default=None,
+    parser.add_argument("--cluster-shell", type=int, default=None,
                         metavar="K",
                         help="restrict --cluster to trails of weight at most "
                              "(best + K).  Unrestricted, z3 returns arbitrary "
@@ -982,7 +1007,18 @@ def main() -> None:
                              "partial enumeration misses exactly the trails "
                              "that dominate the DP sum.  A shell asks only for "
                              "those, and UNSAT then means the shell is "
-                             "enumerated COMPLETELY (default: no restriction)")
+                             "enumerated COMPLETELY.  K may be NEGATIVE: the "
+                             "search's best is an upper bound on the "
+                             "differential's lightest trail, not the lightest "
+                             "itself (default: no restriction)")
+    parser.add_argument("--cluster-time-limit", type=positive_float,
+                        default=None, metavar="SECONDS",
+                        help="time limit for the whole --cluster enumeration "
+                             "(default: the -t value).  Separate from -t "
+                             "because one budget for both caps the "
+                             "enumeration at a single solver call's worth of "
+                             "work, which makes a large --cluster unreachable "
+                             "whenever calls are slow")
     parser.add_argument("--encoding", choices=("witness", "rows"),
                         default="rows",
                         help="S-box DDT encoding (default: %(default)s; "
@@ -1027,6 +1063,8 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(line_buffering=True)
     timeout_ms = int(args.time_limit * 1000)
+    cluster_timeout_ms = timeout_ms if args.cluster_time_limit is None \
+        else int(args.cluster_time_limit * 1000)
     print(f"N={args.num_blocks} blocks, r={args.rounds} rounds, "
           f"target active S-boxes A={num_active}")
     if proven:
@@ -1136,8 +1174,8 @@ def main() -> None:
     if args.cluster > 0:
         cluster_estimate(args.num_blocks, args.rounds, pattern,
                          input_diff, output_diff, args.cluster, timeout_ms,
-                         args.max_memory, args.encoding, args.weight_encoding,
-                         weight, args.cluster_shell)
+                         cluster_timeout_ms, args.max_memory, args.encoding,
+                         args.weight_encoding, weight, args.cluster_shell)
 
 
 if __name__ == "__main__":

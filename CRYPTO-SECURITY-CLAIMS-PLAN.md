@@ -255,7 +255,7 @@ research/README.md — consolidate, don't duplicate; the guide should be a table
 
 | claim / evidence | tool | commands (prerequisites) |
 |---|---|---|
-| trail bounds (diff. + linear) | `permute-min-active-sboxes.py` | Python 3 + PuLP; the exact command set and the `optimal` vs. `NOT proven` interpretation rules already in research/README.md (including the AES 1/5/9/25 validation run) |
+| trail bounds (diff. + linear) | `permute-min-active-sboxes.py` | Python 3 + PuLP + highspy; the exact command set and the `optimal` vs. `NOT proven` interpretation rules already in research/README.md (including the AES 1/5/9/25 validation run) |
 | full diffusion at r=3 | `permute-num_rounds`, `permute-num_rounds-avalanche_matrix` | `make` in `research/`, `sh run-research.sh` |
 | spec ⇄ implementation agreement | `spec-conformance.py` + `tests/KAT.txt` | Python 3 |
 | mode/implementation equivalence (x2, folded, inverse) | `*-verify.cpp`, `equivalence-tests` | `make test`, `make` in `research/` |
@@ -345,30 +345,46 @@ solve one cell at a time with `--min-rounds R -r R` when the budget matters.
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 25 s |
 
 `<pulp>` is `~/.venvs/pulp/bin/python3` (PuLP does not install into the system Python on
-Arch; `python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp`).
+Arch; `python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp highspy`).
+**Install `highspy`** — it is not optional in practice; see §10.2.
 
 ### 10.2 MILP: minimum active S-boxes
 
 **Read the `status` column on every row.** Only `optimal` is a lower bound and hence a
-security bound; `NOT proven` is an incumbent, which bounds the minimum from *above*. Two
-figures recorded from incumbents (A(16,3) = 133, A(16,4) = 225) stood for a month before
-being refuted. Re-verification is **one-directional**: a re-run *below* the recorded value
-refutes it, one *above* proves nothing.
+security bound; `NOT proven` is an incumbent, which bounds the minimum from *above*. Four
+figures recorded from incumbents (A(16,3) = 133, A(16,4) = 225, A(16,5) = 243, A(16,6) =
+290) have been refuted this way. Re-verification is **one-directional**: a re-run *below*
+the recorded value refutes it, one *above* proves nothing.
+
+**Use HiGHS, not CBC.** This is the single largest lever in this runbook and it was found
+late. CBC never proved N=16 above r=3, at any limit up to 90 minutes, and §10.6 argued from
+its decaying dual bound that nothing would. HiGHS proves r=3 in **16 s** against CBC's 72
+min — single-threaded, with a 0% gap, not needing the `gapAbs` trick at all — and then
+closes r=4, r=5 and r=6 outright. The commands below are HiGHS timings; the script picks it
+automatically when `highspy` is importable, and `--solver cbc` forces the old behaviour.
+**Before spending an hour on a larger `-t`, spend five minutes on a different solver.**
 
 ```bash
 # Table 1 (a = 3).  N=2 and N=4 prove everywhere; N=8 proves through r=3 only.
 <pulp> research/permute-min-active-sboxes.py -N 2 -a 3 -r 4                       # 44 s,  all proven
 <pulp> research/permute-min-active-sboxes.py -N 4 -a 3 -r 4                       # 2m15,  all proven
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 3 -t 600
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 4 -r 4 -t 3300 # 55m, incumbent 165
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 # 72m, PROVEN 129
+# N=16 under HiGHS: the whole column proves, in ~45 min for the set.
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 6 -t 2400
+#   r=1..3 seconds; r=4 PROVEN 165 (262 s); r=5 PROVEN 234 (639 s); r=6 PROVEN 270 (1585 s)
+# Under --solver cbc the same r=3 cell needs -t 7200 (72m) and r>=4 never proves.
 
 # r = 5, one cell at a time
 <pulp> research/permute-min-active-sboxes.py -N 2  -a 3 --min-rounds 5 -r 5 -t 3300 # 12m, PROVEN 101
 <pulp> research/permute-min-active-sboxes.py -N 4  -a 3 --min-rounds 5 -r 5 -t 3300 # 38m, PROVEN 114
 <pulp> research/permute-min-active-sboxes.py -N 8  -a 3 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 182
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 293
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300 # covered above (PROVEN 234)
+
+# r = 7 and r = 8 do NOT close, even under HiGHS, in 2 h each.
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 7200 # dual 321, incumbent 354 (gap 9%)
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 7200 # dual 280, incumbent 390 (gap 28%)
+# At r=7 take the dual bound (321 > superadditive 294); at r=8 take superadditivity
+# (363 > dual 280).  Neither source dominates -- record both and take the max.
 
 # Table 2 (N = 16, varying a).  Feeds the AES_NUM_ROUNDS = 3 argument.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 2 -r 2 -t 900  # 12 s, PROVEN 25
@@ -488,9 +504,8 @@ documentation:
    a stage-A timeout is `unknown`, not UNSAT, so it cannot push a floor up, and
    `A(4) ≤ 165` stands. The only readable signal is where the cliff sits — 165 returns a
    pattern in 50 s and everything from 160 down returns nothing in 900 s.
-6. ~~`-N 16 -a 3 --min-rounds 6 -r 6`~~ — **done 2026-08-02; a new bracket, from
-   superadditivity rather than from the solver.** 55 min, 606 MB: incumbent **290**, dual
-   bound **13**, `NOT proven`. The dual bound is worthless at this depth (a 96% gap,
+6. ~~`-N 16 -a 3 --min-rounds 6 -r 6`~~ — **done 2026-08-02; first a bracket, then a
+   solve.** Under CBC: 55 min, 606 MB, incumbent **290**, dual bound **13**, `NOT proven`. The dual bound is worthless at this depth (a 96% gap,
    against 76% at r = 4 and 1% at r = 3 — the decay is monotone), but the incumbent caps
    A(6) from above and superadditivity supplies `A(6) ≥ A(3) + A(3) = 258`, so
    **A(6) ∈ [258, 290]**, DP ≤ 2^−1548. That is the *narrowest* relative bracket above
@@ -499,6 +514,11 @@ documentation:
 
    One caution the run exposes: incumbent quality is not monotone in difficulty. This
    machine's r = 5 run reached only 293 while this strictly harder r = 6 run reached 290.
+
+   **Superseded hours later by HiGHS**, which proved `A(6) = 270` in 1585 s — refuting the
+   290 incumbent and making the bracket moot. The CBC figures are kept above because the
+   contrast is the lesson: a 96% duality gap was read as the problem being hard, and it was
+   the solver. See §10.2.
 7. **`hash-programs/plot-results.py`** — excluded from the 2026-08 re-derivation because it
    is a viewer, not a measurement, and requires first generating CSVs with the
    `benchmark.*.bash` scripts. No documented number depends on it.
@@ -522,3 +542,11 @@ documentation:
   left a 90-minute run 1.45 units short of closing. A linear extrapolation through the
   last mile of a duality gap will be optimistic; budget accordingly, or accept the dual
   bound as the deliverable rather than the closed gap.
+* **But before any of that, change solver.** Both bullets above are careful reasoning about
+  how to spend time on CBC, and both were overtaken by a five-minute `pip install highspy`:
+  HiGHS closes that same r=3 instance in 16 s, and r=4, r=5 and r=6 besides. The reasoning
+  is still correct — it just applies to whichever solver is genuinely the best available,
+  and CBC was not. Treat "the dual bound has stalled" as ambiguous between *this problem is
+  hard* and *this solver is weak*, and settle that cheaply before budgeting hours. The two
+  remaining open cells (r=7, r=8) have now stalled under HiGHS too, so for them the
+  reasoning above is live again.

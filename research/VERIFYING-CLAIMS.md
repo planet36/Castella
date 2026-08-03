@@ -30,7 +30,17 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
 
-Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) and, to reproduce the r ≥ 4 solves, [highspy](https://pypi.org/project/highspy/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
+Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the five scripts:
+
+| script | needs |
+|---|---|
+| `spec-conformance.py` | nothing beyond Python 3 |
+| `permute-degree-bound.py` | nothing beyond Python 3 |
+| `permute-min-active-sboxes.py` | [PuLP](https://pypi.org/project/PuLP/), and [highspy](https://pypi.org/project/highspy/) to reproduce the r ≥ 4 solves — venv recipe in [README.md](README.md#reproducing).  On Arch, HiGHS is also packaged (`highs` + `python-highspy`), but PuLP is not, so the venv is required either way |
+| `permute-trail-search.py` | the [z3](https://github.com/Z3Prover/z3) solver (Arch `python-z3-solver`) |
+| `trail-model-crossvalidate.py` | z3 as well — it imports the trail search to reach its layer machinery |
+
+All commands run from `research/` unless noted.
 
 ## 1. The claim itself cannot be verified — only falsified
 
@@ -92,7 +102,7 @@ Interpretation is in [README.md](README.md#conclusions): compared at equal trans
 
 ## 6. The arithmetic: `R*`, strengths, SHA-3 mapping
 
-Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A` (→ r = 2/3/4/5/6 for b ≤ 135/387/495/702/810); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md.  Note what solving `A(4)` and `A(5)` did and did not change here: 4 rounds now supports a solved **495** bits, so it still falls short of 512 (by 17 bits, where the refuted `A(4) = 225` had made it look sufficient), and the 512-bit floor stays at r = 5.  No further solving can revisit that — `A(4) = 165` is exact. the strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
+Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A` (→ r = 2/3/4/5/6 for b ≤ 135/387/495/702/810); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md.  Note what solving `A(4)` and `A(5)` did and did not change here: 4 rounds now supports a solved **495** bits, so it still falls short of 512 (by 17 bits, where the refuted `A(4) = 225` had made it look sufficient), and the 512-bit floor stays at r = 5.  No further solving can revisit that — `A(4) = 165` is exact.  The strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
 
 ## 7. The mode reductions are proofs — read them
 

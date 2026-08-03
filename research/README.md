@@ -308,6 +308,8 @@ Re-verification is one-directional.  A re-run that returns a value _below_ the r
 * [PuLP](https://pypi.org/project/PuLP/) (bundles the CBC MILP solver; no license is needed)
 * [highspy](https://pypi.org/project/highspy/) — **strongly recommended**, and the default when installed.  HiGHS is not a marginal improvement on this model: it proves _N_ = 16 at _r_ = 3 in **16 s** where CBC needs 72 min, and it closes _r_ = 4, 5 and 6, which CBC has never done at any limit.  Pass `--solver cbc` to force the bundled solver.
 
+**PuLP is what forces the virtual environment, not the solver.** PuLP has no Arch package and pip will not install into the system Python, so the venv below is required regardless.  HiGHS *is* packaged on Arch — `highs` plus `python-highspy` — and either route works for it; note that the pip wheel vendors its own `libhighs.so.1` inside the package directory, whereas `python-highspy` links against the system library and therefore needs `highs` installed alongside it.
+
 pip refuses to install into the system Python on Arch, so use a virtual environment:
 
 ```bash

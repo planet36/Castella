@@ -194,13 +194,37 @@ The honest procedure:
    a policy the shipped parameters meet, or raise `R*` at `C=8`.
 
    **A margin policy has to say what it measures, and the two natural answers disagree
-   here.** Measured in *rounds*, `R*=8` is 1.6× the r=5 floor. Measured in the quantity the
-   criterion is actually about — bits of single-characteristic resistance — 8 rounds gives
-   `6·A(8) ≥ 2178`, i.e. **≥ 1089 bits against a 512-bit claim**, a ratio of 2.1×. The two
-   differ because A grows super-linearly in r (9, 45, 129, 165, 234, 270), so a round-count
-   ratio understates the bound's growth. Both readings are defensible and the example 2×
-   policy in step 3 does not say which it means; whichever is adopted should be stated.
-   *(Deferred by the author 2026-08-02: not ready to decide. Do not press.)*
+   here.** Write `L(r) = 3·A(r)` for the largest level `r` rounds support under this
+   criterion (from `6·A ≥ 2b`, so `b ≤ 3·A`). Then:
+
+   | `C` | claimed `b` | needs `A ≥` | trail floor | binding floor | shipped `R*` | `L(R*)` | margin in bits | margin in rounds |
+   |---|---|---|---|---|---|---|---|---|
+   | 2 | 128 | 43 | r=2 | r=3 (diffusion) | 6 | 810 | **6.33×** | 2.00× |
+   | 4 | 256 | 86 | r=3 | r=3 | 6 | 810 | **3.16×** | 2.00× |
+   | 6 | 384 | 128 | r=3 | r=3 | 6 | 810 | **2.11×** | 2.00× |
+   | 8 | 512 | 171 | **r=5** | r=5 | 8 | ≥1089 | **2.13×** | **1.60×** |
+
+   `L(R*)` uses the solved `A(6) = 270` for the first three rows and the superadditive
+   `A(8) ≥ 363` for the last. **Measured in bits, `C` = 8 is not the outlier — it is
+   marginally the better of the two tightest rows**, 2.13× against `C` = 6's 2.11×. Its
+   exception status comes entirely from measuring in rounds, where the floors happen to
+   fall either side of a step. A grows super-linearly (9, 45, 129, 165, 234, 270), so a
+   round-count ratio understates the bound's growth. Both readings are defensible and the
+   example 2× policy in step 3 does not say which it means; whichever is adopted should be
+   stated. *(Deferred by the author 2026-08-02: not ready to decide. Do not press — but see
+   the standing intent to revisit `R*` upward, below.)*
+
+   **The thinnest margin in this table is not `C` = 8 — it is `C` = 6's floor.** That row
+   needs `A(3) ≥ 128` and gets **129**: it clears by one S-box, 6 bits out of 768. Had
+   `A(3)` come in at 128, `C` = 6's trail floor would be r=4 and its `R*` would want to be
+   8 rather than the shipped 6. This is safe — `A(3) = 129` is now proven by two
+   independent solvers — but it is the tightest quantity in the whole analysis, it is
+   *derived* rather than chosen, and nothing else in these documents says so.
+
+   **Standing intent (author, 2026-08-03): revisit the shipped `R*` values upward.** Not
+   only `C` = 8. Any change to `R*` changes every digest at that capacity, so it is a
+   format decision, not only a margin one; the KATs, `SPEC.md`'s claimed-instances table
+   and the `--help` texts all move with it.
 
 Deliverable: a "Claimed instances" table in SPEC.md — `(C, R*, digest sizes)` per SHA-3
 equivalence row — with the margin rationale, plus a statement that other parameterizations
@@ -323,11 +347,13 @@ in the sense this plan promises.
 ## 10. Re-derivation runbook (the standing procedure)
 
 Every figure in this repository's cryptanalysis sections came out of one of five Python
-programs. This section is the procedure for re-deriving all of them, so a future session
-can refresh the docs without reconstructing what to run or why. It was written from a
-full re-derivation on 2026-08-01/02 that took ~13 hours of machine time on 8 threads and
-**refuted two published figures** — so treat this as maintenance that is expected to find
-things, not a formality.
+programs. (A sixth, `research/trail-model-crossvalidate.py`, produces no figure — it checks
+the model that two of the five depend on, so it belongs in §10.1 but not in that count.)
+This section is the procedure for re-deriving all of them, so a future session can refresh
+the docs without reconstructing what to run or why. It was written from a full re-derivation
+on 2026-08-01/02 that took ~13 hours of machine time on 8 threads and **refuted four
+published figures** — so treat this as maintenance that is expected to find things, not a
+formality.
 
 Timings and peak memory below are from that run (8 threads, 7.7 GiB, no swap). Every
 command is sized to finish inside one hour; `-t` is the limit **per round count**, so
@@ -341,12 +367,26 @@ solve one cell at a time with `--min-rounds R -r R` when the budget matters.
 | `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the AES Square-distinguisher validation | `self-test OK` |
 | `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 8 AES rounds = 2.67 Castella rounds |
 | `python3 research/permute-trail-search.py --self-test` | S-box/DDT/aesenc model checks | `self-test OK` |
+| `python3 research/trail-model-crossvalidate.py` | The trail search models `P` a **third** time (beside the C++ and spec-conformance.py); this compares its difference propagation with the KAT-verified one, r = 1..6 | `240 state pairs verified, 0 failed`, ~3 min |
 | `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 25 s |
 
-`<pulp>` is `~/.venvs/pulp/bin/python3` (PuLP does not install into the system Python on
-Arch; `python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp highspy`).
-**Install `highspy`** — it is not optional in practice; see §10.2.
+(Everything above except the last row runs on the system `python3`; the trail-search rows
+need z3, Arch `python-z3-solver`, and `trail-model-crossvalidate.py` needs it too because it
+imports the trail search to reach its layer machinery.)
+
+`<pulp>` is `~/.venvs/pulp/bin/python3`. **The venv is unavoidable for the MILP script**, and
+the reason is PuLP rather than the solver: PuLP has no Arch package and pip refuses to
+install into the system Python. HiGHS does have one — `highs` plus `python-highspy` — so on
+Arch either route works for the solver half, but the venv is still needed for PuLP:
+
+```bash
+python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp highspy
+```
+
+**Install `highspy` one way or the other** — it is not optional in practice; see §10.2. Note
+that the pip wheel vendors its own `libhighs.so.1` inside the package, whereas the Arch
+`python-highspy` links against the system one and so also needs `highs` installed.
 
 ### 10.2 MILP: minimum active S-boxes
 
@@ -369,6 +409,14 @@ automatically when `highspy` is importable, and `--solver cbc` forces the old be
 <pulp> research/permute-min-active-sboxes.py -N 2 -a 3 -r 4                       # 44 s,  all proven
 <pulp> research/permute-min-active-sboxes.py -N 4 -a 3 -r 4                       # 2m15,  all proven
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
+# Cross-solver check.  Re-proves a cell with the OTHER branch-and-bound on an
+# identical model, so a disagreement means a solver bug rather than a modelling
+# one (the model is checked separately, by the AES row in 10.1).  r=3 is the
+# only cell CBC can close, so it is the only one this is available for -- 16 s
+# under HiGHS against ~72 min under CBC, and both must print 129 / optimal.
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 --solver cbc
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 600  --solver highs
+
 # N=16 under HiGHS: the whole column proves, in ~45 min for the set.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 6 -t 2400
 #   r=1..3 seconds; r=4 PROVEN 165 (262 s); r=5 PROVEN 234 (639 s); r=6 PROVEN 270 (1585 s)

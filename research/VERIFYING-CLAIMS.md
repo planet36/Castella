@@ -22,7 +22,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
-| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
+| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen; and the exact invariant-subspace search (exhaustive over every byte-aligned subspace) | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight; r=2, r=3 and r=4 bracketed, all on solved floors) and first-order differential clustering | executable (solver) | §13 |
@@ -133,13 +133,22 @@ Expected: `passed: 2176 comparisons of permute_folded against permute_generic` (
 
 Nothing to verify — it is a non-claim, documented so nobody assumes otherwise.  The fact making it necessary (that `P` is invertible) is demonstrated by `permute_inv-verify` in §8.
 
-## 10. Structural probes: subspace escape, fixed points, round constants
+## 10. Structural probes and the exact invariant-subspace search
 
 ```bash
 ./permute-structural-probes -n 10000
 ```
 
-Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds; probes 2 and 3 must print only PASS lines (fixed-point screen; round constants: seed value, nonzero, distinct, no shifted predecessors; and the **slide-resistance screen** — no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist).  Results and scope caveats: [README.md](README.md#findings-structural-probes-of-castellapermute-2026-07-19) — the probes cover the transpose's natural symmetry classes, not every conceivable invariant subspace, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
+Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds; probes 2 and 3 must print only PASS lines (fixed-point screen; round constants: seed value, nonzero, distinct, no shifted predecessors; and the **slide-resistance screen** — no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist).  Results and scope caveats: [README.md](README.md#findings-structural-probes-of-castellapermute-2026-07-19) — the probes cover the transpose's natural symmetry classes, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
+
+The sampling in probe 1 is superseded, for invariant subspaces, by an exhaustive computation:
+
+```bash
+python3 permute-invariant-subspaces.py
+python3 permute-invariant-subspaces.py --self-test
+```
+
+Expected: `no invariant subspace exists in any class decided here`, exit status 0 (~14 s, standard library only).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labellings, a single-byte support closure of **256**, **0 of 48** round constants in any symmetry class, and a forced closure of **2048** for all three classes.  The `[control: … 2 rounds 128]` figures beside the last of those are the positive control — with the round constants zeroed the two block classes *are* invariant, at dimension 128 — and a control that also read 2048 would mean the closure test had no power.  Results, the DDT cross-check behind the 85, and scope: [README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03).  The search is exhaustive over byte-aligned subspaces and every coset of one; it is exact but offset-sampled for the three symmetry classes, and does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the infeasible-to-exhaust screen above.
 
 ## 11. Zero-sum (cube) probes
 

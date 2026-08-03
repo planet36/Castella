@@ -497,8 +497,8 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --encoding rows \
 python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --encoding rows \
     --no-minimize --print-trail -M 4000
 
-# r = 4: weight 1154, ~5 s of solving.  A=165 is an incumbent, not a proven
-# optimum, so this result is a ceiling — the script says so on startup.
+# r = 4: weight 1154, ~5 s of solving.  A(4)=165 is a proven optimum, so this
+# one has a real floor (990) under it — the script prints it without a warning.
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --encoding rows \
     --no-minimize --print-trail -M 4000
 
@@ -543,16 +543,16 @@ The attacker therefore wants a **long inbound** (free rounds) and a **cheap outb
 
 ### The outbound cost is set by the transpose's steep active-S-box growth
 
-An outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`, and the attacker picks the split minimizing that sum.  The inputs are the three solved values `A(1)=9`, `A(2)=45` and `A(3)=129`, plus `A(4) ≥ 138` from superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection).  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
+An outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`, and the attacker picks the split minimizing that sum.  The inputs are the solved values `A(1)=9`, `A(2)=45`, `A(3)=129` and `A(4)=165` — all converged MILP optima, so no row here rests on a superadditive floor any more.  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
 
 | outbound rounds `r_out` | best split | min `A_out` | outbound cost `2^(6·A_out)` |
 |---|---|---|---|
 | 2 | 1 + 1 | 18 | 2^108 |
 | 3 | 1 + 2 | 54 | 2^324 |
 | 4 | 2 + 2 | 90 | 2^540 |
-| 5 | 1 + 4 | 147 | 2^882 |
+| 5 | 1 + 4 or 2 + 3 (tie) | 174 | 2^1044 |
 
-The `r_out` = 4 row returns to the 2^540 this section carried before the refutation, but now on a sound basis: that figure previously came from `A(3)=133` making the `1 + 3` split expensive, and it survives because `A(3) = 129` makes `1 + 3` cost 138, still above the `2 + 2` cost of 90.  The `r_out` = 5 row does not recover — 2^882 against the 2^1068 once claimed — because `A(4) ≥ 138` is a derived bound well below the refuted 225.  Which split wins is worth minimizing explicitly rather than assuming: the <q>most even split</q> rule stated here previously happens to hold again at these values, but it failed at `r_out` = 4 under the intermediate floors, so it is a property of the numbers rather than of the structure.
+The `r_out` = 4 row returns to the 2^540 this section carried before the refutation, but now on a sound basis: that figure previously came from `A(3)=133` making the `1 + 3` split expensive, and it survives because `A(3) = 129` makes `1 + 3` cost 138, still above the `2 + 2` cost of 90.  The `r_out` = 5 row read 2^882 while `A(4)` was only the superadditive `A(1)+A(3)` = 138, which made the `1 + 4` split look cheap at 147.  Solving `A(4)` = 165 prices that split at 174, exactly level with `2 + 3` — so the row recovers to **2^1044**, and the two splits tie.  It still does not reach the 2^1068 once claimed, and the residue is entirely `A(3)`: that figure came from the refuted `A(3)` = 133 making `2 + 3` cost 178, where the solved 129 makes it 174.  Twenty-four bits of the withdrawn number were real; the rest was the refutation.  Which split wins is worth minimizing explicitly rather than assuming: the <q>most even split</q> rule stated here previously happens to hold again at these values, but it failed at `r_out` = 4 under the intermediate floors, so it is a property of the numbers rather than of the structure.
 
 ### Margin for the default 6-round permutation
 
@@ -566,7 +566,7 @@ Giving the attacker a free inbound of `r_in` rounds leaves `r_out = 6 − r_in`:
 
 So the default 6 rounds resist rebound with room to spare: even a generous **3-round** inbound leaves an outbound costing ≥ 2^324, above the 2^256 claimed level for `C` = 4 (and every smaller-capacity claim).  The margin erodes only if the inbound reaches **4 rounds** — twice the standard reach, and beyond any published rebound technique.  Both surviving rows draw on the two solved cells alone: the 3-round row is the `1 + 2` split (9 + 45) and the 4-round row the `2 + 2` split (45 + 45), so neither depends on any bound above `r` = 2 and neither was affected by the refutation.
 
-For `C` = 8 (claim 2^512, run at `R*` = 8 rounds) a 3-round inbound leaves `r_out` = 5 and an outbound of ≥ 2^882, safe by 2^370 — down from the 2^1068 previously claimed, since `A(4) ≥ 138` is derived rather than solved.  A 5-round inbound would leave `r_out` = 3 at 2^324, **below** that instance's 2^512 claim; the earlier text quoted the same 2^324 in a way that read as reassuring, which it is not at `C` = 8.
+For `C` = 8 (claim 2^512, run at `R*` = 8 rounds) a 3-round inbound leaves `r_out` = 5 and an outbound of ≥ **2^1044**, safe by 2^532 — up from the 2^882 this section carried while `A(4)` was superadditive, and still just short of the 2^1068 claimed before `A(3)` = 133 was refuted.  A 5-round inbound would leave `r_out` = 3 at 2^324, **below** that instance's 2^512 claim; the earlier text quoted the same 2^324 in a way that read as reassuring, which it is not at `C` = 8.
 
 The underlying reason is the transpose.  In AES itself the four-round "hourglass" trail re-concentrates a difference to one active byte, keeping active-S-box counts low over many rounds and giving rebound long, cheap outbounds; Castella's byte transpose scatters every full block across all 16 blocks (see the [`AES_NUM_ROUNDS` = 3 conclusion](#conclusions)), so activity grows superlinearly and outbounds become expensive after very few rounds — exactly the effect the numbers above quantify.
 

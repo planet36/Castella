@@ -401,7 +401,7 @@ These runs are _N_ = 16, _a_ = 3.
 
 ### Results
 
-A bracket needs a **proven** _A_ for its floor.  Three round counts now have one from a solve — _r_ = 1, 2 and 3, the last closed on 2026-08-02 at _A_(3) = 129.  Above that the floors come from **superadditivity**, which is structural rather than empirical: any (_a_+_b_)-round trail restricts to an _a_-round trail and a _b_-round trail — each with a nonzero input difference, since `P` is a bijection — over disjoint S-box layers, so **_A_(_a_+_b_) ≥ _A_(_a_) + _A_(_b_)**.  From _A_(1) = 9, _A_(2) = 45 and _A_(3) = 129 this gives _A_(4) ≥ 138 and _A_(5) ≥ 174.
+A bracket needs a **proven** _A_ for its floor, and every round count in the table below now has one: the _N_ = 16, _a_ = 3 column is solved outright from _r_ = 1 to _r_ = 8 (see the MILP section above), which covers every shipped round count.  **Superadditivity** — **_A_(_a_+_b_) ≥ _A_(_a_) + _A_(_b_)**, structural rather than empirical, since any (_a_+_b_)-round trail restricts to an _a_-round and a _b_-round trail over disjoint S-box layers, each with a nonzero input difference because `P` is a bijection — supplied these floors before the solves and is retained only above _r_ = 8.  It was loose everywhere it was checked: short by 20%, 34%, 5%, 20% and 7% at _r_ = 4 … 8.
 
 | _r_ | AES rounds | _A_: proven floor … known ceiling | weight floor 6·_A_ | best trail found | bracket on best-trail weight |
 |-----|-----------|-----------------------------------|--------------------|------------------|------------------------------|

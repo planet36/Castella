@@ -848,7 +848,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     enumerated.  `shell` may be NEGATIVE, which asks for trails lighter
     than the one the search reported: its "best" is an upper bound on the
     differential's lightest characteristic, not the lightest itself, and at
-    r = 2 the enumeration returned a weight-298 trail against a reported
+    r = 2 the enumeration returned a weight-294 trail against a reported
     best of 302.  A negative shell is how that gap gets probed, and finding
     nothing under it is then an ordinary result rather than a surprise.
 

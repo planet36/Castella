@@ -918,6 +918,17 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     print(f"cluster: weight histogram {{weight:count}}: {hist}")
     print(f"cluster: DP(differential | pattern) = 2^{dp_log2:.2f} vs "
           f"best single trail 2^-{best}")
+    if best_weight is not None and best < best_weight:
+        # The enumeration is free to return anything within the shell, so it
+        # can hand back a characteristic lighter than the one that defined
+        # the differential -- which is a better ceiling for the round count
+        # than the search itself reported, and would otherwise be visible
+        # only inside the histogram.  Every enumerated trail has already been
+        # re-propagated and checked against the DDT, exactly as the search's
+        # own trails are, so this is a result and not a hint.
+        print(f"cluster: NOTE this beats the search's own best: weight "
+              f"{best} < {best_weight}, so the ceiling for this round "
+              f"count is at most {best} (DP = 2^-{best})")
 
 
 # ------------------------------------------------------------------- main

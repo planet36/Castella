@@ -157,11 +157,12 @@ The honest procedure:
 1. **Floor from proven trail bounds.** From the MILP table (research/README.md, `N=16`,
    `a=3`): a claimed level of `b` bits needs every differential characteristic below
    ~2^−2b, i.e. 6·A ≥ 2b. **Every input to this step is now a solved optimum through
-   r = 6**: A = 9, 45, 129, 165, 234, 270 at r = 1…6. Above that, superadditivity
-   (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection) composes solved values with
-   each other, giving A(7) ≥ 294 and A(8) ≥ 363. So 6·A ≥ 2b is reached at **r=2** for
-   b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495, **r=5** for b ≤ 702 and **r=6** for
-   b ≤ 810 — putting the 128-, 256- and 512-bit floors at r = 2, 3 and 5 respectively.
+   r = 8**, which covers every shipped round count: A = 9, 45, 129, 165, 234, 270, 354, 390
+   at r = 1…8. Above that, superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a
+   bijection) composes solved values with each other. So 6·A ≥ 2b is reached at **r=2** for
+   b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495, **r=5** for b ≤ 702, **r=6** for
+   b ≤ 810, **r=7** for b ≤ 1062 and **r=8** for b ≤ 1170 — putting the 128-, 256- and
+   512-bit floors at r = 2, 3 and 5 respectively.
    Linear trails: correlation ≤ 2^−3·A gives the same round floors. These are necessary
    conditions only (single characteristics; no clustering/structural coverage).
 
@@ -202,11 +203,12 @@ The honest procedure:
    | 2 | 128 | 43 | r=2 | r=3 (diffusion) | 6 | 810 | **6.33×** | 2.00× |
    | 4 | 256 | 86 | r=3 | r=3 | 6 | 810 | **3.16×** | 2.00× |
    | 6 | 384 | 128 | r=3 | r=3 | 6 | 810 | **2.11×** | 2.00× |
-   | 8 | 512 | 171 | **r=5** | r=5 | 8 | ≥1089 | **2.13×** | **1.60×** |
+   | 8 | 512 | 171 | **r=5** | r=5 | 8 | 1170 | **2.29×** | **1.60×** |
 
-   `L(R*)` uses the solved `A(6) = 270` for the first three rows and the superadditive
-   `A(8) ≥ 363` for the last. **Measured in bits, `C` = 8 is not the outlier — it is
-   marginally the better of the two tightest rows**, 2.13× against `C` = 6's 2.11×. Its
+   Every `L(R*)` here is now a solved optimum — `A(6) = 270` for the first three rows,
+   `A(8) = 390` for the last — so this table contains no estimates. **Measured in bits,
+   `C` = 8 is not the outlier but the second-strongest row**, 2.29× against `C` = 6's
+   2.11×. Its
    exception status comes entirely from measuring in rounds, where the floors happen to
    fall either side of a step. A grows super-linearly (9, 45, 129, 165, 234, 270), so a
    round-count ratio understates the bound's growth. Both readings are defensible and the
@@ -428,11 +430,12 @@ automatically when `highspy` is importable, and `--solver cbc` forces the old be
 <pulp> research/permute-min-active-sboxes.py -N 8  -a 3 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 182
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300 # covered above (PROVEN 234)
 
-# r = 7 and r = 8 do NOT close, even under HiGHS, in 2 h each.
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 7200 # dual 321, incumbent 354 (gap 9%)
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 7200 # dual 280, incumbent 390 (gap 28%)
-# At r=7 take the dual bound (321 > superadditive 294); at r=8 take superadditivity
-# (363 > dual 280).  Neither source dominates -- record both and take the max.
+# r = 7 and r = 8 close too, but need well over 2 h.  Budget 6 h and walk away.
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 21600 # PROVEN 354 (7257 s)
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 21600 # PROVEN 390 (14050 s)
+# Cautionary: both were first run at -t 7200 and reported gaps of 9% and 28%.  r=7
+# actually needed 7257 s -- it was cut off 57 SECONDS before closing.  A duality gap
+# is not a progress bar; do not infer remaining time from it.
 
 # Table 2 (N = 16, varying a).  Feeds the AES_NUM_ROUNDS = 3 argument.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 2 -r 2 -t 900  # 12 s, PROVEN 25

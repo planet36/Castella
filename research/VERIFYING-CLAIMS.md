@@ -16,7 +16,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 1 | The flat sponge claim (level `64·C` bits) | conjecture | not verifiable — falsifiable only by attack; §1 |
 | 2 | The spec, the C++, and the KAT file agree | executable | §2 |
 | 3 | Full bit diffusion of `P` needs 3 rounds | executable | §3 |
-| 4 | Trail bounds: A = 9/45/129/165/234/270 solved at r = 1..6; A ≥ 294/363 at r = 7/8 (superadditivity) | executable (solver) + arithmetic | §4 |
+| 4 | Trail bounds: A = 9/45/129/165/234/270/354/390 solved at r = 1..8, covering every shipped round count | executable (solver) + arithmetic | §4 |
 | 5 | 3 AES rounds per Castella round is the right count | executable (proven by solver) | §5 |
 | 6 | `R*`, the strengths table, and the SHA-3 mapping | arithmetic | §6 |
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
@@ -83,6 +83,9 @@ for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; do
 # Needs highspy (see README Dependencies) -- with CBC only r<=3 ever proves,
 # and r=3 alone takes 72 min there against 16 s here.  ~45 min for the set.
 python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 2 -r 6 -t 2400
+
+# r=7 and r=8 also prove, but need 7257 s and 14050 s -- run them separately.
+python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 8 -t 21600
 ```
 
 Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: four figures that stood in these documents (`N=16, a=3` at r=3, 4, 5 and 6) were timed-out incumbents recorded as optima or as the best known, and all four were later refuted by cheaper solutions.
@@ -102,7 +105,7 @@ Interpretation is in [README.md](README.md#conclusions): compared at equal trans
 
 ## 6. The arithmetic: `R*`, strengths, SHA-3 mapping
 
-Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A` (→ r = 2/3/4/5/6 for b ≤ 135/387/495/702/810); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md.  Note what solving `A(4)` and `A(5)` did and did not change here: 4 rounds now supports a solved **495** bits, so it still falls short of 512 (by 17 bits, where the refuted `A(4) = 225` had made it look sufficient), and the 512-bit floor stays at r = 5.  No further solving can revisit that — `A(4) = 165` is exact.  The strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
+Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A` (→ r = 2/3/4/5/6/7/8 for b ≤ 135/387/495/702/810/1062/1170); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md.  Note what solving `A(4)` and `A(5)` did and did not change here: 4 rounds now supports a solved **495** bits, so it still falls short of 512 (by 17 bits, where the refuted `A(4) = 225` had made it look sufficient), and the 512-bit floor stays at r = 5.  No further solving can revisit that — `A(4) = 165` is exact.  The strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
 
 ## 7. The mode reductions are proofs — read them
 

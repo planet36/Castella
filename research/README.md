@@ -250,7 +250,7 @@ This is a **smoke test only**: passing means nothing cryptographically (any dece
 * ≤ _n_ — best known incumbent, **not proven**.  On its own it yields no DP bound; see below for where a floor comes from instead.
 * _m_ … ≤ _n_ — bracketed: _m_ is the solver's dual bound (a **proven** lower bound, so it does yield a DP bound) and _n_ the incumbent.  A dual bound is valid whether or not the gap ever closes, so it is worth recording from a timed-out run.
 
-Every value below was re-derived on 2026-08-01/02 with PuLP 3.3.2.  Where a re-run found a _cheaper_ feasible solution than the previously recorded figure, the old figure is struck through — it was never attainable as a minimum.
+Every value below was re-derived on 2026-08-01/02 with PuLP 3.3.2.  Where a re-run found a _cheaper_ feasible solution than the previously recorded figure, the old figure is struck through — it was never attainable as a minimum.  The _N_ = 16 column was then **solved outright through _r_ = 6** on 2026-08-02 with HiGHS, which refuted two more incumbents (243 → 234, 290 → 270) on the way; _r_ = 7 and _r_ = 8 are bracketed, their floors from HiGHS's dual bound and from superadditivity respectively.
 
 Minimum active S-boxes with _a_ = 3 (the current `AES_NUM_ROUNDS`):
 
@@ -259,9 +259,11 @@ Minimum active S-boxes with _a_ = 3 (the current `AES_NUM_ROUNDS`):
 | 1 | **9** | **9** | **9** | **9** |
 | 2 | **40** | **45** | **45** | **45** |
 | 3 | **59** | **66** | **91** | **129** (was ~~133~~) |
-| 4 | **80** | **90** | ≤ 135 | ≤ 165 (was ~~225~~) |
-| 5 | **101** | **114** | ≤ 182 | ≤ 243 |
-| 6 | — | — | — | ≤ 290 |
+| 4 | **80** | **90** | ≤ 135 | **165** (was ~~225~~) |
+| 5 | **101** | **114** | ≤ 182 | **234** (was ~~243~~) |
+| 6 | — | — | — | **270** (was ~~290~~) |
+| 7 | — | — | — | 321 … ≤ 354 |
+| 8 | — | — | — | 363 … ≤ 390 |
 
 Minimum active S-boxes for _N_ = 16, varying _a_:
 
@@ -283,7 +285,7 @@ Re-verification is one-directional.  A re-run that returns a value _below_ the r
 ### Conclusions
 
 * For _N_ = 16 with _a_ = 3, two rounds already bound every characteristic below 2<sup>−270</sup>, past the 2<sup>−256</sup> threshold.  The former <q>three rounds give 2<sup>−798</sup></q> is withdrawn, since _A_ = 133 was refuted — but **_r_ = 3 has since been solved outright**: _A_(3) = **129**, proven optimal in 72 minutes, so DP ≤ 2<sup>−774</sup>.  That makes it the only _N_ = 16 round count above 2 with a closed duality gap, and it took a specific trick to get there (see the note on `gapAbs` below).
-* Above _r_ = 3 the floors come from superadditivity, which is structural rather than empirical: _A_(_a_+_b_) ≥ _A_(_a_) + _A_(_b_) holds because `P` is a bijection, so a longer trail restricts to two shorter ones with nonzero input differences over disjoint S-box layers.  From _A_(1) = 9, _A_(2) = 45 and _A_(3) = 129 this gives _A_(4) ≥ **138** (DP ≤ 2<sup>−828</sup>), _A_(5) ≥ **174** (DP ≤ 2<sup>−1044</sup>) and _A_(6) ≥ **258** (DP ≤ 2<sup>−1548</sup>).  The _r_ = 6 floor is the strongest of the three relative to its ceiling, because it composes the solved _A_(3) with itself rather than padding with _A_(1): against the incumbent 290 it brackets _A_(6) in [258, 290], 12% wide, where _r_ = 4 is 20% and _r_ = 5 is 40%.
+* Above _r_ = 3 the floors come from superadditivity, which is structural rather than empirical: _A_(_a_+_b_) ≥ _A_(_a_) + _A_(_b_) holds because `P` is a bijection, so a longer trail restricts to two shorter ones with nonzero input differences over disjoint S-box layers.  **Superadditivity is now obsolete through _r_ = 6, and the record of how loose it was is worth keeping.**  It gave _A_(4) ≥ 138, _A_(5) ≥ 174 and _A_(6) ≥ 258 against solved values of **165**, **234** and **270** — short by 20%, 34% and 5%.  It still supplies the floor above the solved range, where it now composes solved values with each other: _A_(7) ≥ _A_(3) + _A_(4) = **294** and _A_(8) ≥ _A_(3) + _A_(5) = **363**.  At _r_ = 7 HiGHS's dual bound of 321 beats that; at _r_ = 8 it does not (280), so the two sources still have to be compared rather than ranked.
 * **The objective is integral, and exploiting that is what closed _r_ = 3.**  It sums binary variables, so the optimum is a whole number and the incumbent is provably optimal as soon as the dual bound exceeds incumbent − 1 — driving the gap to zero proves nothing further.  Passing `gapAbs = 0.99` lets CBC stop there.  Without it a 90-minute run reached a dual bound of only 127.554 against an incumbent of 129 and reported `NOT proven`; with it the same instance closed in 72 minutes.  (Run-to-run variance contributes too — the successful run reached 127.99 at 71 min where the earlier one reached 127.554 at 90 — so treat this as a large improvement rather than a precise speedup.)
 * **Where a solve is out of reach, the two remaining sources do not dominate each other, so take the maximum.**  At _r_ = 4 a 90-minute run reaches a dual bound of only 93.9, a 76% gap, and is beaten by the superadditive 138.  At _r_ = 6 a 55-minute run reaches **13** against an incumbent of 290 — a 96% gap, against 258 from superadditivity.  The reason is structural: superadditivity strengthens as _r_ grows, because it composes an increasingly good _A_(3) with _A_(1) (or, at _r_ = 6, with itself), while the MILP weakens, because each extra round adds layers to a relaxation that is already struggling.  Measured across the three round counts the solver's dual bound falls from 98% of the incumbent at _r_ = 3 to 57% at _r_ = 4 to under 5% at _r_ = 6, so at the depths that remain open it contributes nothing and no time limit is likely to change that.  Note that `permute-min-active-sboxes.py` reports only what its own instance proves, so at _r_ = 4 it prints `A in [94, 165]` while the floor recorded here is the larger 138.
 * The transpose is a stronger mixing layer than its branch number (2) suggests: at _N_ = 16 the count reaches a proven 45 after two rounds against 40 at _N_ = 2, and _r_ = 3 is bracketed in {128, 129} against a proven 59 at _N_ = 2 — better than a factor of two on the same round count.  The earlier <q>~90 active S-boxes per round</q> figure rested on the refuted 133 and 225; the growth from 45 to ~128 across one round is steeper still, but note it mixes a proven value with a bracketed one.
@@ -398,11 +400,13 @@ A bracket needs a **proven** _A_ for its floor.  Three round counts now have one
 | 1 | 3 | **9** (solved) | 2<sup>−54</sup> | **2<sup>−54</sup>** | closed — 54, proven optimal for its pattern |
 | 2 | 6 | **45** (solved) | 2<sup>−270</sup> | 2<sup>−302</sup> | [270, 302] |
 | 3 | 9 | **129** (solved; was ~~133~~) | 2<sup>−774</sup> | 2<sup>−891</sup> | [774, 891] |
-| 4 | 12 | 138 … ≤ 165 (was ~~225~~) | 2<sup>−828</sup> | 2<sup>−1153</sup> | [828, 1153] |
-| 5 | 15 | 174 … ≤ 243 | 2<sup>−1044</sup> | none found | floor only — stage A times out at every target tried |
-| 6 | 18 | 258 … ≤ 290 | 2<sup>−1548</sup> | not attempted | floor only |
+| 4 | 12 | **165** (solved; was ~~225~~) | 2<sup>−990</sup> | 2<sup>−1153</sup> | [990, 1153] |
+| 5 | 15 | **234** (solved; was ~~243~~) | 2<sup>−1404</sup> | none found | floor only — stage A times out at every target tried |
+| 6 | 18 | **270** (solved; was ~~290~~) | 2<sup>−1620</sup> | not attempted | floor only |
+| 7 | 21 | 321 … ≤ 354 | 2<sup>−1926</sup> | not attempted | floor only |
+| 8 | 24 | 363 … ≤ 390 | 2<sup>−2178</sup> | not attempted | floor only |
 
-Only _r_ = 4 separates its floor from a found ceiling by a wide margin: 325 bits, against 117 at _r_ = 3 and 32 at _r_ = 2 — and its floor is superadditive rather than solved, so part of that width is the floor's looseness, not the trail's.  Every floor is far past 2<sup>−256</sup>.
+Every round count with both ends now has a **solved** floor, so the remaining width is entirely the trail search's: 163 bits at _r_ = 4, 117 at _r_ = 3, 32 at _r_ = 2.  The _r_ = 4 figure used to read 325 against a superadditive floor of 828 — solving _A_(4) = 165 raised that floor to 990 and halved the apparent gap, which is what a loose floor costs when it is mistaken for the trail's slack.  Every floor is far past 2<sup>−256</sup>.
 
 The same search at narrower states reaches _r_ = 5, where _N_ = 16 does not, and both narrow columns have **proven** floors:
 
@@ -447,7 +451,7 @@ The measurement covers one differential within one activity pattern, so 2<sup>�
 
 Consistent with the MILP section: this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers, and the reduced-round instances (_r_ = 1, 2, 3, 4, 5) are validation and calibration points — no security is claimed at any of them (`R*` is 6, or 8 at `C` = 8), and at _r_ = 1, 2 full bit diffusion is not even reached (`NUM_ROUNDS_MIN<16>()` = 3) — not standalone security statements.
 
-**_r_ ≤ 3 is bracketed by solved values; _r_ ≥ 4 is not.**  The _r_ = 3 bracket ([774, 891]) has a proven floor, and the _r_ = 4 one ([828, 1153]) rests on superadditivity applied to it; every ceiling is a found trail rather than a minimum — the best of eight patterns at _r_ = 3 and of three at _r_ = 4, but still not a proven minimum, since no minimization has ever completed above _r_ = 1 — so no upper end is tight.  At _r_ = 5 and _r_ = 6 there are floors (2<sup>−1044</sup> and 2<sup>−1548</sup>) but no ceiling at _N_ = 16: stage A never produces a pattern to instantiate at _r_ = 5, at any of the six targets tried, and _r_ = 6 has not been given to the trail search at all.  The _r_ = 5 ceilings that do exist — [606, 705] at _N_ = 2 and [684, 791] at _N_ = 4 — bound **narrower permutations, not the shipped one**, and must not be read as bounds on _N_ = 16.  _r_ ≥ 7 is unsearched by either tool.  Read these as bounds, not as the permutation's actual trail weights.  See [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) for how these results feed the claim.
+**_r_ ≤ 4 is bracketed by solved floors; above that there is a floor and no ceiling.**  The _r_ = 3 and _r_ = 4 brackets ([774, 891] and [990, 1153]) both rest on solved _A_; every ceiling is a found trail rather than a minimum — the best of eight patterns at _r_ = 3 and of three at _r_ = 4, but still not a proven minimum, since no minimization has ever completed above _r_ = 1 — so no upper end is tight.  At _r_ = 5 and _r_ = 6 the floors are solved too (2<sup>−1404</sup> and 2<sup>−1620</sup>) but there is no ceiling at _N_ = 16: stage A never produces a pattern to instantiate at _r_ = 5, at any of the six targets tried, and _r_ = 6 has not been given to the trail search at all.  At _r_ = 7 and _r_ = 8 even the floor is a bracket (2<sup>−1926</sup> and 2<sup>−2178</sup>).  The _r_ = 5 ceilings that do exist — [606, 705] at _N_ = 2 and [684, 791] at _N_ = 4 — bound **narrower permutations, not the shipped one**, and must not be read as bounds on _N_ = 16.  _r_ ≥ 7 is unsearched by either tool.  Read these as bounds, not as the permutation's actual trail weights.  See [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) for how these results feed the claim.
 
 ### Reproducing
 

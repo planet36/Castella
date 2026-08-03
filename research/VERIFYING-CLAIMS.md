@@ -16,7 +16,7 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 1 | The flat sponge claim (level `64·C` bits) | conjecture | not verifiable — falsifiable only by attack; §1 |
 | 2 | The spec, the C++, and the KAT file agree | executable | §2 |
 | 3 | Full bit diffusion of `P` needs 3 rounds | executable | §3 |
-| 4 | Trail bounds: A = 45 at r = 2 and A = 129 at r = 3 (both solved); A ≥ 138/174/258 at r = 4/5/6 (superadditivity) | executable (solver) + arithmetic | §4 |
+| 4 | Trail bounds: A = 9/45/129/165/234/270 solved at r = 1..6; A ≥ 294/363 at r = 7/8 (superadditivity) | executable (solver) + arithmetic | §4 |
 | 5 | 3 AES rounds per Castella round is the right count | executable (proven by solver) | §5 |
 | 6 | `R*`, the strengths table, and the SHA-3 mapping | arithmetic | §6 |
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
@@ -25,12 +25,12 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen | executable | §10 |
 | 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Trail tightness (r=1 bound proven tight; r=2 and r=3 bracketed, r=3 on a solved floor; r=4 a ceiling over a superadditive floor) and first-order differential clustering | executable (solver) | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2, r=3 and r=4 bracketed, all on solved floors) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
 
-Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
+Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the three scripts (`spec-conformance.py` needs no packages; `permute-min-active-sboxes.py` needs [PuLP](https://pypi.org/project/PuLP/) and, to reproduce the r ≥ 4 solves, [highspy](https://pypi.org/project/highspy/) — venv recipe in [README.md](README.md#reproducing); `permute-trail-search.py` needs the [z3](https://github.com/Z3Prover/z3) solver, Arch `python-z3-solver`).  All commands run from `research/` unless noted.
 
 ## 1. The claim itself cannot be verified — only falsified
 
@@ -69,13 +69,15 @@ The MILP model proves lower bounds on differentially active AES S-boxes per char
 # validation: r=1 is pure AES; must print the published bounds 1, 5, 9, 25
 for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done
 
-# the claimed floors.  Expect A = 45 at r=2, 'optimal'; A = 129 at r=3 and
-# A = 165 at r=4, both 'NOT proven' at this limit.  r=3 does converge, but it
-# needs -t 7200 (72 min) -- run that cell on its own with --min-rounds 3 -r 3.
-python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 2 -r 4 -t 1800
+# the claimed floors: every row 'optimal', A = 45/129/165/234/270 at r=2..6.
+# Needs highspy (see README Dependencies) -- with CBC only r<=3 ever proves,
+# and r=3 alone takes 72 min there against 16 s here.  ~45 min for the set.
+python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 2 -r 6 -t 2400
 ```
 
-Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: two figures that stood in these documents for a month (`N=16, a=3` at r=3 and r=4) were timed-out incumbents recorded as optima, and both were later refuted by cheaper patterns.  At `N=16` only r ≤ 3 has ever proven on this machine, and r=3 needed 72 minutes plus the `gapAbs` stopping rule (the objective is integral, so the incumbent is optimal once the dual bound passes incumbent − 1; the script now always passes it).  Above that, a larger `-t` is not a reliable fix: proving is a dual-side question, and the incumbent's stability says nothing about it — at r=4 the incumbent was identical at 1800 s and 3300 s.
+Only rows whose status is `optimal` are valid bounds; `NOT proven` is an upper bound on the minimum and yields no security statement.  **Check the status column on every row**: four figures that stood in these documents (`N=16, a=3` at r=3, 4, 5 and 6) were timed-out incumbents recorded as optima or as the best known, and all four were later refuted by cheaper solutions.
+
+**When a cell will not close, change solver before changing `-t`.**  This is the sharpest lesson of the 2026-08 re-derivation, and it was learned the wrong way round.  CBC could not prove `N=16` above r=3 at any limit up to 90 minutes, and that was written up as structural — the dual bound decayed from 98% of the incumbent at r=3 to 57% at r=4 to under 5% at r=6, which reads like a relaxation weakening with depth.  It was a property of CBC.  HiGHS closes r=3 in 16 s with a 0% gap, single-threaded, and goes on to close r=4, r=5 and r=6.  A dual bound that will not move is evidence about the solver at least as much as about the problem.
 
 ## 5. Three AES rounds per Castella round
 
@@ -90,7 +92,7 @@ Interpretation is in [README.md](README.md#conclusions): compared at equal trans
 
 ## 6. The arithmetic: `R*`, strengths, SHA-3 mapping
 
-Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b` (→ r = 2/3/4/5 for b ≤ 135/387/414/522); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md and traceable to the refuted `A(4) = 225` that used to make 4 the 512-bit floor; the strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
+Pencil and paper from the rows above; the derivations are written out in SPEC.md.  Check: the trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A` (→ r = 2/3/4/5/6 for b ≤ 135/387/495/702/810); `R*` = 2 × max(3, trail floor) → 6/6/6 for `C` = 2/4/6, and **10 for `C` = 8 against a published `R*` of 8** — the one row where the shipped value is below what the rationale gives, documented as an exception in SPEC.md.  Note what solving `A(4)` and `A(5)` did and did not change here: 4 rounds now supports a solved **495** bits, so it still falls short of 512 (by 17 bits, where the refuted `A(4) = 225` had made it look sufficient), and the 512-bit floor stays at r = 5.  No further solving can revisit that — `A(4) = 165` is exact. the strengths table is the generic random-sponge bounds capped by output length; the SHA-3 table is capacity and output-length matching.  The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n`) is `num_digest_bytes_to_capacity_blocks` in [../hash-programs/castella.cpp](../hash-programs/castella.cpp), exercised across digest sizes by the CLI test script.
 
 ## 7. The mode reductions are proofs — read them
 
@@ -167,7 +169,7 @@ python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize -M 4000
 
 Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part; the count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall) but that is a property of the deterministic variable ordering, not a promise — which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.  r=2 finds a realizable trail of weight 302, confirming the ceiling of the bracket [270, 302] — a bracket, not a solved minimum.
 
-The commands above return weight 903 at r=3 and 1154 at r=4 — real characteristics, each re-propagated in Python and checked against the DDT — but the two round counts are bounded from below by different things.  r=3 has a **solved floor**: A(3) = 129 converged on 2026-08-02 (§4), so 6·A = 774 is a genuine lower bound.  r=4 has **no solved floor**; the only bound under its trail is the superadditive A(4) ≥ A(1) + A(3) = 138, i.e. 828.  The recorded brackets are **[774, 891]** and **[828, 1153]**, whose ceilings come from `--patterns 8` sweeps rather than the single-pattern commands above; add `-A 129 --patterns 8` (or `-A 165 --patterns 8`) to reproduce them, ~20 min each.  The 6·A floors the two used to be paired with (798 and 1350) came from MILP figures that have since been refuted — and note that 1154 is *below* 1350, the number earlier revisions published as a proven lower bound for r=4: that bracket never contained the true value.  Do not restore a solved floor at r=4 without a converged MILP solve (status `optimal`) to justify it.
+The commands above return weight 903 at r=3 and 1154 at r=4 — real characteristics, each re-propagated in Python and checked against the DDT — but the two round counts are bounded from below by different things.  r=3 has a **solved floor**: A(3) = 129 converged on 2026-08-02 (§4), so 6·A = 774 is a genuine lower bound.  r=4 now has a solved floor too: A(4) = 165 converged on 2026-08-02 under HiGHS, so 6·A = 990 (it was 828, from the superadditive A(1) + A(3) = 138).  The recorded brackets are **[774, 891]** and **[990, 1153]**, whose ceilings come from `--patterns 8` sweeps rather than the single-pattern commands above; add `-A 129 --patterns 8` (or `-A 165 --patterns 8`) to reproduce them, ~20 min each.  The 6·A floors the two used to be paired with (798 and 1350) came from refuted figures, and 1153 sits *below* 1350 — the number earlier revisions published as a proven lower bound for r=4, an interval the true value was never inside.
 
 Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314 and 315), so only the r ≤ 2 bracket is guaranteed.  Dropping `--no-minimize` reproduces the other half of that claim — the minimization reports `unknown` however long it is given (at r=2 measured both ways, `witness` to 60 min and `rows` to 30 min; at r=3 and r=4 it returns `unknown: canceled` after 1200 s each, leaving 903 and 1154 standing), which is *why* every ceiling above r=1 is a ceiling rather than a minimum; budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.  The tightness and clustering results remain conservative for the claim (where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270).  Results, the encoding-choice lesson, and scope: [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19).
 

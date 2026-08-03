@@ -156,23 +156,26 @@ The honest procedure:
 
 1. **Floor from proven trail bounds.** From the MILP table (research/README.md, `N=16`,
    `a=3`): a claimed level of `b` bits needs every differential characteristic below
-   ~2^−2b, i.e. 6·A ≥ 2b. Only `A(1)=9` and `A(2)=45` are solved. At r=3 CBC closes its gap once told the
-   objective is integral, proving `A(3) = 129`; above that, superadditivity
-   (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection) gives A ≥ 138/174 at r = 4/5.
-   So 6·A ≥ 2b is reached at **r=2** for b ≤ 135,
-   **r=3** for b ≤ 387, and **r=5** for b ≤ 522 — the floors for the 128-, 256-, and
-   512-bit levels respectively. Linear trails: correlation ≤ 2^−3·A gives the same round
-   floors. These are necessary conditions only (single characteristics; no
-   clustering/structural coverage).
+   ~2^−2b, i.e. 6·A ≥ 2b. **Every input to this step is now a solved optimum through
+   r = 6**: A = 9, 45, 129, 165, 234, 270 at r = 1…6. Above that, superadditivity
+   (`A(a+b) ≥ A(a)+A(b)`, valid because `P` is a bijection) composes solved values with
+   each other, giving A(7) ≥ 294 and A(8) ≥ 363. So 6·A ≥ 2b is reached at **r=2** for
+   b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495, **r=5** for b ≤ 702 and **r=6** for
+   b ≤ 810 — putting the 128-, 256- and 512-bit floors at r = 2, 3 and 5 respectively.
+   Linear trails: correlation ≤ 2^−3·A gives the same round floors. These are necessary
+   conditions only (single characteristics; no clustering/structural coverage).
 
-   The 512-bit floor of r=5 is **not** an artifact of the missing solve, and cannot be
-   argued back down to r=4 by proving A(4) exactly. A feasible 165-box pattern is known to
-   exist at r=4, so A(4) ≤ 165 and 6·A(4) ≤ 990 < 1024 whatever the solver eventually
-   proves. Four rounds cannot support a 512-bit claim under this criterion.
+   The 512-bit floor of r=5 is now settled from both sides and cannot move. Four rounds
+   support exactly 495 bits — 17 short of 512 — and `A(4) = 165` is a converged optimum,
+   not a bound, so no further solving can revisit it.
 
-   *Superseded 2026-08-02:* this step previously read r=3 for b ≤ 399 (A=133) and r=4 for
-   b ≤ 675 (A=225). Both A values were timed-out solver incumbents mislabelled as optima
-   and have been refuted; the round floors above are the corrected ones.
+   *Superseded 2026-08-02, twice in one day:* this step first read r=3 for b ≤ 399 (A=133)
+   and r=4 for b ≤ 675 (A=225), both timed-out incumbents mislabelled as optima; it was
+   then corrected to superadditive floors of 138/174 at r = 4/5, which were sound but loose
+   by 20% and 34%. The solved values above replace them. The 512-bit floor itself moved
+   once: under A(4) = 225 it sat at **r=4** (6·225 = 1350 ≥ 1024), and refuting that figure
+   is what pushed it to r=5 and created the `C` = 8 margin exception in step 4. Solving
+   A(4) = 165 has now fixed it there permanently.
 2. **Floor from diffusion.** Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
 3. **Margin against the unknown.** Adopt an explicit margin policy, e.g. *R\* ≥ 2× the
@@ -189,6 +192,15 @@ The honest procedure:
    but it is now a sharper version of the concern flagged here when the floor was believed
    to be r=4, and it should be settled explicitly rather than left implicit: either adopt
    a policy the shipped parameters meet, or raise `R*` at `C=8`.
+
+   **A margin policy has to say what it measures, and the two natural answers disagree
+   here.** Measured in *rounds*, `R*=8` is 1.6× the r=5 floor. Measured in the quantity the
+   criterion is actually about — bits of single-characteristic resistance — 8 rounds gives
+   `6·A(8) ≥ 2178`, i.e. **≥ 1089 bits against a 512-bit claim**, a ratio of 2.1×. The two
+   differ because A grows super-linearly in r (9, 45, 129, 165, 234, 270), so a round-count
+   ratio understates the bound's growth. Both readings are defensible and the example 2×
+   policy in step 3 does not say which it means; whichever is adopted should be stated.
+   *(Deferred by the author 2026-08-02: not ready to decide. Do not press.)*
 
 Deliverable: a "Claimed instances" table in SPEC.md — `(C, R*, digest sizes)` per SHA-3
 equivalence row — with the margin rationale, plus a statement that other parameterizations

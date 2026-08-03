@@ -625,7 +625,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      input_diff: StateBytes, output_diff: StateBytes,
                      max_trails: int,
                      timeout_ms: int, max_memory_mb: int | None,
-                     encoding: str) -> None:
+                     encoding: str, best_weight: int | None = None,
+                     shell: int | None = None) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 
     Builds a fresh instantiation of the pattern, pins the input and output
@@ -635,6 +636,16 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     LOWER-bound estimate of DP(differential), and exact for the pattern if
     the enumeration completes.
 
+    With `shell` set, only trails of weight <= best_weight + shell are
+    enumerated.  This matters above r = 1, where an unrestricted
+    enumeration is worse than a sample: z3 returns arbitrary satisfying
+    assignments, and at r = 2 those came back at weights 310-315 while the
+    trail defining the differential weighs 302 -- so the partial sum missed
+    every dominant term.  Bounding the weight asks only for the terms that
+    dominate, and an UNSAT then means that shell is enumerated completely,
+    which is a real (if partial) result rather than a lower bound of
+    unknown quality.
+
     timeout_ms bounds each solver call AND the enumeration as a whole;
     max_memory_mb, if given, stops a call the same way.  Stopping early
     only reports fewer trails, marked INCOMPLETE, which the lower-bound
@@ -642,6 +653,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     """
     inst = Instantiation(num_blocks, num_rounds, pattern, encoding)
     configure_solver(inst.solver, timeout_ms, max_memory_mb)
+    if shell is not None and best_weight is not None:
+        inst.add_weight_bound(best_weight + shell)
     for i in range(num_blocks):
         for b in range(BLOCK_BYTES):
             inst.solver.add(
@@ -686,9 +699,15 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     best = min(weights)
     dp_log2 = log2(sum(2.0 ** -(w - best) for w in weights)) - best
     hist = " ".join(f"{w}:{n}" for w, n in sorted(Counter(weights).items()))
+    if shell is not None and best_weight is not None:
+        scope = f"of weight <= {best_weight + shell} (best + {shell})"
+        # UNSAT here exhausts the shell, not the pattern.
+        status = "shell COMPLETE" if complete else "shell INCOMPLETE"
+    else:
+        scope = "of any weight"
+        status = "complete" if complete else "INCOMPLETE"
     print(f"cluster: {len(weights)} trail(s) for this differential within "
-          f"this pattern ({'complete' if complete else 'INCOMPLETE'}, "
-          f"{elapsed:.1f}s)")
+          f"this pattern, {scope} ({status}, {elapsed:.1f}s)")
     print(f"cluster: weight histogram {{weight:count}}: {hist}")
     print(f"cluster: DP(differential | pattern) = 2^{dp_log2:.2f} vs "
           f"best single trail 2^-{best}")
@@ -736,6 +755,16 @@ def main() -> None:
                         help="after the search, enumerate up to M "
                              "characteristics sharing the best trail's "
                              "input/output differential (default: off)")
+    parser.add_argument("--cluster-shell", type=nonnegative_int, default=None,
+                        metavar="K",
+                        help="restrict --cluster to trails of weight at most "
+                             "(best + K).  Unrestricted, z3 returns arbitrary "
+                             "satisfying assignments, which at r >= 2 are "
+                             "neither the lightest nor a random sample -- so a "
+                             "partial enumeration misses exactly the trails "
+                             "that dominate the DP sum.  A shell asks only for "
+                             "those, and UNSAT then means the shell is "
+                             "enumerated COMPLETELY (default: no restriction)")
     parser.add_argument("--encoding", choices=("witness", "rows"),
                         default="rows",
                         help="S-box DDT encoding (default: %(default)s; "
@@ -871,7 +900,8 @@ def main() -> None:
     if args.cluster > 0:
         cluster_estimate(args.num_blocks, args.rounds, pattern,
                          input_diff, output_diff, args.cluster, timeout_ms,
-                         args.max_memory, args.encoding)
+                         args.max_memory, args.encoding, weight,
+                         args.cluster_shell)
 
 
 if __name__ == "__main__":

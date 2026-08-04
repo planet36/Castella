@@ -67,12 +67,28 @@ balanced after 3 rounds and not after 4.  --validate checks both
 directions; the negative one matters as much as the positive, since a
 model that proved everything balanced would also "reproduce" the first.
 
+--validate --inverse gates the P^-1 layers the same way, but **at 2
+rounds, not 3**.  That is not a weaker cipher: `aes_round` is SB, SR, MC
+and so ends on a linear layer, while `inv_aes_round` is MC^-1, SR^-1,
+SB^-1 and ends on an S-box.  A division property crosses a linear layer
+untouched and never survives an S-box, so counting whole rounds leaves
+the two directions one nonlinear layer out of step.  Measured: AES^-1 is
+128/128 balanced at 1 and 2 rounds and 0/128 at 3.
+
+Two consequences for an inside-out zero-sum, both adverse to the backward
+half: it reaches one S-box layer less than its round count suggests, so
+the halves must not be budgeted symmetrically; and it costs ~2.5x the
+variables per round, since InvMixColumns has 472 nonzero bit-matrix
+entries against MixColumns's 184.
+
 Usage
 -----
   python3 permute-division-property.py --self-test
-  python3 permute-division-property.py --validate       # AES gates, ~7 min
+  python3 permute-division-property.py --validate    # AES gates, ~17 min
+  python3 permute-division-property.py --validate --inverse   # ~13 min
   python3 permute-division-property.py --rounds 2 --cube block
   python3 permute-division-property.py --rounds 1 --cube byte --count
+  python3 permute-division-property.py --rounds 2 --cube block --inverse
 
 Needs z3.  Everything else is standard library.
 """
@@ -92,6 +108,8 @@ N_BLOCKS = 16
 AES_ROUNDS_PER_ROUND = 3
 
 MC4 = ((2, 3, 1, 1), (1, 2, 3, 1), (1, 1, 2, 3), (3, 1, 1, 2))
+INV_MC4 = ((14, 11, 13, 9), (9, 14, 11, 13),
+           (13, 9, 14, 11), (11, 13, 9, 14))
 
 
 class SelfTestError(Exception):
@@ -140,11 +158,11 @@ def mobius(truth: list[int]) -> set[int]:
     return {m for m in range(256) if f[m]}
 
 
-def make_division_table() -> dict[int, list[int]]:
-    """k -> the minimal output division properties reachable through S."""
+def make_division_table(sbox: list[int]) -> dict[int, list[int]]:
+    """k -> the minimal output division properties reachable through `sbox`."""
     anf_of = {}
     for u in range(256):
-        truth = [1 if all((SBOX[x] >> b) & 1
+        truth = [1 if all((sbox[x] >> b) & 1
                           for b in range(8) if (u >> b) & 1) else 0
                  for x in range(256)]
         anf_of[u] = mobius(truth)
@@ -157,17 +175,39 @@ def make_division_table() -> dict[int, list[int]]:
     return table
 
 
-TABLE = make_division_table()
+INV_SBOX = [0] * 256
+for _x in range(256):
+    INV_SBOX[SBOX[_x]] = _x
 
-# MixColumns as a 32x32 bit matrix over one 4-byte column.
-MC_BITS = [[0] * 32 for _ in range(32)]
-for _r in range(4):
-    for _c in range(4):
-        for _bit in range(8):
-            _img = gf_mul(MC4[_r][_c], 1 << _bit)
-            for _ob in range(8):
-                if (_img >> _ob) & 1:
-                    MC_BITS[8 * _r + _ob][8 * _c + _bit] = 1
+TABLE = make_division_table(SBOX)
+INV_TABLE = make_division_table(INV_SBOX)
+
+
+def mc_bit_matrix(mat: tuple[tuple[int, ...], ...]) -> list[list[int]]:
+    """A 4x4 GF(2^8) column matrix as a 32x32 bit matrix over F_2."""
+    bits = [[0] * 32 for _ in range(32)]
+    for r in range(4):
+        for c in range(4):
+            for bit in range(8):
+                img = gf_mul(mat[r][c], 1 << bit)
+                for ob in range(8):
+                    if (img >> ob) & 1:
+                        bits[8 * r + ob][8 * c + bit] = 1
+    return bits
+
+
+MC_BITS = mc_bit_matrix(MC4)
+INV_MC_BITS = mc_bit_matrix(INV_MC4)
+
+
+def inv_shift_rows_src(byte_idx: int) -> int:
+    """The input byte index that InvShiftRows moves to byte_idx.
+
+    Inverse of TS.shift_rows_src as a permutation: rows shift right where
+    the forward map shifts left.
+    """
+    col, row = divmod(byte_idx, 4)
+    return 4 * ((col - row) % 4) + row
 
 
 # --------------------------------------------------------------- the model
@@ -199,8 +239,14 @@ class Model:
         for b in bits:
             self.s.add(z3.Not(b))
 
-    def sbox_layer(self, bits: list[z3.BoolRef]) -> list[z3.BoolRef]:
-        """One parallel-S-box layer over len(bits)/8 bytes."""
+    def sbox_layer(self, bits: list[z3.BoolRef],
+                   table: dict[int, list[int]] | None = None
+                   ) -> list[z3.BoolRef]:
+        """One parallel-S-box layer over len(bits)/8 bytes.
+
+        `table` selects the S-box: TABLE for S, INV_TABLE for S^-1.
+        """
+        table = TABLE if table is None else table
         out = self.fresh(len(bits))
         for byte in range(len(bits) // 8):
             kin = bits[8 * byte:8 * byte + 8]
@@ -215,7 +261,7 @@ class Model:
             ins = [eq(kin, a) for a in range(256)]
             outs = [eq(kout, u) for u in range(256)]
             self.s.add(z3.Or([z3.And(ins[a], outs[u], self.ctx)
-                              for a in range(256) for u in TABLE[a]],
+                              for a in range(256) for u in table[a]],
                              self.ctx))
             self.n_sboxes += 1
         return out
@@ -257,11 +303,32 @@ class Model:
                 shifted[32 * col:32 * col + 32], MC_BITS)
         return out
 
-    def block(self, bits: list[z3.BoolRef], aes_rounds: int
-              ) -> list[z3.BoolRef]:
-        """`aes_rounds` AES rounds on one block."""
+    def inv_aes_round(self, bits: list[z3.BoolRef]) -> list[z3.BoolRef]:
+        """InvMixColumns, InvShiftRows, InvSubBytes on one 128-bit block.
+
+        aes_round's three layers in reverse, each inverted -- the layer
+        order of `aes_enc_inv` in include/aes_enc.hpp (aesimc then
+        aesdeclast).  Round constants are absent here exactly as they are
+        in the forward direction: XOR with a constant does not change a
+        division property.
+        """
+        mixed: list[z3.BoolRef] = [None] * BLOCK_BITS  # type: ignore[list-item]
+        for col in range(4):
+            mixed[32 * col:32 * col + 32] = self.linear(
+                bits[32 * col:32 * col + 32], INV_MC_BITS)
+        shifted: list[z3.BoolRef] = [None] * BLOCK_BITS  # type: ignore[list-item]
+        for i in range(BLOCK_BYTES):
+            src = inv_shift_rows_src(i)
+            for k in range(8):
+                shifted[8 * i + k] = mixed[8 * src + k]
+        return self.sbox_layer(shifted, INV_TABLE)
+
+    def block(self, bits: list[z3.BoolRef], aes_rounds: int,
+              inverse: bool = False) -> list[z3.BoolRef]:
+        """`aes_rounds` AES rounds on one block, forward or inverse."""
+        step = self.inv_aes_round if inverse else self.aes_round
         for _ in range(aes_rounds):
-            bits = self.aes_round(bits)
+            bits = step(bits)
         return bits
 
 
@@ -287,7 +354,8 @@ def live_blocks(cube_blocks: set[int], target_block: int,
 
 
 def build_trail(m: Model, cube_bits: set[int], target_block: int,
-                rounds: int) -> list[z3.BoolRef] | None:
+                rounds: int, inverse: bool = False
+                ) -> list[z3.BoolRef] | None:
     """Build a division trail from the cube into `target_block`.
 
     Returns that block's 128 output bits, so one build serves all 128
@@ -295,6 +363,22 @@ def build_trail(m: Model, cube_bits: set[int], target_block: int,
     sits in, never on which bit within it.  Returns None when the block is
     unreachable from the cube, in which case every one of its output bits
     is a constant and so balanced, with nothing to solve.
+
+    With `inverse`, the same wiring models `P^-1` instead of `P`, for the
+    backward half of an inside-out zero-sum: each round applies three
+    *inverse* AES rounds, and the transposes sit between rounds exactly as
+    they do forward.
+
+    On the dropped transpose, which differs between the two directions.
+    `P` is (T . A)^r, so the forward build drops the *trailing* T: it is a
+    bit permutation of the output and only relabels which bit is asked
+    about.  `P^-1` is (A^-1 . T)^r, so the mirrored build drops the
+    *leading* T instead -- and that one is not free, since permuting the
+    input relabels the cube.  Dropping it means the cube is specified in
+    the coordinates that feed the first inverse AES round, which is the
+    backward analogue of "a whole block" and the convention these results
+    are stated in.  A cube given in pre-transpose coordinates is a
+    different cube, not the same one written differently.
     """
     cube_blocks = {b // BLOCK_BITS for b in cube_bits}
     live = live_blocks(cube_blocks, target_block, rounds)
@@ -312,7 +396,7 @@ def build_trail(m: Model, cube_bits: set[int], target_block: int,
         state[blk] = bits
 
     for rnd in range(rounds):
-        outs = {blk: m.block(bits, AES_ROUNDS_PER_ROUND)
+        outs = {blk: m.block(bits, AES_ROUNDS_PER_ROUND, inverse)
                 for blk, bits in state.items()}
         if rnd == rounds - 1:
             return outs[target_block]
@@ -373,20 +457,20 @@ def scan_block(m: Model, out: list[z3.BoolRef],
 
 
 def scan(cube_bits: set[int], rounds: int, timeout_s: float,
-         count: bool) -> bool:
+         count: bool, inverse: bool = False) -> bool:
     """Report balancedness over all 2048 output bits.
 
     One model per target block, reused across that block's 128 offsets via
     assumptions: building dominates solving here, and the model's shape
     does not depend on the offset.  Returns True when every bit is
-    balanced.
+    balanced.  With `inverse`, propagates through `P^-1`.
     """
     balanced = unknown = 0
     reported = False
     for blk in range(N_BLOCKS):
         t0 = time.time()
         m = Model()
-        out = build_trail(m, cube_bits, blk, rounds)
+        out = build_trail(m, cube_bits, blk, rounds, inverse)
         if out is None:
             balanced += BLOCK_BITS
             continue
@@ -412,6 +496,11 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
             return False
         print(f"  block {blk:>2}: {balanced} balanced so far "
               f"[{time.time() - t0:.0f} s]", flush=True)
+    return report_scan(balanced, unknown, rounds)
+
+
+def report_scan(balanced: int, unknown: int, rounds: int) -> bool:
+    """Print a completed scan's verdict; True when every bit is balanced."""
     total = N_BLOCKS * BLOCK_BITS
     if unknown:
         print(f"  {balanced}/{total} balanced, {unknown} unknown (timeout) "
@@ -428,16 +517,17 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
 
 
 def aes_scan(active_bytes: set[int], rounds: int, timeout_s: float,
-             count: bool) -> None:
+             count: bool, inverse: bool = False) -> None:
     """The same machinery on plain AES: one block, `rounds` AES rounds."""
     cube = {8 * b + k for b in active_bytes for k in range(8)}
+    which = "AES^-1" if inverse else "AES"
     balanced = 0
     for target in range(BLOCK_BITS):
         m = Model()
         bits = m.fresh(BLOCK_BITS)
         for i in range(BLOCK_BITS):
             m.s.add(bits[i] if i in cube else z3.Not(bits[i]))
-        out = m.block(bits, rounds)
+        out = m.block(bits, rounds, inverse)
         for i in range(BLOCK_BITS):
             m.s.add(out[i] if i == target else z3.Not(out[i]))
         m.s.set("timeout", int(timeout_s * 1000))
@@ -445,24 +535,51 @@ def aes_scan(active_bytes: set[int], rounds: int, timeout_s: float,
         if res == z3.unsat:
             balanced += 1
         elif not count:
-            print(f"  AES {rounds} rounds, active bytes "
+            print(f"  {which} {rounds} rounds, active bytes "
                   f"{sorted(active_bytes)}: bit {target} reachable "
                   f"-- NOT all balanced")
             return
-    print(f"  AES {rounds} rounds, active bytes {sorted(active_bytes)}: "
+    print(f"  {which} {rounds} rounds, active bytes {sorted(active_bytes)}: "
           f"{balanced}/128 balanced")
 
 
-def validate(timeout_s: float) -> None:
-    """Reproduce AES's Square distinguisher, in both directions."""
-    print("== validation against AES (same S-box and MixColumns)",
-          flush=True)
+# Rounds at which the Square distinguisher still holds, per direction.
+# The inverse boundary is one LOWER, and the cause is layer alignment
+# rather than anything about the cipher: aes_round is SB, SR, MC, so r
+# forward rounds end on a *linear* layer, while inv_aes_round is MC^-1,
+# SR^-1, SB^-1, so r inverse rounds end on an *S-box*.  A division
+# property crosses a linear layer untouched and never survives an S-box,
+# so the inverse direction spends one nonlinear layer past the point the
+# forward direction is measured at.  Measured, not assumed: AES^-1 gives
+# 128/128 at 1 and 2 rounds and 0/128 at 3, against 128/128 at 3 forward.
+SQUARE_BOUNDARY = {False: 3, True: 2}
+
+
+def validate(timeout_s: float, inverse: bool = False) -> None:
+    """Reproduce AES's Square distinguisher, in both directions.
+
+    "Both directions" here means the positive and negative gates -- N
+    rounds balanced, N+1 not -- which is what stops a model that proves
+    everything balanced from passing.  With `inverse`, the same pair runs
+    against the inverse cipher at its own boundary (see SQUARE_BOUNDARY;
+    it is 2, not 3).  If the inverse layers were mis-wired -- a transposed
+    InvMixColumns, the wrong ShiftRows sign, INV_TABLE built from the
+    forward S-box -- the boundary moves off 2 and one of the two gates
+    fails.  What this does NOT catch is a wrong round *boundary*, since
+    both gates would shift together; `self_test_inverse` covers the pieces
+    and the concrete round-trip covers their composition.
+    """
+    which = "AES^-1" if inverse else "AES"
+    good = SQUARE_BOUNDARY[inverse]
+    print(f"== validation against {which} "
+          f"(same S-box and MixColumns as the model's)", flush=True)
     t0 = time.time()
-    print("  4 rounds, 1 active byte: expect NOT all balanced ...", flush=True)
-    aes_scan({0}, 4, timeout_s, count=False)
-    print("  3 rounds, 1 active byte: expect 128/128 balanced "
-          "(the Square distinguisher) ...", flush=True)
-    aes_scan({0}, 3, timeout_s, count=True)
+    print(f"  {good + 1} rounds, 1 active byte: expect NOT all balanced ...",
+          flush=True)
+    aes_scan({0}, good + 1, timeout_s, count=False, inverse=inverse)
+    print(f"  {good} rounds, 1 active byte: expect 128/128 balanced "
+          f"(the Square distinguisher) ...", flush=True)
+    aes_scan({0}, good, timeout_s, count=True, inverse=inverse)
     print(f"  [{time.time() - t0:.0f} s]")
 
 
@@ -499,7 +616,72 @@ def self_test() -> None:
         if got != blocks:
             raise SelfTestError(
                 f"{rounds} round(s): {got} live blocks, expected {blocks}")
+    self_test_inverse()
     print("self-test: OK")
+
+
+def self_test_inverse() -> None:
+    """Check the inverse layers actually invert the forward ones.
+
+    Each check is an identity the forward piece and its inverse must
+    satisfy together, so a sign error or a transposed matrix fails here
+    rather than silently producing a wrong division property.
+    """
+    self_test_inverse_sbox()
+    self_test_inverse_layers()
+
+
+def self_test_inverse_layers() -> None:
+    """InvShiftRows and InvMixColumns invert their forward counterparts."""
+    for i in range(BLOCK_BYTES):
+        if inv_shift_rows_src(TS.shift_rows_src(i)) != i:
+            raise SelfTestError(
+                f"InvShiftRows does not invert ShiftRows at byte {i}")
+    for i in range(32):
+        for j in range(32):
+            dot = sum(MC_BITS[i][k] * INV_MC_BITS[k][j]
+                      for k in range(32)) % 2
+            if dot != (1 if i == j else 0):
+                raise SelfTestError(
+                    f"MC_BITS . INV_MC_BITS is not the identity at "
+                    f"({i}, {j}) -- InvMixColumns does not invert "
+                    f"MixColumns over F_2")
+
+
+def self_test_inverse_sbox() -> None:
+    """INV_SBOX inverts SBOX, and INV_TABLE is really the inverse's table."""
+    for x in range(256):
+        if INV_SBOX[SBOX[x]] != x:
+            raise SelfTestError(
+                f"INV_SBOX[SBOX[{x}]] is {INV_SBOX[SBOX[x]]}, expected {x}")
+    if INV_TABLE[0] != [0]:
+        raise SelfTestError(f"INV_TABLE[0] is {INV_TABLE[0]}, expected [0]")
+    if INV_TABLE[0xFF] != [0xFF]:
+        raise SelfTestError(
+            f"INV_TABLE[0xff] is {INV_TABLE[0xFF]}, expected [0xff] -- the "
+            f"top monomial must survive for a bijective S-box")
+    for k in range(1, 256):
+        if 0 in INV_TABLE[k]:
+            raise SelfTestError(
+                f"INV_TABLE[{k:#04x}] contains 0: the sparse block pruning "
+                f"relies on a nonzero division property never vanishing, in "
+                f"the inverse direction too")
+    # Everything above holds of the FORWARD table too, so on its own it
+    # would pass if INV_TABLE had been built from the wrong S-box -- the
+    # likeliest way to get this wrong.  These two discriminate.
+    identity = make_division_table(list(range(256)))
+    for k in range(256):
+        if identity[k] != [k]:
+            raise SelfTestError(
+                f"make_division_table(identity)[{k}] is {identity[k]}, "
+                f"expected [{k}] -- the table builder itself is wrong, so "
+                f"neither direction's table can be trusted")
+    differing = [k for k in range(256) if TABLE[k] != INV_TABLE[k]]
+    if not differing:
+        raise SelfTestError(
+            "INV_TABLE equals TABLE at every k: it was built from the "
+            "forward S-box, and the inverse direction is silently modelling "
+            "the forward one")
 
 
 CUBES = {
@@ -533,8 +715,14 @@ def main() -> None:
     ap.add_argument("--count", action="store_true",
                     help="count every balanced bit instead of stopping at "
                          "the first that is not")
+    ap.add_argument("--inverse", action="store_true",
+                    help="propagate through P^-1 instead of P: the backward "
+                         "half of an inside-out zero-sum.  The cube is taken "
+                         "in the coordinates that feed the first inverse AES "
+                         "round (see build_trail on the dropped transpose)")
     ap.add_argument("--validate", action="store_true",
-                    help="reproduce AES's Square distinguisher and exit")
+                    help="reproduce AES's Square distinguisher and exit; "
+                         "honours --inverse, which gates the inverse layers")
     ap.add_argument("--self-test", action="store_true",
                     help="check this program's own pieces and exit")
     args = ap.parse_args()
@@ -543,7 +731,7 @@ def main() -> None:
         self_test()
         return
     if args.validate:
-        validate(args.time_limit)
+        validate(args.time_limit, args.inverse)
         return
     if not 1 <= args.rounds <= 16:
         print("--rounds must be in 1..16", file=sys.stderr)
@@ -558,12 +746,13 @@ def main() -> None:
     else:
         cube = CUBES[args.cube]()
         name = f"'{args.cube}'"
-    print(f"== Castella, {args.rounds} round(s), cube {name} "
+    direction = "P^-1" if args.inverse else "P"
+    print(f"== Castella {direction}, {args.rounds} round(s), cube {name} "
           f"({len(cube)} active bits)", flush=True)
     live = live_blocks({b // BLOCK_BITS for b in cube}, 0, args.rounds)
     print(f"  live blocks per round: {[len(s) for s in live]} "
           f"(total {sum(len(s) for s in live)})", flush=True)
-    scan(cube, args.rounds, args.time_limit, args.count)
+    scan(cube, args.rounds, args.time_limit, args.count, args.inverse)
 
 
 if __name__ == "__main__":

@@ -91,7 +91,13 @@ Usage
 -----
   python3 permute-trail-search.py [-N {2,4,8,16}] [-r ROUNDS] [-A ACTIVE]
       [--patterns P] [--no-minimize] [-t SECONDS] [--print-trail]
+      [--random-seed K]
       [--card-encoding {pb,totalizer}] [--weight-encoding {pb,totalizer}]
+
+To tighten a ceiling, sweep --random-seed with a raised --patterns and pass
+--no-minimize.  Each seed is an independent process, so run them in parallel;
+budget by elapsed time, not by the solve times printed per pattern, which
+exclude the per-pattern model build that dominates them.
 
 Requires the z3-solver package (Arch: python-z3-solver).
 """
@@ -397,9 +403,16 @@ def totalizer_self_test(max_vars: int = 5) -> None:
 
 
 def configure_solver(s: z3.Solver, timeout_ms: int,
-                     max_memory_mb: int | None) -> None:
-    """Apply the run-wide time and memory limits to one solver."""
+                     max_memory_mb: int | None,
+                     random_seed: int = 0) -> None:
+    """Apply the run-wide time, memory and seed settings to one solver.
+
+    random_seed reorders z3's search without changing what is satisfiable,
+    so it moves a ceiling without weakening the model.  0 is z3's own
+    default, so a run that does not pass one is unchanged.
+    """
     s.set("timeout", timeout_ms)
+    s.set("random_seed", random_seed)
     if max_memory_mb is not None:
         # Solver-level, so exceeding it yields `unknown` from check() with
         # reason_unknown() == 'max. memory exceeded'.  z3's global
@@ -834,7 +847,8 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      max_memory_mb: int | None,
                      encoding: str, weight_encoding: str,
                      best_weight: int | None = None,
-                     shell: int | None = None) -> None:
+                     shell: int | None = None,
+                     random_seed: int = 0) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 
     Builds a fresh instantiation of the pattern, pins the input and output
@@ -872,7 +886,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     """
     inst = Instantiation(num_blocks, num_rounds, pattern, encoding,
                          weight_encoding)
-    configure_solver(inst.solver, timeout_ms, max_memory_mb)
+    configure_solver(inst.solver, timeout_ms, max_memory_mb, random_seed)
     if shell is not None and best_weight is not None:
         inst.add_weight_bound(best_weight + shell)
     for i in range(num_blocks):
@@ -980,6 +994,13 @@ def main() -> None:
                              "(default: %(default)s)")
     parser.add_argument("--no-minimize", action="store_true",
                         help="stop at the first weight per pattern")
+    parser.add_argument("--random-seed", type=nonnegative_int, default=0,
+                        metavar="K",
+                        help="z3 random seed for every solver in the run "
+                             "(default: %(default)s, z3's own). Reorders the "
+                             "search without changing what is satisfiable; "
+                             "sweeping it finds lighter trails z3 otherwise "
+                             "keeps missing")
     parser.add_argument("-t", "--time-limit", type=positive_float,
                         default=600.0,
                         help="time limit per solver call, in seconds; also "
@@ -1080,7 +1101,8 @@ def main() -> None:
         args.num_blocks, args.rounds, num_active, args.card_encoding)
     print(f"stage A model built with the {args.card_encoding} cardinality "
           f"encoding ({time.monotonic() - t0:.1f}s)")
-    configure_solver(pat_solver, timeout_ms, args.max_memory)
+    configure_solver(pat_solver, timeout_ms, args.max_memory,
+                     args.random_seed)
 
     best = None  # (weight, optimal?, input_diff, output_diff, pattern_no,
     #               pattern)
@@ -1107,7 +1129,8 @@ def main() -> None:
 
         inst = Instantiation(args.num_blocks, args.rounds, pattern,
                              args.encoding, args.weight_encoding)
-        configure_solver(inst.solver, timeout_ms, args.max_memory)
+        configure_solver(inst.solver, timeout_ms, args.max_memory,
+                         args.random_seed)
         t0 = time.monotonic()
         res = inst.solver.check()
         tb = time.monotonic() - t0
@@ -1175,7 +1198,8 @@ def main() -> None:
         cluster_estimate(args.num_blocks, args.rounds, pattern,
                          input_diff, output_diff, args.cluster, timeout_ms,
                          cluster_timeout_ms, args.max_memory, args.encoding,
-                         args.weight_encoding, weight, args.cluster_shell)
+                         args.weight_encoding, weight, args.cluster_shell,
+                         args.random_seed)
 
 
 if __name__ == "__main__":

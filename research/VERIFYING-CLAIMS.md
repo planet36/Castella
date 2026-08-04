@@ -23,14 +23,14 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen; and the exact invariant-subspace search (exhaustive over every byte-aligned subspace) | executable | §10 |
-| 11 | Zero-sum (cube) probes: 1-round distinguishers only, nothing from 2 rounds | executable | §11 |
+| 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128 | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight; r=2, r=3 and r=4 bracketed, all on solved floors) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
-| 16 | Division-property refinement, r≥2 trail tightness | evidence pending | §16 |
+| 16 | Inside-out zero-sums, r≥2 trail tightness, r≥5 trail ceiling | evidence pending | §16 |
 
-Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the five scripts:
+Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the seven scripts:
 
 | script | needs |
 |---|---|
@@ -39,6 +39,8 @@ Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs �
 | `permute-min-active-sboxes.py` | [PuLP](https://pypi.org/project/PuLP/), and [highspy](https://pypi.org/project/highspy/) to reproduce the r ≥ 4 solves — venv recipe in [README.md](README.md#reproducing).  On Arch, HiGHS is also packaged (`highs` + `python-highspy`), but PuLP is not, so the venv is required either way |
 | `permute-trail-search.py` | the [z3](https://github.com/Z3Prover/z3) solver (Arch `python-z3-solver`) |
 | `trail-model-crossvalidate.py` | z3 as well — it imports the trail search to reach its layer machinery |
+| `permute-invariant-subspaces.py` | z3 as well, for the same reason — it solves nothing itself |
+| `permute-division-property.py` | z3 |
 
 All commands run from `research/` unless noted.
 
@@ -148,7 +150,7 @@ python3 permute-invariant-subspaces.py
 python3 permute-invariant-subspaces.py --self-test
 ```
 
-Expected: `no invariant subspace exists in any class decided here`, exit status 0 (~14 s, standard library only).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labellings, a single-byte support closure of **256**, **0 of 48** round constants in any symmetry class, and a forced closure of **2048** for all three classes.  The `[control: … 2 rounds 128]` figures beside the last of those are the positive control — with the round constants zeroed the two block classes *are* invariant, at dimension 128 — and a control that also read 2048 would mean the closure test had no power.  Results, the DDT cross-check behind the 85, and scope: [README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03).  The search is exhaustive over byte-aligned subspaces and every coset of one; it is exact but offset-sampled for the three symmetry classes, and does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the infeasible-to-exhaust screen above.
+Expected: `no invariant subspace exists in any class decided here`, exit status 0 (~14 s).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labellings, a single-byte support closure of **256**, **0 of 48** round constants in any symmetry class, and a forced closure of **2048** for all three classes.  The `[control: … 2 rounds 128]` figures beside the last of those are the positive control — with the round constants zeroed the two block classes *are* invariant, at dimension 128 — and a control that also read 2048 would mean the closure test had no power.  Results, the DDT cross-check behind the 85, and scope: [README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03).  The search is exhaustive over byte-aligned subspaces and every coset of one; it is exact but offset-sampled for the three symmetry classes, and does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the infeasible-to-exhaust screen above.
 
 ## 11. Zero-sum (cube) probes
 
@@ -157,6 +159,17 @@ Expected: `no invariant subspace exists in any class decided here`, exit status 
 ```
 
 Expected: `all pass/fail checks passed`, exit status 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums (single-block: exactly 1920 surviving bits — the positive control; spread: all 2048), and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  Results and scope (black-box random cubes up to k = 16 only): [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19).
+
+Those rows measure **random** cubes.  A chosen, structured cube does better on both, which the bit-based division property decides rather than samples:
+
+```bash
+python3 permute-division-property.py --self-test
+python3 permute-division-property.py --validate            # ~7 min
+python3 permute-division-property.py -r 1 -c byte --count   # ~7 min
+python3 permute-division-property.py -r 2 -c block --count
+```
+
+Expected: `--validate` must reproduce AES's Square distinguisher in **both** directions — `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence: a model that proved everything balanced would satisfy the first alone.  Then `-r 1 -c byte` must report **all 2048 output bits balanced**, where the C++ probe's random cube of the same dimension leaves 1920; `-r 1 --bits 7` and `-r 1 -c scattered` must both report *not* balanced, which is what pins the result to byte alignment rather than to cube size.  At `-r 2` the cube matters: `byte`, `column`, `--bits 64` and `--bits 96` are all not balanced, and `-c block --count` reports **all 2048 output bits balanced** across all 16 target blocks — a 2-round integral distinguisher with 2^128 data.  Budget ~50 min for that one, and do not read a long-running block as a stall: per-block cost ranges from ~115 s to ~700 s on an idle machine, depending on which of round 1's output bytes feeds round 2.  That ~6× spread is structural — it is the same ratio measured busy or idle — so a block taking minutes longer than its neighbours is expected, not stuck.  It is also the one result that does not need the model — the three-step proof in the README stands on `--validate`'s Square reproduction plus two exact permutations.  Remember the direction: UNSAT ("balanced") proves a distinguisher, while SAT proves nothing at all, so every "not balanced" is "not provable by this model".  Results, the structural proof behind the 2-round case, and scope: [README.md](README.md#findings-bit-based-division-property-of-castellapermute-2026-08-03).  The 1-round case is also checkable without the model at all, from 2^8 states: XOR the permutation over one varying byte and the whole 2048-bit output is zero.
 
 ## 12. Statistical smoke test (PractRand)
 
@@ -216,7 +229,9 @@ Expected: the self-test passes (it asserts δ_1..7 = 7, γ = 7, and that the sam
 
 ## 16. Evidence pending
 
-A bit-based division-property model (a matching **lower** bound on degree / a tight integral analysis, complementing §15's upper bound and covering the inside-out zero-sum precisely); trail tightness at r ≥ 2 (the §13 minimization times out, leaving brackets rather than minima); and a trail-search **ceiling** at r ≥ 5 for N = 16.
+Trail tightness at r ≥ 2 (the §13 minimization times out, leaving brackets rather than minima); a trail-search **ceiling** at r ≥ 5 for N = 16; and the **inside-out** zero-sum, which runs `P` and `P⁻¹` from a middle state and is the one integral direction still uncovered.
+
+The bit-based division-property model has moved out of this section: it is built (§11) and supplies the matching **lower** end that §15's degree bound could only cap, giving an explicit 2-round integral distinguisher with 2^128 data and so a reach bracketed **[2, 2.67]** rounds.  What it does not settle is r = 3, where the model builds but its checks do not resolve — undecided in both directions rather than refuted.
 
 The MILP floor is no longer among them at any shipped round count: A(r) is a converged optimum from r = 1 to r = 8 — 9, 45, 129, 165, 234, 270, 354, 390 — closed under HiGHS after CBC had stalled, which is also why a stuck dual bound is now read as evidence about the solver rather than the problem (§4).  Superadditivity survives only above r = 8.
 

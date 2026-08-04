@@ -95,10 +95,12 @@ Usage
   python3 permute-invariant-subspaces.py --self-test
 
 Exits nonzero if any decided check finds an invariant subspace, so it can
-gate regressions.  Needs only the standard library; it imports
+gate regressions.  Nothing here solves anything, but it imports
 permute-trail-search.py for the cross-validated layer machinery
 (shift_rows_src, mix_column, transpose_map) and spec-conformance.py for the
-round function and constant schedule, so no layer is modelled twice.
+round function and constant schedule -- so no layer is modelled twice, and
+z3 is required even though it is never used, because the trail search
+imports it at module scope.
 """
 
 import argparse

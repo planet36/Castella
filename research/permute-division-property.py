@@ -81,6 +81,28 @@ the halves must not be budgeted symmetrically; and it costs ~2.5x the
 variables per round, since InvMixColumns has 472 nonzero bit-matrix
 entries against MixColumns's 184.
 
+Inside-out, and the coordinate trap in it
+-----------------------------------------
+`--inside-out FWD BWD` propagates ONE middle-state cube in both
+directions and adds the round counts.  The two directions read a bit-set
+differently -- forward it is the middle state, backward it is one
+transpose past it -- so `inside_out` transposes the cube for the backward
+half.  Without that the same bit-set names a row of the byte matrix
+forward and a column backward, two different sets of states whose round
+counts cannot be added; a revision before 2026-08-04 did exactly that and
+reported a 4-round zero-sum that does not exist.
+
+Expect a negative even where a zero-sum is known.  A `block` cube's
+backward half spreads over all 16 blocks, so the pruning keeps only the
+target's and the cube collapses to the one byte reaching it; balance over
+2^8 is far harder to prove than over 2^128, and the 3-round construction
+this file's own results rest on comes back "not provably balanced".  That
+is the ordinary SAT direction -- it bounds the technique, never `P` --
+but it does mean this flag cannot confirm the known reach.  What does is
+permute-multiplicity-verify.py, which checks the counting argument
+directly and brute-forces the reach at a width where the cube is
+enumerable.
+
 Usage
 -----
   python3 permute-division-property.py --self-test
@@ -89,6 +111,7 @@ Usage
   python3 permute-division-property.py --rounds 2 --cube block
   python3 permute-division-property.py --rounds 1 --cube byte --count
   python3 permute-division-property.py --rounds 2 --cube block --inverse
+  python3 permute-division-property.py --inside-out 2 1 --cube block
 
 Needs z3.  Everything else is standard library.
 """
@@ -536,24 +559,64 @@ def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
     return scan(cube_bits, rounds, timeout_s, count, inverse)
 
 
+def transpose_cube_bits(cube_bits: set[int]) -> set[int]:
+    """Re-express a middle-state cube in the backward build's coordinates.
+
+    The two directions do not read a bit-set the same way.  `build_trail`
+    drops the *trailing* transpose going forward, which only relabels
+    output bits, so a forward cube IS the middle state.  It drops the
+    *leading* one going backward, so a backward cube is taken one
+    transpose past the middle state.  Handing both halves the same
+    bit-set therefore names two different sets of states -- for `block` a
+    row of the byte matrix forward and a column backward -- and their
+    round counts cannot be added.  Applying the transpose here is what
+    makes `inside_out`'s two halves share one cube.
+
+    Bit index = 128*block + 8*byte + k, and the transpose exchanges block
+    and byte, so the bit within the byte is carried across untouched.
+    """
+    out = set()
+    for idx in cube_bits:
+        blk, rem = divmod(idx, BLOCK_BITS)
+        byte, k = divmod(rem, 8)
+        out.add(byte * BLOCK_BITS + blk * 8 + k)
+    return out
+
+
 def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
                timeout_s: float, count: bool) -> bool:
     """Zero-sum running P forward r_fwd rounds and P^-1 backward r_bwd.
 
     The two halves are *independent* given the cube: both consume the same
     middle-state division property and propagate outward, so there is no
-    joint constraint and no combined model.  The zero-sum over
-    r_fwd + r_bwd rounds holds exactly when each half is balanced on its
-    own, which is what lets this reuse `scan` unchanged in both
-    directions.
+    joint constraint and no combined model.  What they do NOT share is a
+    coordinate system, so the backward half is given
+    `transpose_cube_bits(cube_bits)` rather than `cube_bits`; see there.
+    With that, both halves describe the same set of middle states and the
+    zero-sum over r_fwd + r_bwd rounds holds exactly when each is
+    balanced.  A revision before 2026-08-04 passed the same bit-set to
+    both and summed the result, which reported a 4-round zero-sum that
+    does not exist.
 
     Balancedness is required on ALL 2048 bits of each end, not one bit.  A
     single balanced output bit is a distinguisher for one direction, but a
     zero-sum *partition* is a statement about the whole state at both
     ends, so a partial result on either half establishes nothing here.
+
+    Read a negative here as weak, and expect one even where a zero-sum is
+    known.  The backward half of a `block` cube spreads over all 16
+    blocks, so the sparse pruning keeps only the target's and the cube
+    collapses to the single byte reaching it -- balance over 2^8 being a
+    far harder thing to prove than over 2^128, the very construction this
+    file's results rest on comes back "not provably balanced".  That is
+    the usual SAT direction: it bounds the technique, never `P`.  The
+    reach is established instead by the counting argument and the brute
+    force in permute-multiplicity-verify.py.
     """
     print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "
           f"= {r_fwd + r_bwd} round(s)", flush=True)
+    print("  one shared middle-state cube; the backward half reads it "
+          "through the transpose", flush=True)
     t0 = time.time()
     fwd = half(cube_bits, r_fwd, timeout_s, count, inverse=False)
     if not fwd and not count:
@@ -561,7 +624,8 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
               f"({r_fwd}, {r_bwd}); the backward half is not attempted "
               f"[{time.time() - t0:.0f} s]")
         return False
-    bwd = half(cube_bits, r_bwd, timeout_s, count, inverse=True)
+    bwd = half(transpose_cube_bits(cube_bits), r_bwd, timeout_s, count,
+               inverse=True)
     ok = fwd and bwd
     if ok:
         print(f"  ZERO-SUM over {r_fwd + r_bwd} round(s): both halves "
@@ -678,7 +742,35 @@ def self_test() -> None:
             raise SelfTestError(
                 f"{rounds} round(s): {got} live blocks, expected {blocks}")
     self_test_inverse()
+    self_test_cube_transpose()
     print("self-test: OK")
+
+
+def self_test_cube_transpose() -> None:
+    """Check the cube transpose against what the wiring must do.
+
+    The identity would pass a size check and an involution check, and the
+    identity is exactly the bug this function exists to fix, so the last
+    two checks are the discriminating ones.
+    """
+    block = CUBES["block"]()
+    got = transpose_cube_bits(block)
+    if len(got) != len(block):
+        raise SelfTestError(
+            f"transpose_cube_bits changed the cube size, {len(block)} -> "
+            f"{len(got)}")
+    if transpose_cube_bits(got) != block:
+        raise SelfTestError("transpose_cube_bits is not an involution")
+    want = {blk * BLOCK_BITS + k for blk in range(N_BLOCKS) for k in range(8)}
+    if got != want:
+        raise SelfTestError(
+            "transpose_cube_bits does not send block 0 (a row of the byte "
+            "matrix) to byte 0 of every block (a column)")
+    if got == block:
+        raise SelfTestError(
+            "transpose_cube_bits is the identity on the block cube: the "
+            "backward half would read the same coordinates as the forward "
+            "one, which is the defect it exists to remove")
 
 
 def self_test_inverse() -> None:
@@ -779,8 +871,11 @@ def main() -> None:
     ap.add_argument("--inside-out", type=int, nargs=2,
                     metavar=("FWD", "BWD"), default=None,
                     help="zero-sum from a middle state: run P forward FWD "
-                         "rounds and P^-1 backward BWD, covering FWD+BWD.  "
-                         "Either may be 0.  Overrides --rounds/--inverse")
+                         "rounds and P^-1 backward BWD from ONE cube, "
+                         "covering FWD+BWD.  --cube names the cube in "
+                         "middle-state coordinates; the backward half reads "
+                         "it through the transpose.  Either may be 0.  "
+                         "Overrides --rounds/--inverse")
     ap.add_argument("--inverse", action="store_true",
                     help="propagate through P^-1 instead of P: the backward "
                          "half of an inside-out zero-sum.  The cube is taken "

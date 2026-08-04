@@ -513,6 +513,67 @@ def report_scan(balanced: int, unknown: int, rounds: int) -> bool:
     return balanced == total
 
 
+# ----------------------------------------------------- inside-out zero-sums
+
+
+def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
+         inverse: bool) -> bool:
+    """One direction of an inside-out zero-sum; True when it is balanced.
+
+    `rounds` = 0 is balanced by definition and costs no solving: over an
+    affine cube of dimension d >= 1 every coordinate sums to zero (each
+    free coordinate takes both values 2^(d-1) times, each fixed one is
+    added 2^d times), so the identity map already zero-sums.  Allowing it
+    is what makes `--inside-out 2 0` reproduce the one-directional result
+    and act as a consistency check on the two-directional machinery.
+    """
+    which = "P^-1 backward" if inverse else "P forward"
+    if rounds == 0:
+        print(f"  {which} 0 round(s): balanced by definition (a cube sums "
+              f"to zero under the identity)", flush=True)
+        return True
+    print(f"  {which} {rounds} round(s):", flush=True)
+    return scan(cube_bits, rounds, timeout_s, count, inverse)
+
+
+def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
+               timeout_s: float, count: bool) -> bool:
+    """Zero-sum running P forward r_fwd rounds and P^-1 backward r_bwd.
+
+    The two halves are *independent* given the cube: both consume the same
+    middle-state division property and propagate outward, so there is no
+    joint constraint and no combined model.  The zero-sum over
+    r_fwd + r_bwd rounds holds exactly when each half is balanced on its
+    own, which is what lets this reuse `scan` unchanged in both
+    directions.
+
+    Balancedness is required on ALL 2048 bits of each end, not one bit.  A
+    single balanced output bit is a distinguisher for one direction, but a
+    zero-sum *partition* is a statement about the whole state at both
+    ends, so a partial result on either half establishes nothing here.
+    """
+    print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "
+          f"= {r_fwd + r_bwd} round(s)", flush=True)
+    t0 = time.time()
+    fwd = half(cube_bits, r_fwd, timeout_s, count, inverse=False)
+    if not fwd and not count:
+        print(f"  forward half is not balanced -- no zero-sum at "
+              f"({r_fwd}, {r_bwd}); the backward half is not attempted "
+              f"[{time.time() - t0:.0f} s]")
+        return False
+    bwd = half(cube_bits, r_bwd, timeout_s, count, inverse=True)
+    ok = fwd and bwd
+    if ok:
+        print(f"  ZERO-SUM over {r_fwd + r_bwd} round(s): both halves "
+              f"balanced on all {N_BLOCKS * BLOCK_BITS} bits "
+              f"[{time.time() - t0:.0f} s]")
+    else:
+        beaten = "backward" if fwd else "forward"
+        print(f"  no zero-sum at ({r_fwd}, {r_bwd}) -- the {beaten} half "
+              f"is not provably balanced [{time.time() - t0:.0f} s]")
+    return ok
+
+
 # ------------------------------------------------------------ validation
 
 
@@ -715,6 +776,11 @@ def main() -> None:
     ap.add_argument("--count", action="store_true",
                     help="count every balanced bit instead of stopping at "
                          "the first that is not")
+    ap.add_argument("--inside-out", type=int, nargs=2,
+                    metavar=("FWD", "BWD"), default=None,
+                    help="zero-sum from a middle state: run P forward FWD "
+                         "rounds and P^-1 backward BWD, covering FWD+BWD.  "
+                         "Either may be 0.  Overrides --rounds/--inverse")
     ap.add_argument("--inverse", action="store_true",
                     help="propagate through P^-1 instead of P: the backward "
                          "half of an inside-out zero-sum.  The cube is taken "
@@ -733,7 +799,16 @@ def main() -> None:
     if args.validate:
         validate(args.time_limit, args.inverse)
         return
-    if not 1 <= args.rounds <= 16:
+    if args.inside_out is not None:
+        r_fwd, r_bwd = args.inside_out
+        if not 0 <= r_fwd <= 16 or not 0 <= r_bwd <= 16:
+            print("--inside-out rounds must each be in 0..16",
+                  file=sys.stderr)
+            sys.exit(2)
+        if r_fwd == 0 and r_bwd == 0:
+            print("--inside-out 0 0 covers no rounds", file=sys.stderr)
+            sys.exit(2)
+    elif not 1 <= args.rounds <= 16:
         print("--rounds must be in 1..16", file=sys.stderr)
         sys.exit(2)
 
@@ -746,6 +821,13 @@ def main() -> None:
     else:
         cube = CUBES[args.cube]()
         name = f"'{args.cube}'"
+    if args.inside_out is not None:
+        r_fwd, r_bwd = args.inside_out
+        print(f"== Castella, cube {name} ({len(cube)} active bits) at the "
+              f"middle state", flush=True)
+        inside_out(cube, r_fwd, r_bwd, args.time_limit, args.count)
+        return
+
     direction = "P^-1" if args.inverse else "P"
     print(f"== Castella {direction}, {args.rounds} round(s), cube {name} "
           f"({len(cube)} active bits)", flush=True)

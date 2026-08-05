@@ -942,6 +942,7 @@ def hex_state(state_bytes: StateBytes) -> str:
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-statements
 def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      input_diff: StateBytes, output_diff: StateBytes,
                      max_trails: int,
@@ -950,10 +951,12 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
                      encoding: str, weight_encoding: str,
                      best_weight: int | None = None,
                      shell: int | None = None,
-                     random_seed: int = 0) -> None:
+                     random_seed: int = 0,
+                     fresh_instances: bool = False) -> None:
     """Enumerate characteristics sharing one (input, output) differential.
 
-    Builds a fresh instantiation of the pattern, pins the input and output
+    Builds its own instantiation of the pattern, separate from the search's,
+    pins the input and output
     differences, and enumerates distinct trails (distinct S-box output
     tuples) up to max_trails.  The sum of 2^-weight over all of them is the
     differential's probability restricted to this activity pattern -- a
@@ -985,18 +988,51 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     max_memory_mb, if given, stops a call the same way.  Stopping early
     only reports fewer trails, marked INCOMPLETE, which the lower-bound
     reading already allows for.
+
+    fresh_instances rebuilds the solver for every trail instead of adding
+    each blocking clause to one persistent solver.  Above r = 1 the
+    persistent solver is what stalls: measured at r = 2, both shapes find
+    trail 1 in ~32 s, after which the persistent solver returns
+    'unknown: canceled' at 300 s on trail 2 while rebuilding solves the
+    same query in 35 s.  The clauses learned while finding trail k point
+    into the region that trail's own blocking clause then excludes, and z3
+    does not discard them, so the rebuild is not overhead but the thing
+    that works.  It inverts the usual incremental-SMT assumption, which is
+    why it is a flag and not the default.
     """
-    inst = Instantiation(num_blocks, num_rounds, pattern, encoding,
-                         weight_encoding)
-    configure_solver(inst.solver, timeout_ms, max_memory_mb, random_seed)
-    if shell is not None and best_weight is not None:
-        inst.add_weight_bound(best_weight + shell)
-    for i in range(num_blocks):
-        for b in range(BLOCK_BYTES):
-            inst.solver.add(
-                inst.input_state[i][b] == z3.BitVecVal(input_diff[i][b], 8))
-            inst.solver.add(
-                inst.output_state[i][b] == z3.BitVecVal(output_diff[i][b], 8))
+    def block_trail(inst: Instantiation, trail: Sequence[int]) -> None:
+        """Exclude one enumerated trail by its S-box output tuple."""
+        inst.solver.add(z3.Not(z3.And(
+            [dout == z3.BitVecVal(v, 8)
+             for (_din, dout), v in zip(inst.sboxes, trail)])))
+
+    def build() -> Instantiation:
+        """Build the pinned instance, re-excluding every known trail.
+
+        Trails are carried as concrete S-box output tuples rather than as
+        z3 terms, so a rebuild reconstructs the assertion set and not a
+        stale term graph.  The variable names Instantiation declares are
+        deterministic, so the rebuilt terms are the same ones.
+        """
+        inst = Instantiation(num_blocks, num_rounds, pattern, encoding,
+                             weight_encoding)
+        configure_solver(inst.solver, timeout_ms, max_memory_mb, random_seed)
+        if shell is not None and best_weight is not None:
+            inst.add_weight_bound(best_weight + shell)
+        for i in range(num_blocks):
+            for b in range(BLOCK_BYTES):
+                inst.solver.add(
+                    inst.input_state[i][b]
+                    == z3.BitVecVal(input_diff[i][b], 8))
+                inst.solver.add(
+                    inst.output_state[i][b]
+                    == z3.BitVecVal(output_diff[i][b], 8))
+        for trail in blocked:
+            block_trail(inst, trail)
+        return inst
+
+    blocked: list[list[int]] = []
+    inst = build()
 
     weights: list[int] = []
     complete = False
@@ -1021,9 +1057,12 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
         verify_trail(num_blocks, num_rounds,
                      inst.model_bytes(model, inst.input_state), model, inst)
         weights.append(inst.model_weight(model))
-        inst.solver.add(z3.Not(z3.And(
-            [dout == model.eval(dout, model_completion=True)
-             for _din, dout in inst.sboxes])))
+        blocked.append([model.eval(dout, model_completion=True).as_long()
+                        for _din, dout in inst.sboxes])
+        if fresh_instances:
+            inst = build()
+        else:
+            block_trail(inst, blocked[-1])
     elapsed = time.monotonic() - t0
 
     if not weights:
@@ -1142,6 +1181,15 @@ def main() -> None:
                              "search's best is an upper bound on the "
                              "differential's lightest trail, not the lightest "
                              "itself (default: no restriction)")
+    parser.add_argument("--fresh-instances", action="store_true",
+                        help="rebuild the solver for every --cluster trail "
+                             "instead of accumulating blocking clauses in "
+                             "one.  Slower per trail by the model build, but "
+                             "above r = 1 the persistent solver stalls on the "
+                             "second trail (measured at r = 2: 'unknown' at "
+                             "300 s, against 35 s for the same query rebuilt) "
+                             "-- learned clauses point into the region the "
+                             "first trail's blocking clause excludes")
     parser.add_argument("--cluster-time-limit", type=positive_float,
                         default=None, metavar="SECONDS",
                         help="time limit for the whole --cluster enumeration "
@@ -1341,7 +1389,7 @@ def main() -> None:
                          input_diff, output_diff, args.cluster, timeout_ms,
                          cluster_timeout_ms, args.max_memory, args.encoding,
                          args.weight_encoding, weight, args.cluster_shell,
-                         args.random_seed)
+                         args.random_seed, args.fresh_instances)
 
 
 if __name__ == "__main__":

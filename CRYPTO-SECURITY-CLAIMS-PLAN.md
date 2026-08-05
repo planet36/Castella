@@ -468,6 +468,10 @@ python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M
 # r = 5 succeeds at narrow widths, where N=16 fails at every target (2026-08-02).
 python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # 2m, 626 MB; [606, 705]
 python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
+
+# N=16 at r=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
+python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern pat-r5.json  # 639 s, proven 234
+python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; [1404, 1633]
 ```
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
@@ -532,7 +536,9 @@ documentation:
    `-N 2` and `-N 4`, both at *proven* targets (101 and 114), stage A returns in 0.3 s and
    0.6 s and the run brackets those permutations at **[606, 705]** and **[684, 791]** — the
    first bracketed r = 5 results at any width, and both with sound floors. Five rounds is
-   not intrinsically beyond stage A; 16 blocks is. The `PbEq` constraint spans 3 840
+   not intrinsically beyond stage A; 16 blocks is. (N = 16 is bracketed too as of
+   2026-08-04, at **[1404, 1633]** — but by importing the MILP's pattern via
+   `--dump-pattern` / `--pattern-file`, not by stage A ever finding one.) The `PbEq` constraint spans 3 840
    booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose. Read with
    r = 4 — where stage A clears the same constraint three times, then stalls on a fourth —
    this is one continuous difficulty in width and depth, not a cliff at r = 5.

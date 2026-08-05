@@ -63,11 +63,18 @@ Usage
 -----
   python3 permute-min-active-sboxes.py [-N {2,4,8,16}] [-a AES_ROUNDS]
       [--min-rounds R0] [-r RMAX] [-t SECONDS] [--threads T]
+      [--dump-pattern PATH]
+
+--dump-pattern writes the solved activity pattern for permute-trail-search.py
+--pattern-file, which instantiates it into a real characteristic.  That is the
+only route to a trail at N=16 above r=4, where the trail search's own pattern
+stage has never returned one while this model solves the cell in minutes.
 
 Requires the PuLP package (pip install pulp), which bundles the CBC solver.
 """
 
 import argparse
+import json
 import math
 import os
 import re
@@ -119,9 +126,16 @@ def transpose_map(num_blocks: int) -> dict[tuple[int, int], tuple[int, int]]:
 
 
 # pylint: disable=too-many-locals
-def build_model(num_blocks: int, num_rounds: int,
-                aes_num_rounds: int) -> pulp.LpProblem:
-    """Build the MILP whose optimum is the minimum active S-box count."""
+def build_model(num_blocks: int, num_rounds: int, aes_num_rounds: int
+                ) -> tuple[pulp.LpProblem, list[list[list[pulp.LpVariable]]]]:
+    """Build the MILP whose optimum is the minimum active S-box count.
+
+    Also returns the state entering each S-box layer, indexed
+    [t*aes_num_rounds + a][block][byte] -- the same layout, built by the same
+    recurrence, that permute-trail-search.py's build_pattern_solver returns as
+    its Layers.  That is what makes a solved pattern transplantable into its
+    stage B (see --dump-pattern).
+    """
     prob = pulp.LpProblem(
         f"castella_min_active_sboxes_N{num_blocks}_r{num_rounds}",
         pulp.LpMinimize)
@@ -138,11 +152,16 @@ def build_model(num_blocks: int, num_rounds: int,
 
     tmap = transpose_map(num_blocks)
     sbox_layers = []
+    layer_states = []
 
     for t in range(num_rounds):
         for a in range(aes_num_rounds):
             # Every byte entering this AES round passes through SubBytes.
             sbox_layers.append(pulp.lpSum(v for block in state for v in block))
+            # The transpose below rebinds `state` to a fresh list holding the
+            # same variables re-indexed, so the list appended here keeps this
+            # layer's arrangement.
+            layer_states.append(state)
 
             # Nothing after the last S-box layer can affect the objective:
             # the bytes it produces appear in no other constraint, so the
@@ -173,7 +192,68 @@ def build_model(num_blocks: int, num_rounds: int,
         state = nxt
 
     prob += pulp.lpSum(sbox_layers)
-    return prob
+    return prob, layer_states
+
+
+def extract_pattern(layer_states: list[list[list[pulp.LpVariable]]]
+                    ) -> list[list[list[bool]]]:
+    """Read the byte-activity pattern out of a solved model."""
+    pattern = []
+    for layer in layer_states:
+        player = []
+        for block in layer:
+            pblock = []
+            for var in block:
+                value = var.varValue
+                if value is None:
+                    raise ValueError(f"{var.name} has no value: the model was "
+                                     f"not solved")
+                # A MILP solver returns binaries within its integrality
+                # tolerance, not exactly 0 or 1.
+                nearest = round(value)
+                if nearest not in (0, 1) or abs(value - nearest) > 1e-6:
+                    raise ValueError(f"{var.name} is not binary: {value}")
+                pblock.append(bool(nearest))
+            player.append(pblock)
+        pattern.append(player)
+    return pattern
+
+
+def dump_pattern(path: str, args: argparse.Namespace, r: int,
+                 prob: pulp.LpProblem,
+                 layer_states: list[list[list[pulp.LpVariable]]]) -> None:
+    """Write one solved activity pattern to path as JSON.
+
+    The consumer is permute-trail-search.py --pattern-file, which skips its
+    own stage A and instantiates this pattern directly.  That matters at
+    r = 5, where stage A has never returned a pattern at N = 16 while the
+    MILP solves the same cell in minutes.
+    """
+    pattern = extract_pattern(layer_states)
+    num_active = sum(v for layer in pattern for block in layer for v in block)
+
+    # The pattern is only transplantable if the layers read out here are the
+    # ones the objective counted; if they are not, this catches it here rather
+    # than as a puzzling stage B result.
+    objective = round(prob.objective.value())
+    if num_active != objective:
+        raise ValueError(f"extracted pattern has {num_active} active S-boxes "
+                         f"but the objective is {objective}")
+
+    proven = prob.sol_status == pulp.LpSolutionOptimal
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({
+            "num_blocks": args.num_blocks,
+            "aes_rounds": args.aes_rounds,
+            "num_rounds": r,
+            "num_active": num_active,
+            "proven_optimal": proven,
+            "solver": args.solver,
+            "pattern": pattern,
+        }, f)
+        f.write("\n")
+    proof = "proven optimal" if proven else "an UNPROVEN incumbent"
+    print(f"# wrote {path}: {num_active} active S-boxes, {proof}")
 
 
 def highs_available() -> bool:
@@ -242,6 +322,12 @@ def main() -> None:
                              "dramatically stronger on this model -- it closes "
                              "N=16 r=4/5/6, which CBC never has -- but needs "
                              "the highspy package; CBC ships with PuLP")
+    parser.add_argument("--dump-pattern", metavar="PATH", default=None,
+                        help="write each solved activity pattern to PATH as "
+                             "JSON, for permute-trail-search.py "
+                             "--pattern-file.  When more than one round count "
+                             "is solved, PATH must contain '{r}', which is "
+                             "replaced by the round count")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="with --solver cbc, keep CBC's log per round "
                              "count in the working directory "
@@ -250,6 +336,15 @@ def main() -> None:
                              "with tail -f; with --solver highs, stream the "
                              "solver log to stdout")
     args = parser.parse_args()
+
+    if args.min_rounds > args.max_rounds:
+        parser.error(f"--min-rounds {args.min_rounds} exceeds "
+                     f"-r/--max-rounds {args.max_rounds}")
+    # Refuse to silently overwrite one dump with the next round count's.
+    if (args.dump_pattern is not None and args.min_rounds != args.max_rounds
+            and "{r}" not in args.dump_pattern):
+        parser.error("--dump-pattern needs '{r}' in PATH when solving more "
+                     "than one round count")
 
     # Solves can take many minutes; show progress even when stdout is a file.
     if hasattr(sys.stdout, "reconfigure"):
@@ -261,9 +356,13 @@ def main() -> None:
           f"{'DP bound':>10}  status")
 
     for r in range(args.min_rounds, args.max_rounds + 1):
-        prob = build_model(args.num_blocks, r, args.aes_rounds)
+        prob, layer_states = build_model(args.num_blocks, r, args.aes_rounds)
         dual = solve_round(prob, args, r)
         report_round(prob, r, dual)
+        if args.dump_pattern is not None and prob.sol_status in (
+                pulp.LpSolutionOptimal, pulp.LpSolutionIntegerFeasible):
+            dump_pattern(args.dump_pattern.replace("{r}", str(r)),
+                         args, r, prob, layer_states)
 
 
 # The objective is a sum of binary variables, so the optimum is an integer:

@@ -90,8 +90,8 @@ Validation (--self-test, also run at startup)
 Usage
 -----
   python3 permute-trail-search.py [-N {2,4,8,16}] [-r ROUNDS] [-A ACTIVE]
-      [--patterns P] [--no-minimize] [-t SECONDS] [--print-trail]
-      [--random-seed K]
+      [--patterns P] [--pattern-file PATH] [--no-minimize] [-t SECONDS]
+      [--print-trail] [--random-seed K]
       [--card-encoding {pb,totalizer}] [--weight-encoding {pb,totalizer}]
 
 To tighten a ceiling, sweep --random-seed with a raised --patterns and pass
@@ -99,10 +99,22 @@ To tighten a ceiling, sweep --random-seed with a raised --patterns and pass
 budget by elapsed time, not by the solve times printed per pattern, which
 exclude the per-pattern model build that dominates them.
 
+Where stage A cannot produce a pattern at all -- N=16 above r=4, where it has
+never returned one -- import one from the MILP instead, which solves the same
+cell in minutes:
+
+  python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 \
+      --dump-pattern pat-r5.json
+  python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json
+
+The two models are independent, so --pattern-file rechecks the imported
+pattern against stage A's own constraints before instantiating it.
+
 Requires the z3-solver package (Arch: python-z3-solver).
 """
 
 import argparse
+import json
 import sys
 import time
 from collections import Counter
@@ -595,6 +607,96 @@ def pattern_blocking_clause(layers: Layers, pattern: Pattern) -> z3.BoolRef:
     return z3.Not(z3.And(lits))
 
 
+class PatternFileError(Exception):
+    """A pattern file is malformed, or does not match the search given it."""
+
+
+def load_pattern_file(path: str, num_blocks: int, num_rounds: int
+                      ) -> tuple[Pattern, int, bool]:
+    """Read an activity pattern written by permute-min-active-sboxes.py.
+
+    Returns (pattern, num_active, proven_optimal), having checked the shape
+    and the activity count.  Feasibility is the caller's next step, via
+    verify_pattern_feasible; the two are separate because only the second
+    needs a solver.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PatternFileError(f"{path}: {exc}") from exc
+
+    try:
+        pattern = doc["pattern"]
+        declared_active = doc["num_active"]
+        proven = bool(doc["proven_optimal"])
+        for field, want in (("num_blocks", num_blocks),
+                            ("num_rounds", num_rounds),
+                            ("aes_rounds", AES_NUM_ROUNDS)):
+            if doc[field] != want:
+                raise PatternFileError(
+                    f"{path}: {field} is {doc[field]}, but this search needs "
+                    f"{want}")
+    except KeyError as exc:
+        raise PatternFileError(f"{path}: missing field {exc}") from exc
+
+    num_layers = num_rounds * AES_NUM_ROUNDS
+    if len(pattern) != num_layers:
+        raise PatternFileError(f"{path}: {len(pattern)} layers, expected "
+                               f"{num_layers}")
+    for layer in pattern:
+        if len(layer) != num_blocks:
+            raise PatternFileError(f"{path}: a layer has {len(layer)} blocks, "
+                                   f"expected {num_blocks}")
+        for block in layer:
+            if len(block) != BLOCK_BYTES:
+                raise PatternFileError(f"{path}: a block has {len(block)} "
+                                       f"bytes, expected {BLOCK_BYTES}")
+            if not all(isinstance(v, bool) for v in block):
+                raise PatternFileError(f"{path}: activities must be booleans")
+
+    counted = sum(v for layer in pattern for block in layer for v in block)
+    if counted != declared_active:
+        raise PatternFileError(f"{path}: declares {declared_active} active "
+                               f"S-boxes but contains {counted}")
+    return pattern, counted, proven
+
+
+def verify_pattern_feasible(pattern: Pattern, timeout_ms: int,
+                            max_memory: int | None, random_seed: int) -> None:
+    """Check an imported pattern against stage A's own constraints.
+
+    This is what makes a pattern from another program safe to instantiate:
+    pin it into build_pattern_solver and require sat.  Without it a
+    byte-level infeasible pattern would still reach stage B, which would
+    report "NOT bit-level realizable" -- a different and much weaker
+    statement that would hide the disagreement rather than surface it.
+
+    The geometry is taken from the pattern itself, which load_pattern_file
+    has already matched against the run's -N and -r.
+    """
+    num_blocks = len(pattern[0])
+    num_rounds = len(pattern) // AES_NUM_ROUNDS
+    num_active = sum(v for layer in pattern for block in layer for v in block)
+
+    t0 = time.monotonic()
+    solver, layers = build_pattern_solver(num_blocks, num_rounds, num_active)
+    configure_solver(solver, timeout_ms, max_memory, random_seed)
+    for layer, player in zip(layers, pattern, strict=True):
+        for block, pblock in zip(layer, player, strict=True):
+            for var, active in zip(block, pblock, strict=True):
+                solver.add(var if active else z3.Not(var))
+    res = solver.check()
+    elapsed = time.monotonic() - t0
+    if res != z3.sat:
+        raise PatternFileError(
+            f"the pattern is not feasible for stage A's constraints "
+            f"({check_status(solver, res)}, {elapsed:.1f}s); the two models "
+            f"disagree, so it must not be instantiated")
+    print(f"pattern file: {num_active} active S-boxes, feasible for stage A "
+          f"({elapsed:.1f}s)")
+
+
 # -------------------------------------------------- stage B: instantiation
 
 
@@ -992,6 +1094,14 @@ def main() -> None:
     parser.add_argument("--patterns", type=positive_int, default=8,
                         help="max activity patterns to try "
                              "(default: %(default)s)")
+    parser.add_argument("--pattern-file", metavar="PATH", default=None,
+                        help="skip stage A and instantiate the activity "
+                             "pattern in PATH, as written by "
+                             "permute-min-active-sboxes.py --dump-pattern.  "
+                             "The file supplies -A, and --patterns is "
+                             "ignored (a file holds one pattern).  This is "
+                             "the only route at N=16 r>=5, where stage A has "
+                             "never returned a pattern")
     parser.add_argument("--no-minimize", action="store_true",
                         help="stop at the first weight per pattern")
     parser.add_argument("--random-seed", type=nonnegative_int, default=0,
@@ -1070,22 +1180,44 @@ def main() -> None:
         print("self-test OK")
         return
 
-    num_active = args.active
-    key = (args.num_blocks, args.rounds)
-    if num_active is None:
-        num_active = KNOWN_MIN_ACTIVE.get(key)
-        if num_active is None:
-            sys.exit("no known active-S-box count for this -N/-r; pass -A")
-
-    # 6*A is a floor only when A is a converged MILP optimum.  Against an
-    # incumbent -- or any hand-passed -A -- it is just the target's arithmetic.
-    proven = PROVEN_MIN_ACTIVE.get(key) == num_active
+    if args.pattern_file is not None and args.active is not None:
+        parser.error("--pattern-file supplies -A; pass one or the other")
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(line_buffering=True)
     timeout_ms = int(args.time_limit * 1000)
     cluster_timeout_ms = timeout_ms if args.cluster_time_limit is None \
         else int(args.cluster_time_limit * 1000)
+
+    key = (args.num_blocks, args.rounds)
+    file_pattern = None
+    if args.pattern_file is not None:
+        try:
+            file_pattern, num_active, proven = load_pattern_file(
+                args.pattern_file, args.num_blocks, args.rounds)
+            verify_pattern_feasible(file_pattern, timeout_ms, args.max_memory,
+                                    args.random_seed)
+        except PatternFileError as exc:
+            sys.exit(str(exc))
+        # The file records whether its own solve converged; the table records
+        # what this program was told.  Disagreement means one of them is
+        # stale, and which is not knowable from here.
+        table = PROVEN_MIN_ACTIVE.get(key)
+        if proven and table is not None and table != num_active:
+            print(f"WARNING: the file claims a proven optimum A={num_active} "
+                  f"but PROVEN_MIN_ACTIVE has {table} for this -N/-r; one of "
+                  f"them is stale")
+    else:
+        num_active = args.active
+        if num_active is None:
+            num_active = KNOWN_MIN_ACTIVE.get(key)
+            if num_active is None:
+                sys.exit("no known active-S-box count for this -N/-r; pass -A")
+        # 6*A is a floor only when A is a converged MILP optimum.  Against an
+        # incumbent -- or any hand-passed -A -- it is just the target's
+        # arithmetic.
+        proven = PROVEN_MIN_ACTIVE.get(key) == num_active
+
     print(f"N={args.num_blocks} blocks, r={args.rounds} rounds, "
           f"target active S-boxes A={num_active}")
     if proven:
@@ -1096,36 +1228,46 @@ def main() -> None:
               "MILP optimum for this -N/-r, so this is NOT a lower bound; "
               "any trail found below is a ceiling with no floor under it")
 
-    t0 = time.monotonic()
-    pat_solver, layers = build_pattern_solver(
-        args.num_blocks, args.rounds, num_active, args.card_encoding)
-    print(f"stage A model built with the {args.card_encoding} cardinality "
-          f"encoding ({time.monotonic() - t0:.1f}s)")
-    configure_solver(pat_solver, timeout_ms, args.max_memory,
-                     args.random_seed)
+    pat_solver, layers = None, None
+    if file_pattern is None:
+        t0 = time.monotonic()
+        pat_solver, layers = build_pattern_solver(
+            args.num_blocks, args.rounds, num_active, args.card_encoding)
+        print(f"stage A model built with the {args.card_encoding} cardinality "
+              f"encoding ({time.monotonic() - t0:.1f}s)")
+        configure_solver(pat_solver, timeout_ms, args.max_memory,
+                         args.random_seed)
 
     best = None  # (weight, optimal?, input_diff, output_diff, pattern_no,
     #               pattern)
     best_weight = None  # weight of `best`; scalar so it is never subscripted
 
     for pattern_no in range(1, args.patterns + 1):
-        t0 = time.monotonic()
-        res = pat_solver.check()
-        ta = time.monotonic() - t0
-        if res == z3.unsat:
-            print(f"[pattern {pattern_no}] no further activity patterns "
-                  f"with A={num_active} ({ta:.1f}s)")
-            break
-        if res != z3.sat:
-            hint = ("raise -M or free memory"
-                    if "memory" in pat_solver.reason_unknown()
-                    else "try a larger -t")
-            print(f"[pattern {pattern_no}] stage A gave up "
-                  f"({check_status(pat_solver, res)}, {ta:.1f}s); {hint}")
-            break
-        pattern = extract_pattern(pat_solver.model(), layers)
-        pat_solver.add(pattern_blocking_clause(layers, pattern))
-        print(f"[pattern {pattern_no}] activity pattern found ({ta:.1f}s)")
+        if file_pattern is not None:
+            # A file holds exactly one pattern, so there is no second pass.
+            if pattern_no > 1:
+                break
+            pattern = file_pattern
+            print(f"[pattern {pattern_no}] activity pattern read from "
+                  f"{args.pattern_file}")
+        else:
+            t0 = time.monotonic()
+            res = pat_solver.check()
+            ta = time.monotonic() - t0
+            if res == z3.unsat:
+                print(f"[pattern {pattern_no}] no further activity patterns "
+                      f"with A={num_active} ({ta:.1f}s)")
+                break
+            if res != z3.sat:
+                hint = ("raise -M or free memory"
+                        if "memory" in pat_solver.reason_unknown()
+                        else "try a larger -t")
+                print(f"[pattern {pattern_no}] stage A gave up "
+                      f"({check_status(pat_solver, res)}, {ta:.1f}s); {hint}")
+                break
+            pattern = extract_pattern(pat_solver.model(), layers)
+            pat_solver.add(pattern_blocking_clause(layers, pattern))
+            print(f"[pattern {pattern_no}] activity pattern found ({ta:.1f}s)")
 
         inst = Instantiation(args.num_blocks, args.rounds, pattern,
                              args.encoding, args.weight_encoding)

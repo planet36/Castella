@@ -127,6 +127,9 @@ import z3
 BLOCK_BYTES = 16
 AES_NUM_ROUNDS = 3
 
+# How often --cluster reports partial progress, in seconds.
+PROGRESS_INTERVAL_S = 60.0
+
 # The nested shapes this program passes around, all indexed [i][b] by block
 # and byte within a block (Layers and Pattern add a leading S-box layer).
 # z3 ships no py.typed, so its element types document rather than check;
@@ -1037,6 +1040,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     weights: list[int] = []
     complete = False
     t0 = time.monotonic()
+    last_report = t0
     while len(weights) < max_trails:
         # timeout_ms bounds one check(); this bounds the whole enumeration,
         # which would otherwise run max_trails of them back to back.
@@ -1059,6 +1063,15 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
         weights.append(inst.model_weight(model))
         blocked.append([model.eval(dout, model_completion=True).as_long()
                         for _din, dout in inst.sboxes])
+        # An enumeration whose count is unknown in advance is otherwise
+        # silent for its whole budget, so a stall and steady progress look
+        # alike from outside.  Rate-limited rather than one line per trail,
+        # which keeps r = 1's 1048-trail run as quiet as it was.
+        now = time.monotonic()
+        if now - last_report >= PROGRESS_INTERVAL_S:
+            print(f"cluster: {len(weights)} trails so far, latest weight "
+                  f"{weights[-1]} ({now - t0:.0f}s)", flush=True)
+            last_report = now
         if fresh_instances:
             inst = build()
         else:

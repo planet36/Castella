@@ -469,9 +469,19 @@ python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M
 python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # 2m, 626 MB; [606, 705]
 python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
 
-# N=16 at r=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
+# N=16 at r>=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
 python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern pat-r5.json  # 639 s, proven 234
 python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; [1404, 1633]
+
+# Same two commands at r = 6, 7 and 8 (2026-08-05). Raise -t past the MILP's own solve
+# time -- 1585 s, 7257 s, 14050 s -- since the 600 s default cuts all three off. The
+# '{r}' in --dump-pattern is required when solving more than one round count, and is
+# replaced by each; HiGHS uses one core on this model, so running the three round counts
+# as separate concurrent processes costs nothing over this sequential form.
+python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'pat-r{r}.json'
+python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; [1620, 1887]
+python3 permute-trail-search.py -r 7 --pattern-file pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; [2124, 2473]
+python3 permute-trail-search.py -r 8 --pattern-file pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; [2340, 2725]
 ```
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
@@ -538,7 +548,9 @@ documentation:
    first bracketed r = 5 results at any width, and both with sound floors. Five rounds is
    not intrinsically beyond stage A; 16 blocks is. (N = 16 is bracketed too as of
    2026-08-04, at **[1404, 1633]** — but by importing the MILP's pattern via
-   `--dump-pattern` / `--pattern-file`, not by stage A ever finding one.) The `PbEq` constraint spans 3 840
+   `--dump-pattern` / `--pattern-file`, not by stage A ever finding one; r = 6, 7 and 8
+   followed on 2026-08-05 by the same route, at **[1620, 1887]**, **[2124, 2473]** and
+   **[2340, 2725]**.) The `PbEq` constraint spans 3 840
    booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose. Read with
    r = 4 — where stage A clears the same constraint three times, then stalls on a fourth —
    this is one continuous difficulty in width and depth, not a cliff at r = 5.

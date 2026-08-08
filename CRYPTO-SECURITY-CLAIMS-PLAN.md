@@ -242,12 +242,30 @@ The honest procedure:
    independent solvers — but it is the tightest quantity in the whole analysis, it is
    *derived* rather than chosen, and nothing else in these documents says so.
 
-   **Standing intent (author, 2026-08-03): revisit the shipped `R*` values upward.** Not
-   only `C` = 8. Any change to `R*` changes every digest at that capacity, so it is a
-   format decision, not only a margin one; the KATs, `SPEC.md`'s claimed-instances table
-   and the `--help` texts all move with it. **Closing the margin question above does not
-   foreclose this** — the policy fixes the *minimum* a claimed instance must carry, and
-   shipping more rounds than `floor + 3` stays open on its own merits.
+   **DECIDED 2026-08-08: `R*` stays 6/6/6/8 and will not be raised.** A standing intent
+   recorded here on 2026-08-03 — to revisit the shipped values upward, at every capacity
+   rather than only `C` = 8 — was resolved against once the margin question above was
+   settled, since every row meets the adopted policy and none is an exception.
+
+   The decision is not a claim that more rounds would be worthless; it is that nothing in
+   the present evidence obliges them, and the cost is high. `num_rounds` is absorbed into
+   the duplex initialization string, so **changing a shipped `R*` changes every digest at
+   that capacity** — a format decision, not only a margin one. `tests/KAT.txt`, the pinned
+   KATs in `tests/tests.cpp`, `hash-programs/test-correctness.bash`'s hardcoded digests,
+   SPEC.md's claimed-instances table and the `--help` texts all move with it.
+
+   **What would reopen it is evidence, not preference:** the revision trigger published in
+   SPEC.md and CHALLENGES.md — a distinguisher reaching 4 rounds obliges `floor + 4` =
+   7/7/7/9. At that point `C` = 6 deserves the first look, for the floor reason in the
+   paragraph above, not `C` = 8.
+
+   **One property of the trigger is worth stating rather than discovering later: it bounds
+   reach, not data complexity.** A 4-round distinguisher needing 2^256 data would oblige
+   the same format break as a practical one, even though the flat claim already concedes
+   `P` is not a random permutation. That is deliberate conservatism — the anchor is meant
+   to track what is *structurally* known about `P` — but a future revision that wants to
+   qualify it by data complexity should do so explicitly and say why, not by quietly
+   reading the trigger more narrowly.
 
 Deliverable: a "Claimed instances" table in SPEC.md — `(C, R*, digest sizes)` per SHA-3
 equivalence row — with the margin rationale, plus a statement that other parameterizations

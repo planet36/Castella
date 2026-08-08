@@ -17,7 +17,7 @@ source ./benchmark-common.bash
 #openssl dgst --list | sed -e '1d' -e 's|[[:blank:]]*$||' -e 's| \+|\n|g' | command grep -v -x -E -- '-(md4|mdc2|whirlpool)'
 
 
-# Takes about 10:10
+# Takes about 10:40
 CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
 time hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "$CSV" \
@@ -105,81 +105,81 @@ printf 'Exported results: %q\n' "$CSV"
 :<<EOT
 
 Summary
-  ./cch --mix-rate=0    /tmp/test.txt ran
-    1.00 ± 0.11 times faster than ./cch --mix-rate=2048 /tmp/test.txt
-    1.01 ± 0.13 times faster than ./cch                 /tmp/test.txt
-    1.45 ± 0.18 times faster than ./castella --rounds=3 --size=32 /tmp/test.txt
-    1.63 ± 0.20 times faster than ./castella --rounds=3 --size=48 /tmp/test.txt
-    1.89 ± 0.24 times faster than ./castella --rounds=3 --size=64 /tmp/test.txt
-    2.03 ± 0.33 times faster than b3sum                 /tmp/test.txt
-    2.20 ± 0.29 times faster than ./castella            --size=32 /tmp/test.txt
-    2.53 ± 0.29 times faster than ./castella            --size=48 /tmp/test.txt
-    2.73 ± 0.27 times faster than taskset -c 0 ./cch --num-threads=1      /tmp/test.txt
-    2.95 ± 0.29 times faster than taskset -c 0 xxhsum -H2 /tmp/test.txt
-    2.99 ± 0.33 times faster than taskset -c 0 xxhsum -H3 /tmp/test.txt
-    3.02 ± 0.32 times faster than ./castella            --size=64 /tmp/test.txt
-    3.44 ± 0.33 times faster than taskset -c 0 cksum --untagged --algorithm crc               /tmp/test.txt
-    3.46 ± 0.31 times faster than taskset -c 0 cksum --untagged --algorithm crc32b            /tmp/test.txt
-    3.49 ± 0.32 times faster than taskset -c 0 uu-cksum --untagged --algorithm crc32b                /tmp/test.txt
-    3.64 ± 0.43 times faster than taskset -c 0 uu-cksum --untagged --algorithm crc                   /tmp/test.txt
-    4.27 ± 0.39 times faster than taskset -c 0 cksum --untagged --algorithm sysv              /tmp/test.txt
-    4.29 ± 0.39 times faster than taskset -c 0 xxhsum -H1 /tmp/test.txt
-    4.68 ± 0.44 times faster than taskset -c 0 uu-cksum --untagged --algorithm sysv                  /tmp/test.txt
-    9.16 ± 0.81 times faster than taskset -c 0 b3sum --num-threads=1 /tmp/test.txt
-    9.68 ± 0.83 times faster than taskset -c 0 uu-cksum --untagged --algorithm blake3                /tmp/test.txt
-   10.16 ± 0.94 times faster than taskset -c 0 b3sum --no-mmap       /tmp/test.txt
-   10.19 ± 0.89 times faster than taskset -c 0 ./castella --num-threads=1 /tmp/test.txt
-   10.84 ± 0.98 times faster than taskset -c 0 xxhsum -H0 /tmp/test.txt
-   16.22 ± 1.38 times faster than taskset -c 0 cksum --untagged --algorithm sha1              /tmp/test.txt
-   16.87 ± 1.44 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha1                  /tmp/test.txt
-   17.05 ± 1.49 times faster than taskset -c 0 openssl dgst -r -ssl3-sha1           /tmp/test.txt
-   17.41 ± 1.50 times faster than taskset -c 0 openssl dgst -r -sha1                /tmp/test.txt
-   17.60 ± 1.52 times faster than taskset -c 0 uu-cksum --untagged --algorithm bsd                   /tmp/test.txt
-   18.09 ± 1.54 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha2 --length 256     /tmp/test.txt
-   18.16 ± 1.55 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha2 --length 224     /tmp/test.txt
-   18.26 ± 1.56 times faster than taskset -c 0 cksum --untagged --algorithm sha2 --length 224 /tmp/test.txt
-   18.37 ± 1.58 times faster than taskset -c 0 cksum --untagged --algorithm sha2 --length 256 /tmp/test.txt
-   18.87 ± 1.61 times faster than taskset -c 0 openssl dgst -r -sha224              /tmp/test.txt
-   19.05 ± 1.62 times faster than taskset -c 0 openssl dgst -r -sha256              /tmp/test.txt
-   25.72 ± 2.25 times faster than taskset -c 0 uu-cksum --untagged --algorithm blake2b               /tmp/test.txt
-   32.15 ± 2.75 times faster than taskset -c 0 cksum --untagged --algorithm blake2b           /tmp/test.txt
-   32.26 ± 2.75 times faster than taskset -c 0 openssl dgst -r -blake2b512          /tmp/test.txt
-   36.73 ± 3.22 times faster than taskset -c 0 cksum --untagged --algorithm md5               /tmp/test.txt
-   37.30 ± 3.21 times faster than taskset -c 0 openssl dgst -r -ssl3-md5            /tmp/test.txt
-   37.57 ± 3.21 times faster than taskset -c 0 openssl dgst -r -md5                 /tmp/test.txt
-   39.05 ± 3.32 times faster than taskset -c 0 openssl dgst -r -sha512              /tmp/test.txt
-   39.21 ± 3.39 times faster than taskset -c 0 openssl dgst -r -sha512-224          /tmp/test.txt
-   39.34 ± 3.44 times faster than taskset -c 0 openssl dgst -r -sha512-256          /tmp/test.txt
-   39.52 ± 3.40 times faster than taskset -c 0 cksum --untagged --algorithm sha2 --length 384 /tmp/test.txt
-   39.55 ± 3.39 times faster than taskset -c 0 cksum --untagged --algorithm sha2 --length 512 /tmp/test.txt
-   39.62 ± 3.41 times faster than taskset -c 0 openssl dgst -r -sha384              /tmp/test.txt
-   41.39 ± 3.51 times faster than taskset -c 0 cksum --untagged --algorithm bsd               /tmp/test.txt
-   45.86 ± 3.89 times faster than taskset -c 0 uu-cksum --untagged --algorithm md5                   /tmp/test.txt
-   47.80 ± 4.12 times faster than taskset -c 0 openssl dgst -r -shake128 -xoflen 32 /tmp/test.txt
-   49.18 ± 4.20 times faster than taskset -c 0 openssl dgst -r -blake2s256          /tmp/test.txt
-   51.25 ± 4.35 times faster than taskset -c 0 openssl dgst -r -md5-sha1            /tmp/test.txt
-   52.21 ± 4.46 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha2 --length 512     /tmp/test.txt
-   52.76 ± 4.59 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha2 --length 384     /tmp/test.txt
-   54.27 ± 4.66 times faster than taskset -c 0 cksum --untagged --algorithm sha3 --length 224 /tmp/test.txt
-   55.25 ± 4.74 times faster than taskset -c 0 openssl dgst -r -sha3-224            /tmp/test.txt
-   57.26 ± 4.95 times faster than taskset -c 0 uu-cksum --untagged --algorithm shake128 --length 256 /tmp/test.txt
-   57.30 ± 4.90 times faster than taskset -c 0 openssl dgst -r -shake256 -xoflen 64 /tmp/test.txt
-   57.69 ± 4.92 times faster than taskset -c 0 cksum --untagged --algorithm sha3 --length 256 /tmp/test.txt
-   58.90 ± 6.05 times faster than taskset -c 0 openssl dgst -r -sha3-256            /tmp/test.txt
-   65.67 ± 5.58 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha3 --length 224     /tmp/test.txt
-   69.12 ± 5.95 times faster than taskset -c 0 uu-cksum --untagged --algorithm shake256 --length 512 /tmp/test.txt
-   70.15 ± 5.99 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha3 --length 256     /tmp/test.txt
-   73.09 ± 6.25 times faster than taskset -c 0 uu-cksum --untagged --algorithm sm3                   /tmp/test.txt
-   74.10 ± 6.33 times faster than taskset -c 0 cksum --untagged --algorithm sha3 --length 384 /tmp/test.txt
-   75.17 ± 6.49 times faster than taskset -c 0 openssl dgst -r -sha3-384            /tmp/test.txt
-   77.22 ± 6.64 times faster than taskset -c 0 openssl dgst -r -sm3                 /tmp/test.txt
-   78.65 ± 6.68 times faster than taskset -c 0 cksum --untagged --algorithm sm3               /tmp/test.txt
-   89.81 ± 7.68 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha3 --length 384     /tmp/test.txt
-   90.17 ± 7.64 times faster than taskset -c 0 openssl dgst -r -ripemd160           /tmp/test.txt
-   90.88 ± 7.70 times faster than taskset -c 0 openssl dgst -r -ripemd              /tmp/test.txt
-   91.47 ± 7.80 times faster than taskset -c 0 openssl dgst -r -rmd160              /tmp/test.txt
-  106.36 ± 9.04 times faster than taskset -c 0 openssl dgst -r -sha3-512            /tmp/test.txt
-  106.56 ± 9.12 times faster than taskset -c 0 cksum --untagged --algorithm sha3 --length 512 /tmp/test.txt
-  128.54 ± 11.00 times faster than taskset -c 0 uu-cksum --untagged --algorithm sha3 --length 512     /tmp/test.txt
+  ./cch --tag --mix-rate=2048 /tmp/test.txt ran
+    1.04 ± 0.35 times faster than ./cch --tag                 /tmp/test.txt
+    1.06 ± 0.42 times faster than ./cch --tag --mix-rate=0    /tmp/test.txt
+    1.56 ± 0.57 times faster than ./castella --tag --rounds=3 --size=32 /tmp/test.txt
+    1.75 ± 0.56 times faster than ./castella --tag --rounds=3 --size=48 /tmp/test.txt
+    2.00 ± 0.62 times faster than ./castella --tag --rounds=3 --size=64 /tmp/test.txt
+    2.09 ± 0.71 times faster than b3sum --tag                 /tmp/test.txt
+    2.32 ± 0.72 times faster than ./castella --tag            --size=32 /tmp/test.txt
+    2.49 ± 0.64 times faster than taskset -c 0 ./cch --tag --num-threads=1      /tmp/test.txt
+    2.72 ± 0.77 times faster than ./castella --tag            --size=48 /tmp/test.txt
+    2.92 ± 0.70 times faster than taskset -c 0 xxhsum --tag -H2 /tmp/test.txt
+    3.00 ± 0.72 times faster than taskset -c 0 xxhsum --tag -H3 /tmp/test.txt
+    3.33 ± 0.84 times faster than taskset -c 0 cksum --tag --algorithm crc32b            /tmp/test.txt
+    3.34 ± 0.84 times faster than taskset -c 0 cksum --tag --algorithm crc               /tmp/test.txt
+    3.47 ± 0.80 times faster than taskset -c 0 uu-cksum --tag --algorithm crc32b                /tmp/test.txt
+    3.54 ± 0.84 times faster than taskset -c 0 uu-cksum --tag --algorithm crc                   /tmp/test.txt
+    3.97 ± 1.01 times faster than ./castella --tag            --size=64 /tmp/test.txt
+    4.32 ± 1.19 times faster than taskset -c 0 cksum --tag --algorithm sysv              /tmp/test.txt
+    4.36 ± 1.02 times faster than taskset -c 0 xxhsum --tag -H1 /tmp/test.txt
+    4.61 ± 1.05 times faster than taskset -c 0 uu-cksum --tag --algorithm sysv                  /tmp/test.txt
+    8.68 ± 1.94 times faster than taskset -c 0 b3sum --tag --num-threads=1 /tmp/test.txt
+    9.01 ± 1.99 times faster than taskset -c 0 uu-cksum --tag --algorithm blake3                /tmp/test.txt
+    9.85 ± 2.18 times faster than taskset -c 0 ./castella --tag --num-threads=1 /tmp/test.txt
+   10.03 ± 2.30 times faster than taskset -c 0 b3sum --tag --no-mmap       /tmp/test.txt
+   10.20 ± 2.26 times faster than taskset -c 0 xxhsum --tag -H0 /tmp/test.txt
+   16.54 ± 3.69 times faster than taskset -c 0 cksum --tag --algorithm sha1              /tmp/test.txt
+   16.55 ± 3.67 times faster than taskset -c 0 uu-cksum --tag --algorithm sha1                  /tmp/test.txt
+   16.84 ± 3.73 times faster than taskset -c 0 openssl dgst -ssl3-sha1           /tmp/test.txt
+   17.22 ± 3.85 times faster than taskset -c 0 openssl dgst -sha1                /tmp/test.txt
+   17.44 ± 3.92 times faster than taskset -c 0 uu-cksum --tag --algorithm bsd                   /tmp/test.txt
+   17.48 ± 3.89 times faster than taskset -c 0 uu-cksum --tag --algorithm sha2 --length 224     /tmp/test.txt
+   17.90 ± 4.17 times faster than taskset -c 0 uu-cksum --tag --algorithm sha2 --length 256     /tmp/test.txt
+   18.20 ± 4.12 times faster than taskset -c 0 cksum --tag --algorithm sha2 --length 256 /tmp/test.txt
+   18.39 ± 4.13 times faster than taskset -c 0 cksum --tag --algorithm sha2 --length 224 /tmp/test.txt
+   18.44 ± 4.11 times faster than taskset -c 0 openssl dgst -sha256              /tmp/test.txt
+   18.69 ± 4.19 times faster than taskset -c 0 openssl dgst -sha224              /tmp/test.txt
+   25.21 ± 5.57 times faster than taskset -c 0 uu-cksum --tag --algorithm blake2b               /tmp/test.txt
+   32.25 ± 7.77 times faster than taskset -c 0 cksum --tag --algorithm blake2b           /tmp/test.txt
+   32.25 ± 7.20 times faster than taskset -c 0 openssl dgst -blake2b512          /tmp/test.txt
+   36.28 ± 8.01 times faster than taskset -c 0 cksum --tag --algorithm md5               /tmp/test.txt
+   36.54 ± 8.08 times faster than taskset -c 0 openssl dgst -md5                 /tmp/test.txt
+   36.70 ± 8.10 times faster than taskset -c 0 openssl dgst -ssl3-md5            /tmp/test.txt
+   38.51 ± 8.53 times faster than taskset -c 0 openssl dgst -sha384              /tmp/test.txt
+   38.55 ± 8.56 times faster than taskset -c 0 cksum --tag --algorithm sha2 --length 384 /tmp/test.txt
+   38.73 ± 8.54 times faster than taskset -c 0 openssl dgst -sha512-224          /tmp/test.txt
+   39.02 ± 8.67 times faster than taskset -c 0 openssl dgst -sha512-256          /tmp/test.txt
+   39.16 ± 8.65 times faster than taskset -c 0 openssl dgst -sha512              /tmp/test.txt
+   39.82 ± 8.93 times faster than taskset -c 0 cksum --tag --algorithm sha2 --length 512 /tmp/test.txt
+   40.89 ± 9.14 times faster than taskset -c 0 cksum --tag --algorithm bsd               /tmp/test.txt
+   44.88 ± 9.94 times faster than taskset -c 0 uu-cksum --tag --algorithm md5                   /tmp/test.txt
+   46.81 ± 10.41 times faster than taskset -c 0 openssl dgst -shake128 -xoflen 32 /tmp/test.txt
+   49.40 ± 10.91 times faster than taskset -c 0 openssl dgst -blake2s256          /tmp/test.txt
+   49.55 ± 11.00 times faster than taskset -c 0 openssl dgst -md5-sha1            /tmp/test.txt
+   52.35 ± 11.60 times faster than taskset -c 0 uu-cksum --tag --algorithm sha2 --length 512     /tmp/test.txt
+   53.01 ± 11.74 times faster than taskset -c 0 uu-cksum --tag --algorithm sha2 --length 384     /tmp/test.txt
+   53.88 ± 11.90 times faster than taskset -c 0 openssl dgst -sha3-224            /tmp/test.txt
+   55.50 ± 12.45 times faster than taskset -c 0 cksum --tag --algorithm sha3 --length 224 /tmp/test.txt
+   55.86 ± 12.37 times faster than taskset -c 0 uu-cksum --tag --algorithm shake128 --length 256 /tmp/test.txt
+   56.78 ± 12.59 times faster than taskset -c 0 openssl dgst -shake256 -xoflen 64 /tmp/test.txt
+   57.02 ± 12.62 times faster than taskset -c 0 cksum --tag --algorithm sha3 --length 256 /tmp/test.txt
+   58.00 ± 12.88 times faster than taskset -c 0 openssl dgst -sha3-256            /tmp/test.txt
+   65.28 ± 14.38 times faster than taskset -c 0 uu-cksum --tag --algorithm sha3 --length 224     /tmp/test.txt
+   69.06 ± 15.30 times faster than taskset -c 0 uu-cksum --tag --algorithm shake256 --length 512 /tmp/test.txt
+   69.41 ± 15.32 times faster than taskset -c 0 uu-cksum --tag --algorithm sha3 --length 256     /tmp/test.txt
+   71.54 ± 15.87 times faster than taskset -c 0 uu-cksum --tag --algorithm sm3                   /tmp/test.txt
+   73.16 ± 16.25 times faster than taskset -c 0 openssl dgst -sha3-384            /tmp/test.txt
+   75.25 ± 16.81 times faster than taskset -c 0 cksum --tag --algorithm sha3 --length 384 /tmp/test.txt
+   77.41 ± 17.27 times faster than taskset -c 0 openssl dgst -sm3                 /tmp/test.txt
+   78.52 ± 17.36 times faster than taskset -c 0 cksum --tag --algorithm sm3               /tmp/test.txt
+   87.28 ± 19.27 times faster than taskset -c 0 openssl dgst -rmd160              /tmp/test.txt
+   87.82 ± 19.35 times faster than taskset -c 0 openssl dgst -ripemd              /tmp/test.txt
+   88.89 ± 19.70 times faster than taskset -c 0 uu-cksum --tag --algorithm sha3 --length 384     /tmp/test.txt
+   89.26 ± 19.68 times faster than taskset -c 0 openssl dgst -ripemd160           /tmp/test.txt
+  105.09 ± 23.24 times faster than taskset -c 0 cksum --tag --algorithm sha3 --length 512 /tmp/test.txt
+  105.79 ± 23.40 times faster than taskset -c 0 openssl dgst -sha3-512            /tmp/test.txt
+  127.03 ± 27.99 times faster than taskset -c 0 uu-cksum --tag --algorithm sha3 --length 512     /tmp/test.txt
 
 EOT

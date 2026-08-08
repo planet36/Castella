@@ -471,7 +471,7 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 
 # N=16 at r>=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
 python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern pat-r5.json  # 639 s, proven 234
-python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; [1404, 1633]
+python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
 # Same two commands at r = 6, 7 and 8 (2026-08-05). Raise -t past the MILP's own solve
 # time -- 1585 s, 7257 s, 14050 s -- since the 600 s default cuts all three off. The
@@ -479,9 +479,34 @@ python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --
 # replaced by each; HiGHS uses one core on this model, so running the three round counts
 # as separate concurrent processes costs nothing over this sequential form.
 python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'pat-r{r}.json'
-python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; [1620, 1887]
-python3 permute-trail-search.py -r 7 --pattern-file pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; [2124, 2473]
-python3 permute-trail-search.py -r 8 --pattern-file pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; [2340, 2725]
+python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; trail 1887
+python3 permute-trail-search.py -r 7 --pattern-file pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; trail 2473
+python3 permute-trail-search.py -r 8 --pattern-file pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725
+
+# Every weight above is the best trail a SWEEP found, and none of them is the recorded
+# ceiling.  Descending that trail's own weight shell is (2026-08-06): re-run the winning
+# command with --cluster 1, a NEGATIVE --cluster-shell K and --weight-encoding totalizer
+# (required -- the pb default returns nothing here), which pins the trail's input/output
+# differential and asks for a lighter characteristic inside the same pattern.  This is
+# what every ceiling from r = 3 to r = 8 rests on; run it AFTER the sweep, since the
+# sweep is what supplies the differential to pin.  Full detail in research/README.md.
+python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 1387 s
+python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
+# The other four are the same shape over their own winning seeds: r = 4 at K = -26
+# (1151 -> 1125, 2954 s), r = 5 at -30 (1633 -> 1603), r = 7 at -25 (2473 -> 2448) and
+# r = 8 at -20 (2725 -> 2705).  A negative shell returning UNSAT is COMPLETE for that
+# differential; a timeout is `unknown` and bounds nothing, and some are budget artifacts
+# rather than walls -- r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14400.
+# THEN ENUMERATE THE SHELL THE DESCENT STALLED IN, which is where the recorded ceilings
+# come from: same command with --cluster 500 --fresh-instances -t 14400.  A --cluster 1
+# probe takes z3's first answer and that is the heaviest its bound allows, so re-asking
+# an ALREADY-SATISFIED cap for many trails reaches lighter ones than probing below it.
+# Six for six: 824 -> 823, 1125 -> 1123, 1603 -> 1602, 1857 -> 1856, 2448 -> 2447,
+# 2705 -> 2699.  r = 3 is the case to cite: its cap 823 had timed out TWICE, once at the
+# full 14400 s, and the 824 shell then yielded a weight-823 trail -- `unknown` is never
+# evidence of absence.  Give r = 5 -M 4000 (memory-bound at 2500).  All six ended
+# INCOMPLETE, which costs a ceiling nothing but voids their DP sums; three returned their
+# best trail last, so they are budget-limited rather than exhausted.
 ```
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
@@ -547,10 +572,13 @@ documentation:
    0.6 s and the run brackets those permutations at **[606, 705]** and **[684, 791]** — the
    first bracketed r = 5 results at any width, and both with sound floors. Five rounds is
    not intrinsically beyond stage A; 16 blocks is. (N = 16 is bracketed too as of
-   2026-08-04, at **[1404, 1633]** — but by importing the MILP's pattern via
+   2026-08-04, at **[1404, 1602]** — but by importing the MILP's pattern via
    `--dump-pattern` / `--pattern-file`, not by stage A ever finding one; r = 6, 7 and 8
-   followed on 2026-08-05 by the same route, at **[1620, 1887]**, **[2124, 2473]** and
-   **[2340, 2725]**.) The `PbEq` constraint spans 3 840
+   followed on 2026-08-05 by the same route, at **[1620, 1856]**, **[2124, 2447]** and
+   **[2340, 2699]**. Those four ceilings read 1633, 1887, 2473 and 2725 as first found;
+   a weight-shell descent over each winning trail took 30, 30, 25 and 20 bits off them
+   on 2026-08-06, and enumerating the shell each descent stalled in took a further 1, 1,
+   1 and 6 on 2026-08-07 — all of it changing neither the pattern nor the seed.) The `PbEq` constraint spans 3 840
    booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose. Read with
    r = 4 — where stage A clears the same constraint three times, then stalls on a fourth —
    this is one continuous difficulty in width and depth, not a cliff at r = 5.
@@ -560,7 +588,14 @@ documentation:
    The useful finding is the cost comparison: given ~20 min each on the same r = 3
    instance, minimizing pattern 1 moved the ceiling **0 bits** while item 4's sweep moved
    it **12**. Finding a trail in a fresh pattern is satisfiability; minimizing within one
-   is refutation over that whole pattern. **Spend a ceiling budget on `--patterns`.**
+   is refutation over that whole pattern. **Spend a ceiling budget on the shell descent
+   first, then on `--patterns`** — this item read "spend it on `--patterns`" until
+   2026-08-06, when descending one trail's weight shell moved every round count from
+   r = 3 to r = 8 by 17 to 30 bits, against the 5 bits r = 3's 5.5-hour nine-seed
+   `--patterns 32` sweep had bought. Minimization stays refuted either way; what changed
+   is which of the two surviving levers to reach for. They vary different axes — a sweep
+   changes *which* differential is examined, the shell asks for a lighter characteristic
+   inside the one already in hand — so run the sweep first and descend its winner.
 4. ~~`--patterns 8` at r = 3 and r = 4~~ — **done 2026-08-02; both ceilings improved.** At
    r = 3 all 8 patterns are realizable (903, 903, 901, 895, **891**, 902, 901, 897; 19 min,
    865 MB), so realizability is not a quirk of the first pattern, and the ceiling drops

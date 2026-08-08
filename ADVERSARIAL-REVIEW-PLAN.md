@@ -181,8 +181,9 @@ then attack it.
       compression `AESENC(AESENC(AESENC(m,s),m),s)` matches the spec exactly; the initial state
       continues the LFSR stream at constant #769 (not overlapping `RC`); the `mix_rate` binding
       even for short inputs; the finalization padding `00 01 02 …` and final `P(s,4)`; and that
-      the "good statistical behavior" claim has *some* empirical backing (avalanche / SMHasher-style
-      smoke test) rather than being asserted. Idempotent repeated extraction.
+      SPEC.md's statistical wording still matches what is measured — it names the compression's
+      per-input diffusion and the permutation's avalanche matrix, rather than claiming "good
+      statistical behavior". Idempotent repeated extraction.
 
 ---
 
@@ -278,8 +279,12 @@ assert perf claims from reading code (per repo's own accuracy rule).
       file parser, and the PRNG-service request handler.
 - [ ] **No sanitizer CI.** Recommend an ASan/UBSan/TSan build target in the Makefile and a
       `make test-san`.
-- [ ] **Statistical testing for `cch`.** The "good statistical behavior" claim has no visible
-      test; recommend a SMHasher-style or avalanche smoke test.
+- [ ] **Statistical testing for `cch`.** No battery has ever been run against the composite,
+      and SPEC.md now says so rather than claiming "good statistical behavior". Both
+      constituents are measured separately (the compression's per-input diffusion, the
+      permutation's avalanche matrix), and the lanes are pairwise distinct at every legal
+      `mix_rate`, so lane collapse cannot motivate one — is a SMHasher-style or avalanche
+      smoke test still worth having?
 - [ ] **Differential/structural smoke tests.** The MILP bounds live in `research/`; add a
       cheap CI avalanche/diffusion regression so a code change that silently weakens `P` is
       caught.

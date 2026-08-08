@@ -92,17 +92,15 @@ private:
     /// Create the initial state
     // {{{
     /**
-    * The state lanes are initialized with distinct nonzero constants (rather
-    * than zeros) so that lanes given equal input blocks do not evolve
-    * identically.  With an all-zero initial state, an input whose 16-byte
-    * blocks repeat with a period that divides the chunk size (e.g. all-zero
-    * pages) would keep every lane identical until the first mix, collapsing
-    * the effective state to one lane during absorption.
+    * The lanes start at distinct nonzero constants so that lanes fed equal
+    * input blocks do not evolve identically.  From an all-zero state, input
+    * whose 16-byte blocks repeat with a period dividing the chunk size (e.g.
+    * all-zero pages) would keep every lane identical until the first mix,
+    * collapsing absorption to a single lane.
     *
-    * The constants are the continuation of the LFSR stream used to create
-    * \c Castella::round_constants, so they are distinct from every round
-    * constant of the permutation (all states within one period of the LFSR
-    * are distinct).
+    * The constants continue the LFSR stream that produced
+    * \c Castella::round_constants, so they differ from every round constant
+    * (all states within one LFSR period are distinct).
     */
     // }}}
     [[nodiscard]] static consteval state_t

@@ -36,8 +36,11 @@
 # The enumerations all ran out of clock with their shells INCOMPLETE, which
 # costs a CEILING nothing -- any trail below the cap is itself the result -- but
 # voids the DP(differential | pattern) sum each one prints.  Three of the six
-# (r = 3, 5, 8) returned their best trail LAST, so those are budget-limited
-# rather than exhausted: a longer -t is the cheapest remaining gain.
+# (r = 3, 5, 8) returned their best trail LAST, which looked budget-limited --
+# but re-running all six on 2026-08-08, three of them at TIME_LIMIT=28800, moved
+# NO ceiling.  Do not expect a longer budget to.  At the default 14400 this
+# script reproduces the table above trail for trail, so it regenerates the
+# recorded ceilings rather than searching for new ones.
 
 set -u
 

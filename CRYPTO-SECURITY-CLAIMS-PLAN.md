@@ -506,7 +506,8 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # full 14400 s, and the 824 shell then yielded a weight-823 trail -- `unknown` is never
 # evidence of absence.  Give r = 5 -M 4000 (memory-bound at 2500).  All six ended
 # INCOMPLETE, which costs a ceiling nothing but voids their DP sums; three returned their
-# best trail last, so they are budget-limited rather than exhausted.
+# best trail last, which looked budget-limited -- but re-running all six on
+# 2026-08-08, three of them at double the budget, moved NO ceiling.
 ```
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`

@@ -96,4 +96,4 @@ Any attack on a **claimed** instance (SPEC.md's claimed-instances table) with co
 
 ## Non-goals
 
-Compress-Castella (`cch`) digests are out of scope — collisions there are trivial by design and claimed by nobody (see SPEC.md's non-claims).  Implementation attacks (memory safety, timing, parsers) are also out of scope here; see [ADVERSARIAL-REVIEW-PLAN.md](ADVERSARIAL-REVIEW-PLAN.md).
+Compress-Castella (`cch`) digests are out of scope — no collision or preimage resistance is claimed for them (see SPEC.md's non-claims), and its independent lanes cap collision resistance at roughly 2^68 whatever the digest length, so a `cch` collision would confirm that disclaimer rather than break anything.  Implementation attacks (memory safety, timing, parsers) are also out of scope here; see [ADVERSARIAL-REVIEW-PLAN.md](ADVERSARIAL-REVIEW-PLAN.md).

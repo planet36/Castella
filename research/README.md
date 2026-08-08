@@ -19,6 +19,7 @@
 | simd\_compress\_aes\_enc-num\_rounds.cpp | Find the bit diffusion rate of `simd_compress_aes_enc_r{2,3,4}` when each param varies |
 | permute-min-active-sboxes.py | MILP model (truncated differentials) counting the minimum differentially active AES S-boxes in `Castella::permute`; gives a differential characteristic probability bound of 2^(-6·A).  `--dump-pattern` writes the solved activity pattern out for the trail search |
 | permute-trail-search.py | Bit-level SAT/SMT search (z3) for actual differential characteristics realizing the MILP-minimal activity patterns; reports the best-trail weight (an upper bound complementing the MILP lower bound) and, with `--cluster`, enumerates the characteristics sharing one differential.  `--pattern-file` takes the pattern from the MILP instead of searching for it, which is the only route at _N_ = 16 above _r_ = 4 |
+| permute-trail-ceilings.bash | Re-runs the weight-shell probe behind each recorded trail ceiling at _r_ = 3 to 8, holding the per-round-count recipe (pattern source, z3 seed, shell offset _K_) that is not derivable from anything else here.  `-d` descends the shell of the best trail in hand, `-e` (default) enumerates the cap the descent reached; `-n` prints the commands instead of running them |
 | trail-model-crossvalidate.py | Checks `permute-trail-search.py`'s model of `P` against `spec-conformance.py`'s KAT-verified implementation, by propagating the difference of random state pairs through both and comparing byte for byte at every round count |
 | permute-invariant-subspaces.py | Exact invariant-subspace search over `Castella::permute`: exhaustive over every byte-aligned subspace and every coset of one (via an exhaustive census of the affine subspaces the AES S-box preserves, MixColumns compatibility, and byte-support closure), plus a layer-by-layer decision and a forced-closure proof for the transpose's symmetry classes (nonzero exit on any violation) |
 | permute-division-property.py | Bit-based division property of `Castella::permute`: decides whether a *chosen* cube leaves each output bit balanced, so it reaches the structured (byte-aligned) cubes the random zero-sum probes cannot draw.  Runs `P` forward or `P⁻¹` backward.  Validated by reproducing AES's Square distinguisher in both directions, at each direction's own boundary (3 forward, 2 inverse).  **`--inside-out` adds the two directions' round counts, but its halves do not share a cube** — the backward build takes its cube one transpose away from the middle state — so its sum is not a zero-sum reach; see `permute-multiplicity-verify.py` |
@@ -711,7 +712,12 @@ done; wait
 grep -h 'best characteristic' r6-seed*.txt   # then -r 7 / -r 8 with pat-r7/8.json
 
 # THE SHELL DESCENT -- the first half of what every ceiling from r = 3 to r = 8
-# rests on; the enumeration below is the second half.
+# rests on; the enumeration below is the second half.  BOTH ARE WRAPPED by
+# permute-trail-ceilings.bash, which carries the per-round-count recipe -- the
+# pattern source, the winning z3 seed and the shell offset K -- for all six.
+# The commands are spelled out here anyway, since the recipe is the result.
+#   ./permute-trail-ceilings.bash -n -d 3      # print the r = 3 descent
+#   ./permute-trail-ceilings.bash 6 7          # run two enumerations
 # Re-run the command that found the best trail, adding --cluster 1 with a NEGATIVE
 # --cluster-shell K: the search's best is only an upper bound on its own
 # differential's lightest characteristic, so asking for weight <= best+K finds

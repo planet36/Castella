@@ -175,46 +175,65 @@ The honest procedure:
    then corrected to superadditive floors of 138/174 at r = 4/5, which were sound but loose
    by 20% and 34%. The solved values above replace them. The 512-bit floor itself moved
    once: under A(4) = 225 it sat at **r=4** (6·225 = 1350 ≥ 1024), and refuting that figure
-   is what pushed it to r=5 and created the `C` = 8 margin exception in step 4. Solving
-   A(4) = 165 has now fixed it there permanently.
+   is what pushed it to r=5 and created the `C` = 8 margin exception in step 4 — since
+   dissolved by the additive policy adopted in step 3, with no round count changing.
+   Solving A(4) = 165 has now fixed the floor there permanently.
 2. **Floor from diffusion.** Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
-3. **Margin against the unknown.** Adopt an explicit margin policy, e.g. *R\* ≥ 2× the
+3. **Margin against the unknown. RESOLVED 2026-08-08 — the adopted policy is
+   `R* = max(diffusion floor, trail floor) + 3`**, additive in rounds, where the `+ 3`
+   is the longest reach of any known distinguisher against `P` (the inside-out zero-sum).
+   It reproduces all four shipped round counts (6/6/6/8) with no exceptional row, and
+   nothing shipped changed when it was adopted. Written up in SPEC.md's margin rationale,
+   including the disclosures below. Re-evaluate as §5 produces results: a distinguisher at
+   4 rounds obliges `floor + 4` = 7/7/7/9.
+
+   *Why additive rather than the ratio policy this step used to propose* (`R* ≥ 2× the
    highest round count reached by any known attack or distinguisher stronger than
-   generic*, re-evaluated as §5 produces results. Keccak's ratio is roughly 3–4× on
-   attacks; a young design with no external analysis should not claim a thinner one.
+   generic`): a ratio makes the absolute margin scale with whatever it multiplies, so
+   anchoring on the trail floor — which step 4 did — gives more protection to the
+   capacity whose bound is weaker, which is backwards. Attacks advance round by round.
+   Note the old example policy in this step was never the problem: at a known reach of 3
+   it demands `R* ≥ 6`, which every shipped row already met. The `C=8` exception came
+   from step 4 applying `2×` to the *floor* instead.
+
+   *The comparison with Keccak that this step used to make is not like-for-like.* Keccak's
+   ~3–4× is against practical attacks reaching ~6 rounds; the 3 here is a 2^128-data
+   distinguisher on `P`, not a break of the sponge. It cuts both ways and SPEC.md now says
+   so: there are no practical attacks on Castella at any round count to measure from, but
+   zero-sums reach full-round Keccak-`f`, so Keccak would score zero margin under the rule
+   adopted here. Do not present the 2.00×/2.67× ratios as comparable to a SHA-3 figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances* —
-   e.g. the current default `rounds=6` is exactly 2× the r=3 diffusion/trail floor for the
-   256-bit level, but that rationale must be written down and revisited when §5 evidence
-   arrives. **The `C=8` instance is the one that does not currently satisfy the example
-   2× policy**: the 512-bit trail floor is r=5 (step 1), so 2× would be `R*=10` against
-   the shipped `R*=8`, a ratio of 1.6×. This is a margin question rather than a broken
-   claim — the 2× rule is offered as an example policy in step 3, not adopted as binding —
-   but it is now a sharper version of the concern flagged here when the floor was believed
-   to be r=4, and it should be settled explicitly rather than left implicit: either adopt
-   a policy the shipped parameters meet, or raise `R*` at `C=8`.
+   **done, and the margin question that hung over this step is CLOSED (2026-08-08): the
+   round counts stay at 6/6/6/8 and the rationale was rewritten** under step 3's adopted
+   policy `R* = binding floor + 3`. `C=8` is no longer an exception to anything; at 2.67×
+   the known distinguisher reach it is the *widest* margin of the four rows.
 
-   **A margin policy has to say what it measures, and the two natural answers disagree
-   here.** Write `L(r) = 3·A(r)` for the largest level `r` rounds support under this
-   criterion (from `6·A ≥ 2b`, so `b ≤ 3·A`). Then:
+   | `C` | claimed `b` | needs `A ≥` | trail floor | binding floor | shipped `R*` | `R*` − floor | ÷ known reach (3) |
+   |---|---|---|---|---|---|---|---|
+   | 2 | 128 | 43 | r=2 | r=3 (diffusion) | 6 | **+3** | 2.00× |
+   | 4 | 256 | 86 | r=3 | r=3 | 6 | **+3** | 2.00× |
+   | 6 | 384 | 128 | r=3 | r=3 | 6 | **+3** | 2.00× |
+   | 8 | 512 | 171 | **r=5** | r=5 | 8 | **+3** | **2.67×** |
 
-   | `C` | claimed `b` | needs `A ≥` | trail floor | binding floor | shipped `R*` | `L(R*)` | margin in bits | margin in rounds |
-   |---|---|---|---|---|---|---|---|---|
-   | 2 | 128 | 43 | r=2 | r=3 (diffusion) | 6 | 810 | **6.33×** | 2.00× |
-   | 4 | 256 | 86 | r=3 | r=3 | 6 | 810 | **3.16×** | 2.00× |
-   | 6 | 384 | 128 | r=3 | r=3 | 6 | 810 | **2.11×** | 2.00× |
-   | 8 | 512 | 171 | **r=5** | r=5 | 8 | 1170 | **2.29×** | **1.60×** |
+   *How it was decided, since the reasoning is easy to lose.* The prior framing here was
+   that a margin policy "has to say what it measures, and the two natural answers
+   disagree": writing `L(r) = 3·A(r)` for the largest level `r` rounds support, the
+   shipped rows give margins **in bits** of 6.33× / 3.16× / 2.11× / **2.29×** (so `C`=8 is
+   the second-*strongest* row and `C`=6 the weakest) against margins **in rounds** of
+   2.00× / 2.00× / 2.00× / **1.60×** (so `C`=8 is the only row below policy). Those figures
+   are still correct and every `L(R*)` in them is a solved optimum. **Adopting the bits
+   reading was rejected anyway**, on two grounds: it is the metric that happens to flatter
+   the row under question, which a reader is entitled to be suspicious of; and it is the
+   wrong metric for the purpose, since doubling a *differential* bound buys nothing against
+   the rebound, integral and algebraic attacks the margin exists to cover. The additive
+   rounds rule keeps the conservative metric and needs no exception, which is why it won.
 
-   Every `L(R*)` here is now a solved optimum — `A(6) = 270` for the first three rows,
-   `A(8) = 390` for the last — so this table contains no estimates. **Measured in bits,
-   `C` = 8 is not the outlier but the second-strongest row**, 2.29× against `C` = 6's
-   2.11×. Its
-   exception status comes entirely from measuring in rounds, where the floors happen to
-   fall either side of a step. A grows super-linearly (9, 45, 129, 165, 234, 270), so a
-   round-count ratio understates the bound's growth. Both readings are defensible and the
-   example 2× policy in step 3 does not say which it means; whichever is adopted should be
-   stated. *(Deferred by the author 2026-08-02: not ready to decide. Do not press — but see
-   the standing intent to revisit `R*` upward, below.)*
+   **Disclose in SPEC.md, and it does:** that the `+ 3` rule was recognized *after* the
+   round counts were chosen; that it replaced a `2 ×` floor rule and why that rule was
+   defective; that the anchor is a *known* reach with no upper bound claimed on the true
+   one; and the resulting revision trigger, `floor + 4` = 7/7/7/9 if a 4-round
+   distinguisher appears.
 
    **The thinnest margin in this table is not `C` = 8 — it is `C` = 6's floor.** That row
    needs `A(3) ≥ 128` and gets **129**: it clears by one S-box, 6 bits out of 768. Had
@@ -226,7 +245,9 @@ The honest procedure:
    **Standing intent (author, 2026-08-03): revisit the shipped `R*` values upward.** Not
    only `C` = 8. Any change to `R*` changes every digest at that capacity, so it is a
    format decision, not only a margin one; the KATs, `SPEC.md`'s claimed-instances table
-   and the `--help` texts all move with it.
+   and the `--help` texts all move with it. **Closing the margin question above does not
+   foreclose this** — the policy fixes the *minimum* a claimed instance must carry, and
+   shipping more rounds than `floor + 3` stays open on its own merits.
 
 Deliverable: a "Claimed instances" table in SPEC.md — `(C, R*, digest sizes)` per SHA-3
 equivalence row — with the margin rationale, plus a statement that other parameterizations

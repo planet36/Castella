@@ -470,8 +470,8 @@ python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --pr
 python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
 
 # N=16 at r>=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
-python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern pat-r5.json  # 639 s, proven 234
-python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
+python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
+python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
 # Same two commands at r = 6, 7 and 8 (2026-08-05). Raise -t past the MILP's own solve
 # time -- 1585 s, 7257 s, 14050 s -- since the 600 s default cuts all three off. The
@@ -479,9 +479,9 @@ python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize --
 # replaced by each; HiGHS uses one core on this model, so running the three round counts
 # as separate concurrent processes costs nothing over this sequential form.
 python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'pat-r{r}.json'
-python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; trail 1887
-python3 permute-trail-search.py -r 7 --pattern-file pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; trail 2473
-python3 permute-trail-search.py -r 8 --pattern-file pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725
+python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; trail 1887
+python3 permute-trail-search.py -r 7 --pattern-file patterns/pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; trail 2473
+python3 permute-trail-search.py -r 8 --pattern-file patterns/pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725
 
 # Every weight above is the best trail a SWEEP found, and none of them is the recorded
 # ceiling.  Descending that trail's own weight shell is (2026-08-06): re-run the winning
@@ -491,7 +491,7 @@ python3 permute-trail-search.py -r 8 --pattern-file pat-r8.json --no-minimize --
 # what every ceiling from r = 3 to r = 8 rests on; run it AFTER the sweep, since the
 # sweep is what supplies the differential to pin.  Full detail in research/README.md.
 python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 1387 s
-python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
+python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
 # The other four are the same shape over their own winning seeds: r = 4 at K = -26
 # (1151 -> 1125, 2954 s), r = 5 at -30 (1633 -> 1603), r = 7 at -25 (2473 -> 2448) and
 # r = 8 at -20 (2725 -> 2705).  A negative shell returning UNSAT is COMPLETE for that

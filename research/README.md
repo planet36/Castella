@@ -419,7 +419,7 @@ python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300   # 
 
 # The same cell under HiGHS, keeping the solved pattern for the trail search.
 python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 \
-    --dump-pattern pat-r5.json                                               # 639 s, proven 234
+    --dump-pattern patterns/pat-r5.json                                               # 639 s, proven 234
 ```
 
 The two refuted cells, and the limit of what more time buys — the _r_ = 4 incumbent was identical at 30 min and 55 min, so its primal side has converged and only the dual bound is outstanding:
@@ -678,11 +678,14 @@ grep -h 'best characteristic' r3-seed*.txt   # then -r 4 -A 165 --patterns 16 -M
 
 # r >= 5 at N = 16 needs its pattern imported: stage A finds none at any target,
 # while the MILP solves the same cell.  ~3 min, of which the model build is most.
+# THE FOUR SOLVED PATTERNS ARE COMMITTED under patterns/ -- see patterns/README.md
+# -- so the --dump-pattern line below is only needed to re-derive them (~6.4 h of
+# MILP for the set); the trail-search lines run straight off the repo.
 # Seeds vary the trail: nine gave 1633-1638, seed 5 winning with 1633.  The 1602
 # ceiling then comes from a shell descent over seed 5's trail and an enumeration of
 # the shell that descent stopped in, both below.
-python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern pat-r5.json
-python3 permute-trail-search.py -r 5 --pattern-file pat-r5.json --no-minimize \
+python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json
+python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize \
     --random-seed 5 -M 2500 --print-trail
 
 # r = 6, 7 and 8 are the same two commands with -r raised.  Give the MILP a -t
@@ -702,7 +705,7 @@ for R in 6 7 8; do
         --dump-pattern "pat-r$R.json" &
 done; wait
 for K in 0 1 2 3 4 5 6 7; do
-    python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json \
+    python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json \
         --no-minimize --random-seed "$K" -M 3500 > "r6-seed$K.txt" &
 done; wait
 grep -h 'best characteristic' r6-seed*.txt   # then -r 7 / -r 8 with pat-r7/8.json
@@ -722,7 +725,7 @@ python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 \
     --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 \
     --cluster 1 --cluster-shell -17 --cluster-time-limit 14400      # 824, 1387 s
 #   r = 5/6/7/8: same, over the imported pattern (one model build, no stage A)
-python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --random-seed 2 \
+python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 \
     --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 \
     --cluster 1 --cluster-shell -30 --cluster-time-limit 3600       # 1857, 459 s
 
@@ -735,7 +738,7 @@ python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --random-seed 2 
 # This moved all six: 824 -> 823, 1125 -> 1123, 1603 -> 1602, 1857 -> 1856,
 # 2448 -> 2447 and 2705 -> 2699, each in a 4 h budget.  Same selectors as the
 # descent above, with --cluster 1 replaced by --cluster 500 --fresh-instances.
-python3 permute-trail-search.py -r 6 --pattern-file pat-r6.json --random-seed 2 \
+python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 \
     --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2500 \
     --cluster 500 --fresh-instances --cluster-shell -30 \
     --cluster-time-limit 14400              # 7 trails, best 1856, shell INCOMPLETE

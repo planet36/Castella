@@ -253,11 +253,20 @@ The honest procedure:
    distinguisher appears.
 
    **The thinnest margin in this table is not `C` = 8 — it is `C` = 6's floor.** That row
-   needs `A(3) ≥ 128` and gets **129**: it clears by one S-box, 6 bits out of 768. Had
-   `A(3)` come in at 128, `C` = 6's trail floor would be r=4 and its `R*` would want to be
-   8 rather than the shipped 6. This is safe — `A(3) = 129` is now proven by two
-   independent solvers — but it is the tightest quantity in the whole analysis, it is
-   *derived* rather than chosen, and nothing else in these documents says so.
+   needs `A(3) ≥ 128` and gets **129**: it clears by one S-box, 6 bits out of the 768 the
+   level requires. `C` = 6 is the only row where `2b/6` is an integer exactly, which is
+   why: the other three round up and clear by 2, 43 and 63 boxes. One box lower still, at
+   `A(3)` = 127, this row's trail floor would be r=4 and its `R*` 7 rather than the shipped
+   6. This is safe — `A(3) = 129` is now proven by two independent solvers — but it is the
+   tightest quantity in the whole analysis and it is *derived* rather than chosen.
+   **Now stated in SPEC.md's margin rationale too**, which is where a reader of the claim
+   will meet it; this paragraph used to add that nothing else said so.
+
+   *Two arithmetic errors, corrected 2026-08-09 when it was carried across:* the
+   counterfactual read "had `A(3)` come in at 128", which still clears — the requirement is
+   `A ≥ 128`, so 128 meets it with no slack rather than failing it. And the `R*` it named
+   was 8, which was the answer under the `2 ×` floor rule this step abandoned; under
+   `floor + 3` a trail floor of 4 gives 7.
 
    **DECIDED 2026-08-08: `R*` stays 6/6/6/8 and will not be raised.** A standing intent
    recorded here on 2026-08-03 — to revisit the shipped values upward, at every capacity

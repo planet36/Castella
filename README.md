@@ -42,6 +42,17 @@ SPEC.md also states the [security claims and non-claims](SPEC.md#security-claims
 
 The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.
 
+The capacity is the security parameter: the claimed level is `64·C` bits, half the capacity of `128·C` bits.  Paired with a digest size it reproduces the SHA-3 levels exactly, and the [`castella` program](hash-programs/castella.cpp) picks the capacity from the digest size by the rule that produces this mapping (smallest even `C` with `16·C ≥ 2n` bytes for an `n`-byte digest):
+
+| digest size | `C` | capacity | collision / preimage / 2nd-preimage | matches |
+|-------------|-----|----------|--------------------------------------|---------|
+| 28 bytes | 4 | 512 | 112 / 224 / 224 | SHA3-224 (448-bit capacity, so this maps upward) |
+| 32 bytes | 4 | 512 | 128 / 256 / 256 | SHA3-256 |
+| 48 bytes | 6 | 768 | 192 / 384 / 384 | SHA3-384 |
+| 64 bytes | 8 | 1024 | 256 / 512 / 512 | SHA3-512 |
+
+Round counts appear nowhere in that table — as in SHA-3, they are safety margin rather than a security parameter.  [SPEC.md](SPEC.md#security-claims-and-non-claims) derives these strengths from the claim, states which `(C, num_rounds)` instances the claim covers, and gives the margin rationale behind the round counts.
+
 ### Instantiation Parameters
 
 An instance of `Castella::Duplex` takes these parameters:

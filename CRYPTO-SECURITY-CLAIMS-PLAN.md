@@ -395,20 +395,56 @@ in the sense this plan promises.
 
 ## 10. Re-derivation runbook (the standing procedure)
 
-Every figure in this repository's cryptanalysis sections came out of one of five Python
-programs. (A sixth, `research/trail-model-crossvalidate.py`, produces no figure — it checks
-the model that two of the five depend on, so it belongs in §10.1 but not in that count.)
-This section is the procedure for re-deriving all of them, so a future session can refresh
-the docs without reconstructing what to run or why. It was written from a full re-derivation
-on 2026-08-01/02 that took ~13 hours of machine time on 8 threads and **refuted four
-published figures** — so treat this as maintenance that is expected to find things, not a
-formality.
+This section is the procedure for re-deriving every figure in this repository's
+cryptanalysis sections, so a future session can refresh the docs without reconstructing
+what to run or why. It was written from a full re-derivation on 2026-08-01/02 that took
+~13 hours of machine time on 8 threads and **refuted four published figures** — so treat
+this as maintenance that is expected to find things, not a formality.
 
-Timings and peak memory below are from that run (8 threads, 7.7 GiB, no swap). Every
-command is sized to finish inside one hour; `-t` is the limit **per round count**, so
-solve one cell at a time with `--min-rounds R -r R` when the budget matters.
+Timings and peak memory in §10.1–§10.6 are from that run (8 threads, 7.7 GiB, no swap; the
+machine has had 15 GiB since 2026-08-03). §10.7's are from the runs recorded in
+VERIFYING-CLAIMS.md, with the sub-minute ones re-measured on 2026-08-09. Every MILP and
+trail-search command is sized to finish inside one hour; `-t` is the limit **per round
+count**, so solve one cell at a time with `--min-rounds R -r R` when the budget matters.
 
-### 10.1 Cheap and deterministic — run these first (< 1 min total)
+**Two standing rules for anything in this section that solves.** Launch it under
+`nice -n 19` — the benchmarks are the exception, never the solvers — and keep at most 8
+solver processes running at once, trail search and MILP sharing that one budget. `nice`
+does not substitute for the cap. Shed load by killing, never by `SIGSTOP`, because z3's
+`-t` is wall-clock and a stopped process keeps burning it.
+`research/permute-trail-ceilings.bash` already follows both, and additionally caps
+concurrency by memory: `-M` is **per process**, so a batch needs N × M inside RAM. The 8 is
+a ceiling, not a target — memory binds lower for the long shell probes, where that script
+holds the batch to four on a 15 GiB machine.
+
+### 10.0 Which program owns which figure
+
+The list has grown well past the five programs this section was originally written around,
+and a figure whose program is missing here is a figure nobody knows how to re-derive.
+
+| program | figures it owns | where |
+|---|---|---|
+| `research/spec-conformance.py` | none of its own — it is the independent model the KATs are checked against | §10.1 |
+| `research/permute-min-active-sboxes.py` | A(r), the proven active-S-box optima behind every trail floor | §10.2 |
+| `research/permute-trail-search.py` | the bit-level trail ceilings and the r = 1 cluster | §10.3 |
+| `research/permute-trail-ceilings.bash` | regenerates the recorded r = 3…8 ceilings from the two shell levers | §10.3 |
+| `research/trail-model-crossvalidate.py` | no figure — it checks the trail model against the KAT-verified one | §10.1 |
+| `tests/duplex-diff-fuzz.py` | no figure — differential fuzz of the Duplex API against the spec model | §10.1, §10.4 |
+| `research/permute-num_rounds.cpp`, `research/permute-num_rounds-avalanche_matrix.cpp` | the **diffusion floor of 3 rounds** — one of the two inputs to every `R*` | §10.7 |
+| `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §10.1, §10.7 |
+| `research/permute-invariant-subspaces.py` | the exhaustive byte-aligned invariant-subspace census (690,880 / 85 / 0 …) | §10.1, §10.7 |
+| `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §10.1, §10.7 |
+| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers | §10.7 |
+| `research/permute-multiplicity-verify.py` | the **3-round inside-out zero-sum** — the anchor of `R*` = floor + 3 | §10.1, §10.7 |
+| `research/permute-degree-bound.py` | degree saturation by 2 rounds; degree-based zero-sum reach ≈ 2.67 rounds | §10.1 |
+| `research/duplex-prng-stream.cpp` + PractRand | the statistical smoke test (16 GiB, no anomalies) | §10.7 |
+| `research/simd_compress_aes_enc-num_rounds.cpp` | cch's per-input diffusion figure (~50% at 3 AES rounds) — a non-claim's evidence | §10.7 |
+
+[research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) is the companion to this table
+from the other side: it maps each *claim* to the commands, and holds the interpretation
+rules that this section deliberately does not repeat.
+
+### 10.1 Cheap and deterministic — run these first (< 5 min total)
 
 | Command | Purpose | Expected |
 |---|---|---|
@@ -416,13 +452,25 @@ solve one cell at a time with `--min-rounds R -r R` when the budget matters.
 | `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the AES Square-distinguisher validation | `self-test OK` |
 | `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 8 AES rounds = 2.67 Castella rounds |
 | `python3 research/permute-trail-search.py --self-test` | S-box/DDT/aesenc model checks | `self-test OK` |
+| `python3 research/permute-division-property.py --self-test` | division-property model checks | `self-test: OK`, 0.4 s |
+| `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
+| `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out … 3 round(s), not 4`, 4.4 s |
+| `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
+| `python3 research/permute-invariant-subspaces.py` | the exhaustive byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
+| `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
+| `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | The trail search models `P` a **third** time (beside the C++ and spec-conformance.py); this compares its difference propagation with the KAT-verified one, r = 1..6 | `240 state pairs verified, 0 failed`, ~3 min |
 | `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 25 s |
 
-(Everything above except the last row runs on the system `python3`; the trail-search rows
-need z3, Arch `python-z3-solver`, and `trail-model-crossvalidate.py` needs it too because it
-imports the trail search to reach its layer machinery.)
+(Everything above except the last row and the two compiled ones runs on the system
+`python3`. The trail-search rows
+need z3, Arch `python-z3-solver`; `trail-model-crossvalidate.py`, `permute-division-property.py`
+and `permute-invariant-subspaces.py` need it too — the last of these solves nothing itself
+but imports the machinery. `permute-multiplicity-verify.py` needs only the standard library
+and `spec-conformance.py`. The two `./`-prefixed rows are compiled: `make -C research` first,
+which links google-benchmark into every binary in that directory, so the probes need it
+installed even though they benchmark nothing.)
 
 `<pulp>` is `~/.venvs/pulp/bin/python3`. **The venv is unavoidable for the MILP script**, and
 the reason is PuLP rather than the solver: PuLP has no Arch package and pip refuses to
@@ -716,9 +764,74 @@ documentation:
   the same warning §10.2 draws from it: a duality gap is not a progress bar. Above r=8
   nothing has been attempted, so superadditivity remains the only source there.
 
-**What is still open is recorded in VERIFYING-CLAIMS.md § 16, not here**, and one whole
-line of it is closed by decision rather than by result: pushing the trail-search *ceilings*
-any further — more seeds, more patterns, deeper shells, alternate MILP optima above r = 4 —
-**was closed on 2026-08-08 and is not to be re-proposed.** The ceilings bracket every
-shipped round count already, and every floor under them is a converged optimum; what a
-tighter ceiling would buy is characterization, not margin.
+### 10.7 Diffusion, structural, algebraic and statistical evidence
+
+§10.1–§10.6 cover the trail line — the MILP floors and the bit-level ceilings — because
+that is what the 2026-08-01/02 re-derivation was about. It is not the whole evidence
+base, and the rest of it is not optional to re-derive: **the diffusion floor is one of the
+two inputs to every `R*`, and the 3-round inside-out zero-sum is what the `+ 3` margin term
+is anchored to** (§4.3 step 3), so a refresh that skips this subsection leaves the shipped
+round counts resting on figures nobody re-checked. The cheap members are already in §10.1;
+this is the rest, with the budgets they want.
+
+Read the results *there*, not here: [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md)
+§§ 3, 10, 11, 12, 15 hold the expected outputs, the figures that must reproduce exactly, and
+the interpretation rules — in particular that for the division property **UNSAT ("balanced")
+proves a distinguisher while SAT proves nothing at all**, so every "not balanced" reads as
+"not provable by this model". This subsection is only the procedure and the clock.
+
+```bash
+cd research && make    # links google-benchmark into every binary here
+
+# Diffusion floor: the 3 rounds that binds R* at every capacity but C = 8.  Read the
+# N=16 table: r=1 ~3.1% (one block), r=2 ~49.8% but with skewed higher moments, r>=3
+# 50.0% with clean ones.  The second program corroborates it per output bit.
+./permute-num_rounds -n 120
+./permute-num_rounds-avalanche_matrix -n 100
+
+# Structural, and cheap enough to be in 10.1 as well -- repeated here for the family.
+./permute-structural-probes -n 10000              # 0.3 s
+./permute-zero_sum-probes -n 1                    # 8 s
+python3 permute-invariant-subspaces.py            # 13 s
+
+# The division-property model.  Budget ~1.5 h for the set; only the first two are
+# gates, and a model that proved everything balanced would pass the first alone.
+python3 permute-division-property.py --validate            # ~17 min; AES Square, 3 rounds
+python3 permute-division-property.py --validate --inverse  # ~13 min; gates P^-1 AT 2 ROUNDS
+python3 permute-division-property.py -r 1 -c byte --count  # ~7 min; all 2048 bits balanced
+python3 permute-division-property.py -r 2 -c block --count # ~50 min; the 2^128 distinguisher
+python3 permute-division-property.py --inside-out 0 1 -c block   # ~48 s; MUST say no zero-sum
+
+# The margin anchor.  Part A checks the premises on the real state; Part B brute-forces
+# the reach at reduced width, and the table must be IDENTICAL at --reduced 2 and 3.
+python3 permute-multiplicity-verify.py            # 4.4 s
+python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
+
+# Statistical smoke test.  PractRand is external; ~6 s/GiB, so ~100 min per stream.
+./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
+./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
+
+# cch's non-claim rests on a measurement too: per-input diffusion at 3 AES rounds.
+./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from a=2 up; instant
+```
+
+Four traps in that set, all of which have already cost time once:
+
+* **`--validate --inverse` gates at 2 rounds, not 3, and that is correct.** `inv_aes_round`
+  ends on an S-box where `aes_round` ends on a linear layer, and a division property
+  crosses a linear layer untouched but never survives an S-box. "Fixing" the constant back
+  to 3 makes the gate fail.
+* **`--inside-out` reports no zero-sum at `2 1` even though one exists**, because a `block`
+  cube's backward half spreads over all 16 blocks and the sparse pruning collapses it to
+  one byte — balance over 2^8 being far harder to prove than over 2^128. The reach comes
+  from `permute-multiplicity-verify.py`, not from the model. The `0 1` run above is the
+  regression test for the bug that produced the retracted 4-round figure: the two halves
+  must be propagated over *one* middle-state cube, transposed for the backward half.
+* **`-r 2 -c block --count` is slow per block, not stuck.** Per-block cost ranges ~115 s to
+  ~700 s depending on which of round 1's output bytes feeds round 2; the ~6× spread is
+  structural and measures the same busy or idle.
+* **`--reduced 3` is worth its 35 minutes precisely because it should change nothing.** It
+  is the control on the reduced-width reach table, and the four S-box controls inside the
+  script are what make the whole argument capable of failing — one of them (254 odd
+  preimage counts) must *break* the zero-sum, and if it ever passes, the failure is in the
+  test rather than in `P`.

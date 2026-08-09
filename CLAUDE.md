@@ -62,7 +62,7 @@ The library is header-only. Users include `castella-duplex.hpp`, which pulls in 
 - **State**: 256-byte array of `B=16` blocks, where each block is a 16-byte `uint8x16_t` (x86 `__m128i` or ARM `uint8x16_t`)
 - **Capacity/Rate split**: `capacity_blocks` (C) sets the inner state size; rate R = B − C blocks form the outer (absorb/squeeze) state
 - **Permutation**: Each round applies 3 AES rounds to every block — each block in each AES round uses a distinct round constant as its AES round key — then transposes the 16×16 byte matrix
-- **Round constants**: Generated at compile time by a 128-bit Galois LFSR (GCM reduction polynomial) seeded with "expand 16-byte c"; one constant per (permutation round, AES round, block)
+- **Round constants**: Generated at compile time by a 128-bit Galois LFSR (GCM reduction polynomial) seeded with "expand 16-byte c"; one constant per (permutation round, AES round, block). A reduced-round permutation uses the **last** `num_rounds` rounds' constants, as in Keccak-p — with the first `num_rounds`, `permute(x, n2)` would be a fixed public function of `permute(x, n1)` for every `n1 < n2`. Do not "simplify" this to the first N: it changes every digest and it is what keeps the reduced-round instances in `CHALLENGES.md` independent targets
 - **Padding**: pad10\*1 rule, applied before every `squeeze_bytes()` call
 
 ### `Castella::Duplex` API

@@ -1,4 +1,4 @@
-[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) maps each security claim in [SPEC.md](../SPEC.md#security-claims-and-non-claims) to the evidence and commands that back it; this file holds the program inventory, models, and full result tables.
+[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) maps each security claim in [SPEC.md](../SPEC.md#security-claims-and-non-claims) to the evidence and commands that back it; [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) is the standing procedure for re-deriving every figure they quote, with budgets and expected output; this file holds the program inventory, models, and full result tables.
 
 ## Research programs
 

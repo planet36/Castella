@@ -196,7 +196,7 @@ An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.  *
 | 6 | 384 | 3 | 3 | 3 | 6 | 2.00× |
 | 8 | 512 | **5** | 3 | 5 | 8 | **2.67×** |
 
-The rule applies uniformly — no row is an exception, and `C` = 8 carries the *largest* margin of the four rather than the smallest.  Six things about this rationale should be visible to a reader rather than left implicit.
+The rule applies uniformly — no row is an exception, and every row carries the same 3-round margin, `C` = 8 included.  (By the ratio column it is the *widest* of the four rather than the narrowest, which is the shape the `2 ×` rule this replaced got backwards; but the ratio is bookkeeping, not the rule, for the reason given two paragraphs down.)  Seven things about this rationale should be visible to a reader rather than left implicit.
 
 **The additive form was recognized after the fact.**  The round counts were fixed first; `R*` = floor + 3 is the rule that turned out to describe all four of them.  It is offered as an accurate account of the shipped parameters, not as a derivation that produced them.
 

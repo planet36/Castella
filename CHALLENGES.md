@@ -50,6 +50,28 @@ Notes for analysts:
   and then squeezing the digest size.  The first three fields are the final node's role prefix; the last is the number of leaf CVs, which the tree absorbs even when there are none — leaving it out is the easy way to fail to reproduce a target.  (`spec-conformance.py`'s `Duplex` and `tree_digest` implement exactly this.)  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * An independent implementation to check against is [research/spec-conformance.py](research/spec-conformance.py) (pure Python, written from the spec).
 
+## Warm-up instances
+
+Digest size 4 bytes (`C` = 2, capacity 256 bits): generic collision cost 2^16, generic preimage cost 2^32.  These are the entry rungs — small enough that a laptop finishes one — and they exist so that a setup can be exercised end to end (the recipe above, the CLI options, the verification steps, the submission format) before effort goes into the 2^80 families below.
+
+**Solving one is not cryptanalysis and will be recorded as what it is.**  The costs above come from the output length, not from the round reduction: SPEC.md's strengths table caps a 4-byte digest at min(4·n, 64·C) = 2^16 and min(8·n, 64·C) = 2^32 at *any* round count, claimed ones included.  A warm-up therefore falls to brute force alone and says nothing about the design.  Only 3 rounds is listed, because a generic search costs the same at every round count.
+
+| challenge | command | target digest | status |
+|-----------|---------|---------------|--------|
+| warm-up collision, 3 rounds | `castella --rounds=3 --size=4 --custom=challenge` | — (any colliding pair) | unsolved |
+| warm-up preimage, 3 rounds | `castella --rounds=3 --size=4 --custom=challenge` | `43e633d2` | unsolved |
+
+The target follows the same nothing-up-my-sleeve rule as the preimage family, with the size in the string:
+
+```bash
+printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=3,suffix=1,size=4)' \
+| sha256sum | cut -c1-8
+```
+
+Setup check — the input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
+
+Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4; the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance — `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it: the two targets are unrelated values.
+
 ## Collision challenges
 
 Digest size 20 bytes (`C` = 4, capacity 512 bits): generic collision cost 2^80.  **Task:** exhibit two distinct byte strings with the same digest under the instance.

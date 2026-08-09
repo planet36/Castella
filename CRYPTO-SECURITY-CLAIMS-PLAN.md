@@ -63,6 +63,13 @@ mode arguments** (duplex/sponge, tree, MAC), and everything else is either equiv
 
 ### 2.1 Statement
 
+**SHIPPED. SPEC.md's "The security claim" is the authoritative wording; the draft below is
+what it was written from, kept for the notes under it.** Three differences are worth
+knowing before quoting this one rather than that one: the shipped claim says *rate and
+capacity* rather than capacity alone, it names prediction alongside collision, preimage,
+second preimage and distinguishing, and it drops the "negligible term" — which is
+unnecessary once the claim is made about the duplex instances rather than about `P`.
+
 Adopt a **flat sponge claim**, parameterized by capacity, for the Castella duplex at the
 full round count committed to in the claim:
 
@@ -123,9 +130,11 @@ guarantees `64·C ≥ 8n`, so for its default parameter derivation the output-le
 dominate and the table collapses to the familiar SHA-3 shape: **collision = 4n, preimage
 = 2nd preimage = 8n bits** for an `n`-byte digest.
 
-Deliverables: this table in SPEC.md; a one-paragraph derivation of each row from the flat
-claim (cite Bertoni et al., *Cryptographic sponge functions*, for the generic bounds); the
-MAC row's reduction sketch (§1).
+Deliverables — **all shipped**: this table in SPEC.md ("Security strengths (generic
+bounds)"); the derivation of each row from the flat claim, citing Bertoni et al.,
+*Cryptographic sponge functions*, for the generic bounds; and the MAC rows' reduction,
+which grew from the sketch this section asked for into the full argument in SPEC.md's
+"The keyed construction is a MAC".
 
 ---
 
@@ -285,41 +294,124 @@ are supported by the code but **not covered by the claim**.
 
 What exists, what is missing, and what to add. Ordered roughly by value.
 
+**Status: every item below has been built.** This list was written as a program of work and
+is kept in its original order and wording, with each item's outcome and current home
+recorded under it — so it now reads as the account of what the evidence *is*, not of what
+it should be. [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) is the
+user-facing map from each claim to its commands; research/README.md holds the models and
+the full result tables; §10 here is the procedure for re-deriving the figures.
+
+**What is still open is recorded in VERIFYING-CLAIMS.md § 16, not here**, and one whole
+line of it is closed by decision rather than by result: pushing the trail-search *ceilings*
+any further — more seeds, more patterns, deeper shells, alternate MILP optima above r = 4 —
+**was closed on 2026-08-08 and is not to be re-proposed.** The ceilings bracket every
+shipped round count already, and every floor under them is a converged optimum; what a
+tighter ceiling would buy is characterization, not margin.
+
 1. **Existing — keep and cite:** MILP active-S-box lower bounds (differential + linear,
    proven optimal), diffusion round counts, avalanche-matrix statistics, the a=3 vs. a=4
    hourglass rationale. Already reproducible (research/README.md gives exact commands).
+
+   **DONE** — and the MILP has moved a long way since: A(r) is a converged optimum at
+   every r = 1…8, covering every shipped round count (§4.3 step 1). The a=3 vs. a=2 half
+   of the hourglass rationale is the one part that did *not* survive re-derivation and
+   SPEC.md now says so: it rested on figures at 4 and 6 rounds that are respectively
+   refuted and unconfirmed.
 2. **Trail tightness (new):** the MILP is a lower bound; find *actual* best
    characteristics with a SAT/SMT or bit-level MILP search (e.g. a CryptoSMT-style model
    of 3 AES rounds + transpose) to see how far real trails sit above the byte-level bound.
    Closes the "relaxation gap" caveat.
+
+   **DONE** — `research/permute-trail-search.py`; VERIFYING-CLAIMS § 13, and the result
+   tables in research/README.md. Every round count r = 1…8 is bracketed at both ends, and
+   at r = 1 the bound is *proven tight* (a real characteristic attains 6·A exactly). The
+   relaxation gap is therefore measured rather than closed: real trails sit 23 bits above
+   the floor at r = 2 and 267 at r = 6, and no ceiling above r = 1 is a proven minimum.
+   Those above r = 4 each rest on a single imported MILP pattern — the residual caveat,
+   disclosed in VERIFYING-CLAIMS § 16 and covered by the closure above.
 3. **Differential clustering (new):** estimate the number of characteristics sharing an
    input/output difference over 2–4 rounds (the known weak spot of single-trail bounds,
    flagged in SPEC.md itself).
+
+   **DONE at r = 1, and that is the only round count where it produced a number.** The
+   1-round optimum's full differential enumerates to 1048 characteristics, raising its
+   probability from 2^−54 to 2^−51.7 — first-order clustering costs about 2 bits, which is
+   immaterial against the per-two-round floor. Above r = 1 every shell enumeration ran out
+   of clock `INCOMPLETE`, so the `DP(differential | pattern)` figures they print bound
+   nothing and are recorded only as figures to discard (§10.3). A clustering *estimate* at
+   2–4 rounds therefore does not exist, and obtaining one is inside the closed line above.
 4. **Structural distinguishers (new; overlap with ADVERSARIAL-REVIEW-PLAN.md §1a/2a —
    execute once, report in both):** invariant subspaces and symmetric-state propagation
    (do the round constants break the transpose's block↔byte symmetry — test, don't
    assert), slide/self-similarity given the `last(n)` constant selection, fixed points of
    reduced-round `P`, rebound-style start-from-the-middle sketches.
+
+   **DONE, and the "test, don't assert" instruction paid off exactly where it was aimed:**
+   the round-constant addition is now *proven* to be the only layer that breaks the two
+   block symmetry classes, and no constant lies in either. `permute-structural-probes.cpp`
+   covers symmetry-class escape, the fixed-point screen, the round-constant properties and
+   the slide/affine-self-similarity screen; `permute-invariant-subspaces.py` replaces its
+   sampling with an *exhaustive* search over byte-aligned subspaces at every coset
+   (VERIFYING-CLAIMS § 10). The rebound sketch became a written margin argument rather
+   than a program (§ 14 there, research/README.md for the derivation).
 5. **Algebraic properties (new):** degree growth of `P` over rounds (the AES S-box is
    degree 7; estimate rounds until degree saturates 2048 bits), zero-sum/cube
    distinguishers on reduced rounds — the standard Keccak-style distinguisher families.
+
+   **DONE — and this is the item that ended up carrying the margin policy.** The degree
+   bound (`permute-degree-bound.py`) saturates by 2 rounds, capping a *degree-based*
+   zero-sum at ≈ 2.67 rounds. The cube work went further: random-cube probes
+   (`permute-zero_sum-probes.cpp`), then a bit-based division-property model for *chosen*
+   cubes (`permute-division-property.py`) giving a 1-round byte-aligned distinguisher and a
+   2-round integral distinguisher at 2^128 data, and finally the even-multiplicity
+   argument (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3
+   rounds**. That 3 is the longest known reach against `P`, and it is what `R*` = floor + 3
+   is anchored to (§4.3 step 3) — so this item is not merely evidence beside the claim, it
+   is an input to the shipped parameters. VERIFYING-CLAIMS § 11 and § 15.
 6. **Duplex-PRNG mode note (new, cheap):** the sponge-PRNG papers require *state
    forgetting* for backtracking resistance; the duplex as implemented does not zero the
    outer state after squeezing. Document that forward secrecy is **not** claimed for PRNG
    usage (or add a `forget()` operation). This is a mode property, not cryptanalysis —
    but it must not be silently implied by "PRNG."
+
+   **DONE, by the documentation route rather than the code route:** SPEC.md's non-claims
+   carry "No forward secrecy for PRNG usage", naming both facts that make it necessary
+   (squeezing does not erase state, and `P` is invertible) and citing the sponge-PRNG
+   paper. No `forget()` was added; the non-claim is the deliverable (VERIFYING-CLAIMS § 9).
 7. **Reduced-round challenge instances (new):** publish KAT-style collision/preimage
    challenge parameters for r = 1, 2, 3, 4 (small C, small digest), Keccak-crunchy-style.
    Cheap to produce, and the single best way to invite third-party cryptanalysis — a
    claim nobody has tried to break is worth little (Schneier's law, already cited in the
    README).
+
+   **DONE — [CHALLENGES.md](CHALLENGES.md) — but at 3, 4 and 5 rounds, not the r = 1, 2, 3,
+   4 specified here.** The round counts were moved up deliberately: r = 1 and r = 2 are
+   trivial, and what a challenge is for is probing the rounds just below `R*` = 6, which is
+   where a result would move the margin. It also ships more than this item asked for: a
+   4-byte warm-up rung, truncated-collision and truncated-preimage ladders so a partial
+   result has somewhere to land, nothing-up-my-sleeve preimage targets, per-family setup
+   checks, and the grand (claim-falsifying) challenge.
 8. **Statistical batteries (low weight):** PractRand/Dieharder over duplex XOF output at
    full and reduced rounds. Only a smoke test — passing means nothing cryptographically,
    failing means everything — so report it as such.
 
+   **DONE** — PractRand over 16 GiB of duplex PRNG stream at `C` = 4, at both 6 and 3
+   rounds, no anomalies (`research/duplex-prng-stream.cpp`; VERIFYING-CLAIMS § 12).
+   Dieharder was not run — PractRand is the stronger of the two at this sample size, and a
+   second battery would carry the same (zero) cryptographic weight on passing. Reported as
+   the smoke test it is, in those words, in SPEC.md's Evidence section.
+
 ---
 
 ## 6. Verification guide (user-facing deliverable)
+
+**SHIPPED as [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md)** — 16 sections,
+opening with the claim → kind → where-to-verify summary this section sketched, and stating
+the rule below as its ground rule. The sketch table is kept as written; the shipped guide
+covers considerably more than these six rows (structural probes and the exact
+invariant-subspace search, the division property and the multiplicity argument, PractRand,
+the rebound argument, the degree bound, and an explicit *evidence pending* section), and it
+is the file to update when a new result lands — not this one.
 
 A new section (SPEC.md appendix or `research/VERIFYING-CLAIMS.md`) that lets a skeptical
 user reproduce every piece of evidence behind the claim. Much of it already exists in
@@ -342,6 +434,19 @@ in the sense this plan promises.
 ---
 
 ## 7. Documentation updates
+
+**All five are done.** SPEC.md carries the four-layer restructure and every table listed
+below; README.md's status note and FAQ point at the claim and the challenges; the SHA-3
+capacity mapping is stated in SPEC.md where the strengths are derived, and referenced from
+README.md rather than repeated there; research/README.md documents each new tool and links
+the verification guide; ADVERSARIAL-REVIEW-PLAN.md and this file cross-reference each other
+in both directions; and `castella --help` names the claimed round counts, with
+`num_rounds_claimed_small`/`_large` in hash-programs/castella.cpp deriving the default from
+them so the out-of-box instances are claimed at every capacity, while `cch --help` opens by
+calling itself a non-cryptographic checksum. One nuance on the SHA-3 mapping: README.md
+points at it rather than reproducing the table, which is the right side of
+consolidate-don't-duplicate but is less than the "state it where digest sizes are
+discussed" that §4.2 asked for.
 
 * **SPEC.md** — restructure "Security claims and non-claims" into Claim / Proven
   reductions / Evidence (§2.2); add the strengths table (§3), the claimed-instances table
@@ -379,6 +484,13 @@ in the sense this plan promises.
 ---
 
 ## 9. Execution order
+
+**Steps 1–4 and 6 are complete, and step 5 ran to the end of what is planned.** All six
+analyses it lists were built (§5), each with its reproduction commands, and one of them —
+the algebraic/integral family — did move the best-known-reach number and did update the
+margin rationale, exactly as the step anticipated: `R*` = floor + 3 is anchored to the
+3-round inside-out zero-sum. What is left is not a next step in this order but the standing
+maintenance in §10, plus whatever external cryptanalysis the challenges attract.
 
 1. Write the claim + strengths + SHA-3 mapping + claimed-instances sections into SPEC.md
    (§2–4) — pure writing, unblocks everything else. *(smallest useful milestone)*

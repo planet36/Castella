@@ -297,6 +297,16 @@ mac C=4 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 k
 
 **The vectors are layered, so a failure localizes.**  An `rc` line is one round constant `RC[r][aes_r][i]`, and a `permute` line is the whole 256-byte state after `P(s, rounds)` from the all-zero state (`init=zero`) or from `s[i] = i mod 256` (`init=counter`); on both, `digest=` is that raw output rather than a digest.  They exist because every other vector depends on them: without them a wrong LFSR stride or a transposed transpose first shows as a wrong duplex digest, with this whole document in between.  The reduced-round `permute` lines are the sharper ones — `P` uses the **last** `rounds` constants, so an implementation that takes the first ones reproduces `rounds=16` and fails every shorter vector.
 
+## Conformance
+
+An implementation is **conformant** if, for the parameter sets it supports, it reproduces every vector in [tests/KAT.txt](tests/KAT.txt).  That file is the operative test of this document: [research/spec-conformance.py](research/spec-conformance.py) is an implementation written from this specification and nothing else, and it verifies all 91.
+
+Everything in this document is normative, including the little-endian byte order of every integer encoding.  Three things that live around it are **not**:
+
+* **Program behavior.**  The `castella` and `cch` command-line programs' defaults, option parsing, output formats and check modes are policy, not construction.  Only the digest-relevant parameters they select — `C`, `num_rounds`, `suffix`, `N`, `S`, `CHUNK_SIZE`, `mix_rate` — are specified here, and a conformant implementation need not offer the same defaults.
+* **Out-of-range arguments.**  `squeeze(n)` is defined for `0 ≤ n ≤ 16R` only.  The C++ `squeeze_bytes` clamps a larger `n` to the rate as a convenience; that is outside this specification rather than an alternate contract, and an implementation may reject it instead.
+* **Execution strategy.**  Thread counts, chunk-level parallelism, buffering, and the granularity of `add` calls never affect a digest (see [the tree-hashing mode](#the-tree-hashing-mode)), so they are unconstrained.
+
 ## References
 
 * G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Cryptographic sponge functions](https://keccak.team/files/CSF-0.1.pdf) (the sponge and duplex constructions; the flat sponge claim; the generic security bounds)

@@ -197,7 +197,7 @@ print_usage()
 
     std::println("  -c, --check");
     std::println("        Read digest lines from each FILE (or standard input) and verify them.");
-    std::println("        Both output formats are accepted.  A --tag line carries the");
+    std::println("        Both output formats are accepted.  A tag line carries the");
     std::println("        digest-relevant options itself; for an untagged line, --chunk-size,");
     std::println("        --custom, --rounds, and --suffix must be given the same values that");
     std::println("        produced it.  The output size is inferred from the digest length.");

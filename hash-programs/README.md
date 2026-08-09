@@ -13,16 +13,16 @@ Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped inp
 
 On x86-64 with VAES, both programs additionally hash leaf chunks two at a time per thread — `castella` by packing two duplex states into the two 128-bit lanes of ymm registers, `cch` by interleaving two nodes' compression chains in one loop (a cch node alone is latency-bound) — and every single-state Castella permutation runs register-resident in a folded ymm representation.  Like the thread count, none of these ever affects the digest.
 
-The default output format is a line for each FILE:
-
-    digest  "quoted FILE"
-
-With `--tag`, each line instead embeds the digest-relevant options (BSD style; `--size` is inferred from the digest length):
+The default output format (`--tag`) is a line for each FILE that embeds the digest-relevant options (BSD style, as in `cksum`; `--size` is inferred from the digest length):
 
     castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) 'FILE' = digest
     cch (chunk-size=65536,mix-rate=256) 'FILE' = digest
 
-Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A `--tag` line carries its own parameters; an untagged line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time, and the accounting, warnings, and exit status follow the `md5sum --check` conventions.
+With `--untagged`, each line is instead the reversed style, without the digest type:
+
+    digest  'FILE'
+
+Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A tag line carries its own parameters; an untagged line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time, and the accounting, warnings, and exit status follow the `md5sum --check` conventions.
 
 `castella` additionally computes keyed hashes (MACs) with `--key-file=FILE` (the key is the file's exact bytes, so it never appears on the command line or in `/proc`).  The KMAC structure (SP 800-185 Section 4) is followed at tree scale: `bytepad(encode_string(K), CHUNK_SIZE)` is absorbed as chunk 0 (the key block goes straight into the — now keyed — final node, and the input's chunk alignment is preserved), the function name becomes `Castella-MAC`, and the right-encoded output size is absorbed last, so MACs of different sizes are unrelated rather than truncations.  `--check` verifies MACs when given the same `--key-file`; digest lines never contain the key.
 

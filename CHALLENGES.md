@@ -35,7 +35,7 @@ The reduced-round instances to attack are in the sections below; the [grand chal
 Every instance is the `castella` tree hash ([hash-programs/](hash-programs/)) with `chunk-size=65536`, `custom=challenge`, `suffix=1`, and the round count and digest size given per instance; digests are computed by the shipped CLI, e.g.:
 
 ```bash
-printf 'abc' | ./castella --rounds=3 --size=20 --custom=challenge -
+printf 'abc' | ./castella --untagged --rounds=3 --size=20 --custom=challenge -
 ```
 
 Notes for analysts:
@@ -65,8 +65,8 @@ rounds=5: 31f358dfe112d42f77e7e3147c406e42d84ce1fd
 To verify a claimed solution: hash both files with the instance's command and compare the digests (and the files).
 
 ```bash
-./castella --rounds=3 --size=20 --custom=challenge M1 M2   # equal digests, different files
-cmp M1 M2                                                  # must differ
+./castella --untagged --rounds=3 --size=20 --custom=challenge M1 M2   # equal digests, different files
+cmp M1 M2                                                             # must differ
 ```
 
 ## Preimage challenges

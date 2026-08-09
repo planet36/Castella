@@ -154,6 +154,15 @@ Each of these owns something this file only summarizes; go to the owner before q
 
 **A measured or solved figure is published in more than one document, so correcting one copy is not correcting the figure.** Grep the value across every document above before calling it fixed, and sweep the prose around each hit — it states the conclusion the figure was supporting, so it moves with the number. `research/RE-DERIVATION-RUNBOOK.md` § 8 is the canonical target list for the cryptanalysis figures; `ADVERSARIAL-REVIEW-PLAN.md` § 7 carries the same requirement as a standing audit item and adds the throughput figures, which it names *this* file as a carrier of. A figure whose status label changes (`optimal` ⇄ incumbent) must change label everywhere, because only `optimal` is a security bound.
 
+## Running the solver-backed research tools
+
+`research/`'s MILP and z3 programs run for minutes to hours and are memory-hungry — one trail search can want several GiB, against 15 GiB and no swap here — so `research/RE-DERIVATION-RUNBOOK.md` § 0 sets two standing rules for anything that solves, and they apply to runs started from here:
+
+- Launch it under `nice -n 19`. The benchmarks are the exception, never the solvers: they measure speed, so what they need is an otherwise idle machine, and nothing that solves should be running during one.
+- Keep at most 8 solver processes going at once, trail search and MILP sharing that one budget. `nice` does not substitute for the cap. Shed load by killing, never `SIGSTOP` — z3's `-t` is wall-clock, so a stopped process keeps burning it.
+
+The 8 is a ceiling, not a target: memory usually binds first, since z3's `-M` is **per process** and a batch needs N × M inside RAM. Check `free -h` before starting a long or parallel run. Per-command budgets, recorded timings and peak memory live in the runbook.
+
 ## Platform Requirements
 
 - GCC 14+ (C++23 features used; clang++ not supported)

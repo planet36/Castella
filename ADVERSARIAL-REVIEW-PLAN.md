@@ -165,7 +165,7 @@ then attack it.
       identical regardless of pairing (execution-only), and (b) no index near the width
       boundary breaks decodability. Adversarial input lengths straddling chunk 255/256 are the
       test case.
-- [ ] **Thread/split independence — the load-bearing invariant.** SPEC.md and CLAUDE.md both
+- [ ] **Thread/split independence — the invariant every parallel path depends on.** SPEC.md and CLAUDE.md both
       insist the digest never depends on `num_threads`, leaf compute order, or `add()`
       granularity. This is the highest-value property to *try to break*: race the persistent
       pool and the batch path, exercise the ring backpressure bound, split `add()`

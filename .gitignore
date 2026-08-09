@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+# Claude Code settings (local tooling config, not part of the project)
+.claude/

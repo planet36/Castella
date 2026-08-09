@@ -556,6 +556,21 @@ python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize --print-t
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize --print-trail -M 4000  # weight 1154 against A=165
 python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000    # 55m, stage A times out — no result
 
+# r = 2 is the one round count whose recorded ceiling is NOT what its command above
+# prints: that search returns 302, and the recorded ceiling is 293.  It comes from the
+# same shell machinery as r >= 3 but by a different route -- a bisection of the cap over
+# that trail's own differential reached 294, and enumerating the cap-294 shell (500
+# trails, 6 h, INCOMPLETE) turned up five at 293.  Neither is the command to re-run.
+# This one-shot probe confirms the 293 directly, in ~4 min and 320 MB:
+python3 permute-trail-search.py -r 2 --patterns 1 -t 900 -M 1500 --no-minimize \
+    --weight-encoding totalizer --cluster 1 --cluster-shell -9
+# The totalizer is required here: under the pb default the shells return NOTHING at
+# r = 2, failing to find even the weight-302 trail that provably satisfies them.  Lower
+# the shell to descend, raise it to refute -- caps 292 (-10) and 290 time out, while the
+# four caps 285, 280, 275 and 270 come back UNSAT in 87-141 s, COMPLETE, so this
+# differential's own minimum is in [286, 293].  r = 2 is therefore the round count where refutation is the
+# cheap direction and satisfiability is the expensive one -- the inverse of every other.
+
 # The recorded r=3/r=4 ceilings come from sweeps, not single patterns (2026-08-02).
 python3 permute-trail-search.py -r 3 -A 129 --patterns 8 --no-minimize -t 600 -M 1200  # 19m, 865 MB; 8/8 realizable, best 891
 python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M 1200  # 21m, 858 MB; only 3/8 reachable, best 1153

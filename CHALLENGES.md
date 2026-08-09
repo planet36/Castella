@@ -40,8 +40,14 @@ printf 'abc' | ./castella --untagged --rounds=3 --size=20 --custom=challenge -
 
 Notes for analysts:
 
-* For messages shorter than one chunk (65536 bytes) the tree has no leaves: the digest is a single Castella duplex absorbing the role prefix followed by the message — effectively a **plain-duplex target**.  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * The digest size fixes the capacity via the program's rule (smallest even `C` with `16·C ≥ 2·size`); the resulting `C` is listed per family below.
+* For messages no longer than one chunk (65536 bytes) the tree has no leaves, and the target is a **plain duplex**: `Duplex(C, rounds, suffix=1, N="Castella", S="challenge")` absorbing
+
+  ```
+  0x00 || left_encode(65536) || left_encode(16·C) || message || right_encode(0)
+  ```
+
+  and then squeezing the digest size.  The first three fields are the final node's role prefix; the last is the number of leaf CVs, which the tree absorbs even when there are none — leaving it out is the easy way to fail to reproduce a target.  (`spec-conformance.py`'s `Duplex` and `tree_digest` implement exactly this.)  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * An independent implementation to check against is [research/spec-conformance.py](research/spec-conformance.py) (pure Python, written from the spec).
 
 ## Collision challenges

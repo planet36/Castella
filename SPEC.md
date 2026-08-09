@@ -196,7 +196,13 @@ An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.  *
 | 6 | 384 | 3 | 3 | 3 | 6 | 2.00× |
 | 8 | 512 | **5** | 3 | 5 | 8 | **2.67×** |
 
-The rule applies uniformly — no row is an exception, and every row carries the same 3-round margin, `C` = 8 included.  (By the ratio column it is the *widest* of the four rather than the narrowest, which is the shape the `2 ×` rule this replaced got backwards; but the ratio is bookkeeping, not the rule, for the reason given two paragraphs down.)  Seven things about this rationale should be visible to a reader rather than left implicit.
+The rule applies uniformly — no row is an exception, and every row carries the same 3-round margin, `C` = 8 included.  (By the ratio column it is the *widest* of the four rather than the narrowest, which is the shape the `2 ×` rule this replaced got backwards; but the ratio is bookkeeping, not the rule, for the reason given below under *Additive rather than multiplicative*.)
+
+Note: when `--rounds` is not given, the `castella` program derives it from the digest size via the same capacity rule the digest itself uses — 6 rounds for digests up to 48 bytes (`C` ≤ 6) and 8 for 49..64 bytes (`C` = 8) — so **its out-of-box instances are claimed at every capacity**, including a 512-bit-level digest.  An explicit `--rounds` overrides the derivation and can select an unclaimed instance.
+
+#### How the margin rationale was arrived at
+
+The claim above, its two tables and the `R*` rule are the whole of what is claimed; everything in this subsection is the account of how those numbers came to be, including where earlier revisions of them were wrong.  It is kept here, rather than left to a planning document, because a reader deciding how much to trust the claim needs it — but nothing below changes a parameter.  Seven things should be visible rather than left implicit.
 
 **The additive form was recognized after the fact.**  The round counts were fixed first; `R*` = floor + 3 is the rule that turned out to describe all four of them.  It is offered as an accurate account of the shipped parameters, not as a derivation that produced them.
 
@@ -211,8 +217,6 @@ The rule applies uniformly — no row is an exception, and every row carries the
 **The margin term is tied to a moving quantity, and that is the honest weak point.**  3 rounds is the longest *known* reach; no upper bound on integral reach is claimed anywhere in this document, so the true reach may be longer.  The commitment this creates is concrete: **a distinguisher reaching 4 rounds obliges `R*` = floor + 4, i.e. 7 / 7 / 7 / 9** for `C` = 2 / 4 / 6 / 8, and reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md), whose stated bar for beating the current analysis is exactly an integral distinguisher at ≥ 4 rounds).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
 
 **The trigger asks about reach alone** — how many rounds a technique sees through, not what it costs to run.  A distinguisher needing 2^256 data, or one starting from a middle state the sponge never exposes, counts in full.  This is not an oversight: the 3 rounds anchoring the rule has both properties already (2^128 data, from a middle state), so admitting only cheaper or more accessible results would void the policy's own basis — there is no practical attack on any round count to anchor on instead.  The consequence is deliberate and strict, and is recorded here so that it is not narrowed later by argument: **an unusable 4-round distinguisher obliges the same round-count change as a practical one.**
-
-Note: when `--rounds` is not given, the `castella` program derives it from the digest size via the same capacity rule the digest itself uses — 6 rounds for digests up to 48 bytes (`C` ≤ 6) and 8 for 49..64 bytes (`C` = 8) — so **its out-of-box instances are claimed at every capacity**, including a 512-bit-level digest.  An explicit `--rounds` overrides the derivation and can select an unclaimed instance.
 
 ### Security strengths (generic bounds)
 

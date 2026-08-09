@@ -165,7 +165,7 @@ The 8 is a ceiling, not a target: memory usually binds first, since z3's `-M` is
 
 ## Platform Requirements
 
-- GCC 14+ (C++23 features used; clang++ not supported)
+- GCC 14+; clang++ not supported. What sets the floor at 14 is `std::println`, which libstdc++ shipped in 14 and which the default build uses throughout (`hash-programs/`, `tests/`, `examples/`); `research/` additionally uses `std::ranges::to`, also 14. Not the `-std=c++23` flag — earlier GCC accepts that, so flag support alone is no reason to lower the floor
 - x86-64 with AES-NI (`-maes`), or ARM64 with ARM Crypto extensions
 - Compile with `-DDEBUG` to enable internal assertions (`BUILD=debug` does). They assert internal invariants — plus the narrow contracts of the unchecked `fixed_vector` accessors, which have checked counterparts — never user input, which is validated by throwing in every build. Being compiled out at release, they are a debugging aid, not a guard anything may rely on.
 

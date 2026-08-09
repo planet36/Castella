@@ -174,8 +174,8 @@ python3 permute-division-property.py --validate             # ~17 min
 python3 permute-division-property.py --validate --inverse   # ~13 min
 python3 permute-division-property.py -r 1 -c byte --count   # ~7 min
 python3 permute-division-property.py -r 2 -c block --count
-python3 permute-multiplicity-verify.py --self-test
-python3 permute-multiplicity-verify.py                # ~3 s
+python3 permute-multiplicity-verify.py --self-test     # 6 s
+python3 permute-multiplicity-verify.py                # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3    # ~35 min
 ```
 

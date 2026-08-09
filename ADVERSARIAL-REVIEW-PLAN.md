@@ -16,6 +16,16 @@ C++, security, testing, and documentation. The reviewer plays attacker: the goal
 > little-endian `static_assert`s, or the "x86/ARM AESENC are bit-identical" spec claim),
 > verifying that assumption holds on the *supported* targets is in scope.
 
+> **Scope note on cryptanalysis.** [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md)
+> owns cryptanalytic strength — collisions, preimages, distinguishers, trail bounds — and
+> names *this* file as the owner of everything else, so **do not open a cryptanalysis front
+> here**: proposing new attacks or deeper searches belongs to that plan, not this one. What
+> is in scope is the **integrity of what has already been published** about that work —
+> whether a figure's provenance is what the surrounding text says it is, whether the
+> recorded commands still reproduce it, and whether a figure repeated in several documents
+> agrees in all of them. That is the same remit as every other claim in Section 0; it just
+> happens to land on files whose subject is cryptanalysis. Section 1e gives the surface.
+
 ---
 
 ## 0. Framing: what "adversarial" means here, and how to keep it focused
@@ -37,7 +47,7 @@ Two properties of this project drive the whole plan:
    - **undocumented gotchas** — behavior a careful user would be surprised by.
 2. **Independent oracles exist and must be exploited.** `research/spec-conformance.py`
    (pure Python, written from the spec) and `tests/KAT.txt` are two independent
-   reference points. The plan's backbone is a **three-way cross-check**:
+   reference points. The plan's backbone is a **four-way cross-check**:
    `SPEC.md` (prose) ⇄ C++ implementation ⇄ Python conformance ⇄ `KAT.txt`. Any daylight
    between these four is a defect in at least one of them.
 
@@ -58,17 +68,42 @@ section), a **concrete reproduction or trail** (not "could be"), severity, and a
 
 ## 1. Per-surface threat models (do this first)
 
-Define the adversary before hunting. Four surfaces, four adversaries:
+Define the adversary before hunting. Five surfaces, five adversaries — four of them code
+(1a–1d), the fifth the published evidence (1e):
 
 ### 1a. The keyless permutation `Castella::permute` and the unkeyed hash
 - **Adversary:** cryptanalyst with full knowledge of `P`, chosen inputs, seeking
   distinguishers / collisions / preimages below the claimed `64·C`-bit generic bound.
 - **In scope:** structural properties the MILP bound does *not* cover (the spec itself flags
-  these as uncovered): differential **clustering** / multiple trails, **rebound** attacks,
-  **invariant subspaces** / **symmetry** (does the transpose + round constants actually break
-  all the AES/state symmetries?), **slide** attacks (is the per-round asymmetry real given
-  `last(num_rounds)` constant selection?), **fixed points** of `P`, rank/linearity of the
-  transpose layer, weak keys of the AES round when the "key" is a fixed public constant.
+  these as uncovered). Several of them already have a shipped screen, and where one exists the
+  job is to **audit the screen rather than rebuild it** — does the program test what the prose
+  says it tests, does its pass/fail actually gate, and does an independent re-derivation agree?
+  - **Symmetry**, **fixed points**, **slide**, and the round-constant properties →
+    `research/permute-structural-probes.cpp`. Its probes 2 and 3 are pass/fail (nonzero exit
+    on violation); probe 1's tables are informational, so read them against the random-model
+    expectations the program prints. The slide screen is exact over the whole 16-round
+    schedule, but rules out only the constant-schedule route to a slide.
+  - **Invariant subspaces** → `research/permute-invariant-subspaces.py`, which decides the
+    transpose's three symmetry classes without sampling and is exhaustive over every
+    byte-aligned subspace and every coset of one, superseding probe 1's sampling for that
+    question. What it cannot reach — a subspace neither byte-aligned nor in those classes —
+    stays open, and the script says so itself.
+  - **Unscreened, and where a finding would be new:** rank/linearity of the transpose layer,
+    weak keys of the AES round when the "key" is a fixed public constant, and the rotational /
+    higher-order-differential / meet-in-the-middle angles `CHALLENGES.md` lists as having had
+    only light screening.
+- **Known-open, and deliberately not pursued here:** differential **clustering** above
+  `r` = 1 and **rebound** attacks are real gaps rather than oversights. `SPEC.md` lists both
+  among what the trail bounds do not cover, `research/README.md` calls clustering above
+  `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is an
+  explicitly heuristic margin argument, not a proof. Because they are disclosed, *reporting*
+  them is a non-finding under Section 0; *pursuing* them belongs to
+  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md). Per the maintainer the
+  expensive searches in this direction are closed on cost — the `r` ≥ 2 clustering
+  enumerations (every non-empty shell has ended `INCOMPLETE`, the longest returning 133 trails
+  in six hours) and the trail-ceiling descent/enumeration campaign — so do not propose more of
+  either. What *is* in scope: any place where a claim about clustering or rebound is stated
+  more strongly than that evidence supports.
 - **Out of scope (non-findings):** "no proof exists," "3 rounds is thin" — disclosed.
 
 ### 1b. The keyed construction (`--key-file` MAC)
@@ -100,6 +135,34 @@ Define the adversary before hunting. Four surfaces, four adversaries:
   / env parsing, mmap of attacker-controlled files (zero-length, huge, truncated during read),
   and the constant-time compare being used for the *verification* decision.
 
+### 1e. The published cryptanalytic evidence
+(`SPEC.md`'s Evidence section, `research/README.md`, `research/VERIFYING-CLAIMS.md`,
+`CHALLENGES.md`, `research/patterns/README.md`)
+- **Adversary:** the skeptical reader `CHALLENGES.md` is soliciting — an external
+  cryptanalyst who reproduces the evidence before trusting the claim, and who reports a
+  mismatch as a defect in the project's credibility rather than a typo. Secondarily the
+  maintainer's future self, reading a figure whose provenance has been lost.
+- **In scope:** the *provenance* of every published number, not its cryptanalytic merit.
+  `research/README.md` marks proven optima in **bold**, incumbents as `≤ n`, and bracketed
+  cells as `m … ≤ n`, and says to read that marking before using any value — only a proven
+  optimum is a lower bound on the active S-box count, and only a lower bound yields a valid
+  DP bound. Check that every figure quoted outside that table carries the status its source
+  gives it; that `VERIFYING-CLAIMS.md`'s ground rule holds (no security-relevant claim
+  anywhere in the repository's docs without a row there, or an explicit *conjecture* /
+  *evidence pending* label); and that the commands in its table still run and still print
+  what it says they print.
+- **Why this surface earns its place:** the failure mode is documented, not hypothetical.
+  Four active-S-box figures — 133, 225, 243 and 290 — were published as optima, were in
+  fact timed-out incumbents, and were each later refuted by a cheaper solution;
+  `research/README.md` traces the cause to a solver wrapper that reported `optimal` for any
+  run that ended holding an incumbent. Note the direction of the error: a larger `A` means a
+  smaller `2^−6·A`, so a mislabelled figure makes the bound look **stronger** than reality.
+  A reviewer who checks status labels is re-running the one audit this project is known to
+  have failed.
+- **Out of scope (non-findings):** "the bounds cover single characteristics only," "no
+  external cryptanalysis exists," and every other gap the docs already concede; also any
+  proposal to *extend* the analysis, which is the sibling plan's territory.
+
 ---
 
 ## 2. Cryptographic design & principles
@@ -117,15 +180,23 @@ then attack it.
       all distinct, all nonzero, none a bitwise shift of its predecessor, period argument
       (2^128−1 coprime to stride) actually holds for stride 128. Confirm `RC[0][0][0]` equals
       the seed string exactly. Check `lfsr_from_bytes16` endianness matches the spec's
-      "L0 = bytes 0–7."
+      "L0 = bytes 0–7." Probe 3 of `research/permute-structural-probes.cpp` already asserts
+      first-constant-=-seed, distinctness, nonzeroness and no-shift-of-predecessor, so those
+      four are an audit of an existing assertion; the independent re-derivation is still worth
+      doing, since the point of a second implementation is not trusting the first.
 - [ ] **Symmetry / invariant subspaces.** Does an all-equal-blocks state, or a
       row/column-symmetric state, stay in a low-dimensional subspace under `P`? The transpose
       maps block↔byte symmetries; verify the round constants break them (this is the spec's
-      stated *reason* for the constants — test that it's achieved, empirically over a few
-      rounds).
+      stated *reason* for the constants — test that it's achieved). Both programs in
+      Section 1a answer this already, at different strengths: the probes sample the three
+      classes, and `permute-invariant-subspaces.py` decides them exactly and states the
+      condition the constants must satisfy. Read the exact result first — a sampled re-run
+      that agrees with it adds nothing.
 - [ ] **Slide / self-similarity.** With distinct per-round constants the rounds should differ;
       confirm no two rounds share a constant set, and that `last(n)` selection can't create a
-      slid pair for any supported `n`.
+      slid pair for any supported `n`. The probes' slide screen covers the first half exactly
+      (no whole-round shift relates two rounds' constants by a fixed XOR difference, over the
+      full 16-round schedule); the `last(n)` question is the part it does not answer.
 - [ ] **Transpose as a linear layer.** It's a byte permutation (involution). Confirm it is
       exactly its own inverse as the inverse permutation assumes, and that branch number /
       diffusion arguments in the spec aren't undercut by it being a *permutation* (no mixing)
@@ -135,9 +206,17 @@ then attack it.
       claim at least at the level of the MILP model in `research/`; confirm the code's
       `AES_NUM_ROUNDS = 3` matches the spec and the constants table shape.
 - [ ] **Inverse permutation.** Round-trip `permute_inv ∘ permute == id` across all N and all
-      `num_rounds` — and specifically that the folded forward path inverts under the *generic*
-      inverse (the docs claim this is the equivalence proof; verify it runs in CI, not just
-      in `research/`).
+      `num_rounds`, and specifically that the folded forward path inverts under the *generic*
+      inverse — that round trip is the argument that the folded path computes the same
+      function as the one it replaced. Establish what it does and does not cover before
+      judging where it belongs: `research/permute_inv-verify.cpp` runs it over zero,
+      all-distinct-byte and random states for every N and every round count (and also asserts
+      `permute(state) != state`); `permute_inv` is defined in `castella-permute.hpp` but
+      called by nothing outside `research/`; and the folded-vs-generic equality it argues
+      indirectly is checked *directly* in `make test` by `tests/permute-equivalence.cpp`,
+      which runs both paths in one build with no KAT as intermediary. Section 6's question —
+      whether the round trip should be a first-class test — is therefore about a property of a
+      function no shipped digest path calls.
 
 ### 2b. Duplex / sponge (`castella-duplex.hpp`)
 - [ ] **Padding (pad10\*1).** The one-byte-of-space edge case (`0x81`), padding applied before
@@ -180,7 +259,9 @@ then attack it.
 - [ ] Do **not** file "cch has no collision resistance" — disclosed. **Do** check: the
       compression `AESENC(AESENC(AESENC(m,s),m),s)` matches the spec exactly; the initial state
       continues the LFSR stream at constant #769 (not overlapping `RC`); the `mix_rate` binding
-      even for short inputs; the finalization padding `00 01 02 …` and final `P(s,4)`; and that
+      even for short inputs; the finalization padding `00 01 02 …` and the final permutation
+      (`NUM_ROUNDS_MIN<N>() + 1` rounds — 4 at the default N=16, 3 at every other N, so a
+      review of a non-default instantiation is not reviewing `P(s,4)`); and that
       SPEC.md's statistical wording still matches what is measured — it names the compression's
       per-input diffusion and the permutation's avalanche matrix, rather than claiming "good
       statistical behavior". Idempotent repeated extraction.
@@ -190,9 +271,10 @@ then attack it.
 ## 3. Code security (memory safety, UB, concurrency)
 
 - [ ] **UB / memory safety under sanitizers.** Build the whole tree with `-fsanitize=address,undefined`
-      and run tests, KAT, equivalence-tests, and the CLI over crafted inputs. Separately build
-      the tree pool paths with `-fsanitize=thread`. Sanitizer-clean is a *prerequisite*, not a
-      finding; any hit is Critical/High.
+      and run tests, KAT, equivalence-tests, and the CLI over crafted inputs — the suites
+      drive the CLI only with well-formed ones, so the crafted inputs (Section 1d) are yours
+      to add. Separately build the tree pool paths with `-fsanitize=thread`. Sanitizer-clean
+      is a *prerequisite*, not a finding; any hit is Critical/High.
 - [ ] **`bit_cast` / type punning / aliasing.** Heavy use of `std::bit_cast` between SIMD types,
       arrays, and LFSR words. Verify sizes match exactly and no strict-aliasing or alignment
       assumption is violated on the supported targets (esp. `_mm256_set_m128i` folding, the
@@ -231,9 +313,13 @@ review perf against *measured* numbers, using the existing `research/` benchmark
 assert perf claims from reading code (per repo's own accuracy rule).
 
 - [ ] **Validate the headline claims** with the repo's own benchmarks on the current machine
-      (note the env is VM-like; use `taskset -c 0` as the repo does): folded permute ~1.7× at
-      N=16, absorb ~1.9→3.3 GiB/s/core, x2 pairing ~1.1× pinned, `cch` vs b3sum ~2×/~3.2×.
-      Report as reproduced / not-reproduced with numbers, not adjectives.
+      (the env is a VM; pin with `taskset -c 0` and take medians, as `research/README.md`
+      does): the folded permute's speedup at N=16, `Duplex` absorb throughput per core, the
+      x2 pairing's pinned gain, and `cch` against multithreaded and single-threaded `b3sum`.
+      Take each target figure from the document that owns it — `CLAUDE.md`, `README.md` and
+      `research/README.md` — rather than from this file, which is not where any of them is
+      maintained and would only become one more copy to sweep. Report as reproduced /
+      not-reproduced with numbers, not adjectives.
 - [ ] **Store-forwarding / register residency.** The folded path's raison d'être is avoiding
       256-bit-load-over-128-bit-store stalls; spot-check the generated asm (or perf counters)
       that the ymm state actually stays register-resident across rounds.
@@ -287,9 +373,16 @@ assert perf claims from reading code (per repo's own accuracy rule).
       permutation's avalanche matrix), and the lanes are pairwise distinct at every legal
       `mix_rate`, so lane collapse cannot motivate one — is a SMHasher-style or avalanche
       smoke test still worth having?
-- [ ] **Differential/structural smoke tests.** The MILP bounds live in `research/`; add a
-      cheap CI avalanche/diffusion regression so a code change that silently weakens `P` is
-      caught.
+- [ ] **Differential/structural smoke tests.** The regression artifact largely exists:
+      `research/permute-structural-probes.cpp` exits nonzero on any violation of its
+      fixed-point, round-constant and slide screens, so it can gate a change that silently
+      weakens `P`. What it is not is wired in — `make test` runs neither it nor the exact
+      subspace search — and neither wires in cheaply: research's Makefile puts
+      google-benchmark in `LDLIBS` for the whole directory, so the probe binary drags that
+      dependency into the root `make test` unless it gets its own rule, and
+      `permute-invariant-subspaces.py` needs z3 (it imports the trail search for its layer
+      machinery). Weigh a guarded target — the `command -v python3` guards in `tests/` and
+      `research/` are the existing pattern — against writing a new avalanche test.
 - [ ] **Boundary KATs.** Confirm KAT.txt exercises: empty input, single-byte, exactly one
       chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       `mix_rate` 0 and 1 and 2048. Add any missing.
@@ -302,8 +395,16 @@ assert perf claims from reading code (per repo's own accuracy rule).
 
 ## 7. Documentation gaps & undocumented "gotchas"
 
-- [ ] **Three-way consistency audit.** Line-by-line: does every construction in `SPEC.md`
+- [ ] **Four-way consistency audit.** Line-by-line: does every construction in `SPEC.md`
       match the code and the Python model? Flag any prose that says X where code does Y.
+- [ ] **Cross-document figure audit** (Section 1e). Any measured or solved figure that
+      appears in more than one document must agree in all of them, status label included:
+      the trail bounds, ceilings and brackets (`SPEC.md`, `research/README.md`,
+      `research/VERIFYING-CLAIMS.md`, `CHALLENGES.md`, `research/patterns/README.md`), the
+      `R*` policy and its margin term, and the throughput figures (`README.md`, `CLAUDE.md`,
+      `research/README.md`). Fixing one copy is not fixing the figure — grep every document
+      for the value before calling it corrected, and sweep the prose around it, which states
+      the conclusion the figure was supporting.
 - [ ] **Gotchas to hunt for and demand documentation of:**
   - **Little-endian everywhere** (deliberate SP 800-185 deviation) — documented in SPEC.md;
     confirm README/examples don't imply interop with big-endian SP 800-185 tools.
@@ -338,7 +439,8 @@ assert perf claims from reading code (per repo's own accuracy rule).
 1. **Define the threat model per surface first** (Section 1) — without it "how would an
    attacker attack this?" can't produce ranked findings.
 2. **Weaponize the two existing oracles** (Python conformance + KAT) into an automated
-   three-way differential, rather than reviewing correctness by hand.
+   three-way differential — the three *executable* corners of Section 0's four-way check,
+   `SPEC.md` being the one that can only be read — rather than reviewing correctness by hand.
 3. **The local PRNG service deserves its own mini-review** — predictability, forward secrecy /
    backtracking resistance, entropy-failure behavior — but scoped to its **local-pool** intent
    (no remote-exposure threat model; see Section 1c), separate from the crypto.
@@ -352,20 +454,30 @@ assert perf claims from reading code (per repo's own accuracy rule).
 6. **Sanitizer + fuzzing infrastructure** as concrete deliverables, not just "add tests."
 7. **Determinism guarantees** — prove the digest is a pure function of (input, geometry,
    params) by construction *and* by differential test across threads/IO-modes/split-granularity.
-8. **A "claims ledger"** — extract every falsifiable claim from SPEC.md/README/CLAUDE.md into
-   a table and mark each verified / refuted / untestable. This makes the review auditable and
-   is the single most useful artifact for a design under active development.
+8. **A "claims ledger" — audit the one that exists before building another.**
+   `research/VERIFYING-CLAIMS.md` is already a ledger for the *security* claims, and it
+   carries a ground rule: no security-relevant claim may appear in the repository's
+   documentation without a row there, or an explicit *conjecture* / *evidence pending*
+   label. The adversarial job is to test that rule, not restate it — find a security claim
+   in `SPEC.md`, `README.md` or `CHALLENGES.md` with no row, or a row whose commands no
+   longer reproduce what it promises. The ledger that does **not** exist covers everything
+   else: the implementation, performance, API and CLI claims in `README.md`, `CLAUDE.md`,
+   the subdirectory READMEs and the `--help` output. Build that one, marking each claim
+   verified / refuted / untestable.
 
 ---
 
 ## 9. Method & deliverables
 
 **Execution order (roughly):**
-1. Build clean; build ASan/UBSan and TSan variants; run `make test`, KAT, equivalence-tests,
+1. Build clean; build an ASan/UBSan variant; run `make test`, KAT, equivalence-tests,
    `test-correctness.bash`, and `spec-conformance.py` — establish a green baseline and note
-   what's *not* wired into CI.
-2. Build the **claims ledger** (Section 8.8) from the docs.
-3. Three-way consistency audit (Section 7.1) — cheapest high-signal findings.
+   what's *not* wired into CI. **A TSan run is not part of this step:** ASan and TSan cannot
+   share a build, so TSan coverage of the tree pool needs its own — writing it is a
+   *deliverable* of this review (Section 6), not a prerequisite for starting it.
+2. **Claims ledger** (Section 8.8): audit `research/VERIFYING-CLAIMS.md` against its own
+   ground rule, then build the missing ledger for the non-security claims.
+3. Consistency audits (Sections 7.1 and 1e) — cheapest high-signal findings.
 4. Encoding/padding/tree-decodability attacks with the Python model as differential oracle.
 5. Memory-safety / concurrency pass under sanitizers; parser fuzzing.
 6. Crypto structural probes (symmetry/slide/fixed-point/avalanche) — bounded, since the spec
@@ -377,7 +489,8 @@ assert perf claims from reading code (per repo's own accuracy rule).
 - This plan (living document).
 - **Findings report**, grouped by severity (Section 0 taxonomy), each with surface/adversary,
   violated claim (file:line or spec §), concrete reproduction, and fix sketch.
-- **Claims ledger** table (verified / refuted / untestable).
+- **Claims ledger** table (verified / refuted / untestable) for the non-security claims,
+  plus any gap found in `research/VERIFYING-CLAIMS.md`'s coverage of the security ones.
 - Any new **fuzz harnesses, sanitizer build targets, and regression tests** produced along
   the way.
 - A short **"undocumented gotchas"** list for the README/`--help`.

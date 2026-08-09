@@ -213,7 +213,7 @@ python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-mi
 # '{r}' in --dump-pattern is required when solving more than one round count, and is
 # replaced by each; HiGHS uses one core on this model, so running the three round counts
 # as separate concurrent processes costs nothing over this sequential form.
-python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'pat-r{r}.json'
+python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'patterns/pat-r{r}.json'
 python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; trail 1887
 python3 permute-trail-search.py -r 7 --pattern-file patterns/pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; trail 2473
 python3 permute-trail-search.py -r 8 --pattern-file patterns/pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725

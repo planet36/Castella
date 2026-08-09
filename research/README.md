@@ -703,7 +703,7 @@ python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-mi
 # enumerating those three shells took them to 1856, 2447 and 2699.
 for R in 6 7 8; do
     python3 permute-min-active-sboxes.py --min-rounds "$R" -r "$R" -t 21600 \
-        --dump-pattern "pat-r$R.json" &
+        --dump-pattern "patterns/pat-r$R.json" &
 done; wait
 for K in 0 1 2 3 4 5 6 7; do
     python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json \

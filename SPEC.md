@@ -142,7 +142,7 @@ The `castella` command-line program uses `N` = `"Castella"`, default `S` = `"has
 
 ### The keyed (MAC) construction
 
-The `castella` program's `--key-file` mode follows the KMAC structure (SP 800-185 Section 4) at tree scale.  For key `K` (1 byte to one chunk, framing included), output length `L`, and input `X`:
+The `castella` program's `--key-file` mode follows the KMAC structure (SP 800-185 Section 4) at tree scale.  For key `K` (at least 1 byte, and short enough that `bytepad(encode_string(K), CHUNK_SIZE)` is exactly one chunk — the program caps it further, at `min(4096, CHUNK_SIZE − 10)` bytes), output length `L`, and input `X`:
 
 ```
 MAC(K, X, L) = DuplexTree(C(L), num_rounds, suffix, "Castella-MAC", S, CHUNK_SIZE)

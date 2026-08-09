@@ -100,15 +100,23 @@ The existing candid non-claims stay verbatim.
 ## 3. Security strengths (the calculable part)
 
 These follow *generically* from the claim; this table is arithmetic, not analysis. For an
-`n`-byte digest with capacity `C` blocks (all values in bits):
+`n`-byte digest with capacity `C` blocks, MAC key `K` and MAC tag length `L` bytes (all
+values in bits):
 
 | property | claimed strength |
 |---|---|
 | collision resistance | min(4·n, 64·C) |
 | preimage resistance | min(8·n, 64·C) |
 | second-preimage resistance | min(8·n, 64·C) |
-| keyed (MAC) forgery / key recovery | min(8·|K|, 64·C) |
-| XOF output distinguishing | 64·C |
+| keyed (MAC) forgery | min(8·\|K\|, 8·L, 64·C) |
+| keyed (MAC) key recovery | min(8·\|K\|, 64·C) |
+| XOF/PRNG output distinguishing | 64·C |
+
+Forgery and key recovery are separate rows because they are capped differently: a forger
+may simply guess the tag, so forgery is additionally bounded by the tag length `8·L`,
+which key recovery is not. An earlier revision of this table gave both as
+min(8·|K|, 64·C) and so overstated forgery resistance for short tags; SPEC.md carries the
+two-row form, and this one now agrees with it.
 
 The `castella` program's capacity rule (smallest even `C` with `16·C ≥ 2n` bytes)
 guarantees `64·C ≥ 8n`, so for its default parameter derivation the output-length bounds

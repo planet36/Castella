@@ -285,7 +285,7 @@ Evidence supports the claim; it cannot prove it.  [research/VERIFYING-CLAIMS.md]
 
 ## Test vectors
 
-[tests/KAT.txt](tests/KAT.txt) contains 83 known-answer tests covering the round constants, the permutation, the duplex, the DuplexTree, the keyed (MAC) construction, and the Compress-Castella tree across parameter and length sweeps; `tests/kat.cpp` verifies them (`./kat`) or regenerates the file (`kat --generate`).  Each line is self-describing; the message of length `msglen` is the byte pattern `msg[i] = i mod 256`, a MAC key of length `keylen` is `key[i] = 255 − (i mod 256)`, and `fn=`/`custom=`/`digest=` values are hexadecimal.  Three examples:
+[tests/KAT.txt](tests/KAT.txt) contains 91 known-answer tests covering the round constants, the permutation, the duplex, the DuplexTree, the keyed (MAC) construction, and the Compress-Castella hash and tree across parameter and length sweeps; `tests/kat.cpp` verifies them (`./kat`) or regenerates the file (`kat --generate`).  Each line is self-describing; the message of length `msglen` is the byte pattern `msg[i] = i mod 256`, a MAC key of length `keylen` is `key[i] = 255 − (i mod 256)`, and `fn=`/`custom=`/`digest=` values are hexadecimal.  Three examples:
 
 ```
 duplex C=4 rounds=6 suffix=0 fn=43617374656c6c61 custom=4b4154 msglen=0 out=32 digest=181bc8c60a9c802ab22103af544d6db3fbeaa26b126bf0164d59c4500b6a2816

@@ -18,6 +18,7 @@
 #   mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=
 #                        (the keyed construction: a DuplexTree over
 #                         bytepad(encode_string(K), chunk) || msg || right_encode(out))
+#   cch mix= msglen= out= digest=                                   (compress_castella_hash)
 #   cchtree mix= chunk= msglen= out= digest=                        (compress_castella_tree)
 
 # Round constants: the seed, its successor (the 128-step stride), and
@@ -109,6 +110,17 @@ mac C=4 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 k
 mac C=2 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 keylen=32 msglen=5000 out=16 digest=bdcebdca9fc643326df66170d3bbf4b8
 mac C=8 rounds=8 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 keylen=32 msglen=5000 out=64 digest=a726e78a59a7c6eeb3cc3870d7a66e2bde901b65e13f5c33a53de3d2a5eda588910a230ba205010b12a9bbfe0d148b68713f013f9fdcfdce301502f7e8f63f90
 mac C=4 rounds=8 suffix=7 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=2048 keylen=32 msglen=5000 out=32 digest=7c4615bdb0ca63e8bef870fedcf20b1da92a7a2e41b7d863af96e8b80453804b
+
+# compress_castella_hash: the plain node, without the tree around it
+# (256 is the compression block size; mix=0 disables periodic mixing)
+cch mix=256 msglen=0 out=32 digest=5fc10b59be424d33a0684b219d801cbc21e577cf7aa3a5887cf51b95f7c465a1
+cch mix=256 msglen=1 out=32 digest=f62e0ea0149de5372d836ba45bd614eb27ecd6d6ee2a1db6b850d446c6f58298
+cch mix=256 msglen=255 out=32 digest=9a263c0b4290274ebf7ad52bf4baa42959baac70894e25b499b57d3bab799143
+cch mix=256 msglen=256 out=32 digest=0d02927adaef9d99e77ce63bb1805ca35425155d8953d21a6cd2dc23bfe9ae8a
+cch mix=256 msglen=257 out=32 digest=2558c0c5d12c812b1c86e520d6082c46ad3f2bfa76df5ce74d5ed20ea96e8261
+cch mix=256 msglen=5000 out=32 digest=7505d586e8bb513affdbc5a8fa3fd6bed2c2e59b27bc7052e0f92b94b85c27b6
+cch mix=0 msglen=5000 out=32 digest=f9f68d6839e3958e117e8f2198b2bc3fa87d1e31921dcb451e5183be2fc484bd
+cch mix=1 msglen=5000 out=64 digest=ebd7a2d4ce5af668af4e650fc55c41eacbae3c7f2fe093dc456c7564c62c30c8f18b914120348453ea56a41960bbaf50cf81e077c9d3d31b6e1ade6b9caaa292
 
 # compress_castella_tree: msglen sweep (256 is the compression block size)
 cchtree mix=256 chunk=1024 msglen=0 out=32 digest=3cc645d2fd5f59be0cf772194e316c1e595218834e32a9749c7343485e76f928

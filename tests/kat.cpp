@@ -28,10 +28,12 @@
 *     duplex C= rounds= suffix= fn= custom= msglen= out= digest=
 *     tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest=
 *     mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=
+*     cch mix= msglen= out= digest=
 *     cchtree mix= chunk= msglen= out= digest=
 *
-* "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, and
-* "cchtree" is \c compress_castella_tree.  "mac" is the keyed construction SPEC.md
+* "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, "cch"
+* is a plain \c compress_castella_hash node and "cchtree" is
+* \c compress_castella_tree.  "mac" is the keyed construction SPEC.md
 * specifies for <code>castella --key-file</code>: the same
 * \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>,
@@ -98,7 +100,7 @@ constexpr std::string_view kat_mac_function_name = "Castella-MAC";
 * cannot report success on what it did hold.  Update it deliberately when
 * the sweeps in \c generate() change.
 */
-constexpr int64_t EXPECTED_KATS = 83;
+constexpr int64_t EXPECTED_KATS = 91;
 
 /// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
@@ -250,6 +252,23 @@ mac_digest(const int capacity_blocks, const int num_rounds, const int input_suff
     return tree.squeeze_bytes(out);
 }
 
+/// The plain (untreed) Compress-Castella node digest
+/**
+* The \c cchtree lines exercise this node too, but only through the tree,
+* so a node-only fault shows up there as a wrong tree digest.  These
+* isolate it.
+*/
+[[nodiscard]] std::vector<std::byte>
+cch_digest(const int mix_rate, const int msglen, const int out)
+{
+    compress_castella_hash<> node{mix_rate};
+
+    const auto msg = make_msg(msglen);
+    node.add(std::span<const std::byte>{msg});
+
+    return node.final_digest_bytes(out);
+}
+
 [[nodiscard]] std::vector<std::byte>
 cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
                const int out)
@@ -281,6 +300,13 @@ print_permute_kat(const bool counter_init, const int num_rounds)
     std::println("permute init={} rounds={} out={} digest={}",
                  counter_init ? "counter" : "zero", num_rounds, std::size(state),
                  bytes_to_hex(state));
+}
+
+void
+print_cch_kat(const int mix_rate, const int msglen, const int out)
+{
+    std::println("cch mix={} msglen={} out={} digest={}", mix_rate, msglen, out,
+                 bytes_to_hex(cch_digest(mix_rate, msglen, out)));
 }
 
 void
@@ -345,8 +371,8 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 *   - mac: the same chunk boundaries for the message, plus key lengths
 *     across the 255/256 left_encode byte-width boundary, and output sizes
 *     paired with the capacity the castella program derives for them
-*   - cchtree: additionally around the 256-byte compression block size and
-*     with mix rates on both sides of the input's absorption count
+*   - cch and cchtree: additionally around the 256-byte compression block
+*     size and with mix rates on both sides of the input's absorption count
 *   - permute: round counts well below NUM_ROUNDS_MAX, where the last-N
 *     round-constant rule is observable
 */
@@ -374,6 +400,7 @@ generate()
     std::println("#   mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=");
     std::println("#                        (the keyed construction: a DuplexTree over");
     std::println("#                         bytepad(encode_string(K), chunk) || msg || right_encode(out))");
+    std::println("#   cch mix= msglen= out= digest=                                   (compress_castella_hash)");
     std::println("#   cchtree mix= chunk= msglen= out= digest=                        (compress_castella_tree)");
 
     std::println("");
@@ -457,6 +484,16 @@ generate()
     print_mac_kat(2, 6, 1, 1024, 32, 5000, 16);
     print_mac_kat(8, 8, 1, 1024, 32, 5000, 64);
     print_mac_kat(4, 8, 7, 2048, 32, 5000, 32);
+
+    std::println("");
+    std::println("# compress_castella_hash: the plain node, without the tree around it");
+    std::println("# (256 is the compression block size; mix=0 disables periodic mixing)");
+    for (const int msglen : {0, 1, 255, 256, 257, 5000})
+    {
+        print_cch_kat(256, msglen, 32);
+    }
+    print_cch_kat(0, 5000, 32);
+    print_cch_kat(1, 5000, 64);
 
     std::println("");
     std::println("# compress_castella_tree: msglen sweep (256 is the compression block size)");
@@ -570,6 +607,17 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
 
     if (!msglen.has_value())
         return std::nullopt;
+
+    if (type == "cch")
+    {
+        const auto mix = get_int_field(fields, "mix", 0,
+                                       compress_castella_hash<>::MIX_RATE_MAX);
+
+        if (!mix.has_value())
+            return std::nullopt;
+
+        return cch_digest(*mix, *msglen, out);
+    }
 
     if (type == "duplex" || type == "tree" || type == "mac")
     {

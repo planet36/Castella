@@ -13,7 +13,7 @@ the KAT file, an implementer needs nothing but SPEC.md.
 
 Usage: python3 spec-conformance.py [path/to/KAT.txt]
 
-Pure Python, no dependencies.  Verifying all 83 KATs takes several seconds
+Pure Python, no dependencies.  Verifying all 91 KATs takes several seconds
 (the point is independence, not speed).
 """
 
@@ -339,7 +339,7 @@ def tree_digest[NodeT: TreeNode](make_node: Callable[[], NodeT],
 # How many vectors tests/KAT.txt holds.  Checked only for that file, so a
 # truncated or partly written one cannot report success on what it did
 # read.  Update it deliberately when `kat --generate` changes the sweeps.
-EXPECTED_KATS = 83
+EXPECTED_KATS = 91
 
 
 def kat_msg(msglen: int) -> bytes:
@@ -401,6 +401,10 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
 
     msg = kat_msg(int(f["msglen"]))
     out = int(f["out"])
+    if typ == "cch":
+        node = _cch_from_kat(f)
+        node.add(msg)
+        return node.digest(out)
     if typ == "duplex":
         node = _duplex_from_kat(f)
         node.add(msg)

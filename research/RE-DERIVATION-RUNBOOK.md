@@ -90,6 +90,17 @@ rules this runbook deliberately does not repeat.
 
 ## 1. Cheap and deterministic — run these first (< 5 min total)
 
+Preflight first — five lines, and each names the section that stops working without it.
+The dependencies are otherwise scattered across the parentheticals below and §7:
+
+```bash
+python3 -c 'import z3; print("z3", z3.get_version_string())'  # §1, §3  Arch: python-z3-solver
+~/.venvs/pulp/bin/python3 -c 'import pulp, highspy'           # §1, §2  the venv, built below
+pkg-config --exists benchmark && echo 'benchmark ok'          # §1, §7  the compiled probes
+command -v RNG_test                                           # §7 only PractRand, external
+free -h                                                       # -M is per process; see §6
+```
+
 | Command | Purpose | Expected |
 |---|---|---|
 | `python3 research/spec-conformance.py` | SPEC.md is complete and unambiguous: an independent from-the-spec model reproduces every KAT | `58 KATs verified, 0 failed`, 4.2 s |

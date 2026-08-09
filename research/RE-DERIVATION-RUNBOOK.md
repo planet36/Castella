@@ -211,11 +211,39 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 900 -M 1500 --no-minimize \
 python3 permute-trail-search.py -r 3 -A 129 --patterns 8 --no-minimize -t 600 -M 1200  # 19m, 865 MB; 8/8 realizable, best 891
 python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M 1200  # 21m, 858 MB; only 3/8 reachable, best 1153
 
+# Then the WIDER sweeps, which is where the 841 and 1151 the shell block descends from
+# actually come from -- the 8-pattern runs above stop at 891 and 1153.  Sweep
+# --random-seed as parallel processes and take the lightest; raise --patterns only with
+# FRESH seeds, because stage A enumerates from pattern 1 every run, so re-running a swept
+# seed repeats all of it before reaching anything new.  Budget by elapsed time rather than
+# by the per-pattern solve times printed: those cover check() alone, and the untimed model
+# build before each is the larger share (~100 s per pattern at r = 3 against a printed
+# ~8 s).  Keep each batch inside the 8-process cap.
+for K in 0 1 2 3 4 5 6 7; do    # r = 4, ~40 min wall: five trails tie at 1151
+    python3 permute-trail-search.py -r 4 -A 165 --patterns 16 --random-seed "$K" \
+        --no-minimize -t 600 -M 1200 > "r4-seed$K.txt" &
+done; wait
+for K in 8 9 10 11 12 13 14 15; do  # r = 3, ~5.5 h wall: 841 at seed 11, pattern 13
+    python3 permute-trail-search.py -r 3 -A 129 --patterns 32 --random-seed "$K" \
+        --no-minimize -t 600 -M 900 > "r3-seed$K.txt" &
+done; wait                      # seed 16 completes that sweep; run it in a second batch
+grep -h 'best characteristic' r3-seed*.txt r4-seed*.txt
+# The r = 4 shape run at r = 3 -- seeds 0..7 at --patterns 16 -- gives 846 in ~35 min,
+# which is what the 841 sweep above superseded.  At r >= 5 the sweeps are seed-only:
+# --patterns has nothing to enumerate when the one pattern comes from a file.
+
 # r = 5 succeeds at narrow widths, where N=16 fails at every target (2026-08-02).
 python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # 2m, 626 MB; [606, 705]
 python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
 
 # N=16 at r>=5 needs its pattern from the MILP; stage A still returns none (2026-08-04).
+# THE FOUR PATTERNS ARE ALREADY COMMITTED, as patterns/pat-r5.json .. pat-r8.json (see
+# patterns/README.md), so the --pattern-file lines run straight off a clean checkout and
+# the --dump-pattern lines are the REFRESH, not a prerequisite.  Run them only when the
+# MILP model itself has changed: they overwrite tracked files -- review that diff like any
+# other -- and cost ~6.4 h of MILP for the set.  Afterwards check `proven_optimal` in each
+# file: only `true` licenses 6*A as a floor, and the 600 s default -t silently yields an
+# incumbent instead at every one of these cells.
 python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
 python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
@@ -230,17 +258,43 @@ python3 permute-trail-search.py -r 7 --pattern-file patterns/pat-r7.json --no-mi
 python3 permute-trail-search.py -r 8 --pattern-file patterns/pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725
 
 # Every weight above is the best trail a SWEEP found, and none of them is the recorded
-# ceiling.  Descending that trail's own weight shell is (2026-08-06): re-run the winning
-# command with --cluster 1, a NEGATIVE --cluster-shell K and --weight-encoding totalizer
-# (required -- the pb default returns nothing here), which pins the trail's input/output
-# differential and asks for a lighter characteristic inside the same pattern.  This is
-# what every ceiling from r = 3 to r = 8 rests on; run it AFTER the sweep, since the
-# sweep is what supplies the differential to pin.  Full detail in research/README.md.
+# ceiling.  Both levers that produce the ceilings are scripted, and the script is the
+# route to prefer: it carries the recipe table below, the nice -n 19, the concurrency and
+# -M sizing (r = 5 needs 4000), and it logs to results/.
+./permute-trail-ceilings.bash -d 3 4 5 6 7 8   # descent    (--cluster 1)
+./permute-trail-ceilings.bash -e 3 4 5 6 7 8   # enumerate  (--cluster 500), the default
+./permute-trail-ceilings.bash -n -e 6          # print the command instead of running it
+#
+# THE RECIPE, spelled out because the seed and the pattern count are not derivable from
+# anything else in the repository -- they record which sweep run won, and K is relative to
+# that trail's own weight.  Without them only two of the six ceilings can be reproduced.
+#   r  pattern source                       seed  --patterns    K   sweep  descent  enum
+#   3  -A 129                                 11      13      -17    841     824    823
+#   4  -A 165                                  2      11      -26   1151    1125   1123
+#   5  --pattern-file patterns/pat-r5.json     5     inert    -30   1633    1603   1602
+#   6  --pattern-file patterns/pat-r6.json     2     inert    -30   1887    1857   1856
+#   7  --pattern-file patterns/pat-r7.json     8     inert    -25   2473    2448   2447
+#   8  --pattern-file patterns/pat-r8.json     1     inert    -20   2725    2705   2699
+# The `enum` column is the recorded ceiling.  At r = 3 and r = 4 --patterns N means "stop
+# at the Nth pattern stage A enumerates", so it SELECTS the winning pattern instead of
+# requesting more of them; from r = 5 up it is inert, a file holding exactly one pattern.
+#
+# What the script runs, and why.  Descending the winning trail's own weight shell is
+# (2026-08-06): re-run the winning command with --cluster 1, a NEGATIVE --cluster-shell K
+# and --weight-encoding totalizer (required -- the pb default returns nothing here), which
+# pins the trail's input/output differential and asks for a lighter characteristic inside
+# the same pattern.  This is what every ceiling from r = 3 to r = 8 rests on; run it AFTER
+# the sweep, since the sweep is what supplies the differential to pin.  Full detail in
+# README.md in this directory.
 python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 1387 s
 python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
-# The other four are the same shape over their own winning seeds: r = 4 at K = -26
-# (1151 -> 1125, 2954 s), r = 5 at -30 (1633 -> 1603), r = 7 at -25 (2473 -> 2448) and
-# r = 8 at -20 (2725 -> 2705).  A negative shell returning UNSAT is COMPLETE for that
+# The other four are exactly this shape over the seed and K their row in the table gives;
+# r = 4's descent took 2954 s.  Those two lines are the runs as they happened, so their
+# budgets differ from the script's defaults (-t and --cluster-time-limit 14400, -M 2500,
+# both overridable by TIME_LIMIT and MEM); the recipe itself is identical, and the script
+# records that it reproduces the table trail for trail at those defaults.  Check it with
+# `./permute-trail-ceilings.bash -n -d 3` rather than assuming either is stale.
+# A negative shell returning UNSAT is COMPLETE for that
 # differential; a timeout is `unknown` and bounds nothing, and some are budget artifacts
 # rather than walls -- r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14400.
 # THEN ENUMERATE THE SHELL THE DESCENT STALLED IN, which is where the recorded ceilings

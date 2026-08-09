@@ -7,7 +7,7 @@ SPDX-License-Identifier: MPL-2.0
 
 The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers instances with `num_rounds ≥ R*` (6, or 8 at `C` = 8).  The instances below are **deliberately unclaimed** reduced-round targets, published to invite cryptanalysis in the style of the [Keccak crunchy crypto contest](https://keccak.team/crunchy_contest.html): a claim nobody has tried to break is worth little.  Solving a challenge is a welcome research result, not a break of any claimed instance; the [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 
-There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues); [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-08; solutions will be recorded in this file).
+There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues); [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-09; solutions will be recorded in this file).
 
 ## Invitation to external cryptanalysts
 
@@ -77,7 +77,7 @@ printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=3,
 
 Setup check — the input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
 
-Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4; the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance — `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it: the two targets are unrelated values.  The [truncated-collision ladder](#truncated-collision-ladder) is the next rung up, and unlike these it does sit on a challenge instance.
+Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4; the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance — `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it: the two targets are unrelated values.  The [truncated-collision](#truncated-collision-ladder) and [truncated-preimage](#truncated-preimage-ladder) ladders are the next rungs up, and unlike these they lead to a published challenge rather than to a target of their own.
 
 ## Collision challenges
 
@@ -143,6 +143,26 @@ done
 
 Setup check — the input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `908ca791534f60426a6f` (4 rounds), `cb22cd306810fdf91db0` (5 rounds).
 
+### Truncated-preimage ladder
+
+2^80 is the only rung this family has either.  A **truncated preimage** is the partial form: a byte string whose 10-byte digest agrees with the target in its first `k` bytes, generic cost 2^(8·k).  Every rung is the same three instances and the same three targets — a rung's target is that target's first `k` bytes — and the ladder ends on the challenge itself.
+
+| `k` | rung, against the 3-round target | generic cost |
+|-----|------|--------------|
+| 2 | `a92c` | 2^16 |
+| 4 | `a92cb2ea` | 2^32 |
+| 6 | `a92cb2ea973a` | 2^48 |
+| 8 | `a92cb2ea973a312e` | 2^64 |
+| 10 | `a92cb2ea973a312e2622` — the challenge above | 2^80 |
+
+Each rung stands at all three round counts, against that round's own target prefix; none is solved at any of them, and a submission names the round count and `k`.
+
+Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  An unkeyed digest absorbs no length, and the capacity rule leaves `C` = 2 for every size of 16 bytes or fewer, so a shorter digest of this family is exactly the truncation of its 10-byte one — for `abc` at 3 rounds, sizes 2 through 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10` and `e9b6d14bd11d6f10f07a`.  The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance; this family already sits at the smallest capacity there is.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family, and the ladder names targets that existed already rather than creating any.
+
+The `k` = 4 rung and the [warm-up preimage](#warm-up-instances) both cost 2^32 and run on the *same* instance — same round count, same `C` = 2 — differing only in target: the warm-up's `43e633d2` comes from a nothing-up-my-sleeve string naming size 4, where this rung's `a92cb2ea` is the first 4 bytes of the size-10 target.  Solving either says nothing about the other.
+
+What a rung is worth is decided exactly as in the [collision ladder](#truncated-collision-ladder): brute force at the generic cost is compute and buys no head start on the next rung, while reaching one **below** its generic cost is a result on the instance.  Say which a submission is.
+
 ## The grand challenge
 
 Any attack on a **claimed** instance (SPEC.md's claimed-instances table) costing less than its generic bound falsifies the flat sponge claim.  Every row of SPEC.md's strengths table is a target, for an `n`-byte digest at capacity `C` blocks with MAC key `K` and MAC output length `L` bytes:
@@ -157,7 +177,7 @@ A convincing attack *sketch* with a verified reduced-round demonstration is as w
 
 Solutions and write-ups go to the repository's issue tracker: <https://github.com/planet36/Castella/issues>.  A solution needs four things, and is checked by re-hashing the messages with the instance's own command:
 
-* **The instance**, as the exact command line from its table — the round count, the digest size, and `custom=challenge`.  `chunk-size=65536` and `suffix=1` are what those commands already imply, so give them only if something differs.  For a [truncated-collision ladder](#truncated-collision-ladder) rung, give the `k` as well.
+* **The instance**, as the exact command line from its table — the round count, the digest size, and `custom=challenge`.  `chunk-size=65536` and `suffix=1` are what those commands already imply, so give them only if something differs.  For a rung of either ladder — [truncated-collision](#truncated-collision-ladder) or [truncated-preimage](#truncated-preimage-ladder) — give the `k` as well.
 * **The messages**, as lowercase hex, one message per line, with no `0x` prefix and no whitespace or separators inside a line: two lines for a collision, one for a preimage.  Hex rather than a file keeps a trailing newline or a text-mode conversion from silently changing the input, which is the likeliest way a real solution fails to reproduce.  Attach anything longer than a few kilobytes as a file instead, and give its `sha256sum` in the text.
 * **The digest** the messages produce.  If it disagrees with what the command gives here, that says immediately whether the message or the setup is at fault, instead of leaving the two indistinguishable.
 * **The cost, and how it was reached** — brute force at the generic cost, or below it, and by what method.  The two are recorded differently: below the generic cost is a result about the instance, at it is compute.  A partial or heuristic attack that exhibits no message belongs here too; say what it would cost and what it assumes.

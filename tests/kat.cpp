@@ -16,17 +16,25 @@
 *     kat --generate > KAT.txt
 *
 * Each non-comment line is one test.  The message of length msglen is the
-* deterministic byte pattern <code>msg[i] = i mod 256</code>.  The fn=,
-* custom=, and digest= values are hexadecimal (fn and custom decode to
-* byte strings and may be empty).  Line formats:
+* deterministic byte pattern <code>msg[i] = i mod 256</code>, and the MAC
+* key of length keylen is <code>key[i] = 255 - (i mod 256)</code> -- a
+* different pattern, so a key and a message of equal length cannot be
+* swapped unnoticed.  The fn=, custom=, and digest= values are
+* hexadecimal (fn and custom decode to byte strings and may be empty).
+* Line formats:
 *
 *     duplex C= rounds= suffix= fn= custom= msglen= out= digest=
 *     tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest=
+*     mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=
 *     cchtree mix= chunk= msglen= out= digest=
 *
 * "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, and
-* "cchtree" is \c compress_castella_tree.  Tree digests never depend on
-* the thread count, so no thread count appears in the format.
+* "cchtree" is \c compress_castella_tree.  "mac" is the keyed construction
+* SPEC.md specifies for <code>castella --key-file</code>: the same
+* \c Castella::DuplexTree over
+* <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>,
+* which is why it needs no separate class here.  Tree digests never depend
+* on the thread count, so no thread count appears in the format.
 */
 
 #include "../hash-programs/check_utils.hpp"
@@ -35,6 +43,8 @@
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "cch-tree.hpp"
+#include "encode.hpp"
+#include "to_unsigned.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -47,6 +57,7 @@
 #include <print>
 #include <span>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -61,13 +72,21 @@ constexpr std::string_view kat_function_name = "Castella";
 /// The customization string of every generated duplex/tree KAT
 constexpr std::string_view kat_customization_str = "KAT";
 
+/// The function name of every generated MAC KAT
+/**
+* Fixed by the construction rather than chosen here: it is what separates
+* MACs from unkeyed digests (SPEC.md, "The keyed (MAC) construction"), and
+* it is the name \c hash-programs/castella.cpp uses for \c --key-file.
+*/
+constexpr std::string_view kat_mac_function_name = "Castella-MAC";
+
 /// How many KATs \c generate() emits, and so how many KAT.txt holds
 /**
 * Checked only for the default file, so a truncated or partly written one
 * cannot report success on what it did hold.  Update it deliberately when
 * the sweeps in \c generate() change.
 */
-constexpr int64_t EXPECTED_KATS = 58;
+constexpr int64_t EXPECTED_KATS = 72;
 
 /// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
@@ -107,6 +126,65 @@ tree_digest(const int capacity_blocks, const int num_rounds, const int input_suf
 
     const auto msg = make_msg(msglen);
     (void)tree.add(std::span<const std::byte>{msg});
+
+    return tree.squeeze_bytes(out);
+}
+
+/// The deterministic KAT key of length \a len: <code>key[i] = 255 - (i mod 256)</code>
+[[nodiscard]] std::vector<std::byte>
+make_key(const int len)
+{
+    std::vector<std::byte> key(len);
+
+    for (int i = 0; i < len; ++i)
+    {
+        key[i] = static_cast<std::byte>(0xFF - (i & 0xFF));
+    }
+
+    return key;
+}
+
+/// The keyed (MAC) digest, as SPEC.md's "The keyed (MAC) construction" defines it
+/**
+* A \c Castella::DuplexTree over
+* <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>.
+* The key block is exactly chunk 0, so \a msg keeps its chunk alignment;
+* this mirrors \c compute_file_digest in hash-programs/castella.cpp, but is
+* written from the specification rather than sharing its code.
+*
+* \exception std::invalid_argument if the framed key does not fit in one chunk
+*/
+[[nodiscard]] std::vector<std::byte>
+mac_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
+           const std::string_view function_name, const std::string_view customization_str,
+           const int chunk_size_bytes, const int keylen, const int msglen, const int out)
+{
+    Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
+                              customization_str, chunk_size_bytes, 1);
+
+    const auto key = make_key(keylen);
+
+    // bytepad(encode_string(K), chunk)
+    const auto encoded_w = left_encode(to_unsigned(chunk_size_bytes));
+    const auto encoded_key_len = left_encode(std::size(key));
+
+    const auto framing_size =
+        std::size(encoded_w) + std::size(encoded_key_len) + std::size(key);
+
+    if (framing_size > to_unsigned(chunk_size_bytes))
+        throw std::invalid_argument("kat: the framed key does not fit in one chunk");
+
+    (void)tree.add(encoded_w.span());
+    (void)tree.add(encoded_key_len.span());
+    (void)tree.add(std::span<const std::byte>{key});
+    const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
+    (void)tree.add(std::span<const std::byte>{zeros});
+
+    const auto msg = make_msg(msglen);
+    (void)tree.add(std::span<const std::byte>{msg});
+
+    // right_encode(L), so MACs of different output sizes are unrelated
+    (void)tree.add(right_encode(to_unsigned(out)).span());
 
     return tree.squeeze_bytes(out);
 }
@@ -153,6 +231,20 @@ print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_
 }
 
 void
+print_mac_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
+              const int chunk_size_bytes, const int keylen, const int msglen, const int out)
+{
+    std::println("mac C={} rounds={} suffix={} fn={} custom={} chunk={} keylen={} msglen={} out={} digest={}",
+                 capacity_blocks, num_rounds, input_suffix,
+                 bytes_to_hex(as_byte_span(kat_mac_function_name)),
+                 bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
+                 keylen, msglen, out,
+                 bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
+                                         kat_mac_function_name, kat_customization_str,
+                                         chunk_size_bytes, keylen, msglen, out)));
+}
+
+void
 print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msglen,
                   const int out)
 {
@@ -170,6 +262,9 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 *   - tree: around the chunk size (chunk boundaries move input between the
 *     final node and the leaves), and across the leaf-index 255/256
 *     left_encode byte-width boundary
+*   - mac: the same chunk boundaries for the message, plus key lengths
+*     across the 255/256 left_encode byte-width boundary, and output sizes
+*     paired with the capacity the castella program derives for them
 *   - cchtree: additionally around the 256-byte compression block size and
 *     with mix rates on both sides of the input's absorption count
 */
@@ -181,12 +276,16 @@ generate()
     std::println("# Generated by: kat --generate");
     std::println("#");
     std::println("# The message of length msglen is the byte pattern msg[i] = i mod 256.");
+    std::println("# The MAC key of length keylen is key[i] = 255 - (i mod 256).");
     std::println("# The fn=, custom=, and digest= values are hexadecimal (fn and custom");
     std::println("# decode to byte strings and may be empty).");
     std::println("#");
     std::println("# Line formats:");
     std::println("#   duplex C= rounds= suffix= fn= custom= msglen= out= digest=      (Castella::Duplex)");
     std::println("#   tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest= (Castella::DuplexTree)");
+    std::println("#   mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=");
+    std::println("#                        (the keyed construction: a DuplexTree over");
+    std::println("#                         bytepad(encode_string(K), chunk) || msg || right_encode(out))");
     std::println("#   cchtree mix= chunk= msglen= out= digest=                        (compress_castella_tree)");
 
     std::println("");
@@ -231,6 +330,26 @@ generate()
         print_tree_kat(4, 6, 0, chunk_size_bytes, 5000, 32);
     }
     print_tree_kat(8, 8, 7, 1024, 5000, 64);
+
+    std::println("");
+    std::println("# Castella MAC: msglen sweep (the framed key is exactly chunk 0, so the");
+    std::println("# message starts at a chunk boundary and its own boundaries still apply)");
+    for (const int msglen : {0, 1, 1023, 1024, 1025, 5000})
+    {
+        print_mac_kat(4, 6, 1, 1024, 32, msglen, 32);
+    }
+
+    std::println("");
+    std::println("# Castella MAC: parameter sweeps (keylen crosses the 255/256 left_encode");
+    std::println("# byte-width boundary; out=16 and out=64 carry the capacity the castella");
+    std::println("# program derives for those sizes, so they match --size=16 and --size=64)");
+    for (const int keylen : {1, 16, 255, 256, 1000})
+    {
+        print_mac_kat(4, 6, 1, 1024, keylen, 5000, 32);
+    }
+    print_mac_kat(2, 6, 1, 1024, 32, 5000, 16);
+    print_mac_kat(8, 8, 1, 1024, 32, 5000, 64);
+    print_mac_kat(4, 8, 7, 2048, 32, 5000, 32);
 
     std::println("");
     std::println("# compress_castella_tree: msglen sweep (256 is the compression block size)");
@@ -318,7 +437,7 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
     if (!msglen.has_value())
         return std::nullopt;
 
-    if (type == "duplex" || type == "tree")
+    if (type == "duplex" || type == "tree" || type == "mac")
     {
         const auto C = get_int_field(fields, "C", Castella::Duplex::C_MIN,
                                      Castella::Duplex::C_MAX);
@@ -346,8 +465,20 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
         if (!chunk.has_value())
             return std::nullopt;
 
-        return tree_digest(*C, *rounds, *suffix, *fn, *custom, *chunk,
-                           *msglen, out);
+        if (type == "tree")
+        {
+            return tree_digest(*C, *rounds, *suffix, *fn, *custom, *chunk,
+                               *msglen, out);
+        }
+
+        // The framed key has to fit in one chunk, which mac_digest checks.
+        const auto keylen = get_int_field(fields, "keylen", 1, *chunk);
+
+        if (!keylen.has_value())
+            return std::nullopt;
+
+        return mac_digest(*C, *rounds, *suffix, *fn, *custom, *chunk, *keylen,
+                          *msglen, out);
     }
 
     if (type == "cchtree")

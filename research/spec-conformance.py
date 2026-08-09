@@ -13,7 +13,7 @@ the KAT file, an implementer needs nothing but SPEC.md.
 
 Usage: python3 spec-conformance.py [path/to/KAT.txt]
 
-Pure Python, no dependencies.  Verifying all 58 KATs takes several seconds
+Pure Python, no dependencies.  Verifying all 72 KATs takes several seconds
 (the point is independence, not speed).
 """
 
@@ -150,6 +150,12 @@ def right_encode(x: int) -> bytes:
 def encode_string(x: bytes) -> bytes:
     """Prefix x with its left-encoded byte length."""
     return left_encode(len(x)) + x
+
+
+def bytepad(x: bytes, w: int) -> bytes:
+    """Prefix x with left_encode(w) and zero-pad to a multiple of w."""
+    padded = left_encode(w) + x
+    return padded + bytes(-len(padded) % w)
 
 
 # ---- The Castella duplex
@@ -333,12 +339,21 @@ def tree_digest[NodeT: TreeNode](make_node: Callable[[], NodeT],
 # How many vectors tests/KAT.txt holds.  Checked only for that file, so a
 # truncated or partly written one cannot report success on what it did
 # read.  Update it deliberately when `kat --generate` changes the sweeps.
-EXPECTED_KATS = 58
+EXPECTED_KATS = 72
 
 
 def kat_msg(msglen: int) -> bytes:
     """Build the KAT message of the given length (msg[i] = i mod 256)."""
     return bytes(i & 0xFF for i in range(msglen))
+
+
+def kat_key(keylen: int) -> bytes:
+    """Build the MAC KAT key of the given length (key[i] = 255 - i mod 256).
+
+    A different pattern from kat_msg, so a key and a message of equal
+    length cannot be swapped without the digest changing.
+    """
+    return bytes(0xFF - (i & 0xFF) for i in range(keylen))
 
 
 class KatFields(dict[str, str]):
@@ -379,6 +394,19 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
         return tree_digest(partial(_duplex_from_kat, f),
                            lambda node, n: node.squeeze(n),
                            int(f["chunk"]), 16 * int(f["C"]), msg, out)
+    if typ == "mac":
+        # SPEC.md, "The keyed (MAC) construction": the same tree over
+        # bytepad(encode_string(K), chunk) || msg || right_encode(out).
+        chunk = int(f["chunk"])
+        key_block = bytepad(encode_string(kat_key(int(f["keylen"]))), chunk)
+        if len(key_block) != chunk:
+            raise ValueError(
+                f"line {f.lineno}: the framed key is {len(key_block)} bytes,"
+                f" not the one chunk of {chunk} the construction requires")
+        return tree_digest(partial(_duplex_from_kat, f),
+                           lambda node, n: node.squeeze(n),
+                           chunk, 16 * int(f["C"]),
+                           key_block + msg + right_encode(out), out)
     if typ == "cchtree":
         return tree_digest(partial(_cch_from_kat, f),
                            lambda node, n: node.digest(n),

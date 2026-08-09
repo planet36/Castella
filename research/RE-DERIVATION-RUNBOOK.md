@@ -104,7 +104,7 @@ free -h                                                       # -M is per proces
 
 | Command | Purpose | Expected |
 |---|---|---|
-| `python3 research/spec-conformance.py` | SPEC.md is complete and unambiguous: an independent from-the-spec model reproduces every KAT | `58 KATs verified, 0 failed`, 4.2 s |
+| `python3 research/spec-conformance.py` | SPEC.md is complete and unambiguous: an independent from-the-spec model reproduces every KAT | `72 KATs verified, 0 failed`, 4.4 s |
 | `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the AES Square-distinguisher validation | `self-test OK` |
 | `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 8 AES rounds = 2.67 Castella rounds |
 | `python3 research/permute-trail-search.py --self-test` | S-box/DDT/aesenc model checks | `self-test OK` |

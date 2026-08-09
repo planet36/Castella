@@ -173,8 +173,12 @@ concept tree_node_policy =
 *    in-flight chunks (backpressure); see \c dispatch_leaf_().  When the
 *    node policy supports lane-paired leaf hashing (see
 *    \c HAS_PAIRED_LEAF), a worker claims up to TWO adjacent slots at once
-*    and hashes both chunks with one paired node (pipelined chunks are
-*    always full, so lockstep always holds); see \c pool_worker_loop_().
+*    and hashes both chunks with one paired node; see
+*    \c pool_worker_loop_().  Pipelined chunks are always full, so the
+*    chunk lengths always match here -- but the chunk indices still need
+*    equal encoded widths, and \c hash_leaf_pair_into_ makes that check
+*    for every caller, falling back to two single leaves at a width
+*    boundary (e.g. 255/256).
 *
 *    This path is ultimately *producer-bound*: the calling thread must
 *    still copy or buffer each chunk once (plus the -- allocation-free --

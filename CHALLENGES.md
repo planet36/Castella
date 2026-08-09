@@ -70,7 +70,7 @@ printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=3,
 
 Setup check — the input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
 
-Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4; the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance — `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it: the two targets are unrelated values.
+Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4; the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance — `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it: the two targets are unrelated values.  The [truncated-collision ladder](#truncated-collision-ladder) is the next rung up, and unlike these it does sit on a challenge instance.
 
 ## Collision challenges
 
@@ -96,6 +96,24 @@ To verify a claimed solution: hash both files with the instance's command and co
 ./castella --untagged --rounds=3 --size=20 --custom=challenge M1 M2   # equal digests, different files
 cmp M1 M2                                                             # must differ
 ```
+
+### Truncated-collision ladder
+
+2^80 is the only rung the family above has, so there is nothing to submit short of the whole result.  A **truncated collision** is the partial form: two distinct byte strings whose 20-byte digests agree in their first `k` bytes, generic cost 2^(4·k).  Every rung is the same three instances above — no new parameters, no new targets — and the ladder ends on the challenge itself.
+
+| `k` | rung | generic cost |
+|-----|------|--------------|
+| 4 | first 4 digest bytes agree | 2^16 |
+| 8 | first 8 agree | 2^32 |
+| 12 | first 12 agree | 2^48 |
+| 16 | first 16 agree | 2^64 |
+| 20 | the whole digest — the challenge above | 2^80 |
+
+Each rung stands at all three round counts, and none is solved at any of them; a submission names the round count and `k`.  The `k` = 4 rung costs the same 2^16 as the warm-up collision but is not the same task: this is the `C` = 4 instance with its digest truncated, where the warm-up is a whole digest of a `C` = 2 instance.
+
+Verify a rung with the family's command above, comparing only the first `k` bytes.  **Do not hash at `--size=k`** — a smaller size selects a smaller capacity (`C` = 2 for any size of 16 bytes or fewer), which is a different instance answering a different question.  For `abc` at 3 rounds `--size=8` gives `e9b6d14bd11d6f10`, which is not the first 8 bytes of `da47210e7e8699e4…` and never will be.
+
+What a rung is worth depends on how it was reached.  Brute force at its generic cost is compute rather than analysis, and it buys no head start on the next rung — the candidates are independent draws, so `k` = 8 in hand does nothing for `k` = 12.  A rung reached **below** its generic cost is the opposite: a genuine result on a reduced-round instance, worth publishing long before a full collision is in reach, and exactly the kind of partial progress this file previously had nowhere to record.  Say which of the two a submission is.
 
 ## Preimage challenges
 

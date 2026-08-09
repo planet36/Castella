@@ -530,6 +530,27 @@ assert_eq_cmd_str \
     './cch --tag --chunk-size=4096 --mix-rate=3 --size=64 /tmp/test-100KB.txt | ./cch --check -' \
     "'/tmp/test-100KB.txt': OK"
 
+# --tag and --untagged select the output format, which --check does not
+# produce, so both are accepted and ignored with --check.  (A script that
+# fixes the output mode once may pass the same flag to the producer and to
+# the verifier.)
+
+assert_eq_cmd_str \
+    './castella --tag /tmp/test-100KB.txt | ./castella --tag --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --tag /tmp/test-100KB.txt | ./cch --tag --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './castella --untagged /tmp/test-100KB.txt | ./castella --untagged --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --untagged /tmp/test-100KB.txt | ./cch --untagged --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
 # --quiet suppresses the OK lines (the exit status still reports success).
 
 assert_eq_cmd_str \

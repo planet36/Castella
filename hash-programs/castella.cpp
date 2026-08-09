@@ -265,6 +265,12 @@ print_usage()
     std::println("        Print each digest in a self-describing format that embeds the");
     std::println("        digest-relevant options, so --check can verify it without them:");
     std::println("            castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
+    std::println("        (ignored with --check)");
+
+    std::println("  --untagged");
+    std::println("        Print each digest in the reversed style, without the digest type:");
+    std::println("            digest  'FILE'");
+    std::println("        (ignored with --check)");
     std::println("");
 
     std::println("The default output format is a line for each FILE with the following information:");
@@ -308,6 +314,7 @@ void process_options(int argc, char* argv[])
     constexpr int OPTION_HASH_SIZE        = static_cast<int>(fnv1a_32("size"       ));
     constexpr int OPTION_HASH_SUFFIX      = static_cast<int>(fnv1a_32("suffix"     ));
     constexpr int OPTION_HASH_TAG         = static_cast<int>(fnv1a_32("tag"        ));
+    constexpr int OPTION_HASH_UNTAGGED    = static_cast<int>(fnv1a_32("untagged"   ));
 
     using long_option = option;
 
@@ -327,6 +334,7 @@ void process_options(int argc, char* argv[])
         {.name="size"       , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SIZE       },
         {.name="suffix"     , .has_arg=required_argument, .flag=nullptr, .val=OPTION_HASH_SUFFIX     },
         {.name="tag"        , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_TAG        },
+        {.name="untagged"   , .has_arg=no_argument      , .flag=nullptr, .val=OPTION_HASH_UNTAGGED   },
         {.name=nullptr      , .has_arg=0                , .flag=nullptr, .val=0                      },
     };
 
@@ -358,6 +366,10 @@ void process_options(int argc, char* argv[])
 
         case OPTION_HASH_TAG:
             tag_output = true;
+            break;
+
+        case OPTION_HASH_UNTAGGED:
+            tag_output = false;
             break;
 
         case OPTION_HASH_CHUNK_SIZE:
@@ -409,9 +421,6 @@ void process_options(int argc, char* argv[])
 
     if (quiet && !check_mode)
         errx(EXIT_FAILURE, "the --quiet option is only meaningful with --check");
-
-    if (tag_output && check_mode)
-        errx(EXIT_FAILURE, "the --tag option is not meaningful with --check");
 }
 
 // https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36

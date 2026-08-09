@@ -495,8 +495,57 @@ assert_eq_cmd_str \
     './cch --untagged --mix-rate=258 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
     a1bb08ddfb736a5e10ad5a75488876556905dbaf6e41b762d16ddb24ceaa8ff1
 
+# Verify the output format selection.  The tagged format is the default;
+# --untagged selects the reversed style.  (These pin the whole line, so
+# they also pin the format of the tag itself.)
+
+assert_eq_cmd_str \
+    './castella /tmp/test-100B.txt' \
+    "castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) '/tmp/test-100B.txt' = 3d763f563332170d7c7a908e18111b694a189182d1ed5dc501a200ca31eec132"
+
+assert_eq_cmd_str \
+    './castella --untagged /tmp/test-100B.txt' \
+    "3d763f563332170d7c7a908e18111b694a189182d1ed5dc501a200ca31eec132  '/tmp/test-100B.txt'"
+
+assert_eq_cmd_str \
+    './cch /tmp/test-100B.txt' \
+    "cch (chunk-size=65536,mix-rate=256) '/tmp/test-100B.txt' = d587cc3a946df1f14f0e018a05cf35f0712d4ed97dcf0394ec7f69683d95fda6"
+
+assert_eq_cmd_str \
+    './cch --untagged /tmp/test-100B.txt' \
+    "d587cc3a946df1f14f0e018a05cf35f0712d4ed97dcf0394ec7f69683d95fda6  '/tmp/test-100B.txt'"
+
+# The last of --tag and --untagged wins.
+
+assert_eq_cmd_cmd \
+    './castella --untagged --tag /tmp/test-100B.txt' \
+    './castella --tag /tmp/test-100B.txt'
+
+assert_eq_cmd_cmd \
+    './castella --tag --untagged /tmp/test-100B.txt' \
+    './castella --untagged /tmp/test-100B.txt'
+
+assert_eq_cmd_cmd \
+    './cch --untagged --tag /tmp/test-100B.txt' \
+    './cch --tag /tmp/test-100B.txt'
+
+assert_eq_cmd_cmd \
+    './cch --tag --untagged /tmp/test-100B.txt' \
+    './cch --untagged /tmp/test-100B.txt'
+
 # Verify the "--check" and "--tag" modes: digests produced by each program
 # must verify with the same program, in both output formats.
+
+# The default output is a tag line, which carries its own digest-relevant
+# options, so --check needs none of them.
+
+assert_eq_cmd_str \
+    './castella /tmp/test-100KB.txt | ./castella --check -' \
+    "'/tmp/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch /tmp/test-100KB.txt | ./cch --check -' \
+    "'/tmp/test-100KB.txt': OK"
 
 # Untagged round trip (the checkfile is read from standard input).
 # For untagged lines, the digest-relevant options are taken from the

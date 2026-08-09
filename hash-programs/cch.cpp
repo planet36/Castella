@@ -33,7 +33,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-07-16";
+inline constexpr std::string_view program_version = "2026-08-08";
 
 // {{{ default values for options
 inline constexpr int min_digest_size_bytes = 1;
@@ -64,7 +64,7 @@ auto num_threads = default_num_threads;
 
 bool use_mmap = true;
 
-bool tag_output = false;
+bool tag_output = true;
 
 bool check_mode = false;
 
@@ -149,16 +149,13 @@ print_usage()
     std::println("        Print each digest in a self-describing format that embeds the");
     std::println("        digest-relevant options, so --check can verify it without them:");
     std::println("            cch (chunk-size=C,mix-rate=R) 'FILE' = digest");
+    std::println("        (default)");
     std::println("        (ignored with --check)");
 
     std::println("  --untagged");
     std::println("        Print each digest in the reversed style, without the digest type:");
     std::println("            digest  'FILE'");
     std::println("        (ignored with --check)");
-    std::println("");
-
-    std::println("The default output format is a line for each FILE with the following information:");
-    std::println("    digest, spaces, quoted FILE");
     std::println("");
 
     std::println("CCH ALGORITHM DESCRIPTION");

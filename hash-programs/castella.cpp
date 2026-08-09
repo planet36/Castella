@@ -39,7 +39,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-07-22";
+inline constexpr std::string_view program_version = "2026-08-08";
 
 inline constexpr std::string_view function_name = "Castella";
 
@@ -106,7 +106,7 @@ auto num_threads = default_num_threads;
 
 bool use_mmap = true;
 
-bool tag_output = false;
+bool tag_output = true;
 
 bool check_mode = false;
 
@@ -265,16 +265,13 @@ print_usage()
     std::println("        Print each digest in a self-describing format that embeds the");
     std::println("        digest-relevant options, so --check can verify it without them:");
     std::println("            castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
+    std::println("        (default)");
     std::println("        (ignored with --check)");
 
     std::println("  --untagged");
     std::println("        Print each digest in the reversed style, without the digest type:");
     std::println("            digest  'FILE'");
     std::println("        (ignored with --check)");
-    std::println("");
-
-    std::println("The default output format is a line for each FILE with the following information:");
-    std::println("    digest, spaces, quoted FILE");
     std::println("");
 
     std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");

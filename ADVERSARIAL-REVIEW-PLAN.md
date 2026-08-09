@@ -200,7 +200,7 @@ then attack it.
 - [ ] **Integer width / narrowing.** `narrow_cast.hpp`, `to_unsigned.hpp`, `in_range.hpp`,
       `parse_int.hpp`, lengths in encodings, `CHUNK_SIZE` up to 2^30, `mix_rate` bounds. Look
       for signed/unsigned mismatches feeding memory sizes.
-- [ ] **`fixed_vector.hpp` (806 lines — large, custom container).** Bounds, capacity math,
+- [ ] **`fixed_vector.hpp` (a large, custom container).** Bounds, capacity math,
       move/copy, exception safety, and any `reserve`/index path reachable from input length.
 - [ ] **`unique_fd.hpp` / mmap (`hash-programs`).** fd leaks, double-close, mmap of 0-length /
       truncated / concurrently-modified files, `MAP_FAILED` handling, `fd-utils.h`.
@@ -252,7 +252,7 @@ assert perf claims from reading code (per repo's own accuracy rule).
 - [ ] **API consistency.** `add`/`add_left_encoded`/`add_right_encoded`, span-vs-ptr/len
       overloads (memory notes say raw forms are shims — confirm no divergent behavior),
       method-chaining return types, `squeeze_bytes` default-size behavior and clamping.
-- [ ] **CRTP tree machinery.** `HashTree<NodePolicy, Derived>` is 1720 lines of generic
+- [ ] **CRTP tree machinery.** `HashTree<NodePolicy, Derived>` is a large body of generic
       machinery with optional detected policies (`HAS_PAIRED_LEAF`, `USE_STREAMING_POOL`).
       Assess whether the compile-time policy detection is over-engineered for two
       instantiations, and whether the two code paths (batch vs streaming pool) could be
@@ -274,11 +274,13 @@ assert perf claims from reading code (per repo's own accuracy rule).
 - [ ] **Coverage of the invariants above.** Is thread-independence tested under TSan? Is the
       folded-path == generic-path equivalence in the *CI* test suite (`make test`) or only in
       `research/`? Is `permute_inv ∘ permute == id` a first-class test?
-- [ ] **No fuzzing.** There is no fuzz harness. Recommend libFuzzer targets for: encoding
-      round-trips, the duplex absorb/squeeze state machine vs the Python model, the `--check`
-      file parser, and the PRNG-service request handler.
-- [ ] **No sanitizer CI.** Recommend an ASan/UBSan/TSan build target in the Makefile and a
-      `make test-san`.
+- [ ] **Fuzzing coverage.** Which surfaces have a fuzz harness, and which rest on fixed
+      tests alone? Candidates: encoding round-trips, the duplex absorb/squeeze state machine
+      against the Python model, the `--check` file parser, and the PRNG-service request
+      handler.
+- [ ] **Sanitizer CI.** Is there a make target that runs the suites under ASan/UBSan? ASan
+      and TSan cannot share a build, so TSan coverage of the tree pool needs its own build —
+      check whether that exists or is only ever done by hand.
 - [ ] **Statistical testing for `cch`.** No battery has ever been run against the composite,
       and SPEC.md now says so rather than claiming "good statistical behavior". Both
       constituents are measured separately (the compression's per-input diffusion, the

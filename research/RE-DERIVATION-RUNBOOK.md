@@ -5,11 +5,12 @@ SPDX-License-Identifier: MPL-2.0
 
 # Re-deriving the cryptanalysis figures (the standing procedure)
 
-Every figure quoted in [SPEC.md](../SPEC.md)'s Evidence section, in
+Every *cryptanalytic* figure quoted in [SPEC.md](../SPEC.md)'s Evidence section, in
 [README.md](README.md)'s findings, and in
 [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) comes out of a program in this directory or in
 `tests/`.  This runbook says which program, what to run, how long it takes, and what the
-output should say.  It is the maintenance counterpart to VERIFYING-CLAIMS.md: that file
+output should say.  README.md's *performance* findings are the one class it leaves alone —
+see §0.  It is the maintenance counterpart to VERIFYING-CLAIMS.md: that file
 maps each *claim* to the evidence a skeptical reader should check, this one is for whoever
 has to *refresh* the figures.
 
@@ -55,6 +56,15 @@ holds the batch to four on a 15 GiB machine.
 
 The list has grown well past the five programs this runbook was originally written around,
 and a figure whose program is missing here is a figure nobody knows how to re-derive.
+
+**One class is missing on purpose.** README.md's *performance* findings — Duplex
+throughput, the folded permute, the interleaved cch pair — come from the compiled
+`*-benchmark.cpp` and `*-verify.cpp` programs, driven by `run-benchmarks.bash` and
+`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`). They are
+out of scope here for a reason that changes how they must be run: they measure speed rather
+than support a security claim, so what they need is an otherwise idle machine and the core
+pinning `run-benchmarks.bash` does, not a solver budget — which is also why the `nice -n 19`
+rule above exempts them, and why nothing in this file should be running during one.
 
 | program | figures it owns | where |
 |---|---|---|

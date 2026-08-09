@@ -698,3 +698,10 @@ documentation:
   7257 s and 390 at 14050 s. That is the reasoning above applied once more, and it lands on
   the same warning §10.2 draws from it: a duality gap is not a progress bar. Above r=8
   nothing has been attempted, so superadditivity remains the only source there.
+
+**What is still open is recorded in VERIFYING-CLAIMS.md § 16, not here**, and one whole
+line of it is closed by decision rather than by result: pushing the trail-search *ceilings*
+any further — more seeds, more patterns, deeper shells, alternate MILP optima above r = 4 —
+**was closed on 2026-08-08 and is not to be re-proposed.** The ceilings bracket every
+shipped round count already, and every floor under them is a converged optimum; what a
+tighter ceiling would buy is characterization, not margin.

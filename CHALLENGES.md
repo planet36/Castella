@@ -7,7 +7,7 @@ SPDX-License-Identifier: MPL-2.0
 
 The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers instances with `num_rounds ≥ R*` (6, or 8 at `C` = 8).  The instances below are **deliberately unclaimed** reduced-round targets, published to invite cryptanalysis in the style of the [Keccak crunchy crypto contest](https://keccak.team/crunchy_contest.html): a claim nobody has tried to break is worth little.  Solving a challenge is a welcome research result, not a break of any claimed instance; the [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 
-There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, open an issue in the repository.  **Status: all challenges unsolved** (as of 2026-07-19; solutions will be recorded in this file).
+There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, open an issue in the repository.  **Status: all challenges unsolved** (as of 2026-08-08; solutions will be recorded in this file).
 
 ## Invitation to external cryptanalysts
 

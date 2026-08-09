@@ -49,7 +49,6 @@ Notes for analysts:
 
   and then squeezing the digest size.  The first three fields are the final node's role prefix; the last is the number of leaf CVs, which the tree absorbs even when there are none — leaving it out is the easy way to fail to reproduce a target.  (`spec-conformance.py`'s `Duplex` and `tree_digest` implement exactly this.)  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * An independent implementation to check against is [research/spec-conformance.py](research/spec-conformance.py) (pure Python, written from the spec).
-
 ## Warm-up instances
 
 Digest size 4 bytes (`C` = 2, capacity 256 bits): generic collision cost 2^16, generic preimage cost 2^32.  These are the entry rungs — small enough that a laptop finishes one — and they exist so that a setup can be exercised end to end (the recipe above, the CLI options, the verification steps, the submission format) before effort goes into the 2^80 families below.
@@ -138,7 +137,13 @@ Setup check — the input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), 
 
 ## The grand challenge
 
-Any attack on a **claimed** instance (SPEC.md's claimed-instances table) with cost below its generic bound — collision below 2^(min(4n, 64·C)), preimage below 2^(min(8n, 64·C)), any distinguisher of the duplex from a random sponge below 2^(64·C) — falsifies the flat sponge claim.  A convincing attack *sketch* with a verified reduced-round demonstration is as welcome as a full break; that is how the round-count margin gets re-evaluated.
+Any attack on a **claimed** instance (SPEC.md's claimed-instances table) costing less than its generic bound falsifies the flat sponge claim.  Every row of SPEC.md's strengths table is a target, for an `n`-byte digest at capacity `C` blocks with MAC key `K` and MAC output length `L` bytes:
+
+* a collision below 2^(min(4n, 64·C)), or a preimage or **second preimage** below 2^(min(8n, 64·C));
+* a **MAC forgery** below 2^(min(8·|K|, 8·L, 64·C)), or **MAC key recovery** below 2^(min(8·|K|, 64·C)) — the keyed mode is `castella --key-file`, so the same binary produces the targets;
+* any distinguisher of the duplex from a random sponge, or of its output from random, below 2^(64·C).
+
+A convincing attack *sketch* with a verified reduced-round demonstration is as welcome as a full break; that is how the round-count margin gets re-evaluated.
 
 ## Non-goals
 

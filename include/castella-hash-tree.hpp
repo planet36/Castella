@@ -1021,7 +1021,7 @@ private:
             std::rethrow_exception(error);
         }
 
-        final_node_.add(std::span<const std::byte>{slot.cv});
+        (void)final_node_.add(slot.cv);
     }
 
     /// Whether the oldest in-flight slot's CV is ready (does not block)
@@ -1201,7 +1201,7 @@ private:
         }
 
         const auto cv = compute_leaf_cv_(chunk, num_chunks_flushed_);
-        absorb_into_final_node_(std::span<const std::byte>{cv});
+        absorb_into_final_node_(cv);
         ++num_chunks_flushed_;
     }
 
@@ -1272,7 +1272,7 @@ private:
 
             hash_leaf_pair_into_(chunk_a, chunk_b, first_chunk_index + pos, cv_a, cv_b);
 
-            absorb_into_final_node_(std::span<const std::byte>{cvs});
+            absorb_into_final_node_(cvs);
         }
 
         if (pos < num_chunks)
@@ -1504,7 +1504,7 @@ private:
         // byte stream -- with the same absorptions at the same offsets --
         // as a per-CV loop would (the node's add is a pure byte-stream
         // absorber, insensitive to call boundaries).
-        absorb_into_final_node_(std::span<const std::byte>{cvs});
+        absorb_into_final_node_(cvs);
 
         num_chunks_flushed_ += num_chunks;
     }
@@ -1611,7 +1611,7 @@ protected:
         {
             // Nothing was ever flushed: the entire message (possibly
             // empty) is chunk 0, and no pipeline exists to drain.
-            absorb_into_final_node_(std::span<const std::byte>{chunk_buf_});
+            absorb_into_final_node_(chunk_buf_);
         }
         else
         {
@@ -1621,7 +1621,7 @@ protected:
             // highest-index (trailing) CV enters the final node last.
             const auto cv = compute_leaf_cv_(chunk_buf_, num_chunks_flushed_);
 
-            absorb_into_final_node_(std::span<const std::byte>{cv});
+            absorb_into_final_node_(cv);
         }
         ++num_chunks_flushed_;
         chunk_buf_.clear();

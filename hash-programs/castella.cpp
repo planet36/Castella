@@ -662,7 +662,7 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
         (void)hash_obj.add(key);
 
         const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
-        (void)hash_obj.add(std::span<const std::byte>{zeros});
+        (void)hash_obj.add(zeros);
     }
 
     process_file(path, hash_obj);

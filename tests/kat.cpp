@@ -174,7 +174,7 @@ duplex_digest(const int capacity_blocks, const int num_rounds, const int input_s
                               customization_str);
 
     const auto msg = make_msg(msglen);
-    (void)hash_obj.add(std::span<const std::byte>{msg});
+    (void)hash_obj.add(msg);
 
     return hash_obj.squeeze_bytes(out);
 }
@@ -188,7 +188,7 @@ tree_digest(const int capacity_blocks, const int num_rounds, const int input_suf
                               customization_str, chunk_size_bytes, 1);
 
     const auto msg = make_msg(msglen);
-    (void)tree.add(std::span<const std::byte>{msg});
+    (void)tree.add(msg);
 
     return tree.squeeze_bytes(out);
 }
@@ -239,12 +239,12 @@ mac_digest(const int capacity_blocks, const int num_rounds, const int input_suff
 
     (void)tree.add(encoded_w.span());
     (void)tree.add(encoded_key_len.span());
-    (void)tree.add(std::span<const std::byte>{key});
+    (void)tree.add(key);
     const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
-    (void)tree.add(std::span<const std::byte>{zeros});
+    (void)tree.add(zeros);
 
     const auto msg = make_msg(msglen);
-    (void)tree.add(std::span<const std::byte>{msg});
+    (void)tree.add(msg);
 
     // right_encode(L), so MACs of different output sizes are unrelated
     (void)tree.add(right_encode(to_unsigned(out)).span());
@@ -264,7 +264,7 @@ cch_digest(const int mix_rate, const int msglen, const int out)
     compress_castella_hash<> node{mix_rate};
 
     const auto msg = make_msg(msglen);
-    node.add(std::span<const std::byte>{msg});
+    (void)node.add(msg);
 
     return node.final_digest_bytes(out);
 }
@@ -276,7 +276,7 @@ cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
     compress_castella_tree tree{mix_rate, chunk_size_bytes, 1};
 
     const auto msg = make_msg(msglen);
-    tree.add(std::span<const std::byte>{msg});
+    (void)tree.add(msg);
 
     return tree.final_digest_bytes(out);
 }

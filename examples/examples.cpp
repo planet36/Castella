@@ -148,7 +148,7 @@ parallel_hash_like(const std::string_view X,
                             .add(X.substr(off, B))
                             .squeeze_bytes(cv_len);
 
-        final_node.add(std::span<const std::byte>{cv});
+        (void)final_node.add(cv);
     }
 
     // 4. z = z || right_encode(n) || right_encode(L).

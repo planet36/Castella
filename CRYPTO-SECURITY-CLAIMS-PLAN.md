@@ -568,8 +568,9 @@ be inside its stage-A budget.
 python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 639947 squeezes
 ```
 
-~150 programs/s, linear in `-n`; memory grows with the run, so 400 k is near the practical
-ceiling at 7.7 GiB. This covers what KAT.txt structurally cannot (split adds, both
+~150 programs/s, linear in `-n`; memory grows with the run and reached 1.5 GB at 400 k, so
+what bounds a sweep here is the 40 minutes rather than the 15 GiB. This covers what
+KAT.txt structurally cannot (split adds, both
 `*_encoded` entry points, explicit padding, successive squeezes).
 
 ### 10.5 The queued additions — all run as of 2026-08-02

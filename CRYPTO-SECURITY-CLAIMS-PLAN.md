@@ -517,3 +517,34 @@ whatever external cryptanalysis the challenges attract.
    margin rationale (§4.3) if it moves the best-attacked-rounds number.
 6. README/FAQ/--help updates last, once the SPEC.md sections are stable.
 
+
+---
+
+## 10. Closed by decision — do not re-propose
+
+Everything in §5 was built, and the questions §4 left open were settled. What is *not*
+recorded anywhere else is which lines of work were deliberately stopped, and why — so they
+come back as fresh proposals every few sessions, each costing a round trip to decline. This
+section is that register. Each entry is a decision, not a result: the evidence behind it is
+in SPEC.md or research/README.md, and none of it is reopened by wanting a better answer.
+
+| closed | when | what was decided |
+|---|---|---|
+| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity. A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled: every row meets `floor + 3` and none is an exception. Only the published trigger reopens it — see below. |
+| The "margin in bits" metric | 2026-08-08 | Rejected on the merits, not on the answer it gave. It is the metric that happens to flatter the row under question, and doubling a *differential* bound buys nothing against the rebound, integral and algebraic attacks the margin exists to cover. The rounds metric stays. |
+| Pushing the trail-search **ceilings** further | 2026-08-08 | The whole line: more seeds, more patterns, deeper shells, enumerating alternate MILP optima above r = 4. The last batch re-ran all six ceilings, three at double the budget, and moved none. Every round count through r = 8 is bracketed on a solved floor, so a tighter ceiling buys characterization, not margin. |
+| `A(9)` and beyond | 2026-08-08 | Dropped on scope. The shipped round counts are 6 and 8, so r ≤ 8 covers them; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
+| Differential clustering at r ≥ 2 | 2026-08-07 | The r = 2 cluster enumeration was judged not worth its cost, and the shell enumerations that would supply the figures elsewhere are inside the closed ceiling line. So first-order clustering is measured at r = 1 only (≈ 2 bits), and the gap is disclosed rather than queued (§5.3). |
+| Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive: 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. Finding a trail in a fresh pattern is satisfiability; minimizing within one is refutation across 129 coupled S-boxes. |
+
+**What reopens the first entry, and only it:** the published revision trigger — a
+distinguisher reaching 4 rounds obliges `R*` = floor + 4, i.e. 7/7/7/9. It is stated in
+SPEC.md and CHALLENGES.md, it asks about *reach* rather than cost, and if it fires, `C` = 6
+is the row to examine first (§4.3, and now SPEC.md's margin rationale).
+
+**One gap is unmodelled rather than closed.** Rebound attacks are covered by a reasoned
+margin argument, not by a search — the argument grants the attacker a free maximal-reach
+inbound and compares the outbound against the flat claim. That is a heuristic, it is
+labelled as one in SPEC.md and VERIFYING-CLAIMS.md § 14, and no rebound *search* is
+queued. It is the honest weak point of the evidence base, and naming it here is not a
+proposal to fix it.

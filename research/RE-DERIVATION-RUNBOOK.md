@@ -14,10 +14,11 @@ see §0.  It is the maintenance counterpart to VERIFYING-CLAIMS.md: that file
 maps each *claim* to the evidence a skeptical reader should check, this one is for whoever
 has to *refresh* the figures.
 
-It was extracted from § 10 of
+It was extracted from
 [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md), which is where it grew
 up and no longer belongs — a standing procedure is not part of a plan, and this one is now
-longer than the plan's argument.
+longer than the plan's argument. It was that file's § 10; the number has since been reused
+there for the closed-by-decision register, so it is not a pointer to follow.
 
 It was written from a full re-derivation on 2026-08-01/02 that took ~13 hours of machine
 time on 8 threads and **refuted four published figures** — so treat this as maintenance

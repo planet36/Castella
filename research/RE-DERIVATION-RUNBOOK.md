@@ -564,3 +564,30 @@ Four traps in that set, all of which have already cost time once:
   script are what make the whole argument capable of failing — one of them (254 odd
   preimage counts) must *break* the zero-sum, and if it ever passes, the failure is in the
   test rather than in `P`.
+
+## 8. Where a refreshed figure has to land
+
+Producing the number is half the job. **Every figure this file re-derives is published in
+more than one document, so fixing one copy is not fixing the figure** — grep the value
+across all of these before calling it refreshed, and sweep the prose around each hit, which
+states the conclusion the figure was supporting:
+
+| document | what it carries |
+|---|---|
+| [SPEC.md](../SPEC.md) | the Evidence section, the claimed `(C, R*)` instances, and the margin rationale |
+| [README.md](README.md) | the models, the caveats, and the full result tables — the record |
+| [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) | the expected outputs and the rules for reading them |
+| [CHALLENGES.md](../CHALLENGES.md) | the published bracket table and the round counts each challenge is set at |
+| [patterns/README.md](patterns/README.md) | `A(r)`, the solve times, and each pattern's `proven_optimal` |
+| [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
+
+Two of those bite in particular. A changed ceiling or floor moves the brackets **and** the
+bar a challenge has to clear, so CHALLENGES.md is a correctness target rather than a
+narrative one — an unreachable target published there is worse than a stale sentence. And a
+figure whose *status label* changes (`optimal` ⇄ incumbent) has to change label everywhere,
+because only `optimal` is a security bound; four figures have already been refuted for
+having been recorded from timed-out incumbents.
+
+[ADVERSARIAL-REVIEW-PLAN.md](../ADVERSARIAL-REVIEW-PLAN.md) § 7 states the same requirement
+as a standing audit item, and adds the throughput figures (`README.md`, `CLAUDE.md`,
+`research/README.md`) that §0 excludes from this file.

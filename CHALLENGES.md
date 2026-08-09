@@ -7,7 +7,7 @@ SPDX-License-Identifier: MPL-2.0
 
 The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers instances with `num_rounds ≥ R*` (6, or 8 at `C` = 8).  The instances below are **deliberately unclaimed** reduced-round targets, published to invite cryptanalysis in the style of the [Keccak crunchy crypto contest](https://keccak.team/crunchy_contest.html): a claim nobody has tried to break is worth little.  Solving a challenge is a welcome research result, not a break of any claimed instance; the [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 
-There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, open an issue in the repository.  **Status: all challenges unsolved** (as of 2026-08-08; solutions will be recorded in this file).
+There are no prizes — this is a personal research project — only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues); [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-08; solutions will be recorded in this file).
 
 ## Invitation to external cryptanalysts
 
@@ -56,6 +56,7 @@ Notes for analysts:
   and then squeezing the digest size.  The first three fields are the final node's role prefix; the last is the number of leaf CVs, which the tree absorbs even when there are none — leaving it out is the easy way to fail to reproduce a target.  (`spec-conformance.py`'s `Duplex` and `tree_digest` implement exactly this.)  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * An independent implementation to check against is [research/spec-conformance.py](research/spec-conformance.py) (pure Python, written from the spec).
 * Every digest and target in this file is pinned to the current digest format, and the setup check in each section is what detects a change: if one fails against a clean build of this repository, either the build is broken or the format has moved, and in both cases nothing here is a valid target until it passes again.  A deliberate format change voids every value below and they are regenerated with it — the same sweep that regenerates [tests/KAT.txt](tests/KAT.txt), which pins the same formats.
+
 ## Warm-up instances
 
 Digest size 4 bytes (`C` = 2, capacity 256 bits): generic collision cost 2^16, generic preimage cost 2^32.  These are the entry rungs — small enough that a laptop finishes one — and they exist so that a setup can be exercised end to end (the recipe above, the CLI options, the verification steps, the submission format) before effort goes into the 2^80 families below.
@@ -151,6 +152,17 @@ Any attack on a **claimed** instance (SPEC.md's claimed-instances table) costing
 * any distinguisher of the duplex from a random sponge, or of its output from random, below 2^(64·C).
 
 A convincing attack *sketch* with a verified reduced-round demonstration is as welcome as a full break; that is how the round-count margin gets re-evaluated.
+
+## Submitting a solution
+
+Solutions and write-ups go to the repository's issue tracker: <https://github.com/planet36/Castella/issues>.  A solution needs four things, and is checked by re-hashing the messages with the instance's own command:
+
+* **The instance**, as the exact command line from its table — the round count, the digest size, and `custom=challenge`.  `chunk-size=65536` and `suffix=1` are what those commands already imply, so give them only if something differs.  For a [truncated-collision ladder](#truncated-collision-ladder) rung, give the `k` as well.
+* **The messages**, as lowercase hex, one message per line, with no `0x` prefix and no whitespace or separators inside a line: two lines for a collision, one for a preimage.  Hex rather than a file keeps a trailing newline or a text-mode conversion from silently changing the input, which is the likeliest way a real solution fails to reproduce.  Attach anything longer than a few kilobytes as a file instead, and give its `sha256sum` in the text.
+* **The digest** the messages produce.  If it disagrees with what the command gives here, that says immediately whether the message or the setup is at fault, instead of leaving the two indistinguishable.
+* **The cost, and how it was reached** — brute force at the generic cost, or below it, and by what method.  The two are recorded differently: below the generic cost is a result about the instance, at it is compute.  A partial or heuristic attack that exhibits no message belongs here too; say what it would cost and what it assumes.
+
+Every claim is checked against a clean build of this repository and independently against [research/spec-conformance.py](research/spec-conformance.py) before any status column changes.  Solutions are recorded here with attribution, or anonymously on request.
 
 ## Non-goals
 

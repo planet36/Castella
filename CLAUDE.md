@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions. The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in  `castella-duplex.hpp`. `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` — keep spec, KAT file, and conformance script in agreement whenever a digest format changes — and regenerate the published challenge digests and targets in `CHALLENGES.md`, which are digests of specific instances and become unreachable targets otherwise.
+Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions. The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in `castella-duplex.hpp`. `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` — keep spec, KAT file, and conformance script in agreement whenever a digest format changes — and regenerate the published challenge digests and targets in `CHALLENGES.md`, which are digests of specific instances and become unreachable targets otherwise.
 
 ## Build Commands
 
@@ -97,6 +97,26 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 - **`research/`** — Standalone programs, and the evidence behind the design parameters and the security claims. C++: round-count determination (the minimum `aes_num_rounds`/`num_rounds` for full bit diffusion, and `simd_compress`'s diffusion rates), equivalence verifiers for the paired and inverse paths (`permute_inv-verify`, `permute_x2-verify`, `duplex_x2-verify`, `cch_x2-verify`), structural and zero-sum probes of `permute` (nonzero exit on any violation), a duplex PRNG stream to pipe into statistical batteries, and the google-benchmark benchmarks — the dependency that puts `research` in `EXTRA_SUBDIRS`. Python: `spec-conformance.py` (the independent model, and the only thing this directory's `test` target runs) plus the cryptanalysis tools — MILP minimum active S-boxes (`permute-min-active-sboxes.py`, PuLP driving HiGHS or CBC), bit-level differential trail search and clustering (`permute-trail-search.py`, z3, with `permute-trail-ceilings.bash` holding the per-round-count recipe behind each recorded ceiling), bit-based division property (z3), exact invariant-subspace search, even-multiplicity verification, algebraic-degree bounds, and `trail-model-crossvalidate.py`, which checks the trail model's permutation against the KAT-verified one. The solver-backed tools need dependencies `make` does not install (a virtual environment for PuLP; z3). Three documents: `research/README.md` holds the program inventory and every result table; `VERIFYING-CLAIMS.md` maps each `SPEC.md` security claim to the evidence and commands supporting it; `RE-DERIVATION-RUNBOOK.md` is the standing procedure for re-deriving those figures, and names the documents a refreshed figure has to be swept into.
 - **`http-prng-service/`** — HTTP server (using cpp-httplib) exposing a PRNG endpoint. Periodically reseeds from the OS (`getentropy`). `config.h` controls capacity, rounds, and reseed parameters.
 - **`hash-programs/`** — Command-line hash utilities: `castella` (DuplexTree) and `cch` (compress_castella_tree). Both are tree hashes with `--num-threads` (for multicore, never affects the digest) and `--chunk-size` (part of the digest format); both read files or stdin and output hex digests. Both print the self-describing BSD-style `--tag` format by default (it embeds the digest-relevant options; `--size` is inferred from the digest length), with `--untagged` for the reversed `digest  FILE` style, and both have `-c`/`--check` (+`--quiet`), which verifies both output formats with md5sum-style accounting/exit status — tag lines carry their own parameters, untagged lines take them from the check command line (`--tag`/`--untagged` are ignored with `--check`). Shared check helpers (hex parse, constant-time compare, shell unquote, checkfile driver) live in `check_utils.hpp` (program-local, not in `include/`). `castella` also has `--key-file` (keyed MAC: KMAC structure at tree scale — bytepad'd encode_string(K) as chunk 0, function name `Castella-MAC`, trailing right_encode(size) so sizes are unrelated; check needs the same key). `test-correctness.bash` (99 assertions) verifies hardcoded digests, thread/IO-mode invariance, option sensitivity, output-format selection, check/tag round trips, and the keyed mode; rerun it after any digest-relevant change.
+
+## Documentation
+
+Each of these owns something this file only summarizes; go to the owner before quoting a figure or a claim.
+
+| document | what it owns |
+| --- | --- |
+| `README.md` | the public overview — design, features, and the FAQ |
+| `SPEC.md` | the normative specification, the security claims, and the claimed `(C, R*)` instances |
+| `CHALLENGES.md` | the published challenge digests, and the bracket table each challenge is set against |
+| `CRYPTO-SECURITY-CLAIMS-PLAN.md` | how the claims were arrived at: the capacity mapping and the `R*` methodology |
+| `ADVERSARIAL-REVIEW-PLAN.md` | the review's per-surface threat models and its standing audit items |
+| `research/README.md` | the cryptanalysis program inventory, the models and their caveats, and every result table |
+| `research/VERIFYING-CLAIMS.md` | claim → evidence → command, with the expected output and how to read it |
+| `research/RE-DERIVATION-RUNBOOK.md` | the standing procedure for re-deriving those figures, with budgets |
+| `hash-programs/README.md` | every performance figure, and the commands that reproduce it |
+
+`examples/`, `tests/`, `research/` and `hash-programs/` each also have a per-program table in their own `README.md`.
+
+**A measured or solved figure is published in more than one document, so correcting one copy is not correcting the figure.** Grep the value across every document above before calling it fixed, and sweep the prose around each hit — it states the conclusion the figure was supporting, so it moves with the number. `research/RE-DERIVATION-RUNBOOK.md` § 8 is the canonical target list for the cryptanalysis figures; `ADVERSARIAL-REVIEW-PLAN.md` § 7 carries the same requirement as a standing audit item and adds the throughput figures, which it names *this* file as a carrier of. A figure whose status label changes (`optimal` ⇄ incumbent) must change label everywhere, because only `optimal` is a security bound.
 
 ## Platform Requirements
 

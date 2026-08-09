@@ -691,6 +691,9 @@ documentation:
   HiGHS closes that same r=3 instance in 16 s, and r=4, r=5 and r=6 besides. The reasoning
   is still correct — it just applies to whichever solver is genuinely the best available,
   and CBC was not. Treat "the dual bound has stalled" as ambiguous between *this problem is
-  hard* and *this solver is weak*, and settle that cheaply before budgeting hours. The two
-  remaining open cells (r=7, r=8) have now stalled under HiGHS too, so for them the
-  reasoning above is live again.
+  hard* and *this solver is weak*, and settle that cheaply before budgeting hours. No cell
+  at N=16, a=3 is open any more: r=7 and r=8 looked stalled under HiGHS at a 2 h limit,
+  reporting gaps of 9% and 28%, and both closed proven-optimal when given 6 h — 354 at
+  7257 s and 390 at 14050 s. That is the reasoning above applied once more, and it lands on
+  the same warning §10.2 draws from it: a duality gap is not a progress bar. Above r=8
+  nothing has been attempted, so superadditivity remains the only source there.

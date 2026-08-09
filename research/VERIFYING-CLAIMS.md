@@ -25,10 +25,10 @@ This is the guide for a skeptical user who wants to reproduce every piece of evi
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen; and the exact invariant-subspace search (exhaustive over every byte-aligned subspace) | executable | §10 |
 | 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128; plus the even-multiplicity argument behind them, verified independently, which gives a 3-round inside-out zero-sum | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
-| 13 | Trail tightness (r=1 bound proven tight; r=2, r=3 and r=4 bracketed, all on solved floors) and first-order differential clustering | executable (solver) | §13 |
+| 13 | Trail tightness (r=1 bound proven tight; r=2 through r=8 bracketed, all on solved floors) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
-| 16 | r≥2 trail tightness, r≥5 trail ceiling (inside-out zero-sums moved to §11, now built) | evidence pending | §16 |
+| 16 | r≥2 trail tightness; the r≥5 ceilings each rest on a single imported MILP pattern (inside-out zero-sums moved to §11, now built) | evidence pending | §16 |
 
 Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs — building `research/` additionally requires [google-benchmark](https://github.com/google/benchmark) — and Python 3 for the seven scripts:
 
@@ -62,7 +62,7 @@ Expected: `../tests/KAT.txt: 58 KATs verified, 0 failed`, exit status 0, in seco
 make test                       # at the repository root
 ```
 
-Runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 85-assertion CLI script (which includes the keyed-MAC round trips), and finally the spec-conformance script above.  Expected: every suite reports success.  (The Python steps need `python3`; `make test` fails with a clear message if it is missing.)
+Runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 99-assertion CLI script (which includes the keyed-MAC round trips), and finally the spec-conformance script above.  Expected: every suite reports success.  (The Python steps need `python3`; `make test` fails with a clear message if it is missing.)
 
 ## 3. Full bit diffusion at 3 rounds
 
@@ -239,7 +239,7 @@ Expected: the self-test passes (it asserts δ_1..7 = 7, γ = 7, and that the sam
 
 ## 16. Evidence pending
 
-Trail tightness at r ≥ 2 (the §13 minimization times out, leaving brackets rather than minima); and a trail-search **ceiling** at r ≥ 5 for N = 16.  The **inside-out** zero-sum was listed here as the one integral direction still uncovered until 2026-08-04; it is now built and reaches 3 rounds (§11).
+Trail tightness at r ≥ 2 (the §13 minimization times out, leaving brackets rather than minima); and the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.  The **inside-out** zero-sum was listed here as the one integral direction still uncovered until 2026-08-04; it is now built and reaches 3 rounds (§11).
 
 The bit-based division-property model has moved out of this section: it is built (§11) and gives an explicit 2-round one-directional integral distinguisher with 2^128 data.  Run from a middle state, the even-multiplicity counting behind it gives an **inside-out zero-sum over 3 rounds** (forward 2 and backward 1 over one 2^128 cube filling a block) — established by that argument and by direct brute force at reduced width, *not* by the model, which cannot certify the backward half (§11).  A previous revision here called the reach "bracketed **[2, 2.67]**" by pairing that lower end with §15's degree bound; the 3-round result refutes the pairing, since 2.67 caps a *degree-based* construction and never bounded the true reach.  Read the reach as **≥ 3 with no upper bound claimed**.  (Revisions between 2026-08-04 and this one said **4**, by adding the halves of `--inside-out 2 2 -c block`.  Those halves are each balanced but not over a shared cube — see §11.)  What the forward direction alone does not settle is r = 3.  The model builds there, and its first check does resolve given ~6 200 s of solve (the earlier "does not resolve" reflected a 600 s budget), but the answer is **SAT** — which excludes only a *full* 2048-bit zero-sum for the single-block cube and, being the weak direction, says nothing about `P`.  So r = 3 remains **not refuted**, with partial balance on other bits and larger cubes untried.
 

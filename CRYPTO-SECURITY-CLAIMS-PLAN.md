@@ -678,12 +678,21 @@ documentation:
 
 ### 10.6 Resource notes
 
-* **Memory is not the constraint.** Across all 28 runs of the 2026-08 re-derivation the
-  peak was 1.5 GB (the fuzzer) and no solver run exceeded 892 MB, against 7.7 GiB
-  available. The 6.38 GiB figure recorded elsewhere came from the `witness` encoding,
-  which `rows` (now the default) replaces at ~1/7th the memory. More RAM would buy
-  *parallelism* — z3 is single-threaded, so 7 of 8 cores idle during every trail search —
-  and deeper fuzz sweeps, not the ability to solve anything currently out of reach.
+* **Memory was not the constraint on the runs in §10.1–§10.5, and is one on the shell
+  probes in §10.3.** Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB
+  (the fuzzer) and no solver run exceeded 892 MB, against the 7.7 GiB the machine had
+  then. Two things have changed since. The 6.38 GiB figure recorded elsewhere came from the
+  `witness` encoding, which `rows` (now the default) replaces at ~1/7th the memory — but
+  `rows` bounds the *encoding*, not the run: a single `check()` accumulates learned clauses
+  for its whole `-t`, so **`-M` is the only thing that caps a long probe**, and the
+  multi-hour shell probes added in 2026-08-06/08 reach ~2 GB each where the searches here
+  peaked at 270–890 MB. Since `-M` is per process, a parallel batch needs N × M inside RAM;
+  eight at `-M 2500` left 1.8 GiB of 15 free, and r = 5 wants `-M 4000` because it is
+  memory-bound at 2500. So the original conclusion still holds for everything above §10.3's
+  shell block — more RAM buys *parallelism* (z3 is single-threaded, so 7 of 8 cores idle
+  during every trail search) and deeper fuzz sweeps, not reach — but it must not be read as
+  "budget nothing for memory": below that, the process count is what RAM decides, and the
+  ceiling recipes were sized against it.
 * **Longer time limits: measure the gap, do not guess.** The incumbent is a poor guide.
   At N=16 r=4 it was unchanged between 1800 s and 3300 s, and at N=8 r=4 between 600 s and
   3300 s, which reads as exhaustion — but the incumbent is the *primal* side and proving

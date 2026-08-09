@@ -24,13 +24,22 @@ that is expected to find things, not a formality.
 
 Commands are written as each section runs them: §1, §2 and §4 from the repository root
 (paths begin `research/` or `tests/`), §3 and §7 from `research/`, whose blocks open with
-the `cd`.
+the `cd`. §1's two `./`-prefixed rows are the exception within their section — they are
+compiled binaries and run from `research/` like §7's, and each says so.
 
 Timings and peak memory in §1–§6 are from that run (8 threads, 7.7 GiB, no swap; the
-machine has had 15 GiB since 2026-08-03). §7's are from the runs recorded in
-VERIFYING-CLAIMS.md, with the sub-minute ones re-measured on 2026-08-09. Every MILP and
-trail-search command is sized to finish inside one hour; `-t` is the limit **per round
-count**, so solve one cell at a time with `--min-rounds R -r R` when the budget matters.
+machine has had 15 GiB since 2026-08-03) **except where a line carries a later date of its
+own**: the HiGHS figures in §2, and §3's imported patterns and shell probes, were measured
+between 2026-08-04 and 2026-08-08. §7's are from the runs recorded in VERIFYING-CLAIMS.md,
+with the sub-minute ones re-measured on 2026-08-09.
+
+**Budgets here span seconds to six hours** — §2's `-t 21600` cells and §3's four-hour shell
+probes are the long end, and nothing about this file is uniformly cheap. The two solvers
+also spend `-t` differently. In `permute-min-active-sboxes.py` it is the limit **per round
+count**, so solve one cell at a time with `--min-rounds R -r R` when the budget matters. In
+`permute-trail-search.py` there is no `--min-rounds` and `-t` is the limit per solver
+**call** — stage A, stage B and each `--cluster` check get one apiece — so wall time is a
+multiple of it, and `--cluster-time-limit` bounds the enumeration separately.
 
 **Two standing rules for anything here that solves.** Launch it under
 `nice -n 19` — the benchmarks are the exception, never the solvers — and keep at most 8
@@ -86,7 +95,7 @@ rules this runbook deliberately does not repeat.
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | The trail search models `P` a **third** time (beside the C++ and spec-conformance.py); this compares its difference propagation with the KAT-verified one, r = 1..6 | `240 state pairs verified, 0 failed`, ~3 min |
 | `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
-| `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 25 s |
+| `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 6 s (2026-08-09, under the HiGHS default; the 25 s this row used to read is the CBC figure) |
 
 (Everything above except the last row and the two compiled ones runs on the system
 `python3`. The trail-search rows
@@ -133,7 +142,7 @@ automatically when `highspy` is importable, and `--solver cbc` forces the old be
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
 # Cross-solver check.  Re-proves a cell with the OTHER branch-and-bound on an
 # identical model, so a disagreement means a solver bug rather than a modelling
-# one (the model is checked separately, by the AES row in 10.1).  r=3 is the
+# one (the model is checked separately, by the AES row in section 1).  r=3 is the
 # only cell CBC can close, so it is the only one this is available for -- 16 s
 # under HiGHS against ~72 min under CBC, and both must print 129 / optimal.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 --solver cbc
@@ -196,7 +205,9 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 900 -M 1500 --no-minimize \
 # differential's own minimum is in [286, 293].  r = 2 is therefore the round count where refutation is the
 # cheap direction and satisfiability is the expensive one -- the inverse of every other.
 
-# The recorded r=3/r=4 ceilings come from sweeps, not single patterns (2026-08-02).
+# The best r=3/r=4 TRAILS come from sweeps, not single patterns (2026-08-02).  Neither
+# weight below is the recorded ceiling -- the shell block at the end of this section is
+# what produces those, and what these sweeps buy it is a good trail to start from.
 python3 permute-trail-search.py -r 3 -A 129 --patterns 8 --no-minimize -t 600 -M 1200  # 19m, 865 MB; 8/8 realizable, best 891
 python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M 1200  # 21m, 858 MB; only 3/8 reachable, best 1153
 
@@ -368,14 +379,16 @@ documentation:
 
 * **Memory was not the constraint on the runs in §1–§5, and is one on the shell
   probes in §3.** Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB
-  (the fuzzer) and no solver run exceeded 892 MB, against the 7.7 GiB the machine had
-  then. Two things have changed since. The 6.38 GiB figure recorded elsewhere came from the
-  `witness` encoding, which `rows` (now the default) replaces at ~1/7th the memory — but
+  (the fuzzer) and no solver run exceeded 892 MB — that one an r = 4 `rows` probe on the
+  since-withdrawn 225-box pattern, not a command in this file — against the 7.7 GiB the
+  machine had then. Two things have changed since. The 6.38 GiB figure recorded elsewhere
+  came from the `witness` encoding, which `rows` (now the default) replaces at ~1/7th the
+  memory — but
   `rows` bounds the *encoding*, not the run: a single `check()` accumulates learned clauses
   for its whole `-t`, so **`-M` is the only thing that caps a long probe**, and the
-  multi-hour shell probes added in 2026-08-06/08 reach ~2 GB each where the searches here
-  peaked at 270–890 MB. Since `-M` is per process, a parallel batch needs N × M inside RAM;
-  eight at `-M 2500` left 1.8 GiB of 15 free, and r = 5 wants `-M 4000` because it is
+  multi-hour shell probes added in 2026-08-06/08 reach ~2 GB each where the searches quoted
+  in §3 peaked at 99–865 MB. Since `-M` is per process, a parallel batch needs N × M inside
+  RAM; eight at `-M 2500` left 1.8 GiB of 15 free, and r = 5 wants `-M 4000` because it is
   memory-bound at 2500. So the original conclusion still holds for everything above §3's
   shell block — more RAM buys *parallelism* (z3 is single-threaded, so 7 of 8 cores idle
   during every trail search) and deeper fuzz sweeps, not reach — but it must not be read as
@@ -410,8 +423,9 @@ documentation:
 that is what the 2026-08-01/02 re-derivation was about. It is not the whole evidence
 base, and the rest of it is not optional to re-derive: **the diffusion floor is one of the
 two inputs to every `R*`, and the 3-round inside-out zero-sum is what the `+ 3` margin term
-is anchored to** (§4.3 step 3), so a refresh that skips this subsection leaves the shipped
-round counts resting on figures nobody re-checked. The cheap members are already in §1;
+is anchored to** ([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3
+step 3), so a refresh that skips this subsection leaves the shipped round counts resting on
+figures nobody re-checked. The cheap members are already in §1;
 this is the rest, with the budgets they want.
 
 Read the results *there*, not here: [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md)
@@ -429,7 +443,7 @@ cd research && make    # links google-benchmark into every binary here
 ./permute-num_rounds -n 120
 ./permute-num_rounds-avalanche_matrix -n 100
 
-# Structural, and cheap enough to be in 10.1 as well -- repeated here for the family.
+# Structural, and cheap enough to be in section 1 as well -- repeated here for the family.
 ./permute-structural-probes -n 10000              # 0.3 s
 ./permute-zero_sum-probes -n 1                    # 8 s
 python3 permute-invariant-subspaces.py            # 13 s

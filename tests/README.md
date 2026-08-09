@@ -14,7 +14,7 @@
 [KAT.txt](KAT.txt) is a machine-readable known-answer-test file pinning the digest formats of `Castella::Duplex`, `Castella::DuplexTree`, and `compress_castella_tree` across parameter and message-length sweeps (chunk/rate/compression-block boundaries, the leaf-index 255/256 `left_encode` byte-width boundary).  Each line is self-describing; the message is the deterministic pattern `msg[i] = i mod 256`, so external implementations can consume the file directly.  [research/spec-conformance.py](../research/spec-conformance.py) — an independent pure-Python implementation written from [SPEC.md](../SPEC.md) alone — verifies every line, so the spec, this file, and the C++ implementation must be kept in agreement whenever a digest format changes.
 
 * `./kat` verifies every line against the current implementation (nonzero exit status on any mismatch).
-* `./kat --generate > KAT.txt` regenerates the file — only to be done when a digest format deliberately changes.
+* `./kat --generate > KAT.txt` regenerates the file — only to be done when a digest format deliberately changes.  That same change voids the published targets in [CHALLENGES.md](../CHALLENGES.md), which are digests of specific instances rather than of this file's sweeps; regenerate them in the same pass.
 
 ### `equivalence-tests`
 

@@ -14,7 +14,7 @@ either.  The published AES bounds validate it at r=1, where Castella is pure
 AES and the transpose has not yet acted; nothing validated it above that.
 
 This drives random state PAIRS through spec-conformance.py's `permute` -- the
-from-the-spec implementation that reproduces all 72 KATs -- and propagates
+from-the-spec implementation that reproduces all 83 KATs -- and propagates
 their difference, in lockstep, through the trail model's own layers, feeding it
 the S-box output differences the concrete pair actually produces.  The two must
 agree byte for byte at every round count.

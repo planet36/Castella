@@ -57,7 +57,7 @@ Why it matters: the proofs and bounds are about the *specified* constructions; t
 python3 spec-conformance.py     # independent pure-Python implementation of SPEC.md
 ```
 
-Expected: `../tests/KAT.txt: 72 KATs verified, 0 failed`, exit status 0, in seconds.  `make test` runs this automatically (as its last step, from `research/`); run the command above directly for a quick check after any spec or KAT change.
+Expected: `../tests/KAT.txt: 83 KATs verified, 0 failed`, exit status 0, in seconds.  `make test` runs this automatically (as its last step, from `research/`); run the command above directly for a quick check after any spec or KAT change.
 
 ```bash
 make test                       # at the repository root

@@ -6,13 +6,37 @@
 # The fn=, custom=, and digest= values are hexadecimal (fn and custom
 # decode to byte strings and may be empty).
 #
+# On an rc or permute line, digest= is the raw output (one round
+# constant, or the whole 256-byte permuted state), not a digest.
+#
 # Line formats:
+#   rc r= aes_r= i= out= digest=                                    (RC[r][aes_r][i])
+#   permute init= rounds= out= digest=                              (Castella::permute)
+#                        (init=zero, or init=counter for s[i] = i mod 256)
 #   duplex C= rounds= suffix= fn= custom= msglen= out= digest=      (Castella::Duplex)
 #   tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest= (Castella::DuplexTree)
 #   mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=
 #                        (the keyed construction: a DuplexTree over
 #                         bytepad(encode_string(K), chunk) || msg || right_encode(out))
 #   cchtree mix= chunk= msglen= out= digest=                        (compress_castella_tree)
+
+# Round constants: the seed, its successor (the 128-step stride), and
+# the last constant (the r -> aes_r -> i emission order)
+rc r=0 aes_r=0 i=0 out=16 digest=657870616e642031362d627974652063
+rc r=0 aes_r=0 i=1 out=16 digest=2b436d9e3b0ad3079a5838df7180d3b9
+rc r=15 aes_r=2 i=15 out=16 digest=5b971fcc2a92392ff6b9055917b6fc1f
+
+# Castella::permute: the whole 256-byte output state.  rounds=1 is the
+# sharpest of these: P uses the LAST rounds' constants, so an
+# implementation taking the first ones matches rounds=16 and no other.
+permute init=zero rounds=1 out=256 digest=8af83b3bbc131203d6f0ec21204c2d53394ef2a096a340907940e1b9780552a797ebb77f011adfe67202c77f0fb09f41eac151afd166a6f8a2dd04de35496b968d065ec949e838d7133d88bd92e3690a4b2835178920578187d85c8b1ebe67a4da9b8b1bcb569e7dda41ae65fc9a5094b0078730aed3b66eb7a27a1fdb40b31fc44ce1b8b39b1d179e2b1069d05b364830adcb5203cfa058785f2cec1e96f9a2216471603117039dcbc3d2f37907ec5775307b8c89d22d674094912f5efe25182c8c6249b5bb98fd790ba122147562b03901778ea00b7c8724899eba3993a27c70567fd1554455e7b1e8b3cecab3fb38f2cc2f6014a8574855e663a052427e5d
+permute init=zero rounds=3 out=256 digest=3daa797d7f8e4add93d79fdf444ffa102237615c086d80ae2009e622ca9ffb3bd34780f9a017449664b1b32a6c1ca83afc857942f91a69f5bbf65fb1d1c259897238856e5a37c2f326848f125001a65393fd3504d39c537b5ff55d938f2c514b6ade53f90eaf76d3739321f06751516f88c21ddd64a76c9de00e823556148561fbfbc1de64ebdae01a95b0d6df18fbb99fafffded657e6e3c4dbe88a722d22110b282bee47001df129fc09ac9e9f4d9cebb767ce2b92f5285cc76f9ef70448e8df186079c7c992ee686a1002da9948a68c5ad3d32d310899b4247028e304a2f60fcca1d2d1defbcb37450a858423147de9a10c476ab9de9ed447adf0c9b4507e
+permute init=zero rounds=6 out=256 digest=0679bd5c1597496c4085973a33e4dbf7b2a5dd18c9eb5ed183b39b43559b18465d858dc8a407f59b634b2e54c9313291a4807f1fa264274484a2c063685a15d1db0970c3e6f2a8764ab534ef42df15a86982da66dbb58c0f26696f2c44679aafe53cf82f4d42e7391116afa4cc0fbad48d832cac8d906e544135062f7bfd0cb44400285513c6523adfccaa0f42dc130d69d6a8e5c65a79a5b6ff90dd0b77d3b53427e13ec43daf46928d06681c74ac08ca94a3186bf73a8a3a71cb65e8895d09a396b1a4accb1faa24359e73a3cfc2b5116a53b006f70776c789bb943b9b0d3556a5490122d8de939e61d21e37820a191077c826b5e4d4390a70e2ad1729ec0c
+permute init=zero rounds=16 out=256 digest=7957aac8aed56be772fbbf52b4b12856f801f303b421e9baafb93b4ffa87c8e69f1a4306cd5c28e9e37df5e52a4f9376c73947fe04954637e513cf582a25598682f002d768aa342adb232b2181ad16ae70b357b8735d0a91226a686a577bd6ad4c34b42fca15270cd850fd79c33c950707ce32d6506caab6068c61993f4eccd0dcacc3d2a21e7a62e4f900c9dbcb44f33550b6c95bd39a626ae5b8cba5f018a7d1b533c8ffb91083537c4dc47788e5c35771631fda675641355a6258dee82492d48e2c29588079c3f6eb1dcf558db18ea206512cf0c1cb4e5b95abb3af9def056e1b6ff70d481854395eb252d459173c1cd245b6e90983958c62d2899d9e0a38
+permute init=counter rounds=1 out=256 digest=d139677208b6c9f69e82a7aee8789917f498191cbf265eacd7e69846ac62749927d3cd7d25a4e3fb588b22a576f275f7cbc0d5f0d5f281741eefe0d462827e59575d3b68fa2aff9243b813e4cb50c6d6cbc2050fbe97ba47c6f23006dc0968ee596972f501b3ed80fd9531d8804b1f5121475d9898f61f9c8041a87329f660f59693e4344b8d21612e73f4ca6bed6e04a3e1c9c17610bb39227262ffb0fbfc3f16e7a8a2619da67076a8c0ad5001d7c59c99285138716060bf10dea445e2ba3eebaeb70b680a679af86aaf245b24878ac780a9665ebe2180652b8be7c1a56e8ac3efd4edfccd9c387d2cd4784e51837150ac549fa869857a018acfedb4ea051d
+permute init=counter rounds=3 out=256 digest=3c8ce9e596e0fb11dd0485588cbd8fc27c5cf1b07ac66b58849e5f2f063286eaca7e5a4703b34c7e7d757c37d35d2e366cd4df5195ea255f2b7fbe47c9881d71fa7522a2b15531aa8d4e16e587c01e40d690d3178c0c793e0d8db95ad880d1072b9cfb8353a47fb358bc1552313e4003cb20a44e3a9191d48a716f94fe86f466ba3a6fffbe616ad0f28cfba548a226563e45793cd04ad34131da5b48f36eb43aed34c63f602b9de70c539c897ee664599d2fa79032eba100cad3e572a6d00b11db307c0d65f29dd5ccd6676c25c39fb4af3c50a87b205d2253d5d58f1e999691fd8739a5aa09fa2d5147b36a68d23a6c0ba928303e76667a591a75be3b33a0fe
+permute init=counter rounds=6 out=256 digest=63c6da9c810582ccf603a1c53dbf6ff533a25d6b86c4055b7a3b0fd21c5d94459c4e8fae9bb261f0c054586570b3358f996a6ab44bf969ca31acac9c1cfa2a24022b2b79c84529f3e4037d819a2f74f30620d185c4be9008573aeb9eb17c0e100f43d48984151095809b9526811cdcfe8f57223be9a181e440b24715fba104cb4d24ff4b99e917d0bb6a320416fc25a44114986c8db9f4100c32474d50dea7243023e607a049f5b17e260e44bcd913a5f0d86ce89040f28272678a917f3d847299bf680424b1cb13a8b2396cb629df817f7f8ca057acfcf5ddc3f6734afe30870579c251bef890d9ca935a23ea924016a0f442d7b400d9f5090d30e190eec14b
+permute init=counter rounds=16 out=256 digest=fb8a00596760b0bd215a5872a6dc6ec9127abca5ed1a1558487ee1cffe4d92dbd2b73cb429e32292aa67ac4811c4cb2012320e5f785e3fc60a405ef20a14cb52dfa46b7fc0f3e7959fef49c2ec153776ee1a844d9a1b82588364050f7558319ad6e2959e851b51519fe0bc64a5d3fe1b27b1b2a388352f0311f2c9921bfbac18d5073f00d16f1e1ae49294c10c1487e4e6f6b0e2bc18e75e498eed6d13b677a0e4264c44fe9477c160dc4e36bf4bfc2c7008b11dfcca9afed117f3c04f535ba9268022279a1cb62fe7bad76701f3c962e28090d067d068a30db2225d15ac905aae2887f6bf333955198aa98ddea7eb0be95f5dc63fc8ea1472b22ce977625338
 
 # Castella::Duplex: msglen sweep (the C=4 rate is 192 bytes)
 duplex C=4 rounds=6 suffix=0 fn=43617374656c6c61 custom=4b4154 msglen=0 out=32 digest=181bc8c60a9c802ab22103af544d6db3fbeaa26b126bf0164d59c4500b6a2816

@@ -285,7 +285,7 @@ Evidence supports the claim; it cannot prove it.  [research/VERIFYING-CLAIMS.md]
 
 ## Test vectors
 
-[tests/KAT.txt](tests/KAT.txt) contains 72 known-answer tests covering the duplex, the DuplexTree, the keyed (MAC) construction, and the Compress-Castella tree across parameter and length sweeps; `tests/kat.cpp` verifies them (`./kat`) or regenerates the file (`kat --generate`).  Each line is self-describing; the message of length `msglen` is the byte pattern `msg[i] = i mod 256`, a MAC key of length `keylen` is `key[i] = 255 − (i mod 256)`, and `fn=`/`custom=`/`digest=` values are hexadecimal.  Three examples:
+[tests/KAT.txt](tests/KAT.txt) contains 83 known-answer tests covering the round constants, the permutation, the duplex, the DuplexTree, the keyed (MAC) construction, and the Compress-Castella tree across parameter and length sweeps; `tests/kat.cpp` verifies them (`./kat`) or regenerates the file (`kat --generate`).  Each line is self-describing; the message of length `msglen` is the byte pattern `msg[i] = i mod 256`, a MAC key of length `keylen` is `key[i] = 255 − (i mod 256)`, and `fn=`/`custom=`/`digest=` values are hexadecimal.  Three examples:
 
 ```
 duplex C=4 rounds=6 suffix=0 fn=43617374656c6c61 custom=4b4154 msglen=0 out=32 digest=181bc8c60a9c802ab22103af544d6db3fbeaa26b126bf0164d59c4500b6a2816
@@ -294,6 +294,8 @@ mac C=4 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 k
 ```
 
 (`fn` decodes to `"Castella"` — `"Castella-MAC"` on a `mac` line — and `custom` to `"KAT"`.)  A `mac` line is the tree of the same parameters over `bytepad(encode_string(K), chunk) || msg || right_encode(out)`, so it needs no vector format of its own beyond the key.
+
+**The vectors are layered, so a failure localizes.**  An `rc` line is one round constant `RC[r][aes_r][i]`, and a `permute` line is the whole 256-byte state after `P(s, rounds)` from the all-zero state (`init=zero`) or from `s[i] = i mod 256` (`init=counter`); on both, `digest=` is that raw output rather than a digest.  They exist because every other vector depends on them: without them a wrong LFSR stride or a transposed transpose first shows as a wrong duplex digest, with this whole document in between.  The reduced-round `permute` lines are the sharper ones — `P` uses the **last** `rounds` constants, so an implementation that takes the first ones reproduces `rounds=16` and fails every shorter vector.
 
 ## References
 

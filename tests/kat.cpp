@@ -23,18 +23,28 @@
 * hexadecimal (fn and custom decode to byte strings and may be empty).
 * Line formats:
 *
+*     rc r= aes_r= i= out= digest=
+*     permute init= rounds= out= digest=
 *     duplex C= rounds= suffix= fn= custom= msglen= out= digest=
 *     tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest=
 *     mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=
 *     cchtree mix= chunk= msglen= out= digest=
 *
 * "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, and
-* "cchtree" is \c compress_castella_tree.  "mac" is the keyed construction
-* SPEC.md specifies for <code>castella --key-file</code>: the same
+* "cchtree" is \c compress_castella_tree.  "mac" is the keyed construction SPEC.md
+* specifies for <code>castella --key-file</code>: the same
 * \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>,
 * which is why it needs no separate class here.  Tree digests never depend
 * on the thread count, so no thread count appears in the format.
+*
+* The first two types pin the primitives directly rather than through a
+* construction: "rc" is one round constant \c RC[r][aes_r][i], and
+* "permute" is the whole 256-byte state after <code>P(s, rounds)</code>
+* from either the all-zero state (\c init=zero) or <code>s[i] = i mod
+* 256</code> (\c init=counter).  Their digest= is that raw output, not a
+* digest.  Without them an LFSR or transpose fault first shows up as a
+* wrong duplex digest, with the whole specification in between.
 */
 
 #include "../hash-programs/check_utils.hpp"
@@ -46,6 +56,8 @@
 #include "encode.hpp"
 #include "to_unsigned.hpp"
 
+#include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -86,7 +98,7 @@ constexpr std::string_view kat_mac_function_name = "Castella-MAC";
 * cannot report success on what it did hold.  Update it deliberately when
 * the sweeps in \c generate() change.
 */
-constexpr int64_t EXPECTED_KATS = 72;
+constexpr int64_t EXPECTED_KATS = 83;
 
 /// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
@@ -100,6 +112,55 @@ make_msg(const int len)
     }
 
     return msg;
+}
+
+/// One round constant, as bytes: <code>RC[r][aes_r][i]</code>
+/**
+* Pins the constant schedule on its own, so a wrong LFSR seed, stride or
+* emission order is caught here rather than as a wrong digest 200 lines
+* of specification downstream.
+*/
+[[nodiscard]] std::vector<std::byte>
+round_constant_bytes(const int r, const int aes_r, const int i)
+{
+    const auto rc = as_byte_span(Castella::round_constants[to_unsigned(r)][to_unsigned(aes_r)]
+                                                          [to_unsigned(i)]);
+
+    return {std::begin(rc), std::end(rc)};
+}
+
+/// The 256-byte state after <code>P(s, num_rounds)</code>
+/**
+* \param counter_init false for the all-zero state, true for
+*        <code>s[i] = i mod 256</code> over the 256 state bytes
+*
+* Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX
+* are the point: \c P uses the \e last \a num_rounds rounds' constants, so
+* a first-N implementation reproduces the 16-round vector and fails every
+* shorter one.
+*/
+[[nodiscard]] std::vector<std::byte>
+permute_state(const bool counter_init, const int num_rounds)
+{
+    constexpr int STATE_BYTES = 256;
+
+    std::array<std::byte, STATE_BYTES> flat{};
+
+    if (counter_init)
+    {
+        for (int i = 0; i < STATE_BYTES; ++i)
+        {
+            flat[to_unsigned(i)] = static_cast<std::byte>(i & 0xFF);
+        }
+    }
+
+    auto state = std::bit_cast<Castella::arr_blocks<16>>(flat);
+
+    Castella::permute(state, num_rounds);
+
+    const auto out = std::bit_cast<std::array<std::byte, STATE_BYTES>>(state);
+
+    return {std::begin(out), std::end(out)};
 }
 
 [[nodiscard]] std::vector<std::byte>
@@ -204,6 +265,25 @@ cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
 // {{{ generation
 
 void
+print_rc_kat(const int r, const int aes_r, const int i)
+{
+    const auto rc = round_constant_bytes(r, aes_r, i);
+
+    std::println("rc r={} aes_r={} i={} out={} digest={}", r, aes_r, i,
+                 std::size(rc), bytes_to_hex(rc));
+}
+
+void
+print_permute_kat(const bool counter_init, const int num_rounds)
+{
+    const auto state = permute_state(counter_init, num_rounds);
+
+    std::println("permute init={} rounds={} out={} digest={}",
+                 counter_init ? "counter" : "zero", num_rounds, std::size(state),
+                 bytes_to_hex(state));
+}
+
+void
 print_duplex_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
                  const int msglen, const int out)
 {
@@ -267,6 +347,8 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 *     paired with the capacity the castella program derives for them
 *   - cchtree: additionally around the 256-byte compression block size and
 *     with mix rates on both sides of the input's absorption count
+*   - permute: round counts well below NUM_ROUNDS_MAX, where the last-N
+*     round-constant rule is observable
 */
 // }}}
 void
@@ -280,13 +362,38 @@ generate()
     std::println("# The fn=, custom=, and digest= values are hexadecimal (fn and custom");
     std::println("# decode to byte strings and may be empty).");
     std::println("#");
+    std::println("# On an rc or permute line, digest= is the raw output (one round");
+    std::println("# constant, or the whole 256-byte permuted state), not a digest.");
+    std::println("#");
     std::println("# Line formats:");
+    std::println("#   rc r= aes_r= i= out= digest=                                    (RC[r][aes_r][i])");
+    std::println("#   permute init= rounds= out= digest=                              (Castella::permute)");
+    std::println("#                        (init=zero, or init=counter for s[i] = i mod 256)");
     std::println("#   duplex C= rounds= suffix= fn= custom= msglen= out= digest=      (Castella::Duplex)");
     std::println("#   tree C= rounds= suffix= fn= custom= chunk= msglen= out= digest= (Castella::DuplexTree)");
     std::println("#   mac C= rounds= suffix= fn= custom= chunk= keylen= msglen= out= digest=");
     std::println("#                        (the keyed construction: a DuplexTree over");
     std::println("#                         bytepad(encode_string(K), chunk) || msg || right_encode(out))");
     std::println("#   cchtree mix= chunk= msglen= out= digest=                        (compress_castella_tree)");
+
+    std::println("");
+    std::println("# Round constants: the seed, its successor (the 128-step stride), and");
+    std::println("# the last constant (the r -> aes_r -> i emission order)");
+    print_rc_kat(0, 0, 0);
+    print_rc_kat(0, 0, 1);
+    print_rc_kat(15, 2, 15);
+
+    std::println("");
+    std::println("# Castella::permute: the whole 256-byte output state.  rounds=1 is the");
+    std::println("# sharpest of these: P uses the LAST rounds' constants, so an");
+    std::println("# implementation taking the first ones matches rounds=16 and no other.");
+    for (const bool counter_init : {false, true})
+    {
+        for (const int num_rounds : {1, 3, 6, 16})
+        {
+            print_permute_kat(counter_init, num_rounds);
+        }
+    }
 
     std::println("");
     std::println("# Castella::Duplex: msglen sweep (the C=4 rate is 192 bytes)");
@@ -432,6 +539,33 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
 [[nodiscard]] std::optional<std::vector<std::byte>>
 recompute_kat_line(const std::string_view type, const field_list& fields, const int out)
 {
+    // The primitive lines carry no message; every other type needs one.
+    if (type == "rc")
+    {
+        const auto r = get_int_field(fields, "r", 0, Castella::NUM_ROUNDS_MAX - 1);
+        const auto aes_r = get_int_field(fields, "aes_r", 0, Castella::AES_NUM_ROUNDS - 1);
+        const auto i = get_int_field(fields, "i", 0, Castella::B_MAX - 1);
+
+        if (!r.has_value() || !aes_r.has_value() || !i.has_value())
+            return std::nullopt;
+
+        return round_constant_bytes(*r, *aes_r, *i);
+    }
+
+    if (type == "permute")
+    {
+        const auto init = find_field(fields, "init");
+        const auto rounds = get_int_field(fields, "rounds", 0, Castella::NUM_ROUNDS_MAX);
+
+        if (!init.has_value() || !rounds.has_value())
+            return std::nullopt;
+
+        if ((*init != "zero") && (*init != "counter"))
+            return std::nullopt;
+
+        return permute_state(*init == "counter", *rounds);
+    }
+
     const auto msglen = get_int_field(fields, "msglen", 0, 1 << 26);
 
     if (!msglen.has_value())

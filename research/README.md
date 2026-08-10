@@ -303,7 +303,7 @@ This is a **smoke test only**: passing means nothing cryptographically (any dece
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 
-`permute-min-active-sboxes.py` computes the minimum number of differentially active AES S-boxes over _r_ rounds of `Castella::permute`, using PuLP 3.3.2 with the bundled CBC solver.  Notation: _N_ = number of state blocks, _r_ = Castella rounds, _a_ = AES rounds per Castella round (`Castella::AES_NUM_ROUNDS`).
+`permute-min-active-sboxes.py` computes the minimum number of differentially active AES S-boxes over _r_ rounds of `Castella::permute`, using PuLP 3.3.2 to drive HiGHS, falling back to the bundled CBC where highspy is not installed (`--solver` overrides both).  Notation: _N_ = number of state blocks, _r_ = Castella rounds, _a_ = AES rounds per Castella round (`Castella::AES_NUM_ROUNDS`).
 
 ### Model and assumptions
 

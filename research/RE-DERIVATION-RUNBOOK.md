@@ -597,6 +597,7 @@ states the conclusion the figure was supporting:
 | [CHALLENGES.md](../CHALLENGES.md) | the published bracket table and the round counts each challenge is set at |
 | [patterns/README.md](patterns/README.md) | `A(r)`, the solve times, and each pattern's `proven_optimal` |
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
+| [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy — instructions that get acted on, so a stale value here is worse than a stale sentence |
 
 Two of those bite in particular. A changed ceiling or floor moves the brackets **and** the
 bar a challenge has to clear, so CHALLENGES.md is a correctness target rather than a
@@ -605,6 +606,9 @@ figure whose *status label* changes (`optimal` ⇄ incumbent) has to change labe
 because only `optimal` is a security bound; four figures have already been refuted for
 having been recorded from timed-out incumbents.
 
-[ADVERSARIAL-REVIEW-PLAN.md](../ADVERSARIAL-REVIEW-PLAN.md) § 7 states the same requirement
-as a standing audit item, and adds the throughput figures (`README.md`, `CLAUDE.md`,
-`research/README.md`) that §0 excludes from this file.
+**This table is the only list of these targets**, and keeping it that way is deliberate:
+[ADVERSARIAL-REVIEW-PLAN.md](../ADVERSARIAL-REVIEW-PLAN.md) § 7 keeps the same requirement
+as a standing audit item but defers to this table rather than restating it, having once
+carried its own copy that fell a document behind. What § 7 does own is the throughput
+figures (`README.md`, `CLAUDE.md`, `research/README.md`), which §0 excludes from this file.
+Add a new carrier here, not there.

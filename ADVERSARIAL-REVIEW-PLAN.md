@@ -398,13 +398,19 @@ assert perf claims from reading code (per repo's own accuracy rule).
 - [ ] **Four-way consistency audit.** Line-by-line: does every construction in `SPEC.md`
       match the code and the Python model? Flag any prose that says X where code does Y.
 - [ ] **Cross-document figure audit** (Section 1e). Any measured or solved figure that
-      appears in more than one document must agree in all of them, status label included:
-      the trail bounds, ceilings and brackets (`SPEC.md`, `research/README.md`,
-      `research/VERIFYING-CLAIMS.md`, `CHALLENGES.md`, `research/patterns/README.md`), the
-      `R*` policy and its margin term, and the throughput figures (`README.md`, `CLAUDE.md`,
-      `research/README.md`). Fixing one copy is not fixing the figure — grep every document
-      for the value before calling it corrected, and sweep the prose around it, which states
-      the conclusion the figure was supporting.
+      appears in more than one document must agree in all of them, status label included.
+      Fixing one copy is not fixing the figure — grep every document for the value before
+      calling it corrected, and sweep the prose around it, which states the conclusion the
+      figure was supporting.
+      - For the **cryptanalytic** figures — trail bounds, ceilings and brackets, the `R*`
+        policy and its margin term — the target list is
+        [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md) § 8, which is
+        maintained alongside the runs that produce them. Audit against that list rather than
+        against a copy here: this bullet used to carry its own, and it went stale, omitting
+        `CRYPTO-SECURITY-CLAIMS-PLAN.md` after that file became a sweep target.
+      - The **throughput** figures (`README.md`, `CLAUDE.md`, `research/README.md`) are this
+        bullet's own: the runbook's § 0 puts performance findings out of its scope, so no
+        list but this one covers them.
 - [ ] **Gotchas to hunt for and demand documentation of:**
   - **Little-endian everywhere** (deliberate SP 800-185 deviation) — documented in SPEC.md;
     confirm README/examples don't imply interop with big-endian SP 800-185 tools.

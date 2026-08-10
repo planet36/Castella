@@ -218,6 +218,14 @@ python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize --print-t
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize --print-trail -M 4000  # weight 1154 against A=165
 python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000    # 55m, stage A times out — no result
 
+# Soundness gate for --fresh-instances, at the one round count where the enumeration
+# closes.  Must return the SAME 1048 trails as the r = 1 command above, and report
+# complete.  Budget 7576 s: the flag rebuilds the model per trail, which is why it is
+# required above r = 1 and a large loss at r = 1 (README.md's notes give the comparison).
+# Run it when the flag's behaviour is in doubt, never as part of a routine refresh.
+python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows \
+    --cluster 5000 --fresh-instances --cluster-time-limit 12000
+
 # r = 2 is the one round count whose recorded ceiling is NOT what its command above
 # prints: that search returns 302, and the recorded ceiling is 293.  It comes from the
 # same shell machinery as r >= 3 but by a different route -- a bisection of the cap over
@@ -332,7 +340,9 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # Six for six: 824 -> 823, 1125 -> 1123, 1603 -> 1602, 1857 -> 1856, 2448 -> 2447,
 # 2705 -> 2699.  r = 3 is the case to cite: its cap 823 had timed out TWICE, once at the
 # full 14400 s, and the 824 shell then yielded a weight-823 trail -- `unknown` is never
-# evidence of absence.  Give r = 5 -M 4000 (memory-bound at 2500).  All six ended
+# evidence of absence.  Give r = 5 -M 4000: at 2500 it ends
+# `unknown: max. memory exceeded` after ONE trail, 8628 s into its 14400 s, so that one
+# is memory-bound rather than time-bound.  All six ended
 # INCOMPLETE, which costs a ceiling nothing but voids their DP sums; three returned their
 # best trail last, which looked budget-limited -- but re-running all six on
 # 2026-08-08, three of them at double the budget, moved NO ceiling.

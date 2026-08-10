@@ -377,24 +377,7 @@ Re-verification is one-directional.  A re-run that returns a value _below_ the r
 
 ### Reproducing
 
-#### Dependencies
-
-* Python 3
-* [PuLP](https://pypi.org/project/PuLP/) (bundles the CBC MILP solver; no license is needed)
-* [highspy](https://pypi.org/project/highspy/) — **strongly recommended**, and the default when installed.  HiGHS is not a marginal improvement on this model: it proves _N_ = 16 at _r_ = 3 in **16 s** where CBC needs 72 min, and it closes _r_ = 4, 5 and 6, which CBC has never done at any limit.  Pass `--solver cbc` to force the bundled solver.
-
-**PuLP is what forces the virtual environment, not the solver.** PuLP has no Arch package and pip will not install into the system Python, so the venv below is required regardless.  HiGHS *is* packaged on Arch — `highs` plus `python-highspy` — and either route works for it; note that the pip wheel vendors its own `libhighs.so.1` inside the package directory, whereas `python-highspy` links against the system library and therefore needs `highs` installed alongside it.
-
-pip refuses to install into the system Python on Arch, so use a virtual environment:
-
-```bash
-python3 -m venv ~/.venvs/pulp
-~/.venvs/pulp/bin/pip install pulp
-```
-
-Then invoke `~/.venvs/pulp/bin/python3` wherever `python3` appears below (or activate the venv).
-
-#### Commands
+**The commands live in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 2**, with the `-t` budget, the measured solve time and the expected status for every cell of both tables above; § 1 there carries the `~/.venvs/pulp` recipe they all need.  That is the one place they are maintained — this section keeps only what *reading* the results takes.
 
 Validation — must print 1, 5, 9, and 25 active S-boxes, the published AES bounds for 1–4 rounds (blocks are independent within one Castella round, so _r_ = 1 is pure AES):
 
@@ -402,52 +385,11 @@ Validation — must print 1, 5, 9, and 25 active S-boxes, the published AES boun
 for a in 1 2 3 4; do python3 permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done
 ```
 
-`-t` is the limit **per round count**, so a run spanning _k_ round counts can take _k_·`-t`.  Solve one cell at a time with `--min-rounds R -r R` when the budget matters — that is how the timings below were measured (2026-08-01/02, 8 threads).
+#### Dependencies
 
-Table 1 (_a_ = 3, all state sizes).  The first three commands prove every cell they cover except _N_ = 8 at _r_ = 4:
+Python 3, [PuLP](https://pypi.org/project/PuLP/) (which bundles the CBC solver; no license needed), and [highspy](https://pypi.org/project/highspy/).
 
-```bash
-python3 permute-min-active-sboxes.py -N 2 -a 3 -r 4            # 44 s, all proven
-python3 permute-min-active-sboxes.py -N 4 -a 3 -r 4            # 2m15, all proven
-python3 permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600     # 13m30; r=4 does NOT prove
-
-# r = 5, one cell at a time.  These timings are CBC's: N=2 and N=4 prove, N=8
-# and N=16 do not.  Under HiGHS N=16 proves in 639 s -- see the note below.
-python3 permute-min-active-sboxes.py -N 2  -a 3 --min-rounds 5 -r 5 -t 3300   # 12m,  proven 101
-python3 permute-min-active-sboxes.py -N 4  -a 3 --min-rounds 5 -r 5 -t 3300   # 38m,  proven 114
-python3 permute-min-active-sboxes.py -N 8  -a 3 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 182
-python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 293
-
-# The same cell under HiGHS, keeping the solved pattern for the trail search.
-python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 \
-    --dump-pattern patterns/pat-r5.json                                               # 639 s, proven 234
-```
-
-The two refuted cells, and the limit of what more time buys — the _r_ = 4 incumbent was identical at 30 min and 55 min, so its primal side has converged and only the dual bound is outstanding:
-
-```bash
-python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200   # 72m, PROVEN 129
-python3 permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 4 -r 4 -t 3300   # 55m, incumbent 165
-```
-
-Table 2 (_N_ = 16, _a_ = 2 and _a_ = 4).  Only _a_ = 2 at _r_ = 3 proves:
-
-```bash
-python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 3 -r 4 -t 1650   # 28m; r=3 proven 105, r=4 incumbent 200
-python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 450
-python3 permute-min-active-sboxes.py -N 16 -a 2 --min-rounds 6 -r 6 -t 3300   # 55m, incumbent 452
-python3 permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 3 -r 4 -t 1650   # 55m, incumbents 75 and 100
-python3 permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 5 -r 5 -t 3300   # 55m, incumbent 125
-```
-
-Notes:
-
-* `-t` is the time limit **per round count** (seconds, default 600).  `--threads` defaults to all cores.
-* Each row is solved independently, so a single row can be recomputed with `--min-rounds R -r R`.
-* Solve times depend far more on the solver than on the time limit.  Under HiGHS, _N_ = 16 proves in 16 s at _r_ = 3, 262 s at _r_ = 4, 639 s at _r_ = 5, 1585 s at _r_ = 6, **7257 s** at _r_ = 7 and **14050 s** at _r_ = 8.  Under CBC only _r_ ≤ 3 has ever proven, _r_ = 3 needing 72 minutes plus the `gapAbs` trick below.
-* **But do not read that as licence to short-change the limit.**  _r_ = 7 and _r_ = 8 were first run at `-t 7200` and reported gaps of 9% and 28%; _r_ = 7 in fact needed 7257 s, so it was cut off **57 seconds** before closing.  A duality gap says nothing about how near the end is — at _r_ = 7 it fell from 9% to 0 in the final minute.
-* **A longer `-t` is not reliably the fix.**  At _N_ = 16, _a_ = 3, _r_ = 4 the incumbent was 165 at both 1800 s and 3300 s: CBC finds that solution quickly and then spends the whole remaining budget failing to close the duality gap.  When the incumbent stops moving, the outstanding work is all on the dual side, and more time on the same formulation is unlikely to pay.
-* Output is line-buffered, so a long run redirected to a file can be watched with `tail -f`.
+**Install highspy — it is not optional in practice.**  It is the default when importable, and on this model it is not a marginal improvement on CBC but the difference between a solved column and an unsolved one: _N_ = 16 at _r_ = 3 proves in **16 s** where CBC needs 72 min, and _r_ = 4 through _r_ = 8 close only under HiGHS, at no limit CBC has ever reached.  `--solver cbc` forces the bundled solver.  PuLP, not the solver, is what forces a virtual environment — it has no Arch package and pip will not install into the system Python — whereas HiGHS *is* packaged there (`highs` plus `python-highspy`).
 
 #### Processing the results
 

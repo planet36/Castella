@@ -157,6 +157,12 @@ closes r=4, r=5 and r=6 outright. The commands below are HiGHS timings; the scri
 automatically when `highspy` is importable, and `--solver cbc` forces the old behaviour.
 **Before spending an hour on a larger `-t`, spend five minutes on a different solver.**
 
+Mechanics: each round count is solved independently, so a single table cell can be
+recomputed on its own with `--min-rounds R -r R`; `--threads` defaults to all cores, though
+HiGHS runs this model on one whatever it is given; and output is line-buffered, so a long
+run redirected to a file can be watched with `tail -f`. What the `status` column and the
+`DP bound` mean is [README.md](README.md#interpreting-the-results)'s, not repeated here.
+
 ```bash
 # Table 1 (a = 3).  N=2 and N=4 prove everywhere; N=8 proves through r=3 only.
 <pulp> research/permute-min-active-sboxes.py -N 2 -a 3 -r 4                       # 44 s,  all proven

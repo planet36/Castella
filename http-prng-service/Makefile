@@ -5,9 +5,7 @@ include ../config.mk
 
 # for SSL (not supported yet)
 #CPPFLAGS += -DCPPHTTPLIB_OPENSSL_SUPPORT
-
-# for SSL (not supported yet)
-#LDLIBS +=  -lssl -lcrypto
+#LDLIBS += -lssl -lcrypto
 
 SRCS = $(wildcard *.cpp)
 DEPS = $(addsuffix .d,$(basename $(SRCS)))

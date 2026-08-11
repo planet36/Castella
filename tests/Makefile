@@ -9,7 +9,6 @@ BINS = $(basename $(SRCS))
 
 all: $(BINS)
 
-# Build and run this directory's test suites
 test: all
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for duplex-diff-fuzz.py'; exit 1; }
 	./tests

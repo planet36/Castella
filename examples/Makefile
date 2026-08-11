@@ -9,8 +9,6 @@ BINS = $(basename $(SRCS))
 
 all: $(BINS)
 
-# Build and run this directory's test suite.  examples.cpp #undef's NDEBUG, so
-# its assertions against the hardcoded expected digests run in every build.
 test: all
 	./examples
 

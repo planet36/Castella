@@ -9,7 +9,6 @@ BINS = $(basename $(SRCS))
 
 all: $(BINS)
 
-# Build and run this directory's test suite
 test: all
 	bash test-correctness.bash
 

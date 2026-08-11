@@ -11,9 +11,9 @@ BINS = $(basename $(SRCS))
 
 all: $(BINS)
 
-# Build and run this directory's test suite.  Deliberately does not depend on
-# `all`: the benchmarks need google-benchmark, but the conformance model is pure
-# Python, so the root `make test` can run it without that dependency.
+# Deliberately does not depend on `all`.  Only the benchmarks need
+# google-benchmark.  Adding the prerequisite would make the root `make test`
+# require it everywhere.
 test:
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for spec-conformance.py'; exit 1; }
 	python3 spec-conformance.py

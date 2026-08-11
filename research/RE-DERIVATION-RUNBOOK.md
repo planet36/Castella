@@ -297,9 +297,9 @@ python3 permute-trail-search.py -r 8 --pattern-file patterns/pat-r8.json --no-mi
 # ceiling.  Both levers that produce the ceilings are scripted, and the script is the
 # route to prefer: it carries the recipe table below, the nice -n 19, the concurrency and
 # -M sizing (r = 5 needs 4000), and it logs to results/.
-./permute-trail-ceilings.bash -d 3 4 5 6 7 8   # descent    (--cluster 1)
-./permute-trail-ceilings.bash -e 3 4 5 6 7 8   # enumerate  (--cluster 500), the default
-./permute-trail-ceilings.bash -n -e 6          # print the command instead of running it
+bash permute-trail-ceilings.bash -d 3 4 5 6 7 8   # descent    (--cluster 1)
+bash permute-trail-ceilings.bash -e 3 4 5 6 7 8   # enumerate  (--cluster 500), the default
+bash permute-trail-ceilings.bash -n -e 6          # print the command instead of running it
 #
 # THE RECIPE, spelled out because the seed and the pattern count are not derivable from
 # anything else in the repository -- they record which sweep run won, and K is relative to
@@ -329,7 +329,7 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # budgets differ from the script's defaults (-t and --cluster-time-limit 14400, -M 2500,
 # both overridable by TIME_LIMIT and MEM); the recipe itself is identical, and the script
 # records that it reproduces the table trail for trail at those defaults.  Check it with
-# `./permute-trail-ceilings.bash -n -d 3` rather than assuming either is stale.
+# `bash permute-trail-ceilings.bash -n -d 3` rather than assuming either is stale.
 # A negative shell returning UNSAT is COMPLETE for that
 # differential; a timeout is `unknown` and bounds nothing, and some are budget artifacts
 # rather than walls -- r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14400.

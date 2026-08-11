@@ -171,6 +171,54 @@ simd_compress_aes_enc_r4(const __m256i a, const __m256i b) noexcept
 
 #endif
 
+/// Perform \c simd_compress_aes_enc_r2 on corresponding elements of \a arr_1 and \a arr_2
+/**
+* \pre \a arr_2 points to \a N elements
+* \note \a arr_2 need not be aligned.
+*/
+template <size_t N>
+static void
+simd_compress_aes_enc_r2_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
+{
+    for (unsigned int i = 0; i < N; ++i)
+    {
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r2(arr_1[i], b);
+    }
+}
+
+/// Perform \c simd_compress_aes_enc_r3 on corresponding elements of \a arr_1 and \a arr_2
+/**
+* \pre \a arr_2 points to \a N elements
+* \note \a arr_2 need not be aligned.
+*/
+template <size_t N>
+static void
+simd_compress_aes_enc_r3_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
+{
+    for (unsigned int i = 0; i < N; ++i)
+    {
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r3(arr_1[i], b);
+    }
+}
+
+/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
+/**
+* \pre \a arr_2 points to \a N elements
+* \note \a arr_2 need not be aligned.
+*/
+template <size_t N>
+static void
+simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
+{
+    for (unsigned int i = 0; i < N; ++i)
+    {
+        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
+        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], b);
+    }
+}
+
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform \c simd_compress_aes_enc_r2 on corresponding elements of \a arr_1 and \a arr_2
@@ -240,51 +288,3 @@ simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noex
 }
 
 #endif
-
-/// Perform \c simd_compress_aes_enc_r2 on corresponding elements of \a arr_1 and \a arr_2
-/**
-* \pre \a arr_2 points to \a N elements
-* \note \a arr_2 need not be aligned.
-*/
-template <size_t N>
-static void
-simd_compress_aes_enc_r2_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
-{
-    for (unsigned int i = 0; i < N; ++i)
-    {
-        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
-        arr_1[i] = simd_compress_aes_enc_r2(arr_1[i], b);
-    }
-}
-
-/// Perform \c simd_compress_aes_enc_r3 on corresponding elements of \a arr_1 and \a arr_2
-/**
-* \pre \a arr_2 points to \a N elements
-* \note \a arr_2 need not be aligned.
-*/
-template <size_t N>
-static void
-simd_compress_aes_enc_r3_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
-{
-    for (unsigned int i = 0; i < N; ++i)
-    {
-        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
-        arr_1[i] = simd_compress_aes_enc_r3(arr_1[i], b);
-    }
-}
-
-/// Perform \c simd_compress_aes_enc_r4 on corresponding elements of \a arr_1 and \a arr_2
-/**
-* \pre \a arr_2 points to \a N elements
-* \note \a arr_2 need not be aligned.
-*/
-template <size_t N>
-static void
-simd_compress_aes_enc_r4_arr(simd_arr_t<N>& arr_1, const uint8x16_t* arr_2) noexcept
-{
-    for (unsigned int i = 0; i < N; ++i)
-    {
-        const uint8x16_t b = simd_load16(&arr_2[i]); // unaligned load
-        arr_1[i] = simd_compress_aes_enc_r4(arr_1[i], b);
-    }
-}

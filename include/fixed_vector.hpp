@@ -30,8 +30,12 @@
 #include <type_traits>
 #include <utility>
 
-/// A resizable array container with fixed capacity.
+/// A resizable array container with in-place storage and a compile-time capacity bound.
 /**
+* \a N bounds the capacity; it does not fix it.  Of the four containers here this is the only one
+* whose \c capacity() moves after construction (via \c reserve()) -- the heap-backed siblings
+* settle theirs in the constructor, since moving it there would mean reallocating.
+*
 * This is similar to \c std::inplace_vector and \c boost::container::static_vector,
 * except for these important differences:
 *   - The data is stored in a `std::array<T, N>`.
@@ -57,6 +61,9 @@
 * without the constraint an under-alignment request would be quietly ignored.  In
 * \c dynamic_fixed_vector the same bound is instead required for correctness: its storage is
 * raw bytes from the aligned \c ::operator \c new, which a smaller \a Align would under-align.
+*
+* \note \a Align defaults to <code>max(alignof(std::size_t), alignof(T))</code> -- at least a word,
+* so the storage is word-aligned even for a narrow \a T.
 *
 * \invariant \c size() \c <= \c capacity() \c <= \c max_size(), which is \a N.
 * \invariant \c data() is never null: the storage is an in-place \c std::array member, so there
@@ -109,7 +116,7 @@ private:
     /// True if \a R is a sized, contiguous range of \c T.
     /**
     * Such a range is handed to the \c std::span overload for its bulk copy.  Overload
-    * resolution will not do this on its own: for example \c std::vector<T> the \c R&& template is
+    * resolution will not do this on its own: for \c std::vector<T>, say, the \c R&& template is
     * an exact match while the \c std::span overload needs a user-defined conversion, so the
     * template wins and the bulk path is dead code for callers who do not hand-write a span.
     */
@@ -118,9 +125,7 @@ private:
         std::ranges::contiguous_range<R> && std::ranges::sized_range<R> &&
         std::same_as<std::ranges::range_value_t<R>, T>;
 
-    /**
-    * \pre \a rg satisfies \c is_bulk_appendable_.
-    */
+    /// \a rg as a \c std::span of \c const \c T, the form the bulk-copy overload takes.
     template <typename R>
     requires is_bulk_appendable_<R>
     [[nodiscard]] static constexpr std::span<const T> as_span_(R& rg)
@@ -306,7 +311,6 @@ public:
 
     /**
     * \note Does not destroy elements.
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/clear.html
     */
     constexpr void clear() noexcept { size_ = 0; }
 
@@ -341,8 +345,10 @@ public:
     * unchanged (nothing is destroyed).
     * \note Bounded by \c capacity(), like every other space check -- growing past it throws
     * rather than reserving; \c reserve() is the only member that changes the capacity.
+    * \note \c resize(capacity(), \a value) is how to fill only the reserved-unused tail
+    * [\c size(), \c capacity()) and grow into it; \c fill_capacity() overwrites the live
+    * elements as well.
     * \throws std::bad_alloc if \a count > \c capacity().
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/resize.html
     */
     constexpr void resize(const std::size_t count, const T& value)
     {
@@ -360,7 +366,6 @@ public:
     /**
     * \note Does not destroy elements.
     * \note No-op if empty (unlike \c std::inplace_vector::pop_back, where that is UB).
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/pop_back.html
     */
     constexpr void pop_back() noexcept
     {
@@ -375,7 +380,6 @@ public:
     * \note "Emplace" cannot construct in place here: the slot already holds a live element, so
     * a temporary \c T is constructed from \a args and move-assigned in -- equivalent to
     * \c push_back(T(args...)).  Kept for API parity with \c std::inplace_vector.
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/unchecked_emplace_back.html
     */
     template <class... Args>
     requires std::constructible_from<T, Args...> && std::assignable_from<T&, T>
@@ -391,7 +395,7 @@ public:
     }
 
     /**
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/emplace_back.html
+    * \throws std::bad_alloc if \c is_full().
     */
     template <class... Args>
     requires std::constructible_from<T, Args...> && std::assignable_from<T&, T>
@@ -403,9 +407,6 @@ public:
         unchecked_emplace_back(std::forward<Args>(args)...);
     }
 
-    /**
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/try_emplace_back.html
-    */
     template <class... Args>
     requires std::constructible_from<T, Args...> && std::assignable_from<T&, T>
     [[nodiscard]] constexpr bool try_emplace_back(Args&&... args)
@@ -421,7 +422,6 @@ public:
 
     /**
     * \pre \c !is_full()
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/unchecked_push_back.html
     */
     constexpr void unchecked_push_back(const T& value)
         noexcept(noexcept(unchecked_emplace_back(value)))
@@ -431,7 +431,6 @@ public:
 
     /**
     * \pre \c !is_full()
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/unchecked_push_back.html
     */
     constexpr void unchecked_push_back(T&& value)
         noexcept(noexcept(unchecked_emplace_back(std::move(value))))
@@ -440,15 +439,13 @@ public:
     }
 
     /**
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/push_back.html
+    * \throws std::bad_alloc if \c is_full().
     */
     constexpr void push_back(const T& value) { emplace_back(value); }
 
+    /// \copydoc push_back(const T&)
     constexpr void push_back(T&& value) { emplace_back(std::move(value)); }
 
-    /**
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/try_push_back.html
-    */
     [[nodiscard]] constexpr bool try_push_back(const T& value)
         noexcept(noexcept(try_emplace_back(value)))
     {
@@ -461,11 +458,14 @@ public:
         return try_emplace_back(std::move(value));
     }
 
+    /// Fill all \c capacity() elements with \a value and set \c size() to \c capacity().
     /**
-    * Fill all \c capacity() elements with \a value and set \c size() to \c capacity().
+    * The range filled is [0, \c capacity()) -- the live elements are overwritten too, not only
+    * the reserved-unused tail.  To leave [0, \c size()) alone and fill just the tail, growing
+    * into it, call \c resize(capacity(), \a value) instead; to fill just the live elements
+    * without changing \c size(), call \c fill_size().
     * \note Stops at \c capacity(), not \c max_size(): the unreserved slots are outside the
     * container's window and are left alone.
-    * \sa https://cppreference.com/w/cpp/algorithm/ranges/fill
     */
     constexpr void fill_capacity(const T& value)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
@@ -474,9 +474,10 @@ public:
         size_ = capacity();
     }
 
+    /// Fill the live elements [0, \c size()) with \a value; \c size() is unchanged.
     /**
-    * Fill the live elements [0, \c size()) with \a value; \c size() is unchanged.
-    * \sa https://cppreference.com/w/cpp/algorithm/ranges/fill
+    * The complement of \c resize(capacity(), \a value), which fills the reserved-unused tail;
+    * \c fill_capacity() does both.
     */
     constexpr void fill_size(const T& value)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
@@ -536,7 +537,7 @@ public:
 
     /**
     * \pre \a spn does not overlap this vector's storage.
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/append_range.html
+    * \throws std::bad_alloc if \a spn does not fit in \c reserved_unused() (nothing is appended).
     */
     constexpr void append_range(const std::span<const T> spn)
     {
@@ -552,6 +553,7 @@ public:
     * is well-defined.
     * \note A \c std::sized_sentinel_for source is checked up front (all-or-nothing); otherwise
     * the elements that fit are appended before \c std::bad_alloc is thrown.
+    * \throws std::bad_alloc if the source does not fit in \c reserved_unused().
     */
     template <std::input_iterator It, std::sentinel_for<It> S>
     constexpr void append_range(It first, S last)
@@ -568,6 +570,9 @@ public:
         }
     }
 
+    /**
+    * \throws std::bad_alloc if \a count > \c reserved_unused() (nothing is appended).
+    */
     template <std::input_iterator It>
     constexpr void append_range(It first, const std::size_t count)
     {
@@ -577,6 +582,9 @@ public:
         common_append_range_(first, count);
     }
 
+    /**
+    * \throws std::bad_alloc if \a il does not fit in \c reserved_unused() (nothing is appended).
+    */
     constexpr void append_range(const std::initializer_list<T> il)
     {
         append_range(std::span<const T>{std::data(il), std::size(il)});
@@ -587,6 +595,7 @@ public:
     * that case is forwarded to the \c std::span overload, which carries the same tag.
     * \note Sized sources are checked up front (all-or-nothing); unsized sources append
     * element-wise and may partially append before throwing \c std::bad_alloc.
+    * \throws std::bad_alloc if the source does not fit in \c reserved_unused().
     */
     template <std::ranges::input_range R>
     constexpr void append_range(R&& rg)
@@ -617,7 +626,6 @@ public:
 
     /**
     * \pre \a spn does not overlap this vector's storage.
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/try_append_range.html
     */
     [[nodiscard]] constexpr bool try_append_range(const std::span<const T> spn)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
@@ -700,6 +708,7 @@ public:
         }
         else
         {
+            // NOLINTNEXTLINE(readability-use-anyofallof)
             for (auto&& e : std::forward<R>(rg))
             {
                 if (!try_emplace_back(std::forward<decltype(e)>(e)))
@@ -710,10 +719,14 @@ public:
         }
     }
 
+    /// \c clear() followed by \c append_range(), so the source is bounded by \c capacity().
     /**
     * \note Does not destroy elements.
-    * \pre \a spn does not overlap this vector's storage.
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/assign_range.html
+    * \pre The source does not overlap this vector's storage.
+    * \throws std::bad_alloc if the source does not fit in \c capacity().  The \c clear() has
+    * already happened by then, so a failed assign never leaves the previous contents in place:
+    * a sized source (checked up front) leaves the vector empty, while an unsized one leaves the
+    * elements that fit -- \c append_range's partial-append behavior, inherited.
     */
     constexpr void assign_range(const std::span<const T> spn)
     {
@@ -721,6 +734,7 @@ public:
         append_range(spn);
     }
 
+    /// \copydoc assign_range(std::span<const T>)
     template <std::input_iterator It, std::sentinel_for<It> S>
     constexpr void assign_range(It first, S last)
     {
@@ -728,6 +742,7 @@ public:
         append_range(first, last);
     }
 
+    /// \copydoc assign_range(std::span<const T>)
     template <std::input_iterator It>
     constexpr void assign_range(It first, const std::size_t count)
     {
@@ -735,12 +750,14 @@ public:
         append_range(first, count);
     }
 
+    /// \copydoc assign_range(std::span<const T>)
     constexpr void assign_range(const std::initializer_list<T> il)
     {
         clear();
         append_range(il);
     }
 
+    /// \copydoc assign_range(std::span<const T>)
     template <std::ranges::input_range R>
     constexpr void assign_range(R&& rg)
     {
@@ -763,11 +780,12 @@ public:
     }
 
     /**
-    * \note No \c std::assume_aligned<Align> is needed, unlike the heap-backed siblings: the
-    * array is a member of an \c alignas(Align) object, so the compiler derives the alignment.
+    * \note No \c std::assume_aligned<Align> is needed, unlike the heap-backed siblings: the array
+    * member itself carries the \c alignas(Align), so the compiler derives the alignment.
     */
     [[nodiscard]] constexpr T* data() noexcept { return std::data(data_); }
 
+    /// \copydoc data()
     [[nodiscard]] constexpr const T* data() const noexcept { return std::data(data_); }
 
     /**
@@ -841,7 +859,6 @@ public:
     * an element in [size(), capacity()) is alive and \c operator[] reads it, but this rejects
     * that index.
     * \throws std::out_of_range if \a i >= \c size().
-    * \sa https://cppreference.com/w/cpp/container/inplace_vector/at.html
     */
     [[nodiscard]] constexpr T& at(const std::size_t i)
     {
@@ -849,6 +866,7 @@ public:
         return data_[i];
     }
 
+    /// \copydoc at(std::size_t)
     [[nodiscard]] constexpr const T& at(const std::size_t i) const
     {
         check_idx_(i);

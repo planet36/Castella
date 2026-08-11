@@ -31,6 +31,7 @@
 #include <span>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 /*
@@ -220,7 +221,7 @@ private:
     void absorb_(const std::span<const std::byte> src) noexcept
     {
 #if defined(DEBUG)
-        assert(std::ssize(src) >= get_state_size_bytes());
+        assert(std::cmp_greater_equal(std::size(src), get_state_size_bytes()));
         assert(!has_been_finalized_);
 #endif
 
@@ -384,7 +385,7 @@ private:
 
 #if defined(DEBUG)
         assert(input_bytes_.is_empty());
-        assert(std::ssize(dst) <= get_max_digest_size_bytes());
+        assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));
 #endif
 
         // Guard the memcpy: on an empty dst, std::data(dst) may be null,
@@ -510,7 +511,7 @@ public:
     // {{{
     /**
     * Like \c final_digest_bytes(int) but writes the first
-    * \c std::ssize(dst) bytes of the finalized state into the
+    * \c std::size(dst) bytes of the finalized state into the
     * caller-provided buffer instead of allocating a vector.
     *
     * \param dst the destination buffer
@@ -525,7 +526,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::ssize(dst) > get_max_digest_size_bytes())
+        if (std::cmp_greater(std::size(dst), get_max_digest_size_bytes()))
         {
             dst = dst.first(get_max_digest_size_bytes());
         }

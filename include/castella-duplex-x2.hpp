@@ -34,6 +34,9 @@
 #include <span>
 #include <stdexcept>
 #include <string_view>
+#if defined(DEBUG)
+#include <utility>
+#endif
 
 namespace Castella
 {
@@ -387,7 +390,7 @@ public:
     {
 #if defined(DEBUG)
         assert(std::size(dst_a) == std::size(dst_b));
-        assert(std::ssize(dst_a) <= get_rate_size_bytes());
+        assert(std::cmp_less_equal(std::size(dst_a), get_rate_size_bytes()));
 #endif
 
         // Add the input suffix and apply the padding rule before every

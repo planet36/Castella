@@ -48,6 +48,7 @@
 #include <span>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace Castella
@@ -504,7 +505,7 @@ private:
 
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ == 0); // input buf is empty
-        assert(std::ssize(dst) <= get_rate_size_bytes());
+        assert(std::cmp_less_equal(std::size(dst), get_rate_size_bytes()));
 #endif
 
         // Guard the memcpy: on a mute squeeze (empty dst, e.g. squeeze_bytes(0))
@@ -1113,7 +1114,7 @@ public:
     /// Squeeze bytes from the outer state into \a dst
     // {{{
     /**
-    * Like \c squeeze_bytes(int) but writes the first \c std::ssize(dst) bytes
+    * Like \c squeeze_bytes(int) but writes the first \c std::size(dst) bytes
     * of the outer state into the caller-provided buffer instead of allocating
     * a vector.
     *
@@ -1130,7 +1131,7 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        if (std::ssize(dst) > get_rate_size_bytes())
+        if (std::cmp_greater(std::size(dst), get_rate_size_bytes()))
         {
             dst = dst.first(get_rate_size_bytes());
         }

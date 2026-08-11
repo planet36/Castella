@@ -105,7 +105,7 @@ simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 [[nodiscard]] static inline bool
 simd128_is_zero(const uint8x16_t v) noexcept
 {
-#if defined(__x86_64__)
+#if defined(__SSE4_1__)
     // Returns 1 if (v & v) == 0
     return _mm_testz_si128(v, v) == 1;
 #elif defined(__aarch64__) && defined(__ARM_NEON)

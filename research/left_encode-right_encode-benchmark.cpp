@@ -24,7 +24,7 @@
 [[nodiscard]] static std::vector<std::byte>
 left_encode_1(const std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -43,7 +43,7 @@ left_encode_1(const std::unsigned_integral auto x)
 [[nodiscard]] static std::vector<std::byte>
 left_encode_2(std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -84,7 +84,7 @@ left_encode_4(std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     result.unchecked_push_back(static_cast<std::byte>(w));
 
@@ -102,7 +102,7 @@ left_encode_4(std::unsigned_integral auto x) noexcept
 [[nodiscard]] static std::vector<std::byte>
 right_encode_1(const std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -121,7 +121,7 @@ right_encode_1(const std::unsigned_integral auto x)
 [[nodiscard]] static std::vector<std::byte>
 right_encode_2(std::unsigned_integral auto x)
 {
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -163,7 +163,7 @@ right_encode_4(std::unsigned_integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
-    const auto w = byte_width(x);
+    const auto w = static_cast<uint8_t>(byte_width(x));
 
     // extract w bytes, going from least significant byte to most significant byte
     for (std::remove_cv_t<decltype(w)> i = 0; i < w; ++i)

@@ -23,10 +23,14 @@
 *
 * If interleaved does not clearly beat sequential, a wider node group has
 * no headroom: the states' independent 3-deep VAES chains already saturate
-* the AES units (or the memory system, or -- at larger N -- the register
-* file: one state is 8 ymm registers, so 2 states already fill all 16 and
-* 3-4 states must spill between chunks).  Buffer sizes span L1 to DRAM to
-* separate the compute-bound and memory-bound regimes.
+* the AES units or the memory system.  Buffer sizes span L1 to DRAM to
+* separate those two regimes.
+*
+* A register-file limit was the other candidate -- one state is 8 ymm
+* registers, so 2 states already fill all 16 and 3-4 must spill between
+* chunks -- and the measurements refute it: at a fixed total footprint,
+* N=3 and N=4 match the pair everywhere below L2 (research/README.md).
+* What a wider group costs is footprint, which is why both modes exist.
 *
 * The benchmark itself is portable to any AES-capable target (the absorb
 * loop and permutation have non-VAES and ARM fallbacks), so the question

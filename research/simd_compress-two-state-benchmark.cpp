@@ -41,6 +41,7 @@
     (defined(__aarch64__) && defined(__ARM_FEATURE_AES))
 
 #include "castella-permute.hpp"
+#include "cch.hpp"
 #include "simd_compress.hpp"
 #include "simd_equal.hpp"
 
@@ -55,13 +56,18 @@
 #include <utility>
 #include <vector>
 
-using state_t = Castella::arr_blocks<16>;
+/// The node whose bulk loop this benchmark replicates: the one the cch tree uses
+using node_t = compress_castella_hash<>;
+
+using state_t = node_t::state_t;
+inline constexpr size_t N_BLOCKS = std::tuple_size_v<state_t>;
 inline constexpr int state_size_bytes = sizeof(state_t);
 
 /// The default mix rate of compress_castella_hash (one mix per 64 KiB)
-inline constexpr int MIX_RATE = 256;
+inline constexpr int MIX_RATE = node_t::DEFAULT_MIX_RATE;
 
-inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<16>();
+/// The rounds of the periodic mix permute in \c compress_castella_hash::absorb_
+inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
 
 /// One absorb of the cch bulk loop: compress one 256-byte chunk, maybe mix
 /**

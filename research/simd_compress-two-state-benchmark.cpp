@@ -173,6 +173,19 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
     benchmark::DoNotOptimize(data.states);
 }
 
+/// The per-buffer size that puts \a total_bytes of working set behind \a n states
+/**
+* Rounded down to a whole number of chunks, so every state absorbs only full
+* chunks; the N buffers together then cover \a total_bytes to within one chunk
+* per state.
+*/
+[[nodiscard]] static constexpr int
+buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
+{
+    const size_t per_buf = total_bytes / n;
+    return static_cast<int>(per_buf / state_size_bytes * state_size_bytes);
+}
+
 /// Verify that the interleaved loop computes exactly the sequential states
 template <int N>
 static void
@@ -240,6 +253,40 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                   std::format("{}-states-interleaved({}x_{}_KiB)", N + 2, N + 2,
                               buf_size >> 10),
                   BM_states_interleaved<N + 2>, buf_size)),
+             ...);
+        }(std::make_index_sequence<3>{});
+    }
+
+    // The same four regimes, but with the working set held at the total rather
+    // than per buffer, so that comparing N = 3 or 4 against the pair varies only
+    // the group width.  In the fixed-per-buffer rows above, a wider group also
+    // touches proportionally more memory -- realistic, since a tree leaf hashes
+    // a fixed-size chunk however many leaves run, but it means those rows cannot
+    // separate "wider is slower" from "wider fell out of this cache level".
+    // The totals are the 2-state working sets of the sizes above, so the N = 2
+    // rows of the two modes measure the same thing and should agree.
+    constexpr std::array total_sizes{
+        32UL << 10,
+        1UL << 20,
+        16UL << 20,
+        256UL << 20,
+    };
+
+    for (const auto total_size : total_sizes)
+    {
+        [&]<size_t... N>(std::index_sequence<N...>) {
+            ((benchmark::RegisterBenchmark(
+                  std::format("{}-states-sequential-eqtotal({}_KiB={}x_{}_KiB)",
+                              N + 2, total_size >> 10, N + 2,
+                              buf_size_for_total(total_size, N + 2) >> 10),
+                  BM_states_sequential<N + 2>,
+                  buf_size_for_total(total_size, N + 2)),
+              benchmark::RegisterBenchmark(
+                  std::format("{}-states-interleaved-eqtotal({}_KiB={}x_{}_KiB)",
+                              N + 2, total_size >> 10, N + 2,
+                              buf_size_for_total(total_size, N + 2) >> 10),
+                  BM_states_interleaved<N + 2>,
+                  buf_size_for_total(total_size, N + 2))),
              ...);
         }(std::make_index_sequence<3>{});
     }

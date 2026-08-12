@@ -216,9 +216,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // Per-buffer sizes chosen to land the 2-buffer working set in L1
     // (2x16 KiB), L2 (2x512 KiB), L3 (2x8 MiB), and DRAM (2x128 MiB).
     // (The 3- and 4-state working sets are proportionally larger.)
-    constexpr std::array sizes{16UL << 10, 512UL << 10, 8UL << 20, 128UL << 20};
+    constexpr std::array buf_sizes{
+        16UL << 10,
+        512UL << 10,
+        8UL << 20,
+        128UL << 20,
+    };
 
-    for (const auto buf_size : sizes)
+    for (const auto buf_size : buf_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {
             ((benchmark::RegisterBenchmark(

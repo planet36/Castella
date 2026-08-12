@@ -225,19 +225,39 @@ buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
     return static_cast<int>(per_buf / state_size_bytes * state_size_bytes);
 }
 
-/// Format \a bytes in the largest unit that divides it exactly
+/// Format \a bytes for a benchmark name, in the largest unit that reaches 1
 /**
-* Benchmark names carry sizes from 512 B to 256 MiB; a fixed unit either
-* truncates the small ones to \c 0_KiB or prints the large ones as six digits.
+* Names carry sizes from 512 B to 256 MiB.  A whole number of 256-byte chunks
+* rarely divides a power of two once split three ways, so requiring an exact
+* unit falls back to bytes and prints \c 8388096_B; one decimal place gives
+* \c 8_MiB, and the sizes a reader has to tell apart differ by far more than
+* that.  This is a label, not a measurement -- the buffer size the benchmark
+* actually uses is \c buf_size_for_total.
 */
 [[nodiscard]] static std::string
 format_size(const size_t bytes)
 {
-    if (bytes != 0 && bytes % (1UL << 20) == 0)
-        return std::format("{}_MiB", bytes >> 20);
+    const auto scaled = [](const double value, const char* const unit)
+    {
+        auto digits = std::format("{:.1f}", value);
 
-    if (bytes != 0 && bytes % (1UL << 10) == 0)
-        return std::format("{}_KiB", bytes >> 10);
+        if (digits.ends_with(".0"))
+            digits.resize(std::size(digits) - 2);
+
+        return std::format("{}_{}", digits, unit);
+    };
+
+    // Pick the unit the value rounds to at least 1.0 in, not the one it reaches
+    // exactly: 1 MiB less a chunk is 1023.8 KiB, which would leave one row of a
+    // group in different units from its siblings.
+    const auto rounds_to_one = [bytes](const size_t unit)
+    { return bytes * 20 >= unit * 19; };
+
+    if (rounds_to_one(1UL << 20))
+        return scaled(static_cast<double>(bytes) / (1UL << 20), "MiB");
+
+    if (rounds_to_one(1UL << 10))
+        return scaled(static_cast<double>(bytes) / (1UL << 10), "KiB");
 
     return std::format("{}_B", bytes);
 }

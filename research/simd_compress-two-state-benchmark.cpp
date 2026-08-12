@@ -52,6 +52,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <format>
+#include <ranges>
 #include <string>
 #include <utility>
 #include <vector>
@@ -186,6 +187,23 @@ buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
     return static_cast<int>(per_buf / state_size_bytes * state_size_bytes);
 }
 
+/// Format \a bytes in the largest unit that divides it exactly
+/**
+* Benchmark names carry sizes from 512 B to 256 MiB; a fixed unit either
+* truncates the small ones to \c 0_KiB or prints the large ones as six digits.
+*/
+[[nodiscard]] static std::string
+format_size(const size_t bytes)
+{
+    if (bytes != 0 && bytes % (1UL << 20) == 0)
+        return std::format("{}_MiB", bytes >> 20);
+
+    if (bytes != 0 && bytes % (1UL << 10) == 0)
+        return std::format("{}_KiB", bytes >> 10);
+
+    return std::format("{}_B", bytes);
+}
+
 /// Verify that the interleaved loop computes exactly the sequential states
 template <int N>
 static void
@@ -235,9 +253,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // Per-buffer sizes chosen to land the 2-buffer working set in L1
     // (2x16 KiB), L2 (2x512 KiB), L3 (2x8 MiB), and DRAM (2x128 MiB).
     // (The 3- and 4-state working sets are proportionally larger.)
+    //
+    // 64 KiB is the operating point rather than a cache regime: it is the
+    // tree's DEFAULT_CHUNK_SIZE, so an N-wide leaf group holds exactly N of
+    // these, and it is also the mix period (256 absorbs x a 256-byte state),
+    // so a leaf mixes once.  The other sizes only bracket it.
     constexpr std::array buf_sizes{
+        1UL << 10,
         16UL << 10,
+        64UL << 10,
         512UL << 10,
+        4UL << 20,
         8UL << 20,
         128UL << 20,
     };
@@ -246,12 +272,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         [&]<size_t... N>(std::index_sequence<N...>) {
             ((benchmark::RegisterBenchmark(
-                  std::format("{}-states-sequential({}x_{}_KiB)", N + 2, N + 2,
-                              buf_size >> 10),
+                  std::format("{}-states-sequential({}x_{})", N + 2, N + 2,
+                              format_size(buf_size)),
                   BM_states_sequential<N + 2>, buf_size),
               benchmark::RegisterBenchmark(
-                  std::format("{}-states-interleaved({}x_{}_KiB)", N + 2, N + 2,
-                              buf_size >> 10),
+                  std::format("{}-states-interleaved({}x_{})", N + 2, N + 2,
+                              format_size(buf_size)),
                   BM_states_interleaved<N + 2>, buf_size)),
              ...);
         }(std::make_index_sequence<3>{});
@@ -266,25 +292,40 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // The totals are the 2-state working sets of the sizes above, so the N = 2
     // rows of the two modes measure the same thing and should agree.
     constexpr std::array total_sizes{
+        2UL << 10,
         32UL << 10,
+        128UL << 10,
         1UL << 20,
+        8UL << 20,
         16UL << 20,
         256UL << 20,
     };
+    // The name reports the total each row actually covers, not the one
+    // requested: a buffer is a whole number of 256-byte chunks, so at the
+    // smallest total N = 3 lands on 1536 B rather than 2048 (75%) and the
+    // footprints are no longer equal.  Every other row is within 2%.
+    //
+    // Each total must be the 2-state working set of the size at the same
+    // index, or the N = 2 rows stop being the same configuration and the
+    // cross-check between the modes is lost.
+    static_assert(std::ranges::equal(
+        total_sizes, buf_sizes | std::views::transform([](const auto b) { return 2 * b; })));
 
     for (const auto total_size : total_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {
             ((benchmark::RegisterBenchmark(
-                  std::format("{}-states-sequential-eqtotal({}_KiB={}x_{}_KiB)",
-                              N + 2, total_size >> 10, N + 2,
-                              buf_size_for_total(total_size, N + 2) >> 10),
+                  std::format("{}-states-sequential-eqtotal({}={}x_{})", N + 2,
+                              format_size((N + 2) * buf_size_for_total(total_size, N + 2)),
+                              N + 2,
+                              format_size(buf_size_for_total(total_size, N + 2))),
                   BM_states_sequential<N + 2>,
                   buf_size_for_total(total_size, N + 2)),
               benchmark::RegisterBenchmark(
-                  std::format("{}-states-interleaved-eqtotal({}_KiB={}x_{}_KiB)",
-                              N + 2, total_size >> 10, N + 2,
-                              buf_size_for_total(total_size, N + 2) >> 10),
+                  std::format("{}-states-interleaved-eqtotal({}={}x_{})", N + 2,
+                              format_size((N + 2) * buf_size_for_total(total_size, N + 2)),
+                              N + 2,
+                              format_size(buf_size_for_total(total_size, N + 2))),
                   BM_states_interleaved<N + 2>,
                   buf_size_for_total(total_size, N + 2))),
              ...);

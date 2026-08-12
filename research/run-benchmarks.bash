@@ -11,8 +11,7 @@ export LC_ALL=C
 NUM_THREADS=1
 export NUM_THREADS
 
-# Should be an odd number for simpler median.  Each findings section in
-# README.md records the count its own run used.
+# Should be an odd number for simpler median
 BENCHMARK_REPS=${BENCHMARK_REPS:-5}
 
 # Pin to one CPU per thread: mid-run core migration adds noise that can invert

@@ -148,9 +148,9 @@ Each of these owns something this file only summarizes; go to the owner before q
 | `research/README.md` | the cryptanalysis program inventory, the models and their caveats, and every result table |
 | `research/VERIFYING-CLAIMS.md` | claim → evidence → command, with the expected output and how to read it |
 | `research/RE-DERIVATION-RUNBOOK.md` | the standing procedure for re-deriving those figures, with budgets |
-
-Those three divide one subject three ways, and the split is what keeps a changed budget from having to be swept: **the runbook owns the commands** — every invocation, `-t`/`-M` budget, measured timing and concurrency rule for the solver-backed tools; **README owns the record** — models, result tables, interpretation rules and the lessons, citing the runbook rather than repeating a recipe; **VERIFYING-CLAIMS owns the ledger** — claim → evidence → expected output, keeping a command inline only when it is cheap (seconds to minutes) and citing a runbook section for anything that solves. Put a new command in the runbook, not beside the result it produced.
 | `hash-programs/README.md` | every performance figure, and the commands that reproduce it |
+
+The three `research/` documents divide one subject three ways, and the split is what keeps a changed budget from having to be swept: **the runbook owns the commands** — every invocation, `-t`/`-M` budget, measured timing and concurrency rule for the solver-backed tools; **README owns the record** — models, result tables, interpretation rules and the lessons, citing the runbook rather than repeating a recipe; **VERIFYING-CLAIMS owns the ledger** — claim → evidence → expected output, keeping a command inline only when it is cheap (seconds to minutes) and citing a runbook section for anything that solves. Put a new command in the runbook, not beside the result it produced.
 
 `examples/`, `tests/`, `research/` and `hash-programs/` each also have a per-program table in their own `README.md`.
 

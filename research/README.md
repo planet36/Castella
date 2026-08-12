@@ -105,25 +105,25 @@ A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, on the committed con
 
 * Folded permute, _N_ = 16: 1.67× (rounds = 3) to 1.70× (rounds = 16) over the generic path — the documented ~1.7×.
 * `permute_x2`: 1.69–1.79× over two sequential register-resident permutes for rounds ≥ 4 (1.43× at rounds = 3, where the pack/unpack boundary cost weighs most) — at or slightly above the documented ~1.7×.
-* AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — exactly the recorded ratio.
+* AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — matching the ratio the dedicated section records.
 * The interleaved cch pair and the wider-group question: see the dedicated section below, built from this run's data.
 
-## Findings: the AES stage in isolation (2026-07-17)
+## Findings: the AES stage in isolation (2026-08-12)
 
-`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overload is shadowed under VAES by the constrained same-signature overload, the benchmark carries a verbatim copy of it (`aes_enc_arr_generic` — keep in sync).  Medians of 7 repetitions, interleaved, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
+`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overload is shadowed under VAES by the constrained same-signature overload, the benchmark carries a verbatim copy of it (`aes_enc_arr_generic` — keep in sync).  Medians of 5 repetitions, pinned to core 0, random interleaving on (plain `bash run-benchmarks.bash`, whose default `BENCHMARK_REPS` is 5 where the earlier recorded findings used 7), `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
 
 | variant | header overload | ns/call | per byte |
 |---------|-----------------|--------:|---------:|
-| generic\<16\> | copy of the non-VAES fallback | 5.40 | 44.2 GiB/s |
-| vaes\_cast\<16\> | VAES pair-cast (selected in real use) | 2.93 | 81.4 GiB/s |
-| x2\_broadcast\<16\> | lane-paired, key broadcast to both lanes (`permute_x2`) | 7.31 (2 states) | 65.2 GiB/s |
-| folded\<8x2\> | 256-bit keys, folded state (register-resident `permute`) | 3.07 | 77.6 GiB/s |
+| generic\<16\> | copy of the non-VAES fallback | 4.82 | 50.0 GiB/s |
+| vaes\_cast\<16\> | VAES pair-cast (selected in real use) | 2.59 | 92.8 GiB/s |
+| x2\_broadcast\<16\> | lane-paired, key broadcast to both lanes (`permute_x2`) | 6.53 (2 states) | 73.6 GiB/s |
+| folded\<8x2\> | 256-bit keys, folded state (register-resident `permute`) | 2.62 | 91.7 GiB/s |
 
 Interpretation:
 
-* The VAES pair-cast is **1.84×** the generic path on the AES stage alone — larger than the ~1.7× whole-permute gap, which the transpose dilutes.
+* The VAES pair-cast is **1.86×** the generic path on the AES stage alone — larger than the ~1.7× whole-permute gap, which the transpose dilutes.
 * folded ≈ vaes\_cast confirms that both run the same eight 256-bit AES dependency chains; the folded `permute`'s win over the generic path comes from keeping the state in registers *across the transpose*, not from the AES stage.
-* x2\_broadcast is slower per byte than vaes\_cast (3.66 ns per state vs. 2.93) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
+* x2\_broadcast is slower per byte than vaes\_cast (3.27 ns per state vs. 2.59) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
 
 The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` — which is unguarded, so it runs on every target — already round-trips it for every state size and round count.  An earlier revision of this table timed them and drew a conclusion about which overload `permute_inv` selects; that conclusion was wrong (it takes the VAES path, not the generic one), and since the speed cannot matter, the rows were dropped rather than corrected.
 

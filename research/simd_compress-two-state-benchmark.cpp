@@ -64,6 +64,9 @@ inline constexpr int MIX_RATE = 256;
 inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<16>();
 
 /// One absorb of the cch bulk loop: compress one 256-byte chunk, maybe mix
+/**
+* \pre the size of \a chunk is at least \c state_size_bytes
+*/
 static inline void
 absorb_chunk(state_t& state, const std::byte* chunk, int& absorbs_since_mix) noexcept
 {

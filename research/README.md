@@ -106,11 +106,11 @@ A full `BENCHMARK_REPS=7 bash run-benchmarks.bash` (pinned, on the committed con
 * Folded permute, _N_ = 16: 1.67× (rounds = 3) to 1.70× (rounds = 16) over the generic path — the documented ~1.7×.
 * `permute_x2`: 1.69–1.79× over two sequential register-resident permutes for rounds ≥ 4 (1.43× at rounds = 3, where the pack/unpack boundary cost weighs most) — at or slightly above the documented ~1.7×.
 * AES stage in isolation: vaes\_cast 88.8 GiB/s vs. generic 48.4 = 1.84× — matching the ratio the dedicated section records.
-* The interleaved cch pair and the wider-group question: see the dedicated section below, built from this run's data.
+* The interleaved cch pair and the wider-group question: see the dedicated section below, which a 2026-08-12 run has since superseded.
 
 ## Findings: the AES stage in isolation (2026-08-12)
 
-`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overload is shadowed under VAES by the constrained same-signature overload, the benchmark carries a verbatim copy of it (`aes_enc_arr_generic` — keep in sync).  Medians of 5 repetitions, pinned to core 0, random interleaving on (plain `bash run-benchmarks.bash`, whose default `BENCHMARK_REPS` is 5 where the earlier recorded findings used 7), `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
+`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overload is shadowed under VAES by the constrained same-signature overload, the benchmark carries a verbatim copy of it (`aes_enc_arr_generic` — keep in sync).  Medians of 5 repetitions, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
 
 | variant | header overload | ns/call | per byte |
 |---------|-----------------|--------:|---------:|
@@ -146,33 +146,51 @@ Interpretation: the speedup **grows as _N_ shrinks** — a 2- or 4-block state f
 
 Conclusion: folding every supported state size (not just the 16-block state used by `Duplex`) is a clear win; the smaller research-only sizes benefit even more than _N_ = 16 does.
 
-## Findings: the interleaved cch pair pays ~1.1×; wider groups do not (2026-07-18)
+## Findings: the interleaved cch pair pays ~1.1×; wider groups lose to footprint, not registers (2026-08-12)
 
-`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do).  Medians of 7 repetitions, pinned with `taskset -c 0`, `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; the last column compares per-byte interleaved throughput against the _N_ = 2 pair:
+`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do).  It registers two modes.  Medians of 5 repetitions, pinned to core 0, random interleaving on — i.e. plain `bash run-benchmarks.bash`, whose default `BENCHMARK_REPS` is 5 where the earlier recorded findings used 7 — on `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group; cv is the larger of the two arms' coefficient of variation, and is the noise floor for that row.  **Read no difference smaller than the two rows' combined cv as real** — at 5 repetitions several of these are not, and they are called out below.
 
-| per-buffer size (regime) | _N_ | sequential | interleaved | speedup | vs. pair |
-|--------------------------|----:|-----------:|------------:|--------:|---------:|
-| 16 KiB (L1)    | 2 | 65.5 GiB/s | 73.0 GiB/s | 1.11× | — |
-| 16 KiB (L1)    | 3 | 64.7 GiB/s | 69.0 GiB/s | 1.07× | 0.94× |
-| 16 KiB (L1)    | 4 | 62.8 GiB/s | 68.5 GiB/s | 1.09× | 0.94× |
-| 512 KiB (L2)   | 2 | 62.1 GiB/s | 65.8 GiB/s | 1.06× | — |
-| 512 KiB (L2)   | 3 | 61.5 GiB/s | 65.6 GiB/s | 1.07× | 1.00× |
-| 512 KiB (L2)   | 4 | 61.1 GiB/s | 67.4 GiB/s | 1.10× | 1.03× |
-| 8 MiB (L3)     | 2 | 50.4 GiB/s | 57.7 GiB/s | 1.15× | — |
-| 8 MiB (L3)     | 3 | 45.0 GiB/s | 52.4 GiB/s | 1.17× | 0.91× |
-| 8 MiB (L3)     | 4 | 34.6 GiB/s | 44.5 GiB/s | 1.29× | 0.77× |
-| 128 MiB (DRAM) | 2 | 24.4 GiB/s | 28.0 GiB/s | 1.15× | — |
-| 128 MiB (DRAM) | 3 | 23.3 GiB/s | 29.3 GiB/s | 1.26× | 1.05× |
-| 128 MiB (DRAM) | 4 | 22.9 GiB/s | 30.1 GiB/s | 1.31× | 1.07× |
+**Fixed per buffer.**  The working set is _N_ × the size, so a wider group also touches proportionally more memory.  This is the shape the tree actually has: a leaf hashes a fixed `CHUNK_SIZE` however many leaves run concurrently, so widening the group widens the footprint.
 
-(The 8 MiB rows at _N_ = 3 and 4 approach the L3 capacity, so cross-_N_ comparisons there mix regimes.)
+| per-buffer size | _N_ | sequential | interleaved | speedup | vs. pair | cv |
+|---|---:|---:|---:|---:|---:|---:|
+| 16 KiB | 2 | 63.6 GiB/s | 70.5 GiB/s | 1.11× | — | 2.8% |
+|  | 3 | 63.3 GiB/s | 67.2 GiB/s | 1.06× | 0.95× | 2.5% |
+|  | 4 | 60.1 GiB/s | 65.8 GiB/s | 1.10× | 0.93× | 4.9% |
+| 512 KiB | 2 | 59.5 GiB/s | 65.7 GiB/s | 1.11× | — | 3.5% |
+|  | 3 | 57.2 GiB/s | 64.0 GiB/s | 1.12× | 0.97× | 4.1% |
+|  | 4 | 59.2 GiB/s | 61.8 GiB/s | 1.04× | 0.94× | 5.2% |
+| 8 MiB | 2 | 51.3 GiB/s | 55.2 GiB/s | 1.08× | — | 4.9% |
+|  | 3 | 39.6 GiB/s | 48.5 GiB/s | 1.22× | 0.88× | 13.2% |
+|  | 4 | 30.1 GiB/s | 44.0 GiB/s | 1.46× | 0.80× | 6.2% |
+| 128 MiB | 2 | 22.3 GiB/s | 27.7 GiB/s | 1.24× | — | 4.6% |
+|  | 3 | 22.5 GiB/s | 28.4 GiB/s | 1.27× | 1.03× | 3.4% |
+|  | 4 | 23.6 GiB/s | 29.0 GiB/s | 1.23× | 1.05× | 5.8% |
+
+**Fixed total.**  The same working set split _N_ ways, so a cross-_N_ comparison varies only the group width.  The totals are the 2-state working sets of the sizes above, which makes the _N_ = 2 rows of the two modes the *same configuration*, measured twice — a built-in control.  It agrees to within 3% at 16 KiB, 512 KiB and 128 MiB, and differs by 6.7% at 8/16 MiB; but those are exactly the rows whose own cv is 4.9% and 8.2%, so the control is telling us the L3 rows are noisy at 5 repetitions, not that the modes disagree.  **Compare ratios within a row group, never throughputs across the two tables.**
+
+| total working set | _N_ | sequential | interleaved | speedup | vs. pair | cv |
+|---|---:|---:|---:|---:|---:|---:|
+| 32 KiB (L1d = 32 KiB) | 2 | 64.9 GiB/s | 70.1 GiB/s | 1.08× | — | 4.6% |
+|  | 3 | 65.2 GiB/s | 70.7 GiB/s | 1.08× | 1.01× | 3.1% |
+|  | 4 | 64.5 GiB/s | 71.8 GiB/s | 1.11× | 1.02× | 1.7% |
+| 1 MiB (L2) | 2 | 61.1 GiB/s | 64.2 GiB/s | 1.05× | — | 3.5% |
+|  | 3 | 57.3 GiB/s | 64.5 GiB/s | 1.13× | 1.01× | 5.8% |
+|  | 4 | 59.4 GiB/s | 65.8 GiB/s | 1.11× | 1.03× | 3.6% |
+| 16 MiB (L3) | 2 | 47.8 GiB/s | 51.5 GiB/s | 1.08× | — | 8.2% |
+|  | 3 | 50.3 GiB/s | 57.8 GiB/s | 1.15× | 1.12× | 11.6% |
+|  | 4 | 48.4 GiB/s | 60.0 GiB/s | 1.24× | 1.16× | 7.3% |
+| 256 MiB (DRAM) | 2 | 22.3 GiB/s | 26.9 GiB/s | 1.20× | — | 2.6% |
+|  | 3 | 23.1 GiB/s | 29.0 GiB/s | 1.25× | 1.08× | 3.4% |
+|  | 4 | 24.1 GiB/s | 30.1 GiB/s | 1.25× | 1.12× | 4.4% |
 
 Interpretation:
 
-* One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency) exceeds the throughput cost — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count: the pair is worth ~1.05–1.15× per core in the compute-bound regimes.  (This is a different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize.)
-* One state is 8 ymm registers, so two states already fill the 16-register file, and a third and fourth must spill between chunks.  In the cache-resident regimes the wider groups add no instruction-level parallelism the pair did not already provide (0.91–1.03× per byte vs. the pair); only in the DRAM regime does wider interleaving keep winning slightly (1.05–1.07× vs. the pair) — more concurrent read streams, a memory effect rather than an AES one.
+* **The pair pays, in every regime and in both modes.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so per chunk the critical path (3 × `vaesenc` latency) exceeds the throughput cost — one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count: 1.05–1.11× in the cache-resident regimes, 1.21–1.24× in DRAM.  (A different bottleneck than the one VAES leaf batching fixed for `Duplex`: cch has no transpose to amortize.)
+* **At equal footprint a wider group is never worse than the pair.**  At 32 KiB and 1 MiB the ratios (1.01–1.03×) sit inside the rows' combined cv, so the honest reading there is *no penalty* rather than a gain; at 16 MiB and 256 MiB the gains (1.08–1.16×) do clear it.  The interleaving speedup also grows with _N_, to 1.25×.  So more than two states do supply usable instruction-level parallelism.
+* **The register file is not what stops them.**  An earlier revision of this section explained the wider groups' cache-resident deficit as spilling: one state is 8 ymm registers, so two fill the 16-register file and a third and fourth must spill.  That explanation predicts a loss regardless of footprint, and the fixed-total mode shows no loss at all.  What the fixed-per-buffer rows were measuring is the extra memory a wider group touches.  The cleanest case is the 16 KiB row, which is also the least noisy: L1d is 32 KiB, so the pair (2 × 16 KiB) sits exactly at capacity while _N_ = 3 and 4 spill to L2 — 0.95× and 0.93×, both outside the combined cv — and holding the total at 32 KiB instead moves the same comparison to 1.01× and 1.02×, inside it.  The 8 MiB row repeats the effect against L3 (36 MiB, shared): _N_ = 4 touches 32 MiB and falls to 0.80×, against 1.16× at a fixed 16 MiB total.  (_N_ = 3's 0.88× there carries a 13.2% cv and should not be leaned on.)
 
-Conclusion: keep the pair (implemented as `compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`); a wider lockstep class would buy a few percent only in the single-threaded DRAM regime.  These tables supersede the 2026-07-10 measurements, which were taken on non-default flags (and, for the original pair table, unpinned — that run's 1.23–1.37× overstated the pinned win).
+Conclusion: keep the pair (implemented as `compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`).  The conclusion is unchanged but its basis is not: a wider lockstep class is not blocked by register pressure, it is blocked by the footprint it brings with it, and in the tree those are inseparable — a 4-wide group is four concurrent `CHUNK_SIZE` chunks by construction, which is exactly the fixed-per-buffer column where it loses to the pair — 0.93× at 16 KiB, and 0.94× at 512 KiB though that row does not clear its own noise.  Neither size is the 64 KiB default itself, which is still unmeasured and is the row worth adding next.  A wider group would pay only where that coupling is broken (a smaller `CHUNK_SIZE`, or a machine whose cache absorbs the wider footprint).  These tables supersede the 2026-07-18 ones; the 2026-07-10 cross-codegen section below asks a different question and stands.  Absolute figures wander between sessions on this machine, so compare the ratios rather than the throughputs.
 
 ## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
 

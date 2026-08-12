@@ -40,6 +40,7 @@
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
+#include "aes_enc.hpp"
 #include "castella-permute.hpp"
 #include "pack_states.hpp"
 #include "parse_int.hpp"

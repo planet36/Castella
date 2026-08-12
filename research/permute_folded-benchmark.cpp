@@ -127,40 +127,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    // The N = 2, 4, 8 registrations are commented out: they lengthen the
-    // run considerably, and only the 16-block state is used outside
-    // research.  Uncomment them to reproduce the non-16 rows of the
-    // findings table in README.md.
-
-    /*
-    {
-        constexpr int N = 2;
-        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
-             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
-        {
-            register_pair<N>(num_rounds, num_threads);
-        }
-    }
-
-    {
-        constexpr int N = 4;
-        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
-             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
-        {
-            register_pair<N>(num_rounds, num_threads);
-        }
-    }
-
-    {
-        constexpr int N = 8;
-        for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();
-             num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
-        {
-            register_pair<N>(num_rounds, num_threads);
-        }
-    }
-    */
-
     {
         constexpr int N = 16;
         for (auto num_rounds = Castella::NUM_ROUNDS_MIN<N>();

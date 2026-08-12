@@ -40,7 +40,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | duplex-throughput-benchmark.cpp | Measure the absorb and squeeze throughput (bytes/s) of `Castella::Duplex` through its public API, across capacity and round counts |
 | left\_encode-right\_encode-benchmark.cpp | Benchmark alternative implementations of `left_encode` and `right_encode` |
 | nested-for-loop-order-aes\_enc\_0-benchmark.cpp | Benchmark loop ordering for the AES array permutation (elements-first vs. rounds-first) |
-| permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path (_N_ = 16 by default; the _N_ = 2, 4, 8 registrations are commented out to keep the run short) |
+| permute\_folded-benchmark.cpp | Benchmark the folded (register-resident) `Castella::permute` against the pre-folding generic path, at _N_ = 16 |
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
@@ -71,7 +71,7 @@ Neither of those two Python programs is run by `run-research.sh` (which drives o
 
 Raw benchmark results are saved in a folder named `results`.
 
-`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  Two carry older numbers a default run does not refresh: the folded-permute table's _N_ < 16 rows (7 repetitions, and the benchmark no longer registers them) and the 2026-07-10 non-VAES section, which predates the practice and records neither a count nor a cv.
+`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  The one exception is the 2026-07-10 non-VAES section, which predates the practice and records neither a count nor a cv.
 
 ## Benchmark coverage on ARM
 
@@ -127,26 +127,20 @@ Interpretation:
 
 The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` — which is unguarded, so it runs on every target — already round-trips it for every state size and round count.  An earlier revision of this table timed them and drew a conclusion about which overload `permute_inv` selects; that conclusion was wrong (it takes the VAES path, not the generic one), and since the speed cannot matter, the rows were dropped rather than corrected.
 
-## Findings: the folded permute wins at every state size (2026-07-17, N = 16 refreshed 2026-08-12)
+## Findings: the folded permute wins at _N_ = 16 (2026-08-12)
 
-When the folded (register-resident) `Castella::permute` was generalized from _N_ = 16 to all supported _N_, only _N_ = 16 had been measured (~1.7×).  `permute_folded-benchmark.cpp` compares the folded path against the generic one it replaced (`Castella::permute_generic`).  Ratios are generic ÷ folded; compare only within this table.
+`permute_folded-benchmark.cpp` compares the folded (register-resident) `Castella::permute` against the generic path it replaced (`Castella::permute_generic`).  Medians of 5 repetitions, pinned to core 0 (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Ratios are generic ÷ folded; compare only within this table.
 
-**The rows have two provenances, because the benchmark no longer registers _N_ < 16.**  Keeping the default run short is the reason, and the decision this table records is settled with _N_ < 16 research-only.  The _N_ = 16 row is from the 2026-08-12 full-suite run (medians of 5 repetitions, pinned to core 0, `bash run-benchmarks.bash`); the _N_ = 2, 4, 8 rows are from the original 2026-07-17 run at 7 repetitions and are not refreshed by a default run.  To reproduce them, uncomment the _N_ = 2, 4, 8 blocks in the benchmark's `main()`.
+| rounds | generic | folded | ratio |
+|-------:|--------:|-------:|------:|
+| 3 | 45.0 ns | 27.1 ns | 1.66× |
+| 4 | 60.7 ns | 35.5 ns | 1.71× |
+| 8 | 120 ns | 70.7 ns | 1.70× |
+| 16 | 240 ns | 140 ns | 1.71× |
 
-| _N_ | rounds=2 | rounds=4 | rounds=8 | rounds=16 |
-|-----|---------:|---------:|---------:|----------:|
-| 2 ‡ | 16.9 → 7.5 ns (2.25×) | 34.7 → 14.2 ns (2.44×) | 67.0 → 25.7 ns (2.61×) | 134 → 50.1 ns (2.67×) |
-| 4 ‡ | 18.5 → 9.3 ns (2.00×) | 37.1 → 16.8 ns (2.21×) | 73.3 → 31.4 ns (2.33×) | 147 → 62.1 ns (2.37×) |
-| 8 ‡ | 24.9 → 13.6 ns (1.83×) | 48.9 → 25.2 ns (1.94×) | 92.6 → 44.1 ns (2.10×) | 193 → 88.3 ns (2.19×) |
-| 16 | — | 60.7 → 35.5 ns (1.71×) | 120 → 70.7 ns (1.70×) | 240 → 140 ns (1.71×) |
+Interpretation: the speedup **grows with the round count** — the fold/unfold at the boundaries is a fixed cost amortized over more register-resident rounds, which is why rounds = 3 gives 1.66× and everything above it 1.70–1.71×.  The win itself comes from the generic path round-tripping the state through memory every round and paying the store-to-load-forwarding stall: a 256-bit AES load spanning two 128-bit transpose stores.
 
-‡ 2026-07-17, 7 repetitions.  _N_ = 16 has no rounds = 2 entry because `NUM_ROUNDS_MIN<16>` is 3; at rounds = 3 it is 45.0 → 27.1 ns (1.66×).
-
-The _N_ = 16 row reproduces the previously documented ~1.7× across every round count, anchoring this run to the earlier measurements.  It is also now measured at four round counts rather than one, and the 1.66× at rounds = 3 rising to 1.71× at rounds = 4 and above is the same amortization the interpretation below describes.
-
-Interpretation: the speedup **grows as _N_ shrinks** — a 2- or 4-block state fits entirely in one or two ymm registers, so the folded path has zero memory traffic between rounds, while the generic path still round-trips the state through memory every round and pays the store-to-load-forwarding stall (a 256-bit AES load spanning two 128-bit transpose stores), a fixed cost that looms larger the less AES work a round contains.  The speedup also **grows with the round count** at every _N_, because the fold/unfold at the boundaries is a fixed cost amortized over more register-resident rounds.
-
-Conclusion: folding every supported state size (not just the 16-block state used by `Duplex`) is a clear win; the smaller research-only sizes benefit even more than _N_ = 16 does.
+Conclusion: folding is a clear ~1.7× win at the 16-block state, which is the only size used outside `research/`.  `permute_folded` is instantiated for every supported _N_, and the smaller sizes benefited by even more when that generalization was measured — but _N_ < 16 is research-only, the benchmark no longer registers it, and it is not tracked here.
 
 ## Findings: the cch pair pays ~1.1×; group width is free below L2, footprint is what costs (2026-08-12)
 

@@ -49,7 +49,7 @@ make lint
 make clean
 ```
 
-Compiler flags come from the shared `config.mk` (included by every Makefile): `-std=c++23 -O3 -flto=auto` plus, per architecture, `-march=x86-64-v3 -maes -mvaes` (x86-64) or `-march=armv8-a+aes` (aarch64). No external libraries are linked by default. `BUILD=debug` replaces `-O3 -flto=auto` with `-Og -g3 -fhardened -fsanitize=address -fsanitize=undefined`, and defines `DEBUG` (enabling the internal assertions) plus the `_GLIBCXX_DEBUG` family.
+Compiler flags come from the shared `config.mk`, included by every Makefile.
 
 Note that UBSan recovers by default: it prints a diagnostic and still exits 0. Set `UBSAN_OPTIONS=halt_on_error=1` when a sanitizer finding should fail the run.
 
@@ -64,17 +64,6 @@ The library is header-only. Users include `castella-duplex.hpp`, which pulls in 
 - **Permutation**: Each round applies 3 AES rounds to every block — each block in each AES round uses a distinct round constant as its AES round key — then transposes the 16×16 byte matrix
 - **Round constants**: Generated at compile time by a 128-bit Galois LFSR (GCM reduction polynomial) seeded with "expand 16-byte c"; one constant per (permutation round, AES round, block). A reduced-round permutation uses the **last** `num_rounds` rounds' constants, as in Keccak-p — with the first `num_rounds`, `permute(x, n2)` would be a fixed public function of `permute(x, n1)` for every `n1 < n2`. Do not "simplify" this to the first N: it changes every digest and it is what keeps the reduced-round instances in `CHALLENGES.md` independent targets
 - **Padding**: pad10\*1 rule, applied before every `squeeze_bytes()` call
-
-### `Castella::Duplex` API
-
-Constructor parameters: `capacity_blocks`, `num_rounds`, `input_suffix`, `function_name`, `customization_str`.
-
-Method-chaining interface:
-- `add(span)` / `add(ptr, len)` — absorb raw bytes
-- `add_left_encoded(span)` — absorb left-encoded length prefix + data
-- `add_right_encoded(span)` — absorb data + right-encoded length suffix
-- `apply_padding_rule()` — explicitly pad (also implicitly done by `squeeze_bytes`)
-- `squeeze_bytes(n)` — pad, permute, return first n bytes of outer state; default n = `get_capacity_size_bytes() / 2`
 
 ### `Castella::HashTree` (`castella-hash-tree.hpp`) and its two instantiations
 
@@ -108,29 +97,14 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 ### Subprojects
 
 - **`include/`** — The header-only library and its shared helpers; the sole `-I` root (`config.mk`), so every subproject includes these by bare filename (which is why headers can move within `include/` without touching most `#include` lines).
-  - *Core algorithm and API* (detailed above): `castella-permute.hpp`, `castella-duplex.hpp`, `castella-hash-tree.hpp`, `castella-duplex-tree.hpp`, `castella-duplex-x2.hpp`, and the cch tree (`cch.hpp`, `cch-tree.hpp`, `cch-x2.hpp`) over the `simd_compress.hpp` compression node.
-  - *Supporting primitives*: `aes_enc.hpp` (AES-round wrappers incl. `aes_enc_arr`), `simd_transpose.hpp`, `simd_types.hpp`, `simd_load.hpp` (16-byte SIMD load overloads), `lfsr.hpp` (round-constant LFSR), `encode.hpp` (SP 800-185 `left_encode`/`right_encode` etc.), `byte_width.hpp`.
-  - *General utilities*: `as_byte_span.hpp`, `bytes_to_hex.hpp`, `fixed_vector.hpp`, `in_range.hpp`, `narrow_cast.hpp`, `to_unsigned.hpp`, `parse_int.hpp`, `quote_shell_always.hpp`.
   - *Not here*: headers used only by the hash programs live in `hash-programs/` — `check_utils.hpp`, `fd-utils.h`, `fnv.hpp`, `mmap_sigbus_guard.hpp` (a SIGBUS guard that turns a concurrent truncation of an mmap'd file into a clean error instead of a crash), `unique_fd.hpp`.
 - **`examples/`** — Usage demonstrations that are also a real test suite; see `examples/CLAUDE.md`, which loads when working there.
-  - *Helpers from `include/`*: `bytes_to_hex.hpp`, `encode.hpp`, `quote_shell_always.hpp`, `to_unsigned.hpp`.
-- **`tests/`** — The test programs.
-  - `tests.cpp`: fixed correctness tests (multi-block input, `squeeze_bytes(0)`, clamping, constructor constraint violations, successive squeeze distinctness) and the pinned Duplex/DuplexTree KATs.
-  - `kat.cpp` + `KAT.txt`: machine-readable KAT file (rc/permute/duplex/tree/mac/cch/cchtree lines, message pattern `msg[i] = i mod 256`, MAC key pattern `key[i] = 255 - (i mod 256)`; the `rc` and `permute` lines pin the primitives directly, and their `digest=` is raw output rather than a digest; the vector count is pinned by `EXPECTED_KATS`, so a truncated file fails rather than passing short); `./kat` verifies it, `./kat --generate > KAT.txt` regenerates (only on a deliberate format change).
-  - `equivalence-tests.cpp`: randomized digest-equivalence tests — for adversarial input lengths (chunk boundaries, pool-start threshold, leaf-index 255/256 width fallback, random), one-shot and randomly split adds across thread counts must reproduce the single-threaded reference for DuplexTree and compress_castella_tree; seeded (seed printed and settable via argv).
-  - `permute-equivalence.cpp`: `permute<N>` vs `permute_generic<N>` in one build, over random states for every N and every round count 0..NUM_ROUNDS_MAX — the folded-VAES path's only direct guard (elsewhere it is guarded transitively through the KATs); on a build without the folded path the two are the same function and the program says so.
-  - `duplex-diff-fuzz.py` + `duplex-diff-driver.cpp`: differential fuzzer for the `Duplex` API against `research/spec-conformance.py` (imported via `importlib`, so the model is never copied) — random programs of `add`/`add_left_encoded`/`add_right_encoded`/`apply_padding_rule`/`squeeze_bytes` over random parameters, replayed through a stdin script interpreter and diffed squeeze by squeeze; covers what the one-shape duplex KATs cannot (split adds, both encoding entry points, explicit padding, successive squeezes). Fixed default seed so `make test` is deterministic; `--seed`/`-n` for longer sweeps. Two C++-only conveniences are deliberately steered around, not modelled: the `squeeze_bytes` clamp and the null-data-span no-op in the raw `add_*_encoded` forms.
+- **`tests/`** — The test programs. `tests/README.md` describes each one; `KAT.txt` is regenerated only on a deliberate format change.
 - **`research/`** — Standalone programs, and the evidence behind the design parameters and the security claims.
-  - *C++*: round-count determination (the minimum `aes_num_rounds`/`num_rounds` for full bit diffusion, and `simd_compress`'s diffusion rates), equivalence verifiers for the paired and inverse paths (`permute_inv-verify`, `permute_x2-verify`, `duplex_x2-verify`, `cch_x2-verify`), structural and zero-sum probes of `permute` (nonzero exit on any violation), a duplex PRNG stream to pipe into statistical batteries, and the google-benchmark benchmarks — the dependency that puts `research` in `EXTRA_SUBDIRS`.
-  - *Python*: `spec-conformance.py` (the independent model, and the only thing this directory's `test` target runs) plus the cryptanalysis tools — MILP minimum active S-boxes (`permute-min-active-sboxes.py`, PuLP driving HiGHS or CBC), bit-level differential trail search and clustering (`permute-trail-search.py`, z3, with `permute-trail-ceilings.bash` holding the per-round-count recipe behind each recorded ceiling), bit-based division property (z3), exact invariant-subspace search, even-multiplicity verification, algebraic-degree bounds, and `trail-model-crossvalidate.py`, which checks the trail model's permutation against the KAT-verified one.
   - *Dependencies*: the solver-backed tools need what `make` does not install (a virtual environment for PuLP; z3).
   - *Documents*: `research/README.md` holds the program inventory and every result table; `VERIFYING-CLAIMS.md` maps each `SPEC.md` security claim to the evidence supporting it and to the output that evidence must produce; `RE-DERIVATION-RUNBOOK.md` holds the commands behind both, is the standing procedure for re-deriving those figures, and names the documents a refreshed figure has to be swept into.
 - **`http-prng-service/`** — HTTP server (using cpp-httplib) exposing a PRNG endpoint. Periodically reseeds from the OS (`getentropy`). `config.h` controls capacity, rounds, and reseed parameters.
-- **`hash-programs/`** — Command-line hash utilities: `castella` (DuplexTree) and `cch` (compress_castella_tree).
-  - *Common options*: both are tree hashes with `--num-threads` (for multicore, never affects the digest) and `--chunk-size` (part of the digest format); both read files or stdin and output hex digests.
-  - *Output formats*: both print the self-describing BSD-style `--tag` format by default (it embeds the digest-relevant options; `--size` is inferred from the digest length), with `--untagged` for the reversed `digest  FILE` style, and both have `-c`/`--check` (+`--quiet`), which verifies both output formats with md5sum-style accounting/exit status — tag lines carry their own parameters, untagged lines take them from the check command line (`--tag`/`--untagged` are ignored with `--check`). Shared check helpers (hex parse, constant-time compare, shell unquote, checkfile driver) live in `check_utils.hpp` (program-local, not in `include/`).
-  - *Keyed mode*: `castella` also has `--key-file` (keyed MAC: KMAC structure at tree scale — bytepad'd encode_string(K) as chunk 0, function name `Castella-MAC`, trailing right_encode(size) so sizes are unrelated; check needs the same key).
-  - *Testing*: `test-correctness.bash` (which prints its own `N passed, M failed` tally, but unlike `EXPECTED_CHECKS`/`EXPECTED_KATS` does not pin the total) verifies hardcoded digests, thread/IO-mode invariance, option sensitivity, output-format selection, check/tag round trips, and the keyed mode; rerun it after any digest-relevant change.
+- **`hash-programs/`** — Command-line hash utilities: `castella` (DuplexTree) and `cch` (compress_castella_tree). `hash-programs/README.md` and `--help` document the options; `--chunk-size` and `castella --key-file` are digest-relevant, `--num-threads` never is. Rerun `test-correctness.bash` after any digest-relevant change — unlike `EXPECTED_CHECKS`/`EXPECTED_KATS` its tally does not pin the total, so a deleted case passes quietly.
 
 ## Documentation
 

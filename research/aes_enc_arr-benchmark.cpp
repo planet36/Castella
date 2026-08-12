@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Benchmark the aes_enc_arr / aes_enc_inv_arr overloads of aes_enc.hpp
+/// Benchmark the aes_enc_arr overloads of aes_enc.hpp
 /**
 * \file
 * \author Steven Ward
@@ -30,7 +30,9 @@
 *     (element j = blocks j and j+8), round keys from
 *     \c Castella::round_constants_folded.
 *
-* The inverse pair (inv_generic<16>, inv_vaes_cast<16>) mirrors the first two.
+* The inverse overloads are deliberately not measured: \c permute_inv is the
+* only caller of \c aes_enc_inv_arr, nothing in the hash programs calls
+* \c permute_inv, and permute_inv-verify.cpp already checks its accuracy.
 *
 * Each iteration transforms the previous result in place (latency-chained,
 * matching how the permutation uses these functions).  x2_broadcast processes
@@ -72,23 +74,6 @@ aes_enc_arr_generic(simd_arr_t<N>& arr,
         for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
         {
             arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
-        }
-    }
-}
-
-/// Verbatim copy of the generic (non-VAES) \c aes_enc_inv_arr in aes_enc.hpp (keep in sync)
-template <size_t aes_num_rounds, size_t N, size_t M>
-static void
-aes_enc_inv_arr_generic(simd_arr_t<N>& arr,
-                        const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
-{
-    static_assert(M >= N);
-
-    for (int i = 0; i < std::ssize(arr); ++i)
-    {
-        for (int aes_r = static_cast<int>(aes_num_rounds) - 1; aes_r >= 0; aes_r--)
-        {
-            arr[i] = aes_enc_inv(arr[i], aes_round_keys[aes_r][i]);
         }
     }
 }
@@ -189,54 +174,6 @@ BM_folded(benchmark::State& BM_state)
     benchmark::DoNotOptimize(arr);
 }
 
-void
-BM_inv_generic(benchmark::State& BM_state)
-{
-    // Perform setup here
-
-    simd_arr_t<N_BLOCKS> arr{};
-    arc4random_buf(std::data(arr), sizeof(arr));
-
-    const auto& keys = Castella::round_constants[0];
-
-    for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
-    {
-        // This code gets timed
-
-        aes_enc_inv_arr_generic(arr, keys);
-    }
-
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
-
-    // This is to prevent the compiler from eliding the work above.
-    benchmark::DoNotOptimize(arr);
-}
-
-void
-BM_inv_vaes_cast(benchmark::State& BM_state)
-{
-    // Perform setup here
-
-    simd_arr_t<N_BLOCKS> arr{};
-    arc4random_buf(std::data(arr), sizeof(arr));
-
-    const auto& keys = Castella::round_constants[0];
-
-    for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
-    {
-        // This code gets timed
-
-        aes_enc_inv_arr(arr, keys);
-    }
-
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
-
-    // This is to prevent the compiler from eliding the work above.
-    benchmark::DoNotOptimize(arr);
-}
-
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -283,14 +220,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         aes_enc_arr(result_vaes, keys);
         assert(simd_arr_equal(result_generic, result_vaes));
 
-        // Both inverses must round-trip the forward transform.
-        auto result_inv = result_vaes;
-        aes_enc_inv_arr(result_inv, keys);
-        assert(simd_arr_equal(result_inv, state_a));
-        result_inv = result_generic;
-        aes_enc_inv_arr_generic(result_inv, keys);
-        assert(simd_arr_equal(result_inv, state_a));
-
         // Each lane of the broadcast x2 overload must match its
         // independently transformed state.
         auto result_b = state_b;
@@ -326,13 +255,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     using BM_func_t = void (*)(benchmark::State&);
 
-    constexpr std::array<std::pair<const char*, BM_func_t>, 6> benchmarks{{
+    constexpr std::array<std::pair<const char*, BM_func_t>, 4> benchmarks{{
         {"generic<16>", BM_generic},
         {"vaes_cast<16>", BM_vaes_cast},
         {"x2_broadcast<16>", BM_x2_broadcast},
         {"folded<8x2>", BM_folded},
-        {"inv_generic<16>", BM_inv_generic},
-        {"inv_vaes_cast<16>", BM_inv_vaes_cast},
     }};
 
     for (const auto& [BM_name, BM_func] : benchmarks)

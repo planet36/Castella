@@ -71,7 +71,7 @@ Neither of those two Python programs is run by `run-research.sh` (which drives o
 
 Raw benchmark results are saved in a folder named `results`.
 
-`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…` (the 2026-07-17 and 2026-07-18 findings below used 7; each findings section states its own repetition count).
+`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Every findings section below states the count its own run used — they range from 5 to 11 — so read the ratios within a section, not across them.
 
 ## Benchmark coverage on ARM
 
@@ -146,73 +146,120 @@ Interpretation: the speedup **grows as _N_ shrinks** — a 2- or 4-block state f
 
 Conclusion: folding every supported state size (not just the 16-block state used by `Duplex`) is a clear win; the smaller research-only sizes benefit even more than _N_ = 16 does.
 
-## Findings: the cch pair pays ~1.1×; a wider group is a wash at the default chunk size (2026-08-12, second run)
+## Findings: the cch pair pays ~1.1×; group width itself is free, footprint is what costs (2026-08-12, third run)
 
-`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 5 repetitions, pinned to core 0, random interleaving on (plain `bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group; cv is the larger of the two arms'.  **A † marks a "vs. pair" ratio that does not exceed the combined cv of the two rows compared — read those as no difference, not as a result.**
+`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 11 repetitions over a power-of-two size ladder, pinned to core 0, random interleaving on (`BENCHMARK_REPS=11 bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group; cv is the larger of the two arms'.  **A † marks a "vs. pair" ratio that does not exceed the combined cv of the two rows compared (added in quadrature) — read those as no difference, not as a result.**
 
-This machine: L1d 32 KiB and L2 4 MiB per core, L3 36 MiB shared.
+This machine: L1d 32 KiB and L2 4 MiB per core, L3 36 MiB shared.  The size labels below are those levels and are specific to this hardware.
 
-**Fixed per buffer.**  The working set is _N_ × the size, which is the shape the tree has: a leaf hashes a fixed `CHUNK_SIZE` however many leaves run, so widening the group widens the footprint.
+**Fixed per buffer.**  The working set is _N_ × the size, which is the shape the tree has: a leaf hashes a fixed `CHUNK_SIZE` however many leaves run, so widening the group widens the footprint.  § At 8 MiB the _N_ = 4 working set is 32 MiB against a shared 36 MiB L3, and its sequential arm is the run's worst point (31.1 GiB/s at 11.8% cv, against the pair's 50.8 GiB/s); read that group as the L3 cliff, not as a width result.
 
 | per-buffer size | _N_ | sequential | interleaved | speedup | vs. pair | cv |
 |---|---:|---:|---:|---:|---:|---:|
-| 1 KiB (`CHUNK_SIZE_MIN`) | 2 | 65.7 GiB/s | 66.5 GiB/s | 1.01× | — | 1.6% |
-|  | 3 | 68.3 GiB/s | 68.2 GiB/s | 1.00× | 1.03× † | 2.4% |
-|  | 4 | 67.9 GiB/s | 67.5 GiB/s | 1.00× | 1.02× † | 3.0% |
-| 16 KiB | 2 | 64.3 GiB/s | 72.8 GiB/s | 1.13× | — | 3.6% |
-|  | 3 | 62.2 GiB/s | 65.8 GiB/s | 1.06× | 0.90× | 4.1% |
-|  | 4 | 59.0 GiB/s | 66.4 GiB/s | 1.13× | 0.91× | 3.5% |
-| **64 KiB (`DEFAULT_CHUNK_SIZE`)** | 2 | 61.9 GiB/s | 65.9 GiB/s | 1.06× | — | 4.1% |
-|  | 3 | 59.9 GiB/s | 64.3 GiB/s | 1.07× | 0.98× † | 2.1% |
-|  | 4 | 59.7 GiB/s | 66.6 GiB/s | 1.11× | 1.01× † | 2.3% |
-| 512 KiB | 2 | 60.3 GiB/s | 66.8 GiB/s | 1.11× | — | 2.7% |
-|  | 3 | 58.1 GiB/s | 63.5 GiB/s | 1.09× | 0.95× | 3.3% |
-|  | 4 | 58.5 GiB/s | 64.3 GiB/s | 1.10× | 0.96× | 2.3% |
-| 4 MiB (= L2) | 2 | 54.2 GiB/s | 57.3 GiB/s | 1.06× | — | 8.0% |
-|  | 3 | 52.8 GiB/s | 56.6 GiB/s | 1.07× | 0.99× † | 4.4% |
-|  | 4 | 46.6 GiB/s | 56.8 GiB/s | 1.22× | 0.99× † | 7.2% |
-| 8 MiB | 2 | 55.1 GiB/s | 57.3 GiB/s | 1.04× | — | 7.9% |
-|  | 3 | 39.2 GiB/s | 52.2 GiB/s | 1.33× | 0.91× † | 17.2% |
-|  | 4 | 31.9 GiB/s | 44.6 GiB/s | 1.40× | 0.78× | 7.5% |
-| 128 MiB | 2 | 25.1 GiB/s | 27.2 GiB/s | 1.08× | — | 5.2% |
-|  | 3 | 24.5 GiB/s | 29.7 GiB/s | 1.21× | 1.09× | 4.6% |
-|  | 4 | 23.1 GiB/s | 29.9 GiB/s | 1.30× | 1.10× | 5.5% |
+| 1 KiB (`CHUNK_SIZE_MIN`) | 2 | 70.1 GiB/s | 70.0 GiB/s | 1.00× | — | 2.9% |
+|  | 3 | 70.7 GiB/s | 71.2 GiB/s | 1.00× | 1.01× † | 2.2% |
+|  | 4 | 70.2 GiB/s | 72.0 GiB/s | 1.03× | 1.03× † | 1.8% |
+| 2 KiB | 2 | 69.6 GiB/s | 70.4 GiB/s | 1.01× | — | 3.4% |
+|  | 3 | 67.8 GiB/s | 72.0 GiB/s | 1.06× | 1.02× † | 1.9% |
+|  | 4 | 68.8 GiB/s | 72.5 GiB/s | 1.06× | 1.03× † | 2.5% |
+| 4 KiB | 2 | 67.1 GiB/s | 73.5 GiB/s | 1.10× | — | 2.7% |
+|  | 3 | 67.9 GiB/s | 73.2 GiB/s | 1.08× | 1.00× † | 1.9% |
+|  | 4 | 66.9 GiB/s | 73.1 GiB/s | 1.09× | 1.00× † | 3.1% |
+| 8 KiB | 2 | 64.9 GiB/s | 72.5 GiB/s | 1.12× | — | 4.7% |
+|  | 3 | 66.1 GiB/s | 72.4 GiB/s | 1.09× | 1.00× † | 1.9% |
+|  | 4 | 65.7 GiB/s | 73.0 GiB/s | 1.12× | 1.00× † | 2.3% |
+| 16 KiB (_N_ = 2 fills L1d) | 2 | 66.0 GiB/s | 72.9 GiB/s | 1.10× | — | 2.2% |
+|  | 3 | 64.8 GiB/s | 69.8 GiB/s | 1.08× | 0.96× † | 3.4% |
+|  | 4 | 61.9 GiB/s | 67.4 GiB/s | 1.10× | 0.93× | 2.9% |
+| 32 KiB | 2 | 61.6 GiB/s | 66.1 GiB/s | 1.07× | — | 2.0% |
+|  | 3 | 62.1 GiB/s | 65.5 GiB/s | 1.06× | 0.99× † | 2.6% |
+|  | 4 | 60.7 GiB/s | 67.9 GiB/s | 1.11× | 1.02× † | 2.3% |
+| **64 KiB (`DEFAULT_CHUNK_SIZE`)** | 2 | 62.7 GiB/s | 66.8 GiB/s | 1.07× | — | 2.2% |
+|  | 3 | 62.3 GiB/s | 66.3 GiB/s | 1.06× | 0.99× † | 3.2% |
+|  | 4 | 62.5 GiB/s | 67.1 GiB/s | 1.07× | 1.00× † | 2.3% |
+| 128 KiB | 2 | 61.8 GiB/s | 65.7 GiB/s | 1.07× | — | 2.7% |
+|  | 3 | 61.7 GiB/s | 66.5 GiB/s | 1.09× | 1.01× † | 3.4% |
+|  | 4 | 61.6 GiB/s | 67.0 GiB/s | 1.09× | 1.02× † | 3.4% |
+| 256 KiB | 2 | 62.3 GiB/s | 65.8 GiB/s | 1.06× | — | 2.4% |
+|  | 3 | 61.5 GiB/s | 65.5 GiB/s | 1.07× | 0.99× † | 3.2% |
+|  | 4 | 61.6 GiB/s | 66.9 GiB/s | 1.09× | 1.02× † | 2.4% |
+| 512 KiB | 2 | 61.5 GiB/s | 66.2 GiB/s | 1.08× | — | 2.8% |
+|  | 3 | 60.6 GiB/s | 66.1 GiB/s | 1.10× | 1.00× † | 3.6% |
+|  | 4 | 59.4 GiB/s | 66.6 GiB/s | 1.12× | 1.01× † | 3.5% |
+| 1 MiB | 2 | 59.9 GiB/s | 65.7 GiB/s | 1.10× | — | 3.8% |
+|  | 3 | 53.1 GiB/s | 61.6 GiB/s | 1.16× | 0.94× † | 6.2% |
+|  | 4 | 54.6 GiB/s | 61.8 GiB/s | 1.13× | 0.94× † | 5.4% |
+| 2 MiB | 2 | 55.0 GiB/s | 58.7 GiB/s | 1.07× | — | 6.7% |
+|  | 3 | 53.4 GiB/s | 57.5 GiB/s | 1.08× | 0.98× † | 7.1% |
+|  | 4 | 54.7 GiB/s | 62.6 GiB/s | 1.15× | 1.07× † | 5.7% |
+| 4 MiB (= L2) | 2 | 54.0 GiB/s | 59.1 GiB/s | 1.09× | — | 6.7% |
+|  | 3 | 54.3 GiB/s | 57.5 GiB/s | 1.06× | 0.97× † | 8.1% |
+|  | 4 | 50.5 GiB/s | 59.5 GiB/s | 1.18× | 1.01× † | 5.2% |
+| 8 MiB § | 2 | 50.8 GiB/s | 56.3 GiB/s | 1.11× | — | 6.3% |
+|  | 3 | 43.3 GiB/s | 49.5 GiB/s | 1.14× | 0.88× † | 11.9% |
+|  | 4 | 31.1 GiB/s | 40.6 GiB/s | 1.30× | 0.72× | 11.8% |
+| 128 MiB | 2 | 23.8 GiB/s | 27.2 GiB/s | 1.15× | — | 4.9% |
+|  | 3 | 23.6 GiB/s | 29.0 GiB/s | 1.23× | 1.07× | 4.4% |
+|  | 4 | 23.7 GiB/s | 30.4 GiB/s | 1.28× | 1.12× | 5.9% |
 
-**Fixed total.**  The same working set split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size above it, making the _N_ = 2 rows of the two modes the same configuration measured twice — the control.  It holds this run at every size but the 128 MiB sequential arm (−7.7% against a 7.0% combined cv), which is why no firm pair speedup is quoted for DRAM below.  ‡ The 2 KiB group is not truly equal-footprint: a buffer is a whole number of 256-byte chunks, so _N_ = 3 lands on 1536 B, 75% of the target.
+**Fixed total.**  The same working set split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size at the same index above, making the _N_ = 2 rows of the two modes the same configuration measured twice — the control.  It holds this run at every size: the largest gap between the two _N_ = 2 measurements of one configuration is 6.5% — per-buffer 2 MiB against the 4 MiB total, on the sequential arm — against a 9.3% combined cv.  ‡ The _N_ = 3 groups are not exactly equal-footprint: a buffer is a whole number of 256-byte chunks, so _N_ = 3 rounds down — to 75% of the target at 2 KiB and ~94% at 4 and 8 KiB, then ≥98% from 16 KiB up and indistinguishable at the printed precision from 1 MiB.  The ratios are per byte, so the shortfall does not inflate throughput, but at the three marked sizes the _N_ = 3 footprint really is smaller than the pair's.
 
 | total working set | _N_ | sequential | interleaved | speedup | vs. pair | cv |
 |---|---:|---:|---:|---:|---:|---:|
-| 2 KiB ‡ | 2 | 65.6 GiB/s | 67.3 GiB/s | 1.03× | — | 2.7% |
-|  | 3 | 66.9 GiB/s | 65.2 GiB/s | 0.97× | 0.97× † | 3.3% |
-|  | 4 | 68.2 GiB/s | 70.1 GiB/s | 1.03× | 1.04× | 3.2% |
-| 32 KiB (= L1d) | 2 | 64.8 GiB/s | 69.2 GiB/s | 1.07× | — | 5.2% |
-|  | 3 | 62.4 GiB/s | 69.9 GiB/s | 1.12× | 1.01× † | 2.6% |
-|  | 4 | 63.9 GiB/s | 70.7 GiB/s | 1.11× | 1.02× † | 4.8% |
-| **128 KiB (2 chunks)** | 2 | 60.6 GiB/s | 66.2 GiB/s | 1.09× | — | 2.6% |
-|  | 3 | 59.9 GiB/s | 63.8 GiB/s | 1.07× | 0.96× † | 5.1% |
-|  | 4 | 61.4 GiB/s | 67.0 GiB/s | 1.09× | 1.01× † | 4.2% |
-| 1 MiB | 2 | 59.9 GiB/s | 64.7 GiB/s | 1.08× | — | 3.5% |
-|  | 3 | 60.3 GiB/s | 66.2 GiB/s | 1.10× | 1.02× † | 2.3% |
-|  | 4 | 59.5 GiB/s | 66.4 GiB/s | 1.12× | 1.03× † | 3.1% |
-| 8 MiB | 2 | 54.8 GiB/s | 55.2 GiB/s | 1.01× | — | 6.6% |
-|  | 3 | 49.1 GiB/s | 61.2 GiB/s | 1.25× | 1.11× | 3.1% |
-|  | 4 | 55.8 GiB/s | 61.6 GiB/s | 1.11× | 1.12× | 7.0% |
-| 16 MiB | 2 | 53.1 GiB/s | 56.7 GiB/s | 1.07× | — | 6.0% |
-|  | 3 | 50.5 GiB/s | 58.7 GiB/s | 1.16× | 1.03× † | 5.9% |
-|  | 4 | 52.6 GiB/s | 58.4 GiB/s | 1.11× | 1.03× † | 5.6% |
-| 256 MiB | 2 | 23.2 GiB/s | 28.2 GiB/s | 1.22× | — | 4.7% |
-|  | 3 | 23.4 GiB/s | 29.1 GiB/s | 1.24× | 1.03× | 2.7% |
-|  | 4 | 24.0 GiB/s | 30.1 GiB/s | 1.25× | 1.07× | 6.8% |
-
+| 2 KiB ‡ | 2 | 68.5 GiB/s | 69.7 GiB/s | 1.01× | — | 2.2% |
+|  | 3 | 70.0 GiB/s | 68.5 GiB/s | 0.98× | 0.98× † | 2.3% |
+|  | 4 | 71.9 GiB/s | 70.0 GiB/s | 0.97× | 1.01× † | 2.3% |
+| 4 KiB ‡ | 2 | 68.2 GiB/s | 70.5 GiB/s | 1.03× | — | 2.6% |
+|  | 3 | 69.1 GiB/s | 71.4 GiB/s | 1.03× | 1.03× † | 2.4% |
+|  | 4 | 69.7 GiB/s | 72.5 GiB/s | 1.04× | 1.03× † | 2.8% |
+| 8 KiB ‡ | 2 | 66.6 GiB/s | 71.6 GiB/s | 1.08× | — | 3.8% |
+|  | 3 | 68.3 GiB/s | 71.1 GiB/s | 1.04× | 0.98× † | 2.6% |
+|  | 4 | 68.4 GiB/s | 72.8 GiB/s | 1.07× | 1.01× † | 2.3% |
+| 16 KiB | 2 | 65.8 GiB/s | 72.6 GiB/s | 1.10× | — | 3.0% |
+|  | 3 | 67.2 GiB/s | 71.6 GiB/s | 1.06× | 0.99× † | 2.2% |
+|  | 4 | 67.8 GiB/s | 72.4 GiB/s | 1.07× | 1.00× † | 2.4% |
+| 32 KiB (= L1d) | 2 | 66.0 GiB/s | 72.7 GiB/s | 1.10× | — | 3.5% |
+|  | 3 | 65.1 GiB/s | 72.0 GiB/s | 1.11× | 0.99× † | 2.2% |
+|  | 4 | 65.6 GiB/s | 72.8 GiB/s | 1.11× | 1.00× † | 3.2% |
+| 64 KiB | 2 | 62.4 GiB/s | 66.5 GiB/s | 1.07× | — | 2.3% |
+|  | 3 | 61.3 GiB/s | 66.6 GiB/s | 1.07× | 0.99× † | 5.1% |
+|  | 4 | 60.9 GiB/s | 67.0 GiB/s | 1.10× | 1.01× † | 2.0% |
+| **128 KiB (2 chunks)** | 2 | 60.2 GiB/s | 66.0 GiB/s | 1.10× | — | 2.2% |
+|  | 3 | 61.2 GiB/s | 66.4 GiB/s | 1.09× | 1.01× † | 2.4% |
+|  | 4 | 62.2 GiB/s | 67.6 GiB/s | 1.09× | 1.02× † | 3.3% |
+| 256 KiB | 2 | 61.3 GiB/s | 66.8 GiB/s | 1.09× | — | 3.6% |
+|  | 3 | 61.9 GiB/s | 67.0 GiB/s | 1.08× | 1.00× † | 2.9% |
+|  | 4 | 61.4 GiB/s | 67.9 GiB/s | 1.10× | 1.02× † | 4.2% |
+| 512 KiB | 2 | 61.5 GiB/s | 65.8 GiB/s | 1.07× | — | 3.4% |
+|  | 3 | 60.3 GiB/s | 66.9 GiB/s | 1.12× | 1.01× † | 3.3% |
+|  | 4 | 60.8 GiB/s | 66.7 GiB/s | 1.10× | 1.01× † | 2.1% |
+| 1 MiB | 2 | 60.0 GiB/s | 66.1 GiB/s | 1.10× | — | 2.1% |
+|  | 3 | 60.9 GiB/s | 66.9 GiB/s | 1.10× | 1.02× † | 3.2% |
+|  | 4 | 60.6 GiB/s | 66.9 GiB/s | 1.10× | 1.02× † | 3.2% |
+| 2 MiB | 2 | 58.8 GiB/s | 64.1 GiB/s | 1.09× | — | 3.6% |
+|  | 3 | 60.1 GiB/s | 64.4 GiB/s | 1.07× | 1.00× † | 4.7% |
+|  | 4 | 60.1 GiB/s | 65.9 GiB/s | 1.10× | 1.03× † | 3.8% |
+| 4 MiB (= L2) | 2 | 51.4 GiB/s | 57.7 GiB/s | 1.12× | — | 6.4% |
+|  | 3 | 56.3 GiB/s | 63.1 GiB/s | 1.12× | 1.09× | 5.6% |
+|  | 4 | 55.0 GiB/s | 62.0 GiB/s | 1.12× | 1.07× † | 6.8% |
+| 8 MiB | 2 | 54.0 GiB/s | 58.0 GiB/s | 1.08× | — | 5.9% |
+|  | 3 | 55.1 GiB/s | 61.5 GiB/s | 1.12× | 1.06× † | 4.1% |
+|  | 4 | 52.5 GiB/s | 61.8 GiB/s | 1.18× | 1.07× † | 6.0% |
+| 16 MiB | 2 | 51.0 GiB/s | 55.2 GiB/s | 1.08× | — | 5.6% |
+|  | 3 | 51.1 GiB/s | 58.7 GiB/s | 1.15× | 1.06× † | 6.0% |
+|  | 4 | 48.7 GiB/s | 59.3 GiB/s | 1.22× | 1.07× † | 6.0% |
+| 256 MiB | 2 | 24.3 GiB/s | 27.1 GiB/s | 1.12× | — | 4.7% |
+|  | 3 | 23.9 GiB/s | 29.4 GiB/s | 1.23× | 1.09× | 3.7% |
+|  | 4 | 22.8 GiB/s | 29.9 GiB/s | 1.31× | 1.11× | 5.2% |
 
 Interpretation:
 
-* **The pair pays at every size except the smallest.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so the per-chunk critical path exceeds the throughput cost and one state leaves the AES units idle part of the time; a second interleaved state doubles the chain count.  That is worth 1.04–1.13× from 16 KiB up.  At 1 KiB — `CHUNK_SIZE_MIN` — it is 1.01×, inside the noise: a buffer is only four chunks there, so loop entry and the ramp dominate the overlap the pair exists to exploit.
-* **At the default chunk size a wider group is a wash.**  0.98× and 1.01× at 64 KiB per buffer, both inside the noise, and the fixed-total control agrees (0.96× and 1.01×, also inside).  A 3- or 4-wide group neither gains nor loses at the size the tree actually runs.
-* **Where a wider group does lose, it is a cache level, not the register file.**  The losses land exactly where widening crosses a boundary: at 16 KiB the pair's 32 KiB working set is L1d and _N_ = 3, 4 spill to L2 (0.90×, 0.91×); at 8 MiB _N_ = 4 reaches 32 MiB against a shared 36 MiB L3 (0.78×).  Where no boundary is crossed there is no loss — 1 KiB, 64 KiB and 4 MiB are all †.  The earlier register-pressure account (two states fill the 16 ymm registers, a third and fourth spill) predicts a loss everywhere and is not what the data shows.  512 KiB is the one row this does not explain: 1–2 MiB all sits inside a 4 MiB L2, yet 0.95× and 0.96× clear the noise.
-* **In DRAM wider keeps winning** (1.09×, 1.10× per buffer; 1.03×, 1.07× at fixed total) — more concurrent read streams, a memory effect rather than an AES one, and one the tree's prefetcher already collects on contiguous leaf chunks.
+* **The pair pays from 4 KiB up, and the denser ladder locates the onset.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so the per-chunk critical path exceeds the throughput cost and one state leaves the AES units idle part of the time; a second interleaved state doubles the chain count.  That is worth 1.06–1.12× at every cache-resident size from 4 KiB up, and 1.15× in DRAM.  It is 1.00× at `CHUNK_SIZE_MIN` and 1.01× at 2 KiB: a buffer is 4 or 8 chunks there, so loop entry and the ramp dominate the overlap the pair exists to exploit.  The transition is between 8 and 16 chunks per buffer.
+* **Group width itself is free.**  The fixed-total control — same footprint, more states — is flat from 2 KiB to 2 MiB: every _N_ = 3 and _N_ = 4 ratio in that range is †, and none deviates from the pair by more than 3%.  The register-pressure account (two states fill the 16 ymm registers, a third and fourth spill) predicts a loss across that whole range and there is none.
+* **What a wider group pays for is footprint, and only at a cache boundary.**  In the per-buffer mode, where widening the group widens the working set, the one clean loss is 16 KiB × 4 at 0.93×: the pair's 32 KiB working set is exactly L1d and _N_ = 4's is double it.  Everything else in the cache-resident range is †, including the 1 MiB group (0.94×, 0.94×, against 6.2% and 5.4% cv).  **This supersedes the second 2026-08-12 run's 512 KiB anomaly.**  That run recorded 0.95× and 0.96× there and could not account for them; at 11 repetitions and with 256 KiB, 1 MiB and 2 MiB measured either side, 512 KiB comes out 1.00× and 1.01× and its neighbours are † as well.  The anomaly was noise that cleared a 5-repetition cv.
+* **Above L2, wider stops being free and starts winning.**  From a 4 MiB total up the control is no longer flat: all eight rows (4, 8, 16 and 256 MiB × _N_ = 3, 4) land between 1.06× and 1.11×, where every row below 4 MiB sat within 3% of the pair.  Most are individually † — 5.6–6.8% cv against a 6–9% effect — so no single one of them is a result; what is a result is that the sign is the same in all eight and the two largest clear their own noise (4 MiB _N_ = 3 at 1.09×; 256 MiB at 1.09× and 1.11×).  The per-buffer DRAM rows confirm it independently and are not † (1.07×, 1.12×).  More concurrent read streams is a memory-level-parallelism effect rather than an AES one, and one the tree's prefetcher already collects on contiguous leaf chunks.
 
-Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`), but on the measurement rather than against it — at the default chunk size a wider group is indistinguishable from the pair, so it would buy nothing to justify a second implementation.  **This supersedes the first 2026-08-12 run, whose conclusion — that a wider group loses to the pair in the tree — interpolated across the operating point from 16 KiB and 512 KiB.  Measured directly, 64 KiB shows no penalty; the 16 KiB loss is an L1d boundary the default chunk size is nowhere near.**  A wider group would still need a reason to exist: the DRAM rows are the only place it wins, and that win does not transfer.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
+Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE` a 3- or 4-wide group is 0.99× and 1.00× — indistinguishable from the pair, so a second implementation would buy nothing.  The only regime where widening trends positive is a working set already past L2 — for the tree, leaf chunks far larger than the default, and even there the win is 6–11% and mostly inside the noise of individual rows; the L1d loss at 16 KiB is the mirror image and is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
 
 ## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
 

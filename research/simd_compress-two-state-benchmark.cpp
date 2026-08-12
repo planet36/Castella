@@ -52,7 +52,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <format>
-#include <ranges>
 #include <string>
 #include <utility>
 #include <vector>
@@ -69,6 +68,45 @@ inline constexpr int MIX_RATE = node_t::DEFAULT_MIX_RATE;
 
 /// The rounds of the periodic mix permute in \c compress_castella_hash::absorb_
 inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
+
+/// Per-buffer sizes: the working set is \a N times one of these
+/**
+* Chosen to land the 2-buffer working set in L1 (2x16 KiB), L2 (2x512 KiB),
+* L3 (2x8 MiB) and DRAM (2x128 MiB), plus the two ends of the legal
+* \c --chunk-size range (1 KiB is \c CHUNK_SIZE_MIN) and this machine's
+* per-core L2 (4 MiB), where a wider group's footprint starts to cost.
+*
+* 64 KiB is the operating point rather than a cache regime: it is the tree's
+* \c DEFAULT_CHUNK_SIZE, so an N-wide leaf group holds exactly N of them, and
+* it is also the mix period (256 absorbs x a 256-byte state), so a leaf mixes
+* once.  The other sizes only bracket it.
+*/
+inline constexpr std::array buf_sizes{
+    1UL << 10,
+    16UL << 10,
+    64UL << 10,
+    512UL << 10,
+    4UL << 20,
+    8UL << 20,
+    128UL << 20,
+};
+
+/// Total working sets: the same regimes, held at the total rather than per buffer
+/**
+* Derived rather than written out, so each total is the 2-state working set of
+* the size at the same index by construction.  That is what makes the \a N = 2
+* rows of the two modes the same configuration -- the control that exposed this
+* run's cache-level noise -- and a hand-maintained copy could drift out of it.
+*/
+inline constexpr auto total_sizes = []
+{
+    auto result = buf_sizes;
+
+    for (auto& total : result)
+        total *= 2;
+
+    return result;
+}();
 
 /// One absorb of the cch bulk loop: compress one 256-byte chunk, maybe mix
 /**
@@ -250,24 +288,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     self_check<3>();
     self_check<4>();
 
-    // Per-buffer sizes chosen to land the 2-buffer working set in L1
-    // (2x16 KiB), L2 (2x512 KiB), L3 (2x8 MiB), and DRAM (2x128 MiB).
-    // (The 3- and 4-state working sets are proportionally larger.)
-    //
-    // 64 KiB is the operating point rather than a cache regime: it is the
-    // tree's DEFAULT_CHUNK_SIZE, so an N-wide leaf group holds exactly N of
-    // these, and it is also the mix period (256 absorbs x a 256-byte state),
-    // so a leaf mixes once.  The other sizes only bracket it.
-    constexpr std::array buf_sizes{
-        1UL << 10,
-        16UL << 10,
-        64UL << 10,
-        512UL << 10,
-        4UL << 20,
-        8UL << 20,
-        128UL << 20,
-    };
-
     for (const auto buf_size : buf_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {
@@ -283,34 +303,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }(std::make_index_sequence<3>{});
     }
 
-    // The same four regimes, but with the working set held at the total rather
-    // than per buffer, so that comparing N = 3 or 4 against the pair varies only
-    // the group width.  In the fixed-per-buffer rows above, a wider group also
+    // The same regimes with the working set held at the total rather than per
+    // buffer, so that comparing N = 3 or 4 against the pair varies only the
+    // group width.  In the fixed-per-buffer rows above, a wider group also
     // touches proportionally more memory -- realistic, since a tree leaf hashes
     // a fixed-size chunk however many leaves run, but it means those rows cannot
     // separate "wider is slower" from "wider fell out of this cache level".
-    // The totals are the 2-state working sets of the sizes above, so the N = 2
-    // rows of the two modes measure the same thing and should agree.
-    constexpr std::array total_sizes{
-        2UL << 10,
-        32UL << 10,
-        128UL << 10,
-        1UL << 20,
-        8UL << 20,
-        16UL << 20,
-        256UL << 20,
-    };
+    //
     // The name reports the total each row actually covers, not the one
     // requested: a buffer is a whole number of 256-byte chunks, so at the
     // smallest total N = 3 lands on 1536 B rather than 2048 (75%) and the
     // footprints are no longer equal.  Every other row is within 2%.
-    //
-    // Each total must be the 2-state working set of the size at the same
-    // index, or the N = 2 rows stop being the same configuration and the
-    // cross-check between the modes is lost.
-    static_assert(std::ranges::equal(
-        total_sizes, buf_sizes | std::views::transform([](const auto b) { return 2 * b; })));
-
     for (const auto total_size : total_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {

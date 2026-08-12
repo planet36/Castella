@@ -419,9 +419,10 @@ public:
 
     ~compress_castella_hash()
     {
-        // Defensive only: destruction concurrent with a member call is
-        // already a caller data race, but the uncontended lock is nearly
-        // free and keeps the scrub from racing a straggling call.
+        // Not a correctness guarantee: destroying an object while a member
+        // call is in flight is already a caller error.  The lock is kept
+        // because it costs nothing uncontended and makes zeroize_() run
+        // after such a call rather than underneath it.
         std::scoped_lock lock{mtx_};
 
         zeroize_();

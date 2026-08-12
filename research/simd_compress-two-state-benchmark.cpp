@@ -71,21 +71,38 @@ inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
 
 /// Per-buffer sizes: the working set is \a N times one of these
 /**
-* Chosen to land the 2-buffer working set in L1 (2x16 KiB), L2 (2x512 KiB),
-* L3 (2x8 MiB) and DRAM (2x128 MiB), plus the two ends of the legal
-* \c --chunk-size range (1 KiB is \c CHUNK_SIZE_MIN) and this machine's
-* per-core L2 (4 MiB), where a wider group's footprint starts to cost.
+* An unbroken power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 8 MiB,
+* plus 128 MiB for DRAM.  The density is the point: a widening group crosses
+* a cache boundary at some size, and only neighbouring sizes tell a boundary
+* apart from noise.  Sampling the levels alone once produced a 512 KiB
+* "anomaly" that its neighbours later showed to be noise (research/README.md).
 *
-* 64 KiB is the operating point rather than a cache regime: it is the tree's
-* \c DEFAULT_CHUNK_SIZE, so an N-wide leaf group holds exactly N of them, and
-* it is also the mix period (256 absorbs x a 256-byte state), so a leaf mixes
-* once.  The other sizes only bracket it.
+* Two sizes carry meaning beyond their regime.  1 KiB is \c CHUNK_SIZE_MIN,
+* the low end of the legal \c --chunk-size range, and only four absorbs, so
+* it bounds how short a buffer the pair can still pay on.  64 KiB is the
+* operating point: the tree's \c DEFAULT_CHUNK_SIZE, so an N-wide leaf group
+* holds exactly N of them, and also the mix period (256 absorbs x a 256-byte
+* state), so a leaf mixes once.
+*
+* The ladder is deliberately hardware-independent: it spans L1 to DRAM on
+* any current CPU without naming a cache size, so which rung sits at which
+* level is read off the run rather than assumed here.  google-benchmark
+* prints the host's cache sizes in its header, and research/README.md
+* records them alongside the run it interpreted.
 */
 inline constexpr std::array buf_sizes{
     1UL << 10,
+    2UL << 10,
+    4UL << 10,
+    8UL << 10,
     16UL << 10,
+    32UL << 10,
     64UL << 10,
+    128UL << 10,
+    256UL << 10,
     512UL << 10,
+    1UL << 20,
+    2UL << 20,
     4UL << 20,
     8UL << 20,
     128UL << 20,

@@ -115,7 +115,7 @@ using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
 /// The initial state of the LFSR used to generate the Castella round constants
 /**
-* (It's a perfectly cromulent initial value.)
+* It's a perfectly cromulent initial value.
 */
 constexpr auto lfsr_seed = lfsr_from_bytes16("expand 16-byte c");
 

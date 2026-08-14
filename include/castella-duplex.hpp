@@ -33,6 +33,7 @@
 #include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
+#include "in_range.hpp"
 #include "narrow_cast.hpp"
 #include "to_unsigned.hpp"
 
@@ -194,6 +195,7 @@ public:
     */
     // }}}
     const int8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    static_assert(in_range<decltype(C)>(C_MAX));
 
     /// The size (in blocks) of the input buffer
     // {{{
@@ -218,6 +220,7 @@ public:
     */
     // }}}
     const int8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    static_assert(in_range<decltype(R)>(R_MAX));
 
     /// The number of rounds to perform in the Castella permutation function
     // {{{
@@ -238,6 +241,7 @@ public:
     */
     // }}}
     const int8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    static_assert(in_range<decltype(NUM_ROUNDS)>(NUM_ROUNDS_MAX));
 
     /// The byte to append to the input buffer before squeezing
     // {{{

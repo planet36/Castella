@@ -15,6 +15,7 @@
 
 * `./kat` verifies every line against the current implementation (nonzero exit status on any mismatch).
 * `./kat --generate > KAT.txt` regenerates the file — only to be done when a digest format deliberately changes.  That same change voids the published targets in [CHALLENGES.md](../CHALLENGES.md), which are digests of specific instances rather than of this file's sweeps; regenerate them in the same pass.
+* `./kat --generate | diff - KAT.txt` checks that the committed file is still exactly what the generator emits.  `make test` runs this after `./kat`, and it covers what `./kat` structurally cannot: verification recomputes each digest from the line's own fields, so editing a swept *value* in `generate()` leaves the file testing the old value and every check still passes.  (Editing the *number* of vectors is already caught, by `EXPECTED_KATS`.)  A failure here means either regenerate the file or revert the sweep — it is not a digest mismatch.
 
 ### `equivalence-tests`
 

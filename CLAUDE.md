@@ -15,7 +15,8 @@ A top-level Makefile recurses into the subdirectories; each subdirectory also ha
 make
 
 # Build and run every test suite, by delegating to each subdirectory's own `test`
-# target in turn: tests (tests, kat, equivalence-tests, permute-equivalence,
+# target in turn: tests (tests, kat, `kat --generate | diff - KAT.txt`,
+# equivalence-tests, permute-equivalence,
 # duplex-diff-fuzz.py), examples, hash-programs (test-correctness.bash), and
 # research (spec-conformance.py). The two Python steps need python3, and each is
 # guarded by a check at the front of its recipe.

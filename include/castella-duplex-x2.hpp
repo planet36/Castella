@@ -305,6 +305,13 @@ private:
 
 public:
     /// ctor (same parameters, meaning, and constraints as \c Duplex::Duplex)
+    /**
+    * \exception std::invalid_argument if \a capacity_blocks or \a num_rounds
+    *            violates a constraint (see \c check_constraints_)
+    * \exception std::range_error if a value does not fit the member it
+    *            initializes; the member-init \c narrow_cast runs first, so a
+    *            wildly out-of-range value reports this rather than the above
+    */
     explicit DuplexX2(const int capacity_blocks,
                       const int num_rounds,
                       const int input_suffix = 0,

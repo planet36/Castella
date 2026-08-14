@@ -356,7 +356,7 @@ probe_fixed_point_screen()
     }
     std::println("");
 
-    return num_violations != 0;
+    return num_violations;
 }
 
 // ---- probe 3

@@ -612,8 +612,16 @@ private:
     /**
     * The lane-paired counterpart of \c absorb_left_encoded_ for a value
     * that is identical in both lanes.
+    *
+    * \a pair is constrained to the policy's own \c node_x2_type, the way
+    * \c absorb_left_encoded_ names \c node_type outright.  It stays a
+    * constrained placeholder rather than that type spelled directly, so
+    * that the reference to \c NodePolicy::node_x2_type is checked only if
+    * this is called -- which a policy without \c HAS_PAIRED_LEAF never
+    * does, and such a policy has no such type to name.
     */
-    static void absorb_left_encoded_x2_(auto& pair, const std::unsigned_integral auto x)
+    static void absorb_left_encoded_x2_(std::same_as<typename NodePolicy::node_x2_type> auto& pair,
+                                        const std::unsigned_integral auto x)
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 

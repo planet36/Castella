@@ -11,6 +11,7 @@
 
 #include <array>
 #include <bit>
+#include <cstddef>
 
 static_assert(std::endian::native == std::endian::little,
               "little-endian host required (integer length encodings and "

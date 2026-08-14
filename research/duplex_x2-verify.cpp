@@ -24,6 +24,7 @@
 #include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
+#include "to_unsigned.hpp"
 
 #include <cassert>
 #include <cstddef>

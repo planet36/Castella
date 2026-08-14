@@ -10,7 +10,9 @@
 
 #pragma once
 
+#include "castella-permute.hpp"
 #include "cch.hpp"
+#include "simd_compress.hpp"
 
 #if defined(DEBUG)
 #include <cassert>

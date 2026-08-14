@@ -33,6 +33,7 @@
 #include <cstring>
 #include <span>
 #include <stdexcept>
+#include <string.h> // explicit_bzero
 #include <string_view>
 #if defined(DEBUG)
 #include <utility>

@@ -30,6 +30,7 @@
 #include <mutex>
 #include <span>
 #include <stdexcept>
+#include <string.h> // explicit_bzero
 #include <string_view>
 #include <utility>
 #include <vector>

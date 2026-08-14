@@ -18,7 +18,7 @@ FAIL=0
 # Without it a deleted assertion still reports "0 failed" and exits 0,
 # so the script could not report success on the assertions that did run.
 # Update this when assertions are added or removed.
-declare -r EXPECTED_ASSERTIONS=99
+declare -r EXPECTED_ASSERTIONS=117
 
 function assert_eq_cmd_str
 {
@@ -34,7 +34,7 @@ function assert_eq_cmd_str
     if ((EXIT_STATUS))
     then
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nexit status = %d\n' \
             "${FUNCNAME[0]}" "$CMD" "$EXIT_STATUS" 1>&2
         return 1
     fi
@@ -64,7 +64,7 @@ function assert_eq_cmd_cmd
     if ((EXIT_STATUS))
     then
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nexit status = %d\n' \
             "${FUNCNAME[0]}" "$CMD1" "$EXIT_STATUS" 1>&2
         return 1
     fi
@@ -76,7 +76,7 @@ function assert_eq_cmd_cmd
     if ((EXIT_STATUS))
     then
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nexit status = %d\n' \
             "${FUNCNAME[0]}" "$CMD2" "$EXIT_STATUS" 1>&2
         return 1
     fi
@@ -106,7 +106,7 @@ function assert_neq_cmd_cmd
     if ((EXIT_STATUS))
     then
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nexit status = %d\n' \
             "${FUNCNAME[0]}" "$CMD1" "$EXIT_STATUS" 1>&2
         return 1
     fi
@@ -118,7 +118,7 @@ function assert_neq_cmd_cmd
     if ((EXIT_STATUS))
     then
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nexit status = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nexit status = %d\n' \
             "${FUNCNAME[0]}" "$CMD2" "$EXIT_STATUS" 1>&2
         return 1
     fi
@@ -151,8 +151,29 @@ function assert_eq_cmd_str_status
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand = %s\nactual   = %s (exit status %d)\nexpected = %s (exit status %d)\n' \
+        printf '%s FAIL:\ncommand  = %s\nactual   = %s (exit status %d)\nexpected = %s (exit status %d)\n' \
             "${FUNCNAME[0]}" "$CMD" "$ACTUAL" "$EXIT_STATUS" "$EXPECTED" "$EXPECTED_STATUS" 1>&2
+        return 1
+    fi
+}
+
+function assert_eq_cmd_exit_status
+{
+    local CMD="$1"
+    local EXPECTED_STATUS="$2"
+
+    local EXIT_STATUS
+
+    eval "$CMD" > /dev/null
+    EXIT_STATUS=$?
+
+    if ((EXIT_STATUS == EXPECTED_STATUS))
+    then
+        ((PASS++))
+    else
+        ((FAIL++))
+        printf '%s FAIL:\ncommand  = %s\nactual   = %d\nexpected = %d\n' \
+            "${FUNCNAME[0]}" "$CMD" "$EXIT_STATUS" "$EXPECTED_STATUS" 1>&2
         return 1
     fi
 }
@@ -714,6 +735,84 @@ assert_eq_cmd_str_status \
 assert_eq_cmd_str_status \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin ${CASTELLA_TMP}/test-100KB.txt | ./castella --check - 2>/dev/null' \
     "'${CASTELLA_TMP}/test-100KB.txt': FAILED" \
+    1
+
+# Out-of-range option values must be rejected, not silently clamped.
+# --rounds and --size are digest-relevant, so a value outside the supported
+# range must not produce a digest at all.
+
+assert_eq_cmd_exit_status \
+    './castella --rounds=2 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --rounds=17 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --size=0 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --size=65 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --chunk-size=1023 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --chunk-size=1073741825 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --num-threads=1025 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --size=0 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --size=65 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --chunk-size=1023 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --chunk-size=1073741825 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --num-threads=1025 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --mix-rate=2049 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+# A missing file, and an unrecognized option, are errors for both programs.
+
+assert_eq_cmd_exit_status \
+    './castella --key-file=${CASTELLA_TMP}/no-such-key ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella ${CASTELLA_TMP}/no-such-input 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch ${CASTELLA_TMP}/no-such-input 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --no-such-option ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --no-such-option ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
     1
 
 echo "$PASS of $EXPECTED_ASSERTIONS passed ($FAIL failed)"

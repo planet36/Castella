@@ -164,5 +164,15 @@ operator+(const running_stats<T>& a, const running_stats<T>& b)
         6 * delta2 * (a.n * a.n * b.M2 + b.n * b.n * a.M2) / (combined.n * combined.n) +
         4 * delta * (a.n * b.M3 - b.n * a.M3) / combined.n;
 
+    // The remaining members combine directly, the same way push() accumulates
+    // them.  fmin/fmax carry the empty-object NaN sentinel through: merging an
+    // empty object leaves the other one's extrema.
+    combined._sum = a._sum + b._sum;
+    combined._min = std::fmin(a._min, b._min);
+    combined._max = std::fmax(a._max, b._max);
+    combined._sum_abs = a._sum_abs + b._sum_abs;
+    combined._min_abs = std::fmin(a._min_abs, b._min_abs);
+    combined._max_abs = std::fmax(a._max_abs, b._max_abs);
+
     return combined;
 }

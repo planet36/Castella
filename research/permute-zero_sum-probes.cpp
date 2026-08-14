@@ -37,6 +37,7 @@
 #include "castella-permute.hpp"
 #include "parse_int.hpp"
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstdint>
@@ -52,8 +53,13 @@ using bytes_t = std::array<uint8_t, state_size_bytes>;
 static_assert(state_size_bytes == B * B);
 
 inline constexpr int NUM_BASES = 32;
-inline constexpr std::array CUBE_SIZES{8, 12, 16};
+
 inline constexpr int MAX_CUBE_SIZE = 16;
+static_assert(MAX_CUBE_SIZE < 32);
+
+inline constexpr std::array CUBE_SIZES{8, 12, 16};
+static_assert(std::ranges::max(CUBE_SIZES) <= MAX_CUBE_SIZE);
+
 inline constexpr int STATE_BITS = state_size_bytes * 8;
 
 static bytes_t

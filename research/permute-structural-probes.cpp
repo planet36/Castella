@@ -330,7 +330,7 @@ probe_subspace_escape(const int num_samples)
 static int
 probe_fixed_point_screen()
 {
-    int num_violations = 0;
+    int num_failed_checks = 0;
 
     for (int v = 0; v <= 0xFF; ++v)
     {
@@ -341,13 +341,13 @@ probe_fixed_point_screen()
         for (int num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
         {
             const auto y = permuted_bytes(x, num_rounds);
-            num_violations += (y == x) + (y == x_t);
+            num_failed_checks += (y == x) + (y == x_t);
         }
     }
 
-    if (num_violations != 0)
+    if (num_failed_checks != 0)
     {
-        std::println("FAIL: {} fixed-point-screen violations", num_violations);
+        std::println("FAIL: {} fixed-point-screen violations", num_failed_checks);
     }
     else
     {
@@ -356,7 +356,7 @@ probe_fixed_point_screen()
     }
     std::println("");
 
-    return num_violations;
+    return num_failed_checks;
 }
 
 // ---- probe 3

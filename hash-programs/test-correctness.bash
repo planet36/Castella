@@ -147,6 +147,25 @@ function assert_eq_cmd_str_status
     fi
 }
 
+# Print the first whitespace-separated field of each input line
+#
+# This replaces `cut -w -f 1`, which needs coreutils >= 9.11 (released
+# 2026-04-20).  On anything older, `cut` rejects `-w` and the assertions below
+# fail as if the digests had changed, which is the worst way for this script to
+# break: it is the gate rerun after every digest-relevant change.  Doing it in
+# the shell also spawns no process -- measured an order of magnitude cheaper
+# than either `cut` form across the ~100 call sites.
+function first_field
+{
+    local INPUT_LINE
+
+    # The `|| [[ -n $INPUT_LINE ]]` keeps a final line that has no newline.
+    while IFS= read -r INPUT_LINE || [[ -n "$INPUT_LINE" ]]
+    do
+        printf '%s\n' "${INPUT_LINE%%[[:space:]]*}"
+    done
+}
+
 # Create the input data files.  The size of each file is in its name.
 #     0 B  : only padding is absorbed
 #   100 B  : smaller than one 256-byte chunk
@@ -187,7 +206,7 @@ set -o pipefail
 # 2026-07-05; the castella digests below were regenerated for the tree
 # format.
 #
-# `cut -w -f 1` reads the untagged digest format, so the assertions below pass
+# `first_field` reads the untagged digest format, so the assertions below pass
 # --untagged rather than rely on the default format.
 
 CUSTOM='hash'
@@ -195,19 +214,19 @@ ROUNDS=3
 SUFFIX=0
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     28972bdafe8179d94cadc226523f5619
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     c49fdd8a0c2f0d25be7a23b8801fbdb57d6eb6f20f04f289c7fc8ac5ca610ab7
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     295f2570600b59ec63b58ae93fecb1fe025fe19018ea2a2f9e4e41652716b36898bcaf9b31d4ccb5933c000f354e97ee
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS  --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     32c7917372fa301f4fde2585ae371539da2152ba63c36ecb74a5dda63756af69ecb47bc543c7c8c6c3b97125b41e8afe9684f3bfbf00d0306dd5adb923aa5bfe
 
 CUSTOM='¡Ay, caramba!'
@@ -215,35 +234,35 @@ ROUNDS=16
 SUFFIX=105
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=16 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     e8394ac8c21b209ade9b7501c56bfc1e
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     679d8b01ff5db3c821de89aec8ffe5b8b200488b2a3451162b24a60c31e419d3
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=48 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     f3110931f131afb9c36fde659e10b883639241543ae72fa583a42878c9fcb12311e1c20ce082beab672f654e5b04ae00
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=64 --suffix=$SUFFIX /tmp/test-1MiB.txt | first_field" \
     b1517ca48696ff050ed10f3eb3696f5000838212716705ff81b4421d8bb3d8655924b3285fc14c32bd69a1884d84b5f6159292a23a48053cc9c043e5810952a5
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=16 /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./cch --untagged --size=16 /tmp/test-1MiB.txt | first_field" \
     3bfc271b111cc49f0ef7f1670a8a82e0
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=32 /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./cch --untagged --size=32 /tmp/test-1MiB.txt | first_field" \
     3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=48 /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./cch --untagged --size=48 /tmp/test-1MiB.txt | first_field" \
     3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e2
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=64 /tmp/test-1MiB.txt | cut -w -f 1" \
+    "./cch --untagged --size=64 /tmp/test-1MiB.txt | first_field" \
     3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e22a32d96452965e8add103afae3cdfd11
 
 # Verify known output for input sizes that exercise boundary conditions.
@@ -255,74 +274,74 @@ ROUNDS=3
 SUFFIX=0
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-0B.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-0B.txt | first_field" \
     6d7cfcfab9493b5fc842ba35e82c79de66addefe151c7d924a2d23450bb680fa
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100B.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100B.txt | first_field" \
     023b50ff0a3e8a8822e4778548270f6e2e884ba0335428dbff1e051ab44f091f
 
 assert_eq_cmd_str \
-    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100KB.txt | cut -w -f 1" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=$ROUNDS --size=32 --suffix=$SUFFIX /tmp/test-100KB.txt | first_field" \
     14a592e9d6cdfcab5d5cd8654a3a0ea8734e40c6ce0a2767db5fae0520c8a465
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=32 /tmp/test-0B.txt | cut -w -f 1" \
+    "./cch --untagged --size=32 /tmp/test-0B.txt | first_field" \
     7e4d0aa073e24b82d722a96dc60688a7fd09d91c7ced878390dd3966a67ee720
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=32 /tmp/test-100B.txt | cut -w -f 1" \
+    "./cch --untagged --size=32 /tmp/test-100B.txt | first_field" \
     d587cc3a946df1f14f0e018a05cf35f0712d4ed97dcf0394ec7f69683d95fda6
 
 assert_eq_cmd_str \
-    "./cch --untagged --size=32 /tmp/test-100KB.txt | cut -w -f 1" \
+    "./cch --untagged --size=32 /tmp/test-100KB.txt | first_field" \
     d3fd974b1067998f82a7f70039a99d141271b42eb6753f434eaee044ead8b543
 
 # Verify that different "--custom" values give distinct results.
 
 assert_neq_cmd_cmd \
-    './castella --untagged --custom="Bart" /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --custom="Lisa" /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --custom="Bart" /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --custom="Lisa" /tmp/test-1MiB.txt | first_field'
 
 # Verify that different "--rounds" values give distinct results.
 
 assert_neq_cmd_cmd \
-    './castella --untagged --rounds=4 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --rounds=8 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --rounds=4 /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --rounds=8 /tmp/test-1MiB.txt | first_field'
 
 # Verify that different "--size" values give distinct results.
 
 assert_neq_cmd_cmd \
-    './castella --untagged --size=16 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --size=32 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --size=16 /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --size=32 /tmp/test-1MiB.txt | first_field'
 
 # Verify that the default ROUNDS is 6 when SIZE <= 48.
 # (See SPEC.md "Margin rationale")
 
 assert_eq_cmd_cmd \
-    './castella --untagged --size=48            /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --size=48 --rounds=6 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --size=48            /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --size=48 --rounds=6 /tmp/test-1MiB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './castella --untagged --size=48            /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --size=48 --rounds=8 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --size=48            /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --size=48 --rounds=8 /tmp/test-1MiB.txt | first_field'
 
 # Verify that the default ROUNDS is 8 when SIZE > 48.
 # (See SPEC.md "Margin rationale")
 
 assert_eq_cmd_cmd \
-    './castella --untagged --size=49            /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --size=49 --rounds=8 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --size=49            /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --size=49 --rounds=8 /tmp/test-1MiB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './castella --untagged --size=49            /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --size=49 --rounds=6 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --size=49            /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --size=49 --rounds=6 /tmp/test-1MiB.txt | first_field'
 
 # Verify that different "--suffix" values give distinct results.
 
 assert_neq_cmd_cmd \
-    './castella --untagged --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --suffix=184 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --suffix=105 /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --suffix=184 /tmp/test-1MiB.txt | first_field'
 
 # Verify "--no-mmap" option produces the same output.  The I/O mode is
 # orthogonal to every digest parameter, so one parameter set per program
@@ -330,28 +349,28 @@ assert_neq_cmd_cmd \
 # below.
 
 assert_eq_cmd_cmd \
-    "./castella --untagged --custom='hash'           --rounds=3  --suffix=0   /tmp/test-1MiB.txt | cut -w -f 1" \
-    "./castella --untagged --custom='hash' --no-mmap --rounds=3  --suffix=0   /tmp/test-1MiB.txt | cut -w -f 1"
+    "./castella --untagged --custom='hash'           --rounds=3  --suffix=0   /tmp/test-1MiB.txt | first_field" \
+    "./castella --untagged --custom='hash' --no-mmap --rounds=3  --suffix=0   /tmp/test-1MiB.txt | first_field"
 
 assert_eq_cmd_cmd \
-    "./castella --untagged --custom='¡Ay, caramba!'           --rounds=16 --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1" \
-    "./castella --untagged --custom='¡Ay, caramba!' --no-mmap --rounds=16 --suffix=105 /tmp/test-1MiB.txt | cut -w -f 1"
+    "./castella --untagged --custom='¡Ay, caramba!'           --rounds=16 --suffix=105 /tmp/test-1MiB.txt | first_field" \
+    "./castella --untagged --custom='¡Ay, caramba!' --no-mmap --rounds=16 --suffix=105 /tmp/test-1MiB.txt | first_field"
 
 assert_eq_cmd_cmd \
-    './cch --untagged           /tmp/test-1MiB.txt | cut -w -f 1' \
-    './cch --untagged --no-mmap /tmp/test-1MiB.txt | cut -w -f 1'
+    './cch --untagged           /tmp/test-1MiB.txt | first_field' \
+    './cch --untagged --no-mmap /tmp/test-1MiB.txt | first_field'
 
 # Verify "--no-mmap" produces the same output for an input size that is large
 # enough to be memory-mapped and is not a multiple of any internal block size.
 # (Inputs smaller than the read block size never take the mmap path.)
 
 assert_eq_cmd_cmd \
-    './castella --untagged           /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged           /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --no-mmap /tmp/test-100KB.txt | first_field'
 
 assert_eq_cmd_cmd \
-    './cch --untagged           /tmp/test-100KB.txt | cut -w -f 1' \
-    './cch --untagged --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+    './cch --untagged           /tmp/test-100KB.txt | first_field' \
+    './cch --untagged --no-mmap /tmp/test-100KB.txt | first_field'
 
 # Verify reading from standard input produces the same output as reading from
 # a file.  A pipe exercises the non-seekable path, where read may return
@@ -359,20 +378,20 @@ assert_eq_cmd_cmd \
 # exercises the seekable (memory-mappable) standard input path.
 
 assert_eq_cmd_cmd \
-    'cat /tmp/test-100KB.txt | ./castella --untagged - | cut -w -f 1' \
-    './castella --untagged /tmp/test-100KB.txt | cut -w -f 1'
+    'cat /tmp/test-100KB.txt | ./castella --untagged - | first_field' \
+    './castella --untagged /tmp/test-100KB.txt | first_field'
 
 assert_eq_cmd_cmd \
-    'cat /tmp/test-100KB.txt | ./cch --untagged - | cut -w -f 1' \
-    './cch --untagged /tmp/test-100KB.txt | cut -w -f 1'
+    'cat /tmp/test-100KB.txt | ./cch --untagged - | first_field' \
+    './cch --untagged /tmp/test-100KB.txt | first_field'
 
 assert_eq_cmd_cmd \
-    './castella --untagged - < /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged - < /tmp/test-100KB.txt | first_field' \
+    './castella --untagged /tmp/test-100KB.txt | first_field'
 
 assert_eq_cmd_cmd \
-    './cch --untagged - < /tmp/test-100KB.txt | cut -w -f 1' \
-    './cch --untagged /tmp/test-100KB.txt | cut -w -f 1'
+    './cch --untagged - < /tmp/test-100KB.txt | first_field' \
+    './cch --untagged /tmp/test-100KB.txt | first_field'
 
 # Verify that "--num-threads" NEVER affects the digest, in both programs.
 # The digest is defined by the hash tree alone (chunk boundaries fall at
@@ -389,90 +408,90 @@ assert_eq_cmd_cmd \
 for NT in 2 0
 do
     assert_eq_cmd_cmd \
-        "./castella --untagged --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
-        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "./castella --untagged --num-threads=$NT /tmp/test-1MiB.txt | first_field" \
+        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./castella --untagged --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
-        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "./castella --untagged --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | first_field" \
+        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "cat /tmp/test-1MiB.txt | ./castella --untagged --num-threads=$NT - | cut -w -f 1" \
-        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "cat /tmp/test-1MiB.txt | ./castella --untagged --num-threads=$NT - | first_field" \
+        './castella --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./castella --untagged --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
-        './castella --untagged --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
+        "./castella --untagged --num-threads=$NT /tmp/test-100KB.txt | first_field" \
+        './castella --untagged --num-threads=1 /tmp/test-100KB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./castella --untagged --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
-        './castella --untagged --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
+        "./castella --untagged --num-threads=$NT --no-mmap /tmp/test-100KB.txt | first_field" \
+        './castella --untagged --num-threads=1 /tmp/test-100KB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./cch --untagged --num-threads=$NT /tmp/test-1MiB.txt | cut -w -f 1" \
-        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "./cch --untagged --num-threads=$NT /tmp/test-1MiB.txt | first_field" \
+        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./cch --untagged --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | cut -w -f 1" \
-        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "./cch --untagged --num-threads=$NT --no-mmap /tmp/test-1MiB.txt | first_field" \
+        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "cat /tmp/test-1MiB.txt | ./cch --untagged --num-threads=$NT - | cut -w -f 1" \
-        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | cut -w -f 1'
+        "cat /tmp/test-1MiB.txt | ./cch --untagged --num-threads=$NT - | first_field" \
+        './cch --untagged --num-threads=1 /tmp/test-1MiB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./cch --untagged --num-threads=$NT /tmp/test-100KB.txt | cut -w -f 1" \
-        './cch --untagged --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
+        "./cch --untagged --num-threads=$NT /tmp/test-100KB.txt | first_field" \
+        './cch --untagged --num-threads=1 /tmp/test-100KB.txt | first_field'
 
     assert_eq_cmd_cmd \
-        "./cch --untagged --num-threads=$NT --no-mmap /tmp/test-100KB.txt | cut -w -f 1" \
-        './cch --untagged --num-threads=1 /tmp/test-100KB.txt | cut -w -f 1'
+        "./cch --untagged --num-threads=$NT --no-mmap /tmp/test-100KB.txt | first_field" \
+        './cch --untagged --num-threads=1 /tmp/test-100KB.txt | first_field'
 done
 
 # Verify that different "--chunk-size" values give distinct results.
 # The chunk size, unlike the thread count, is part of the digest format.
 
 assert_neq_cmd_cmd \
-    './castella --untagged --chunk-size=16384 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './castella --untagged --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
+    './castella --untagged --chunk-size=16384 /tmp/test-1MiB.txt | first_field' \
+    './castella --untagged --chunk-size=32768 /tmp/test-1MiB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './cch --untagged --chunk-size=16384 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './cch --untagged --chunk-size=32768 /tmp/test-1MiB.txt | cut -w -f 1'
+    './cch --untagged --chunk-size=16384 /tmp/test-1MiB.txt | first_field' \
+    './cch --untagged --chunk-size=32768 /tmp/test-1MiB.txt | first_field'
 
 # Verify that a non-default "--chunk-size" is also independent of the thread
 # count and the I/O mode.  4096 makes the 100 KB file span 24 full chunks
 # plus a partial one.
 
 assert_eq_cmd_cmd \
-    './castella --untagged --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | first_field'
 
 assert_eq_cmd_cmd \
-    './cch --untagged --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
-    './cch --untagged --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+    './cch --untagged --chunk-size=4096 --num-threads=0           /tmp/test-100KB.txt | first_field' \
+    './cch --untagged --chunk-size=4096 --num-threads=1 --no-mmap /tmp/test-100KB.txt | first_field'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
 # The input file size must be at least 512 Bytes (twice the state size).
 
 assert_neq_cmd_cmd \
-    './cch --untagged --mix-rate=0 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './cch --untagged --mix-rate=1 /tmp/test-1MiB.txt | cut -w -f 1'
+    './cch --untagged --mix-rate=0 /tmp/test-1MiB.txt | first_field' \
+    './cch --untagged --mix-rate=1 /tmp/test-1MiB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './cch --untagged --mix-rate=1 /tmp/test-1MiB.txt | cut -w -f 1' \
-    './cch --untagged --mix-rate=2 /tmp/test-1MiB.txt | cut -w -f 1'
+    './cch --untagged --mix-rate=1 /tmp/test-1MiB.txt | first_field' \
+    './cch --untagged --mix-rate=2 /tmp/test-1MiB.txt | first_field'
 
 # Verify that different "--mix-rate" values give distinct results even for
 # inputs too short to trigger a mix.
 
 assert_neq_cmd_cmd \
-    './cch --untagged --mix-rate=0    /tmp/test-1KiB.txt | cut -w -f 1' \
-    './cch --untagged --mix-rate=256  /tmp/test-1KiB.txt | cut -w -f 1'
+    './cch --untagged --mix-rate=0    /tmp/test-1KiB.txt | first_field' \
+    './cch --untagged --mix-rate=256  /tmp/test-1KiB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './cch --untagged --mix-rate=256  /tmp/test-1KiB.txt | cut -w -f 1' \
-    './cch --untagged --mix-rate=2048 /tmp/test-1KiB.txt | cut -w -f 1'
+    './cch --untagged --mix-rate=256  /tmp/test-1KiB.txt | first_field' \
+    './cch --untagged --mix-rate=2048 /tmp/test-1KiB.txt | first_field'
 
 # Verify known output around the first-mix boundary.
 # /tmp/test-64KiB.txt is exactly one tree chunk (chunk 0, absorbed directly
@@ -484,15 +503,15 @@ assert_neq_cmd_cmd \
 # --mix-rate=258 never mixes.
 
 assert_eq_cmd_str \
-    './cch --untagged --mix-rate=256 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
+    './cch --untagged --mix-rate=256 --size=32 /tmp/test-64KiB.txt | first_field' \
     1b65963b62d9fd9baadae6c2f746e03a1a705e56217cb1c552a1d8c706638cc7
 
 assert_eq_cmd_str \
-    './cch --untagged --mix-rate=257 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
+    './cch --untagged --mix-rate=257 --size=32 /tmp/test-64KiB.txt | first_field' \
     c6b83550110ae90160637d71613ca6d797d7964c2658d80356eb60e4d887ccad
 
 assert_eq_cmd_str \
-    './cch --untagged --mix-rate=258 --size=32 /tmp/test-64KiB.txt | cut -w -f 1' \
+    './cch --untagged --mix-rate=258 --size=32 /tmp/test-64KiB.txt | first_field' \
     a1bb08ddfb736a5e10ad5a75488876556905dbaf6e41b762d16ddb24ceaa8ff1
 
 # Verify the output format selection.  The tagged format is the default;
@@ -646,31 +665,31 @@ printf 'Duff'     > /tmp/test-key2.bin || exit
 # chunk 0, function name "Castella-MAC", trailing right_encode of the size).
 
 assert_eq_cmd_str \
-    './castella --untagged --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | cut -w -f 1' \
+    './castella --untagged --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | first_field' \
     3072378b717dd04714e99e74bc2050b82ce0ce3deff877d28bee041481cf953d
 
 # A keyed digest differs from the unkeyed digest, and differs per key.
 
 assert_neq_cmd_cmd \
-    './castella --untagged                               /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged                               /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | first_field'
 
 assert_neq_cmd_cmd \
-    './castella --untagged --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --key-file=/tmp/test-key2.bin /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged --key-file=/tmp/test-key1.bin /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --key-file=/tmp/test-key2.bin /tmp/test-100KB.txt | first_field'
 
 # The thread count and the I/O mode still never affect a keyed digest.
 
 assert_eq_cmd_cmd \
-    './castella --untagged --key-file=/tmp/test-key1.bin --num-threads=0           /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --key-file=/tmp/test-key1.bin --num-threads=1 --no-mmap /tmp/test-100KB.txt | cut -w -f 1'
+    './castella --untagged --key-file=/tmp/test-key1.bin --num-threads=0           /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --key-file=/tmp/test-key1.bin --num-threads=1 --no-mmap /tmp/test-100KB.txt | first_field'
 
 # A 16-byte MAC is not a truncation of the 32-byte MAC (the trailing
 # right_encode of the output size makes different sizes unrelated).
 
 assert_neq_cmd_cmd \
-    './castella --untagged --key-file=/tmp/test-key1.bin --size=16 /tmp/test-100KB.txt | cut -w -f 1' \
-    './castella --untagged --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | cut -w -f 1 | head -c 32'
+    './castella --untagged --key-file=/tmp/test-key1.bin --size=16 /tmp/test-100KB.txt | first_field' \
+    './castella --untagged --key-file=/tmp/test-key1.bin --size=32 /tmp/test-100KB.txt | first_field | head -c 32'
 
 # A keyed digest verifies only with the same key: --check with the right
 # key succeeds, and with the wrong key or no key it must FAIL (the key is

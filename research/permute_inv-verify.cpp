@@ -1,6 +1,26 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+/// Verify that the inverse permutation undoes the forward one
+/**
+* \file
+* \author Steven Ward
+*
+* For zero, all-distinct-byte and random states, at every state size and
+* every round count, verify that
+*
+*     permute_inv(permute(state, num_rounds), num_rounds) == state
+*
+* and that the forward permutation moved the state at all.
+*
+* This is what keeps permute_inv generic while permute is not.  Under VAES,
+* permute dispatches to permute_folded; the inverse has no folded form and is
+* always permute_generic, so a successful round trip says the folded forward
+* path agrees with the one the unchanged inverse was written against.
+* tests/permute-equivalence.cpp compares the two forward paths directly; this
+* program is the check that does not depend on either of them being right.
+*/
+
 #if !defined(DEBUG)
 #define DEBUG 1
 #endif

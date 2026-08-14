@@ -17,8 +17,8 @@ halves composed into a 4-round inside-out zero-sum.
 Nothing had checked the argument itself.  This program does, two ways that
 fail independently.
 
-Part A -- the premises, at full width and exactly
--------------------------------------------------
+Part A -- the premises, at full width
+------------------------------------
 The argument's four premises are each decidable on the real 16x16 state,
 against the permutation in spec-conformance.py (an independent
 implementation of SPEC.md, pinned to the C++ by tests/KAT.txt):

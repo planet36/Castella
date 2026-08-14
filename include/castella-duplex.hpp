@@ -781,6 +781,11 @@ public:
     * \param input_suffix the byte to append to the input buffer before squeezing
     * \param function_name a string for algorithm domain separation; like \e N in cSHAKE terminology
     * \param customization_str a string for user-defined domain separation; like \e S in cSHAKE terminology
+    * \exception std::invalid_argument if \a capacity_blocks or \a num_rounds
+    *            violates a constraint (see \c check_constraints_)
+    * \exception std::range_error if either does not fit the member it
+    *            initializes; the member-init \c narrow_cast runs first, so a
+    *            wildly out-of-range value reports this rather than the above
     * \pre \a capacity_blocks is even
     */
     // }}}

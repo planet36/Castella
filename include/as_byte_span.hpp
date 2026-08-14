@@ -13,6 +13,12 @@
 #include <ranges>
 #include <span>
 
+/// Get a view to a single object as a span of bytes
+/**
+* \param x the object to view
+* \return a \c std::span of <code>const std::byte</code> over the object
+*         representation of \a x
+*/
 template <typename T>
 requires (!std::ranges::contiguous_range<T>)
 [[nodiscard]] constexpr auto
@@ -21,6 +27,12 @@ as_byte_span(const T& x) noexcept
     return std::as_bytes(std::span(std::addressof(x), 1));
 }
 
+/// Get a view to the elements of a contiguous range as a span of bytes
+/**
+* \param container the range to view
+* \return a \c std::span of <code>const std::byte</code> over the elements of
+*         \a container
+*/
 [[nodiscard]] constexpr auto
 as_byte_span(const std::ranges::contiguous_range auto& container) noexcept
 {

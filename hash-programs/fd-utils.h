@@ -129,6 +129,7 @@ acq_read_lock_fd(int fd)
         .l_pid = 0,
     };
 
+    // F_OFD_SETLKW blocks until the lock is acquired.
     // Use F_OFD_SETLK for non-blocking behavior.
     return fcntl(fd, F_OFD_SETLKW, &lock);
 }
@@ -177,6 +178,7 @@ acq_write_lock_fd(int fd)
         .l_pid = 0,
     };
 
+    // F_OFD_SETLKW blocks until the lock is acquired.
     // Use F_OFD_SETLK for non-blocking behavior.
     return fcntl(fd, F_OFD_SETLKW, &lock);
 }
@@ -184,7 +186,7 @@ acq_write_lock_fd(int fd)
 /// Releases an OFD lock held on an entire file.
 /**
 * Applies \c F_UNLCK over the whole file (offset 0, length 0) using
-* \c F_OFD_SETLKW, unconditionally releasing any read or write OFD lock
+* \c F_OFD_SETLK, unconditionally releasing any read or write OFD lock
 * held by the current open file description.
 *
 * \param fd  Open file descriptor whose lock should be released.

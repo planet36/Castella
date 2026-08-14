@@ -38,6 +38,10 @@ static_assert(std::endian::native == std::endian::little,
 * unambiguously parsed from the beginning of the string by inserting the
 * length of the byte string before the byte string representation of 𝑥.
 * </blockquote>
+*
+* \param x the integer to encode
+* \return a \c fixed_vector holding the encoding: the significant bytes of
+*         \a x in little-endian order, with their count before them
 */
 [[nodiscard]] static auto
 left_encode(const std::unsigned_integral auto x) noexcept
@@ -69,6 +73,10 @@ left_encode(const std::unsigned_integral auto x) noexcept
 * unambiguously parsed from the end of the string by inserting the length of
 * the byte string after the byte string representation of 𝑥.
 * </blockquote>
+*
+* \param x the integer to encode
+* \return a \c fixed_vector holding the encoding: the significant bytes of
+*         \a x in little-endian order, with their count after them
 */
 [[nodiscard]] static auto
 right_encode(const std::unsigned_integral auto x) noexcept

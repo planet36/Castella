@@ -70,7 +70,10 @@ Usage
 only route to a trail at N=16 above r=4, where the trail search's own pattern
 stage has never returned one while this model solves the cell in minutes.
 
-Requires the PuLP package (pip install pulp), which bundles the CBC solver.
+Requires the PuLP package (pip install pulp), which bundles the CBC solver,
+and highspy for --solver highs.  Install both: --solver defaults to cbc when
+highspy is absent, and CBC has never proved N=16 above r=3 at any time limit
+tried, where HiGHS closes r=4, 5 and 6 (RE-DERIVATION-RUNBOOK.md).
 """
 
 import argparse

@@ -81,12 +81,18 @@ parse_int(std::string_view s,
 * \param max the maximum allowed value (inclusive)
 * \param option_name the option name, used in the error message
 * \return the parsed value
-* \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits (via \c errx); it does not return.
+* \note On a null, malformed, or out-of-range value this prints a diagnostic
+*       and exits (via \c errx); it does not return.
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
 {
+    if (optarg == nullptr)
+    {
+        (void)std::fflush(stdout);
+        errx(EXIT_FAILURE, "null argument: %s", option_name);
+    }
+
     const auto value = parse_int<int>(optarg, min, max);
 
     if (!value.has_value())
@@ -108,8 +114,8 @@ parse_option_int(const char* optarg, const int min, const int max, const char* o
 * \param option_name the option name, used in the error message
 * \return the parsed value
 * \note The parsed value is bounded only by the range of \c int.
-* \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits (via \c errx); it does not return.
+* \note On a null, malformed, or out-of-range value this prints a diagnostic
+*       and exits (via \c errx); it does not return.
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const char* option_name)

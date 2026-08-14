@@ -89,6 +89,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
+    if (num_samples < 1) // NOLINT(readability-use-std-min-max)
+    {
+        num_samples = 1;
+    }
+
     // 0 disables periodic mixing; small rates mix within a few chunks.
     constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
                                  compress_castella_hash<>::MIX_RATE_MAX};

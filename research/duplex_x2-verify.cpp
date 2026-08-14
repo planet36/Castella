@@ -104,6 +104,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
+    if (num_samples < 1) // NOLINT(readability-use-std-min-max)
+    {
+        num_samples = 1;
+    }
+
     for (int i = 0; i < num_samples; ++i)
     {
         for (auto capacity_blocks = Castella::Duplex::C_MIN;

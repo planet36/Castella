@@ -505,6 +505,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
+    if (num_samples < 1) // NOLINT(readability-use-std-min-max)
+    {
+        num_samples = 1;
+    }
+
     std::println("## num_samples: {}", num_samples);
     std::println("");
 

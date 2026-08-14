@@ -113,6 +113,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
+    if (num_samples < 1) // NOLINT(readability-use-std-min-max)
+    {
+        num_samples = 1;
+    }
+
     test_permute_bytes_zero<2>();
     test_permute_bytes_zero<4>();
     test_permute_bytes_zero<8>();

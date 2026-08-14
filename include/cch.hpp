@@ -404,6 +404,18 @@ public:
         bind_mix_rate_();
     }
 
+    /// ctor
+    // {{{
+    /**
+    * \param mix_rate the number of absorptions between periodic mixes; 0 disables mixing
+    * \exception std::invalid_argument if \a mix_rate violates a constraint
+    *            (see \c check_constraints_)
+    * \exception std::range_error if \a mix_rate does not fit \c mix_rate_
+    *            (an \c int16_t); the member-init \c narrow_cast runs before
+    *            the body, so a wildly out-of-range value reports this rather
+    *            than the above
+    */
+    // }}}
     explicit compress_castella_hash(const int mix_rate) :
     mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {

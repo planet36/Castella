@@ -15,13 +15,17 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <print>
 #include <unistd.h>
 
+/// \return the number of round trips made
 template <size_t N>
-void
+int
 test_permute(const Castella::arr_blocks<N>& state)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
+
+    int num_round_trips = 0;
 
     for (auto num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
@@ -36,7 +40,11 @@ test_permute(const Castella::arr_blocks<N>& state)
 
         // verify permute_inv(permute(state)) == state
         assert(simd_arr_equal(state, state_copy));
+
+        ++num_round_trips;
     }
+
+    return num_round_trips;
 }
 
 inline constexpr std::array<uint8_t, 256> unique_bytes{
@@ -59,34 +67,37 @@ inline constexpr std::array<uint8_t, 256> unique_bytes{
 };
 
 /// Test state with byte values that are 0
+/// \return the number of round trips made
 template <size_t N>
-void
+int
 test_permute_bytes_zero()
 {
     Castella::arr_blocks<N> state;
     (void)std::memset(std::data(state), 0, sizeof(state));
-    test_permute(state);
+    return test_permute(state);
 }
 
 /// Test state with byte values that are unique
+/// \return the number of round trips made
 template <size_t N>
-void
+int
 test_permute_bytes_unique()
 {
     Castella::arr_blocks<N> state;
     static_assert(sizeof(state) <= sizeof(unique_bytes));
     (void)std::memcpy(std::data(state), std::data(unique_bytes), sizeof(state));
-    test_permute(state);
+    return test_permute(state);
 }
 
 /// Test state with byte values that are random
+/// \return the number of round trips made
 template <size_t N>
-void
+int
 test_permute_bytes_random()
 {
     Castella::arr_blocks<N> state;
     arc4random_buf(std::data(state), sizeof(state));
-    test_permute(state);
+    return test_permute(state);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -118,23 +129,27 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         num_samples = 1;
     }
 
-    test_permute_bytes_zero<2>();
-    test_permute_bytes_zero<4>();
-    test_permute_bytes_zero<8>();
-    test_permute_bytes_zero<16>();
+    int num_round_trips = 0;
 
-    test_permute_bytes_unique<2>();
-    test_permute_bytes_unique<4>();
-    test_permute_bytes_unique<8>();
-    test_permute_bytes_unique<16>();
+    num_round_trips += test_permute_bytes_zero<2>();
+    num_round_trips += test_permute_bytes_zero<4>();
+    num_round_trips += test_permute_bytes_zero<8>();
+    num_round_trips += test_permute_bytes_zero<16>();
+
+    num_round_trips += test_permute_bytes_unique<2>();
+    num_round_trips += test_permute_bytes_unique<4>();
+    num_round_trips += test_permute_bytes_unique<8>();
+    num_round_trips += test_permute_bytes_unique<16>();
 
     for (int i = 0; i < num_samples; ++i)
     {
-        test_permute_bytes_random<2>();
-        test_permute_bytes_random<4>();
-        test_permute_bytes_random<8>();
-        test_permute_bytes_random<16>();
+        num_round_trips += test_permute_bytes_random<2>();
+        num_round_trips += test_permute_bytes_random<4>();
+        num_round_trips += test_permute_bytes_random<8>();
+        num_round_trips += test_permute_bytes_random<16>();
     }
+
+    std::println("passed: {} round trips of permute_inv over permute", num_round_trips);
 
     return 0;
 }

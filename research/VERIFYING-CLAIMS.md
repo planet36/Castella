@@ -115,7 +115,7 @@ The VAES/x2/folded paths and the generic paths are claimed bit-identical (an *im
 sh run-research.sh    # includes permute_inv-verify, permute_x2-verify, duplex_x2-verify, cch_x2-verify
 ```
 
-plus the randomized equivalence tests in `make test`.  Expected: every verify program reports zero mismatches (`permute_inv-verify` also round-trips the folded forward path through the unchanged generic inverse).
+plus the randomized equivalence tests in `make test`.  Expected: each program prints a `passed: N …` line naming what it compared and exits 0 — at the default `-n`, `permute_x2-verify` reports 14008 comparisons, `duplex_x2-verify` 22400 squeeze comparisons, `cch_x2-verify` 2000 digest comparisons and `permute_inv-verify` 192 round trips, each scaling linearly with `-n` (`run-research.sh` passes much larger counts).  A mismatch aborts on the assertion instead, so the absence of that line is itself the failure signal.  (`permute_inv-verify` also round-trips the folded forward path through the unchanged generic inverse.)
 
 `Castella::permute_folded` against `Castella::permute_generic` is the one comparison that runs both paths in a single build, so it does not depend on the KATs as an intermediary:
 

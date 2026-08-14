@@ -29,10 +29,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <print>
 #include <unistd.h>
 #include <vector>
 
-void
+/// \return the number of squeeze comparisons made
+int
 test_duplex_x2(const int capacity_blocks, const int num_rounds)
 {
     constexpr int input_suffix = 0x0b;
@@ -68,6 +70,8 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
 
     // Squeeze twice (successive squeezes must also stay in lockstep), with
     // a length that exercises the partial-block copy in squeeze_pair_to.
+    int num_comparisons = 0;
+
     for (const int n : {duplex_x2.get_capacity_size_bytes() / 2, 27})
     {
         const auto expected_a = duplex_a.squeeze_bytes(n);
@@ -79,7 +83,11 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
 
         assert(expected_a == actual_a);
         assert(expected_b == actual_b);
+
+        num_comparisons += 2;
     }
+
+    return num_comparisons;
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -109,6 +117,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         num_samples = 1;
     }
 
+    int num_comparisons = 0;
+
     for (int i = 0; i < num_samples; ++i)
     {
         for (auto capacity_blocks = Castella::Duplex::C_MIN;
@@ -117,10 +127,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             for (auto num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>();
                  num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
             {
-                test_duplex_x2(capacity_blocks, num_rounds);
+                num_comparisons += test_duplex_x2(capacity_blocks, num_rounds);
             }
         }
     }
+
+    std::println("passed: {} squeeze comparisons of DuplexX2 against two separate Duplex objects",
+                 num_comparisons);
 
     return 0;
 }

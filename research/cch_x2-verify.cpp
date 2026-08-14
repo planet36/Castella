@@ -27,11 +27,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <print>
 #include <unistd.h>
 #include <vector>
 
 /// One trial: random pieces (equal lengths, different contents) then digests
-void
+/// \return the number of digest comparisons made
+int
 test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_pieces)
 {
     compress_castella_hash<> hash_a{mix_rate};
@@ -65,6 +67,8 @@ test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_piece
 
     assert(expected_a == actual_a);
     assert(expected_b == actual_b);
+
+    return 2;
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -98,20 +102,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
                                  compress_castella_hash<>::MIX_RATE_MAX};
 
+    int num_comparisons = 0;
+
     for (int i = 0; i < num_samples; ++i)
     {
         for (const auto mix_rate : mix_rates)
         {
             // Small pieces: exercise the buffered (partial-chunk) path and
             // piece boundaries that do not divide the 256-byte chunk.
-            test_cch_x2(mix_rate, 1500, 8);
+            num_comparisons += test_cch_x2(mix_rate, 1500, 8);
 
             // One big piece: exercise the interleaved bulk loop, crossing
             // the mix boundary even at the default mix rate
             // (300 chunks > 256).
-            test_cch_x2(mix_rate, 300 * 256, 1);
+            num_comparisons += test_cch_x2(mix_rate, 300 * 256, 1);
         }
     }
+
+    std::println("passed: {} digest comparisons of compress_castella_hash_x2 against "
+                 "two separate compress_castella_hash objects",
+                 num_comparisons);
 
     return 0;
 }

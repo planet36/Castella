@@ -32,10 +32,12 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <print>
 #include <unistd.h>
 
+/// \return the number of comparisons made
 template <size_t N>
-void
+int
 test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_blocks<N>& state_b)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -51,6 +53,8 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_bloc
         assert(simd_arr_equal(state_a, unpacked_a));
         assert(simd_arr_equal(state_b, unpacked_b));
     }
+
+    int num_comparisons = 2;
 
     for (auto num_rounds = 1; num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
     {
@@ -71,12 +75,17 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_bloc
         // verify the lanes never mixed
         assert(simd_arr_equal(expected_a, actual_a));
         assert(simd_arr_equal(expected_b, actual_b));
+
+        num_comparisons += 2;
     }
+
+    return num_comparisons;
 }
 
 /// Test state pairs with byte values that are 0 (both states, and one of each)
+/// \return the number of comparisons made
 template <size_t N>
-void
+int
 test_permute_x2_bytes_zero()
 {
     Castella::arr_blocks<N> state_zero;
@@ -85,14 +94,15 @@ test_permute_x2_bytes_zero()
     Castella::arr_blocks<N> state_random;
     arc4random_buf(std::data(state_random), sizeof(state_random));
 
-    test_permute_x2(state_zero, state_zero);
-    test_permute_x2(state_zero, state_random);
-    test_permute_x2(state_random, state_zero);
+    return test_permute_x2(state_zero, state_zero) +
+           test_permute_x2(state_zero, state_random) +
+           test_permute_x2(state_random, state_zero);
 }
 
 /// Test state pairs with byte values that are random
+/// \return the number of comparisons made
 template <size_t N>
-void
+int
 test_permute_x2_bytes_random()
 {
     Castella::arr_blocks<N> state_a;
@@ -100,7 +110,7 @@ test_permute_x2_bytes_random()
     arc4random_buf(std::data(state_a), sizeof(state_a));
     arc4random_buf(std::data(state_b), sizeof(state_b));
 
-    test_permute_x2(state_a, state_b);
+    return test_permute_x2(state_a, state_b);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -130,18 +140,23 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         num_samples = 1;
     }
 
-    test_permute_x2_bytes_zero<2>();
-    test_permute_x2_bytes_zero<4>();
-    test_permute_x2_bytes_zero<8>();
-    test_permute_x2_bytes_zero<16>();
+    int num_comparisons = 0;
+
+    num_comparisons += test_permute_x2_bytes_zero<2>();
+    num_comparisons += test_permute_x2_bytes_zero<4>();
+    num_comparisons += test_permute_x2_bytes_zero<8>();
+    num_comparisons += test_permute_x2_bytes_zero<16>();
 
     for (int i = 0; i < num_samples; ++i)
     {
-        test_permute_x2_bytes_random<2>();
-        test_permute_x2_bytes_random<4>();
-        test_permute_x2_bytes_random<8>();
-        test_permute_x2_bytes_random<16>();
+        num_comparisons += test_permute_x2_bytes_random<2>();
+        num_comparisons += test_permute_x2_bytes_random<4>();
+        num_comparisons += test_permute_x2_bytes_random<8>();
+        num_comparisons += test_permute_x2_bytes_random<16>();
     }
+
+    std::println("passed: {} comparisons of permute_x2 against two separate permute calls",
+                 num_comparisons);
 
     return 0;
 }

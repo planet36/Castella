@@ -1709,7 +1709,7 @@ public:
     HashTree(HashTree&&) = delete;
     HashTree& operator=(HashTree&&) = delete;
 
-    /// Consume \a byte_sp into the tree
+    /// Consume the input data into the tree
     // {{{
     /**
     * \param byte_sp the input data

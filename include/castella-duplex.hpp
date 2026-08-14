@@ -819,7 +819,7 @@ public:
         zeroize_();
     }
 
-    /// Consume \a src into the input buffer
+    /// Consume the input data
     // {{{
     /**
     * \param src the input data
@@ -877,7 +877,7 @@ public:
         return add(as_byte_span(s));
     }
 
-    /// Consume the left-encoded size of \a src, then its contents into the input buffer
+    /// Consume the left-encoded size of the input data, then its contents
     // {{{
     /**
     * \param src the input data
@@ -942,7 +942,7 @@ public:
         return add_left_encoded(as_byte_span(s));
     }
 
-    /// Consume \a src, then its right-encoded size into the input buffer
+    /// Consume the input data, then its right-encoded size
     // {{{
     /**
     * \param src the input data

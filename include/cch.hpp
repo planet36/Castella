@@ -441,7 +441,7 @@ public:
         zeroize_();
     }
 
-    /// Consume \a src
+    /// Consume the input data
     // {{{
     /**
     * \param src the input data

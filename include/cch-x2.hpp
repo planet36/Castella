@@ -75,7 +75,7 @@ public:
     // Copying and moving are implicitly disabled (node_type is neither
     // copyable nor movable), and each node zeroizes itself on destruction.
 
-    /// Consume \a src_a into node A and \a src_b into node B
+    /// Consume the input data into node A and node B
     // {{{
     /**
     * The lockstep counterpart of \c compress_castella_hash::add_: the two

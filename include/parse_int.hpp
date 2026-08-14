@@ -84,7 +84,7 @@ parse_int(std::string_view s,
 * \note On a malformed or out-of-range value this prints a diagnostic and
 *       exits (via \c errx); it does not return.
 */
-inline int
+[[nodiscard]] inline int
 parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
 {
     const auto value = parse_int<int>(optarg, min, max);
@@ -111,7 +111,7 @@ parse_option_int(const char* optarg, const int min, const int max, const char* o
 * \note On a malformed or out-of-range value this prints a diagnostic and
 *       exits (via \c errx); it does not return.
 */
-inline int
+[[nodiscard]] inline int
 parse_option_int(const char* optarg, const char* option_name)
 {
     return parse_option_int(optarg, std::numeric_limits<int>::min(),

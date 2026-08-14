@@ -28,7 +28,6 @@
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <exception>
 #include <mutex>
 #include <span>

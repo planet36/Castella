@@ -9,6 +9,7 @@
 #include "as_byte_span.hpp"
 #include "bytes_to_hex.hpp"
 #include "castella-duplex-tree.hpp"
+#include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
 #include "quote_shell_always.hpp"
 
@@ -16,6 +17,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdio>
 #include <print>
 #include <ranges>
 #include <span>
@@ -184,6 +186,61 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             std::println("std::invalid_argument: {}", ex.what());
         }
     }
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+    {
+        // The same five constraints on Castella::DuplexX2, which enforces them
+        // separately (castella-duplex-x2.hpp check_constraints_).  Guarded
+        // because the class exists only where the lane-paired path does; on
+        // every other target these constraints are Duplex's alone, tested
+        // above.
+        constexpr int input_suffix = 0;
+        constexpr std::string_view function_name = "Castella";
+        constexpr std::string_view customization_str = "test";
+
+        constexpr int good_num_rounds = 6;
+        constexpr int good_capacity_blocks = 4;
+
+        // The capture is required: passing the string_views by value odr-uses
+        // them, which clang rejects without one even though they are constexpr.
+        const auto expect_invalid = [&](const int capacity_blocks, const int num_rounds)
+        {
+            try
+            {
+                Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                            function_name, customization_str);
+            }
+            catch (const std::invalid_argument& ex)
+            {
+                std::println("std::invalid_argument: {}", ex.what());
+                return true;
+            }
+
+            std::println(stderr, "FAILED: DuplexX2(C={}, NUM_ROUNDS={}) did not throw",
+                         capacity_blocks, num_rounds);
+            return false;
+        };
+
+        // Each value isolates one check, which is possible here and not for
+        // Duplex above: DuplexX2 validates C directly and has no R_MIN/R_MAX
+        // checks, whose equivalent bounds (R = B - C) subsume Duplex's C range.
+        // The out-of-range capacities are even, so that removing a C range
+        // check cannot be masked by the "C is odd" check.
+        static_assert(((Castella::Duplex::C_MIN + 1) % 2) != 0); // odd
+        static_assert(((Castella::Duplex::C_MIN - 2) % 2) == 0);
+        static_assert(((Castella::Duplex::C_MAX + 2) % 2) == 0);
+
+        if (!expect_invalid(Castella::Duplex::C_MIN + 1, good_num_rounds) ||
+            !expect_invalid(Castella::Duplex::C_MIN - 2, good_num_rounds) ||
+            !expect_invalid(Castella::Duplex::C_MAX + 2, good_num_rounds) ||
+            !expect_invalid(good_capacity_blocks,
+                            Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1) ||
+            !expect_invalid(good_capacity_blocks, Castella::NUM_ROUNDS_MAX + 1))
+        {
+            return 1;
+        }
+    }
+#endif
 
     {
         // Test an input size that is greater than the outer state.

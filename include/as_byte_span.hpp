@@ -3,6 +3,13 @@
 
 /// Get a view to the object as a span of bytes
 /**
+* Each overload returns a view that's valid only while the referenced storage
+* remains valid.
+*
+* The span becomes dangling if the storage is destroyed, reallocated, or
+* (potentially) modified, or if the argument is a temporary (dangling at
+* full-expression end).
+*
 * \file
 * \author Steven Ward
 */
@@ -12,15 +19,19 @@
 #include <memory>
 #include <ranges>
 #include <span>
+#include <type_traits>
 
 /// Get a view to a single object as a span of bytes
 /**
+* The view spans the object representation, so padding bytes within \a T are
+* included, and their values are unspecified.
+*
 * \param x the object to view
 * \return a \c std::span of <code>const std::byte</code> over the object
 *         representation of \a x
 */
 template <typename T>
-requires (!std::ranges::contiguous_range<T>)
+requires (!std::ranges::contiguous_range<T>) && std::is_trivially_copyable_v<T>
 [[nodiscard]] constexpr auto
 as_byte_span(const T& x) noexcept
 {

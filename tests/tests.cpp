@@ -26,6 +26,38 @@
 #include <string_view>
 #include <vector>
 
+/// The number of runtime checks \c main is expected to make
+/**
+* Without this the program cannot report success on the checks that did run:
+* every check that remains genuinely passes, so deleting one leaves the
+* program at exit 0.  Update it deliberately when tests are added or removed.
+*
+* The VAES-only DuplexX2 block contributes 5 of these, so the expected total
+* depends on the target.
+*/
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+constexpr int EXPECTED_CHECKS = 71;
+#else
+constexpr int EXPECTED_CHECKS = 66;
+#endif
+
+/// The number of runtime checks made so far
+int num_checks = 0;
+
+/// Count one runtime check, then \c assert it
+/**
+* A macro rather than a function so that a failure still names the expression
+* rather than the parameter.  The file undefines \c NDEBUG above, so this is
+* active in every build.
+*/
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define CHECK(...)           \
+    do                       \
+    {                        \
+        ++num_checks;        \
+        assert(__VA_ARGS__); \
+    } while (false)
+
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -48,7 +80,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // `hash_obj.get_capacity_size_bytes() / 2`
             const auto digest_bytes = hash_obj.squeeze_bytes();
 
-            assert(std::ssize(digest_bytes) == hash_obj.get_capacity_size_bytes() / 2);
+            CHECK(std::ssize(digest_bytes) == hash_obj.get_capacity_size_bytes() / 2);
         }
 
         hash_obj.add(
@@ -61,7 +93,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto digest_bytes = hash_obj.squeeze_bytes();
             const auto digest_bytes2 = hash_obj.squeeze_bytes();
 
-            assert(digest_bytes != digest_bytes2);
+            CHECK(digest_bytes != digest_bytes2);
         }
 
         hash_obj.add("To alcohol!  The cause of, and solution to, all of life's problems."sv);
@@ -70,7 +102,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // Test a mute call
             const auto digest_bytes = hash_obj.squeeze_bytes(0);
 
-            assert(digest_bytes.empty());
+            CHECK(digest_bytes.empty());
         }
 
         hash_obj.add(
@@ -84,7 +116,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes = hash_obj.squeeze_bytes(num_bytes_to_squeeze);
 
-            assert(std::ssize(digest_bytes) == hash_obj.get_rate_size_bytes());
+            CHECK(std::ssize(digest_bytes) == hash_obj.get_rate_size_bytes());
         }
 
         hash_obj.add("My eyes!  The goggles do nothing!");
@@ -100,7 +132,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             std::println("{} {}: {}", quote_shell_always(function_name),
                          quote_shell_always(customization_str), result);
 
-            assert(result == expected_result);
+            CHECK(result == expected_result);
         }
     }
 
@@ -123,6 +155,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         catch (const std::invalid_argument& ex)
         {
+            ++num_checks;
             std::println("std::invalid_argument: {}", ex.what());
         }
 
@@ -138,6 +171,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         catch (const std::invalid_argument& ex)
         {
+            ++num_checks;
             std::println("std::invalid_argument: {}", ex.what());
         }
 
@@ -153,6 +187,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         catch (const std::invalid_argument& ex)
         {
+            ++num_checks;
             std::println("std::invalid_argument: {}", ex.what());
         }
 
@@ -168,6 +203,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         catch (const std::invalid_argument& ex)
         {
+            ++num_checks;
             std::println("std::invalid_argument: {}", ex.what());
         }
 
@@ -183,6 +219,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         catch (const std::invalid_argument& ex)
         {
+            ++num_checks;
             std::println("std::invalid_argument: {}", ex.what());
         }
     }
@@ -212,6 +249,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::invalid_argument& ex)
             {
+                ++num_checks;
                 std::println("std::invalid_argument: {}", ex.what());
                 return true;
             }
@@ -286,7 +324,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         };
 
         // Ensure the input size is greater than the outer state size.
-        assert(std::ssize(X) > hash_obj.get_rate_size_bytes());
+        CHECK(std::ssize(X) > hash_obj.get_rate_size_bytes());
 
         // Add all the data at once
         hash_obj.add(X);
@@ -302,7 +340,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         const auto digest_bytes = hash_obj.squeeze_bytes();
         const auto digest_bytes2 = hash_obj2.squeeze_bytes();
 
-        assert(digest_bytes == digest_bytes2);
+        CHECK(digest_bytes == digest_bytes2);
     }
 
     {
@@ -352,7 +390,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const auto digest_bytes = tree.add(X_sp).squeeze_bytes();
 
-            assert(std::ssize(digest_bytes) == tree.get_capacity_size_bytes() / 2);
+            CHECK(std::ssize(digest_bytes) == tree.get_capacity_size_bytes() / 2);
         }
 
         {
@@ -369,7 +407,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 // keeps regression coverage
                 tree1.add(&b, 1);
             }
-            assert(tree1.squeeze_bytes() == expected);
+            CHECK(tree1.squeeze_bytes() == expected);
 
             // pieces that do not divide the chunk size, so chunk boundaries
             // are crossed mid-call
@@ -381,7 +419,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 const auto len = std::min<std::ptrdiff_t>(piece_size, std::ssize(X_sp) - off);
                 tree2.add(X_sp.subspan(off, len));
             }
-            assert(tree2.squeeze_bytes() == expected);
+            CHECK(tree2.squeeze_bytes() == expected);
         }
 
         {
@@ -410,7 +448,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             {
                 for (int j = i + 1; j < std::ssize(digests); ++j)
                 {
-                    assert(digests[i] != digests[j]);
+                    CHECK(digests[i] != digests[j]);
                 }
             }
         }
@@ -422,7 +460,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             Castella::DuplexTree tree2(capacity_blocks, num_rounds, input_suffix,
                                        function_name, customization_str, 2 * chunk_size);
 
-            assert(tree1.add(X_sp).squeeze_bytes() != tree2.add(X_sp).squeeze_bytes());
+            CHECK(tree1.add(X_sp).squeeze_bytes() != tree2.add(X_sp).squeeze_bytes());
         }
 
         {
@@ -430,8 +468,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // (the central contract of the tree design)
             const auto digest_bytes = tree_digest(X_sp, 1);
 
-            assert(tree_digest(X_sp, 4) == digest_bytes);
-            assert(tree_digest(X_sp, 0) == digest_bytes); // 0 = auto
+            CHECK(tree_digest(X_sp, 4) == digest_bytes);
+            CHECK(tree_digest(X_sp, 0) == digest_bytes); // 0 = auto
         }
 
         {
@@ -441,7 +479,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
 
-            assert(hash_obj.add(X_sp).squeeze_bytes() != tree_digest(X_sp));
+            CHECK(hash_obj.add(X_sp).squeeze_bytes() != tree_digest(X_sp));
         }
 
         {
@@ -454,7 +492,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             const auto digest_bytes = tree.squeeze_bytes();
             const auto digest_bytes2 = tree.squeeze_bytes();
 
-            assert(digest_bytes != digest_bytes2);
+            CHECK(digest_bytes != digest_bytes2);
 
             try
             {
@@ -464,6 +502,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::logic_error& ex)
             {
+                ++num_checks;
                 std::println("std::logic_error: {}", ex.what());
             }
 
@@ -478,6 +517,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::logic_error& ex)
             {
+                ++num_checks;
                 std::println("std::logic_error: {}", ex.what());
             }
         }
@@ -496,6 +536,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::invalid_argument& ex)
             {
+                ++num_checks;
                 std::println("std::invalid_argument: {}", ex.what());
             }
 
@@ -511,6 +552,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::invalid_argument& ex)
             {
+                ++num_checks;
                 std::println("std::invalid_argument: {}", ex.what());
             }
 
@@ -526,6 +568,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::invalid_argument& ex)
             {
+                ++num_checks;
                 std::println("std::invalid_argument: {}", ex.what());
             }
 
@@ -542,6 +585,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             catch (const std::invalid_argument& ex)
             {
+                ++num_checks;
                 std::println("std::invalid_argument: {}", ex.what());
             }
         }
@@ -572,9 +616,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             // parallel, with different worker counts (hence different
             // static partitions of the leaves)
-            assert(tree_digest(Y_sp, 2) == expected);
-            assert(tree_digest(Y_sp, 4) == expected);
-            assert(tree_digest(Y_sp, 0) == expected); // 0 = auto
+            CHECK(tree_digest(Y_sp, 2) == expected);
+            CHECK(tree_digest(Y_sp, 4) == expected);
+            CHECK(tree_digest(Y_sp, 0) == expected); // 0 = auto
 
             // Piecewise adds (piece sizes are relative to the 1024-byte test
             // chunk size, NOT DEFAULT_CHUNK_SIZE): 1000-byte pieces are too
@@ -592,7 +636,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                     const auto len = std::min<std::ptrdiff_t>(piece_size, std::ssize(Y_sp) - off);
                     tree.add(Y_sp.subspan(off, len));
                 }
-                assert(tree.squeeze_bytes() == expected);
+                CHECK(tree.squeeze_bytes() == expected);
             }
         }
 
@@ -636,7 +680,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                             std::min<std::ptrdiff_t>(piece_size, std::ssize(Z_sp) - off);
                         tree.add(Z_sp.subspan(off, len));
                     }
-                    assert(tree.squeeze_bytes() == expected);
+                    CHECK(tree.squeeze_bytes() == expected);
                 }
             }
 
@@ -669,8 +713,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             std::println("{} {}: {}", quote_shell_always(function_name),
                          quote_shell_always("tree test"), result);
 
-            assert(result == expected_result);
+            CHECK(result == expected_result);
         }
+    }
+
+    if (num_checks != EXPECTED_CHECKS)
+    {
+        (void)std::fflush(stdout);
+        std::println(stderr,
+                     "expected {} checks, made {} -- a test is missing, or "
+                     "EXPECTED_CHECKS is stale",
+                     EXPECTED_CHECKS, num_checks);
+        return 1;
     }
 
     return 0;

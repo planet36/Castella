@@ -10,6 +10,12 @@ test -x cch || exit
 PASS=0
 FAIL=0
 
+# The number of assertions this script is expected to make.
+# Without it a deleted assertion still reports "0 failed" and exits 0,
+# so the script could not report success on the assertions that did run.
+# Update this when assertions are added or removed.
+declare -r EXPECTED_ASSERTIONS=99
+
 function assert_eq_cmd_str
 {
     local CMD="$1"
@@ -709,6 +715,9 @@ assert_eq_cmd_str_status \
     "'/tmp/test-100KB.txt': FAILED" \
     1
 
-echo "$PASS passed, $FAIL failed"
+echo "$PASS of $EXPECTED_ASSERTIONS passed ($FAIL failed)"
 
-(( FAIL == 0 ))
+(( FAIL == 0 )) || exit 1
+
+# If this is false, then an assertion is missing, or EXPECTED_ASSERTIONS is stale.
+(( PASS == EXPECTED_ASSERTIONS )) || exit 1

@@ -20,8 +20,8 @@
 
 #if !defined(DEBUG)
 #define DEBUG 1
-#undef NDEBUG
 #endif
+#undef NDEBUG
 
 #include "castella-permute.hpp"
 #include "pack_states.hpp"

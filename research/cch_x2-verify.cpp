@@ -15,8 +15,8 @@
 
 #if !defined(DEBUG)
 #define DEBUG 1
-#undef NDEBUG
 #endif
+#undef NDEBUG
 
 #include "cch-x2.hpp"
 #include "cch.hpp"

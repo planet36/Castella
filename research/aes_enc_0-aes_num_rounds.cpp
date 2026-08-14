@@ -3,8 +3,8 @@
 
 #if !defined(DEBUG)
 #define DEBUG 1
-#undef NDEBUG
 #endif
+#undef NDEBUG
 
 #include "aes_enc.hpp"
 #include "parse_int.hpp"

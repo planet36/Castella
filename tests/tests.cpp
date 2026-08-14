@@ -3,8 +3,8 @@
 
 #if !defined(DEBUG)
 #define DEBUG 1
-#undef NDEBUG
 #endif
+#undef NDEBUG
 
 #include "as_byte_span.hpp"
 #include "bytes_to_hex.hpp"

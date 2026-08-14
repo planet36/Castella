@@ -24,8 +24,8 @@
 
 #if !defined(DEBUG)
 #define DEBUG 1
-#undef NDEBUG
 #endif
+#undef NDEBUG
 
 #include "castella-duplex-tree.hpp"
 #include "cch-tree.hpp"

@@ -32,7 +32,7 @@ do
     hyperfine --shell=none --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
-        "./${PROGRAM} --num-threads={NUM-THREADS} /tmp/test.txt" || exit
+        "./${PROGRAM} --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
     printf 'Exported results: %q\n' "$CSV"
 
@@ -41,7 +41,7 @@ do
     hyperfine --shell=none --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
-        "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} /tmp/test.txt" || exit
+        "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
     printf 'Exported results: %q\n' "$CSV"
 
@@ -51,7 +51,7 @@ do
     hyperfine --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
-        "cat /tmp/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
+        "cat ${CASTELLA_TMP}/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
 
     printf 'Exported results: %q\n' "$CSV"
 done

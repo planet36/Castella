@@ -13,11 +13,16 @@ export LC_ALL=C
 # Setup
 FILE_SIZE=${FILE_SIZE:-500M}
 
+# A private directory per run, so concurrent runs cannot clobber each other's
+# input.  mktemp honours $TMPDIR: on a tmpfs /tmp the input stays RAM-resident,
+# which is what the cache-hot comparisons in README.md measure.
+CASTELLA_TMP=$(mktemp --directory) || exit
+
 # Remove the generated input file at the end of every run (the trap is set
 # before the generation so a failed or interrupted run is cleaned up too)
-trap 'rm --force -- /tmp/test.txt' EXIT
+trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > /tmp/test.txt || exit
+yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > "${CASTELLA_TMP}/test.txt" || exit
 
 OUTPUT_DIR=results
 DATETIME=$(date -u +'%Y%m%dT%H%M%S')

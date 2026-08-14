@@ -86,7 +86,7 @@ Every performance number in this repository's documentation is machine-dependent
 
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size: `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.4×); `castella --rounds=3` beat multithreaded `b3sum` while the default `--rounds=6` roughly matched it; `castella --no-mmap` and piped input were fastest at 2 threads (more threads made piped input clearly slower and `--no-mmap` slightly slower); streamed `cch` times were identical across thread counts (within 1%); the default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower); and the 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input (for `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned).
 
-Create the test input the same way the benchmark scripts do (the scripts remove `/tmp/test.txt` when they exit, so a previous script run will not have left it behind):
+Create the test input the same way the benchmark scripts do.  They no longer use this path: each run generates its input in a private `mktemp` directory and removes that directory on exit, so a script can neither collide with a concurrent run nor disturb a `/tmp/test.txt` of your own:
 
 ```bash
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 500M > /tmp/test.txt

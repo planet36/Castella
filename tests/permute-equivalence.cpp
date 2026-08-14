@@ -58,6 +58,13 @@ constexpr bool folded_path = false;
 /// The number of random states tried per (state size, round count)
 constexpr int num_trials = 32;
 
+/// The number of comparisons the four state sizes are expected to make
+/**
+* Four state sizes, each (NUM_ROUNDS_MAX + 1) round counts by num_trials.
+* Update it deliberately when any of those changes.
+*/
+constexpr int EXPECTED_COMPARISONS = 2176;
+
 /// The state of an \a N-block permutation as plain bytes (comparable, printable)
 template <size_t N>
 using state_bytes_t = std::array<uint8_t, sizeof(Castella::arr_blocks<N>)>;
@@ -136,4 +143,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         std::println("passed: {} comparisons, but this build has no folded path: "
                      "permute IS permute_generic",
                      num_comparisons);
+
+    if (num_comparisons != EXPECTED_COMPARISONS)
+    {
+        (void)std::fflush(stdout);
+        std::println(stderr,
+                     "expected {} comparisons, made {} -- a state size is missing, or "
+                     "EXPECTED_COMPARISONS is stale",
+                     EXPECTED_COMPARISONS, num_comparisons);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

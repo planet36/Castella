@@ -158,6 +158,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     //   - around 256 chunks: the left_encode of leaf index 255 is one
     //     byte, of 256 two, so these inputs cross the paired-leaf
     //     byte-width fallback
+    // Every input length is verified once per tree configuration: DuplexTree,
+    // then compress_castella_tree at each mix rate.  Pinned so that a deleted
+    // length or a deleted configuration cannot pass quietly.
+    constexpr int EXPECTED_VERIFICATIONS = 76;
+    int num_verified = 0;
+
     std::vector<int> lens = {
         0,
         1,
@@ -209,6 +215,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             test_one_input("DuplexTree", make_tree, get_digest,
                            std::span<const std::byte>{data}.first(len), rng);
+            ++num_verified;
         }
 
         std::println("DuplexTree: {} input lengths verified", std::ssize(lens));
@@ -227,10 +234,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             test_one_input("compress_castella_tree", make_tree, get_digest,
                            std::span<const std::byte>{data}.first(len), rng);
+            ++num_verified;
         }
 
         std::println("compress_castella_tree (mix_rate={}): {} input lengths verified",
                      mix_rate, std::ssize(lens));
+    }
+
+    if (num_verified != EXPECTED_VERIFICATIONS)
+    {
+        (void)std::fflush(stdout);
+        std::println(stderr,
+                     "expected {} verifications, made {} -- an input length or a tree "
+                     "configuration is missing, or EXPECTED_VERIFICATIONS is stale",
+                     EXPECTED_VERIFICATIONS, num_verified);
+        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;

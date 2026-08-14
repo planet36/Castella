@@ -195,7 +195,7 @@ public:
 #endif
     }
 
-    /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
+    /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
     /**
     * The raw-data form; a null \a data_a or \a data_b is a no-op,
     * ignoring \a len.
@@ -203,6 +203,8 @@ public:
     * \param data_a the input data for node A
     * \param data_b the input data for node B
     * \param len the size (in bytes) of BOTH inputs
+    * \pre \c len is the size of both inputs (lockstep)
+    * \pre neither node has been finalized
     * \note A null pointer with a nonzero \a len is well defined -- nothing
     *       is absorbed -- but is almost certainly a caller bug, so a
     *       \c -DDEBUG build asserts on it.

@@ -1736,13 +1736,16 @@ public:
         return derived_();
     }
 
-    /// \copydoc add(std::span<const std::byte>)
+    /// \copybrief add(std::span<const std::byte>)
     /**
     * The raw-data form: equivalent to the byte-span form; a null \a data
     * is treated as an empty span, ignoring \a len.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
+    * \return a reference to the derived tree (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \exception std::logic_error if this object has been finalized
     * \note A null \a data with a nonzero \a len is well defined -- nothing
     *       is absorbed -- but is almost certainly a caller bug, so a
     *       \c -DDEBUG build asserts on it.
@@ -1760,7 +1763,15 @@ public:
         return add(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copydoc add(std::span<const std::byte>)
+    /// \copybrief add(std::span<const std::byte>)
+    /**
+    * The string form: equivalent to the byte-span form.
+    *
+    * \param s the input data
+    * \return a reference to the derived tree (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \exception std::logic_error if this object has been finalized
+    */
     Derived& add(const std::string_view s)
     {
         static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");

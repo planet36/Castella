@@ -126,6 +126,11 @@ public:
     * The first five parameters are forwarded to every node's \c Duplex
     * constructor; see \c Duplex::Duplex for their meaning and constraints.
     *
+    * \param capacity_blocks the size (in blocks) of the capacity
+    * \param num_rounds the number of rounds to perform in the permutation
+    * \param input_suffix the byte to append to the input buffer before squeezing
+    * \param function_name a string for algorithm domain separation
+    * \param customization_str a string for user-defined domain separation
     * \param chunk_size_bytes the size (in bytes) of a full chunk; part of
     *        the digest format (different chunk sizes give different digests)
     * \param num_threads the number of worker threads to use; 0 means one
@@ -176,9 +181,13 @@ public:
         return final_node_.squeeze_bytes(n);
     }
 
-    /// \copydoc squeeze_bytes(int)
+    /// Squeeze half the capacity's worth of bytes from the final node
     /**
     * The number of bytes returned is equal to half the capacity.
+    * See \c squeeze_bytes(int) for what the first call finalizes.
+    *
+    * \exception std::bad_alloc if the output vector cannot be allocated
+    * \exception std::system_error if the mutex cannot be locked
     */
     [[nodiscard]] std::vector<std::byte> squeeze_bytes()
     {

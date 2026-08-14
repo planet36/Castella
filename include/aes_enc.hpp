@@ -249,7 +249,7 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 * AES round key.
 *
 * This is the fallback for targets without VAES; the overload above does the
-* same thing two elements at a time.  It cannot say \c \copydoc, because the
+* same thing two elements at a time.  It cannot say \c \\copydoc, because the
 * two differ only by a \c requires clause, which doxygen does not use to tell
 * overloads apart -- naming the other one there resolves back to this one.
 */
@@ -305,7 +305,7 @@ aes_enc_inv_arr(simd_arr_t<N>& arr,
 /**
 * The AES round keys are applied in reverse order of \c aes_enc_arr.  This is
 * the fallback for targets without VAES; see the note on the corresponding
-* \c aes_enc_arr overload for why it does not use \c \copydoc.
+* \c aes_enc_arr overload for why it does not use \c \\copydoc.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void

@@ -155,3 +155,6 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
             throw SYSERR_PATH(path);
     }
 }
+
+#undef BLOCKSIZE
+#undef SYSERR_PATH

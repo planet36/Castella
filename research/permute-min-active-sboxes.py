@@ -332,7 +332,7 @@ def main() -> None:
     parser.add_argument("-t", "--time-limit", type=positive_float, default=600.0,
                         help="solver time limit per round count, in seconds "
                              "(default: %(default)s)")
-    parser.add_argument("--threads", type=int, default=os.cpu_count(),
+    parser.add_argument("--threads", type=positive_int, default=os.cpu_count(),
                         help="solver threads (default: %(default)s)")
     parser.add_argument("--solver", choices=("highs", "cbc"),
                         default="highs" if highs_available() else "cbc",

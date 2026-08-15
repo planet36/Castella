@@ -297,6 +297,43 @@ def read_dual_bound(log_path: str) -> float | None:
     return float(match.group(1)) if match else None
 
 
+class SelfTestError(Exception):
+    """The MILP model disagrees with a published AES bound."""
+
+
+# The AES bounds this model must reproduce at one Castella round, as
+# (AES rounds, minimum active S-boxes).  N is irrelevant here -- blocks are
+# independent within one round -- so the self-test solves them at N=2.
+AES_VALIDATION_BOUNDS = ((1, 1), (2, 5), (3, 9), (4, 25))
+
+
+def self_test(args: argparse.Namespace) -> None:
+    """Check the model against the published AES bounds.
+
+    Raises SelfTestError on any mismatch.  Deliberately not `assert`: an
+    assert-based version would pass vacuously under `python3 -O`.
+    """
+    for aes_rounds, want in AES_VALIDATION_BOUNDS:
+        cell = argparse.Namespace(**vars(args))
+        cell.num_blocks, cell.aes_rounds = 2, aes_rounds
+        prob, _ = build_model(cell.num_blocks, 1, aes_rounds)
+        solve_round(prob, cell, 1)
+
+        if prob.sol_status != pulp.LpSolutionOptimal:
+            raise SelfTestError(
+                f"a={aes_rounds}: expected a proven optimum, got "
+                f"{pulp.LpStatus[prob.status]} "
+                f"(sol_status {prob.sol_status})")
+
+        got = round(prob.objective.value())
+        if got != want:
+            raise SelfTestError(
+                f"a={aes_rounds}: minimum active S-boxes is {got}, "
+                f"expected {want}")
+
+    print("self-test: OK")
+
+
 def main() -> None:
     """Parse arguments and solve the MILP for each round count."""
     parser = argparse.ArgumentParser(
@@ -331,6 +368,10 @@ def main() -> None:
                              "--pattern-file.  When more than one round count "
                              "is solved, PATH must contain '{r}', which is "
                              "replaced by the round count")
+    parser.add_argument("--self-test", action="store_true",
+                        help="check the model against the published AES "
+                             "bounds (a = 1, 2, 3, 4 give 1, 5, 9, 25 active "
+                             "S-boxes at one round) and exit")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="with --solver cbc, keep CBC's log per round "
                              "count in the working directory "
@@ -339,6 +380,10 @@ def main() -> None:
                              "with tail -f; with --solver highs, stream the "
                              "solver log to stdout")
     args = parser.parse_args()
+
+    if args.self_test:
+        self_test(args)
+        return
 
     if args.min_rounds > args.max_rounds:
         parser.error(f"--min-rounds {args.min_rounds} exceeds "

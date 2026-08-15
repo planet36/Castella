@@ -117,6 +117,16 @@ def random_pair(rng):
 def main() -> None:
     """Cross-validate at every round count and report."""
     sc = load("spec_model", "spec-conformance.py")
+
+    # permute_model's own checks are structural (spot values, DDT shape, the
+    # aesenc vectors).  This compares the whole table with the independent
+    # from-the-spec one, so an S-box that is wrong but structurally plausible
+    # cannot pass.
+    if list(PM.SBOX) != list(sc.SBOX):
+        raise CrossValidationError(
+            "the shared model's S-box differs from spec-conformance.py's at "
+            f"{sum(a != b for a, b in zip(PM.SBOX, sc.SBOX))} of 256 entries")
+
     rng = random.Random(int(sys.argv[1], 0) if len(sys.argv) > 1 else 0xC8)
 
     total = 0

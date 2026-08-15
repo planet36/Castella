@@ -944,6 +944,13 @@ public:
     * \param s the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
+    * \warning \c ""sv and \c std::string_view{} are not interchangeable here,
+    *          though they compare equal and are in most C++ code.  The first
+    *          has non-null \c data() and absorbs \c left_encode(0); the second
+    *          has null \c data() and absorbs nothing, exactly as if this were
+    *          never called.  The two therefore give different digests, so
+    *          substituting one for the other is a digest change, not a
+    *          refactor.
     */
     Duplex& add_left_encoded(const std::string_view s)
     {

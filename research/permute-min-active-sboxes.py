@@ -88,8 +88,7 @@ import tempfile
 # linting, so silence the import-error rather than making it a hard dependency.
 import pulp  # pylint: disable=import-error
 
-BLOCK_BYTES = 16
-
+from permute_model import BLOCK_BYTES, shift_rows_src, transpose_map
 
 def positive_int(s: str) -> int:
     """argparse type: an integer >= 1."""
@@ -105,27 +104,6 @@ def positive_float(s: str) -> float:
     if value <= 0:
         raise argparse.ArgumentTypeError(f"must be > 0, got {value}")
     return value
-
-
-# AES ShiftRows: output byte (row, col) comes from input byte (row, (col+row)%4).
-# Byte index within a block = 4*col + row (AES column-major order).
-def shift_rows_src(byte_idx: int) -> int:
-    """Return the input byte index that ShiftRows moves to byte_idx."""
-    col, row = divmod(byte_idx, 4)
-    return 4 * ((col + row) % 4) + row
-
-
-# simd_transpose: byte k of word j of block i -> byte k of word i of block j,
-# where a word is 16/N bytes.  Returns {(block, byte): (block, byte)}.
-def transpose_map(num_blocks: int) -> dict[tuple[int, int], tuple[int, int]]:
-    """Map each (block, byte) to its destination under simd_transpose."""
-    word_size = BLOCK_BYTES // num_blocks
-    mapping: dict[tuple[int, int], tuple[int, int]] = {}
-    for i in range(num_blocks):
-        for b in range(BLOCK_BYTES):
-            j, k = divmod(b, word_size)
-            mapping[(i, b)] = (j, i * word_size + k)
-    return mapping
 
 
 # pylint: disable=too-many-locals

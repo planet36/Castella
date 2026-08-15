@@ -454,11 +454,12 @@ private:
 #endif
 
         const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
-        const auto num_bytes_to_add = available_space;
 
 #if defined(DEBUG)
         assert(available_space > 0);
 #endif
+
+        const auto num_bytes_to_add = available_space;
 
         std::byte* input_bytes = get_input_bytes_();
         std::byte* dst = &input_bytes[cur_input_byte_idx_];
@@ -532,11 +533,15 @@ private:
 #endif
 
             const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+
+#if defined(DEBUG)
+            assert(available_space > 0);
+#endif
+
             const auto num_bytes_to_add =
                 static_cast<int>(std::min<size_t>(available_space, std::size(src)));
 
 #if defined(DEBUG)
-            assert(available_space > 0);
             assert(num_bytes_to_add > 0);
 #endif
 

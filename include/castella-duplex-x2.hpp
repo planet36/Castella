@@ -229,11 +229,15 @@ private:
 #endif
 
             const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+
+#if defined(DEBUG)
+            assert(available_space > 0);
+#endif
+
             const auto num_bytes_to_add =
                 static_cast<int>(std::min<size_t>(available_space, std::size(src_a)));
 
 #if defined(DEBUG)
-            assert(available_space > 0);
             assert(num_bytes_to_add > 0);
 #endif
 

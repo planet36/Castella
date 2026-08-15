@@ -402,13 +402,13 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
     msg = kat_msg(int(f["msglen"]))
     out = int(f["out"])
     if typ == "cch":
-        node = _cch_from_kat(f)
-        node.add(msg)
-        return node.digest(out)
+        cch_node = _cch_from_kat(f)
+        cch_node.add(msg)
+        return cch_node.digest(out)
     if typ == "duplex":
-        node = _duplex_from_kat(f)
-        node.add(msg)
-        return node.squeeze(out)
+        duplex_node = _duplex_from_kat(f)
+        duplex_node.add(msg)
+        return duplex_node.squeeze(out)
     if typ == "tree":
         return tree_digest(partial(_duplex_from_kat, f),
                            lambda node, n: node.squeeze(n),

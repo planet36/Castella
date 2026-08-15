@@ -496,6 +496,9 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
         out = build_trail(m, cube_bits, blk, rounds, inverse)
         if out is None:
             balanced += BLOCK_BITS
+            print(f"  block {blk:>2}: unreachable from the cube, all "
+                  f"{BLOCK_BITS} bits balanced [{time.time() - t0:.0f} s]",
+                  flush=True)
             continue
         m.s.set("timeout", int(timeout_s * 1000))
         if not reported:

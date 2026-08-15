@@ -938,7 +938,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     elapsed = time.monotonic() - t0
 
     if not weights:
-        if shell is None or shell >= 0:
+        if shell is None or best_weight is None or shell >= 0:
             # The defining trail is itself inside any shell >= 0, so an
             # empty result there means the solver failed to re-find a trail
             # known to satisfy every constraint.

@@ -76,6 +76,13 @@ public:
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
 
+    /// The number of permutation rounds used by a periodic mix
+    /**
+    * The full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN, without the
+    * extra round \c FINAL_NUM_ROUNDS adds.
+    */
+    static constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>();
+
     /// The number of permutation rounds used at finalization
     /**
     * One more than the full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN.
@@ -214,6 +221,29 @@ private:
         has_been_finalized_ = false;
     }
 
+    /// Count one absorption and decide whether the state should be mixed
+    /**
+    * If periodic mixing is enabled, advances \a absorbs_since_mix, resetting
+    * it when it reaches the mix rate.
+    * This is not a pure predicate.  Call this exactly once per absorption.
+    *
+    * \param absorbs_since_mix a reference to the mix-schedule counter (the
+    *        member, or a local staging copy of it)
+    * \return whether the state should be mixed
+    */
+    [[nodiscard]] bool
+    should_mix_state_(decltype(absorbs_since_mix_)& absorbs_since_mix) const noexcept
+    {
+        if (mix_rate_ <= 0) // Periodic mixing is disabled.
+            return false;
+
+        if (++absorbs_since_mix < mix_rate_)
+            return false;
+
+        absorbs_since_mix = 0;
+        return true;
+    }
+
     /// Absorb \a src into the state and perhaps apply the permutation function
     /**
     * \param src the bytes to absorb
@@ -230,17 +260,10 @@ private:
 
         simd_compress_aes_enc_r3_arr(state_, src_blocks);
 
-        if (mix_rate_ > 0)
+        if (should_mix_state_(absorbs_since_mix_))
         {
             // Periodically mix the state.
-
-            ++absorbs_since_mix_;
-
-            if (absorbs_since_mix_ >= mix_rate_)
-            {
-                Castella::permute(state_, Castella::NUM_ROUNDS_MIN<N>());
-                absorbs_since_mix_ = 0;
-            }
+            Castella::permute(state_, MIX_NUM_ROUNDS);
         }
     }
 
@@ -306,17 +329,10 @@ private:
 
                 src = src.subspan(get_state_size_bytes());
 
-                if (mix_rate_ > 0)
+                if (should_mix_state_(absorbs_since_mix))
                 {
                     // Periodically mix the state.
-
-                    ++absorbs_since_mix;
-
-                    if (absorbs_since_mix >= mix_rate_)
-                    {
-                        Castella::permute(state, Castella::NUM_ROUNDS_MIN<N>());
-                        absorbs_since_mix = 0;
-                    }
+                    Castella::permute(state, MIX_NUM_ROUNDS);
                 }
             } while (std::size(src) >= get_state_size_bytes());
 

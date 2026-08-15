@@ -136,7 +136,6 @@ public:
             state_t state_a = node_a_.state_;
             state_t state_b = node_b_.state_;
             auto absorbs_since_mix = node_a_.absorbs_since_mix_;
-            const auto mix_rate = node_a_.mix_rate_;
 
             do
             {
@@ -148,19 +147,12 @@ public:
                 src_a = src_a.subspan(node_a_.get_state_size_bytes());
                 src_b = src_b.subspan(node_b_.get_state_size_bytes());
 
-                if (mix_rate > 0)
+                // The lanes share one absorb schedule, so one counter
+                // decides the mix for both states.
+                if (node_a_.should_mix_state_(absorbs_since_mix))
                 {
-                    // Periodically mix the states (in the same iteration:
-                    // the lanes share one absorb schedule).
-
-                    ++absorbs_since_mix;
-
-                    if (absorbs_since_mix >= mix_rate)
-                    {
-                        Castella::permute(state_a, Castella::NUM_ROUNDS_MIN<N>());
-                        Castella::permute(state_b, Castella::NUM_ROUNDS_MIN<N>());
-                        absorbs_since_mix = 0;
-                    }
+                    Castella::permute(state_a, node_type::MIX_NUM_ROUNDS);
+                    Castella::permute(state_b, node_type::MIX_NUM_ROUNDS);
                 }
             } while (std::size(src_a) >= node_a_.get_state_size_bytes());
 

@@ -18,9 +18,11 @@
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
+#include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <err.h>
 #include <unistd.h>
 #include <vector>
 
@@ -64,7 +66,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         duplex.squeeze_to(buf);
         if (std::fwrite(std::data(buf), 1, std::size(buf), stdout) != std::size(buf))
+        {
+            // A closed reader is not an error.
+            if (errno != EPIPE)
+            {
+                err(EXIT_FAILURE, "fwrite");
+            }
             break;
+        }
     }
 
     return 0;

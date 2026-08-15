@@ -9,6 +9,9 @@
 
 #pragma once
 
+#if defined(DEBUG)
+#include <cassert>
+#endif
 #include <charconv>
 #include <concepts>
 #include <cstdio>
@@ -58,6 +61,11 @@ parse_int(std::string_view s,
             base = 10;
         }
     }
+
+#if defined(DEBUG)
+    // std::from_chars supports integer bases from 2 through 36.
+    assert((base >= 2) && (base <= 36));
+#endif
 
     T value{};
     const auto [ptr, ec] = std::from_chars(std::data(s), std::data(s) + std::size(s), value, base);

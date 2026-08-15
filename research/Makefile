@@ -20,6 +20,9 @@ test:
 	python3 trail-model-crossvalidate.py
 	python3 permute-invariant-subspaces.py --self-test
 
+# The verifiers do not use google-benchmark, so keep them buildable without it.
+%-verify: LDLIBS =
+
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $< -o $@ $(LDLIBS)

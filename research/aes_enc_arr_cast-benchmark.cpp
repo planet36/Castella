@@ -4,6 +4,7 @@
 #if defined(__x86_64__) && defined(__VAES__)
 
 #include "parse_int.hpp"
+#include "simd_equal.hpp"
 
 #include <algorithm>
 #include <array>
@@ -172,7 +173,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             aes_enc_arr(result_3, round_key_256);
         }
 
-        assert(std::memcmp(std::data(result_1), std::data(result_2), sizeof(result_1)) == 0);
+        assert(simd_arr_equal(result_1, result_2));
         assert(std::memcmp(std::data(result_1), std::data(result_3), sizeof(result_1)) == 0);
     }
 

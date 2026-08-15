@@ -187,8 +187,12 @@ private:
         assert(available_space > 0);
 #endif
 
+        // The set bits must not overlap.
         constexpr std::byte first_padding_byte_pattern{0b0000'0001};
         constexpr std::byte last_padding_byte_pattern{0b1000'0000};
+        static_assert((first_padding_byte_pattern & last_padding_byte_pattern) ==
+                          std::byte{0},
+                      "set bits must not overlap");
 
         const auto last_input_byte_idx = get_rate_size_bytes() - 1;
 

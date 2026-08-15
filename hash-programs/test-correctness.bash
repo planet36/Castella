@@ -8,8 +8,10 @@
 
 export LC_ALL=C
 
-test -x castella || exit
-test -x cch || exit
+SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
+
+test -x castella || { printf "%q: ./castella is not executable\n" "${SCRIPT_NAME}" 1>&2; exit 1; }
+test -x cch      || { printf "%q: ./cch is not executable\n"      "${SCRIPT_NAME}" 1>&2; exit 1; }
 
 PASS=0
 FAIL=0

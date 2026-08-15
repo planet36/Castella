@@ -204,7 +204,10 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         std::unique_lock lock{cv_mtx};
 
         if (getentropy(std::data(entropy_buf), sizeof(entropy_buf)) < 0)
+        {
+            // Not thread safe, but this is an acceptable risk.
             err(EXIT_FAILURE, "getentropy");
+        }
 
         hash_obj->add(entropy_buf);
 
@@ -416,8 +419,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             spdlog::info("Begin listening on http://{}:{} ...", host, port);
 
             if (!svr.listen_after_bind())
+            {
                 // Not thread safe, but this is an acceptable risk.
                 errx(EXIT_FAILURE, "svr.listen_after_bind() failed");
+            }
         });
 
     while (true)

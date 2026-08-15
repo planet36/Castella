@@ -966,10 +966,12 @@ private:
                 // for the calling thread to rethrow when it drains the
                 // slot(s).  On a pair claim, neither CV can be trusted, so
                 // both slots park it.
-                slot->error = std::current_exception();
+                const std::exception_ptr error = std::current_exception();
+
+                slot->error = error;
 
                 if (slot2 != nullptr)
-                    slot2->error = std::current_exception();
+                    slot2->error = error;
             }
 
             // The slots' chunks hold message plaintext; wipe them (same

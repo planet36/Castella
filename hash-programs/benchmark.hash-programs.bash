@@ -102,7 +102,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 
 printf 'Exported results: %q\n' "$CSV"
 
-# Most recent output (nproc=8)
+# Example of most recent output (nproc=8)
 :<<EOT
 
 Summary

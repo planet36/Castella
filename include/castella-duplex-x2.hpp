@@ -280,6 +280,11 @@ private:
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
+#if defined(DEBUG)
+        assert(w >= 1);
+        assert(w <= 255);
+#endif
+
         add_(as_byte_span(w), as_byte_span(w));
         add_(as_byte_span(x).first(w), as_byte_span(x).first(w));
     }

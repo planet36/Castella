@@ -532,6 +532,7 @@ private:
 
 #if defined(DEBUG)
         assert(w >= 1);
+        assert(w <= 255);
 #endif
 
         node.add(as_byte_span(w));
@@ -550,6 +551,7 @@ private:
 
 #if defined(DEBUG)
         assert(w >= 1);
+        assert(w <= 255);
 #endif
 
         node.add(as_byte_span(x).first(w));
@@ -627,6 +629,7 @@ private:
 
 #if defined(DEBUG)
         assert(w >= 1);
+        assert(w <= 255);
 #endif
 
         pair.add(as_byte_span(w), as_byte_span(w));

@@ -50,6 +50,8 @@ left_encode(const std::unsigned_integral auto x) noexcept
 
     const auto w = static_cast<uint8_t>(byte_width(x));
 
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
 #if defined(DEBUG)
     assert(w >= 1);
     assert(w <= 255);
@@ -84,6 +86,8 @@ right_encode(const std::unsigned_integral auto x) noexcept
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
     const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
 #if defined(DEBUG)
     assert(w >= 1);

@@ -530,6 +530,8 @@ private:
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
 
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
 #if defined(DEBUG)
         assert(w >= 1);
         assert(w <= 255);
@@ -548,6 +550,8 @@ private:
     static void absorb_right_encoded_(node_type& node, const std::unsigned_integral auto x)
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
+
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
 #if defined(DEBUG)
         assert(w >= 1);
@@ -626,6 +630,8 @@ private:
                                         const std::unsigned_integral auto x)
     {
         const auto w = static_cast<uint8_t>(byte_width(x));
+
+        static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
 #if defined(DEBUG)
         assert(w >= 1);

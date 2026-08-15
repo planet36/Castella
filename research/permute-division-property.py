@@ -123,6 +123,7 @@ import sys
 import time
 import types
 
+import permute_model as PM
 import z3
 
 BLOCK_BITS = 128
@@ -150,8 +151,7 @@ def load(name: str, filename: str) -> types.ModuleType:
     return module
 
 
-TS = load("trail_search", "permute-trail-search.py")
-SBOX = TS.SBOX
+SBOX = PM.SBOX
 
 
 def gf_mul(a: int, b: int) -> int:
@@ -226,7 +226,7 @@ INV_MC_BITS = mc_bit_matrix(INV_MC4)
 def inv_shift_rows_src(byte_idx: int) -> int:
     """The input byte index that InvShiftRows moves to byte_idx.
 
-    Inverse of TS.shift_rows_src as a permutation: rows shift right where
+    Inverse of PM.shift_rows_src as a permutation: rows shift right where
     the forward map shifts left.
     """
     col, row = divmod(byte_idx, 4)
@@ -317,7 +317,7 @@ class Model:
         b = self.sbox_layer(bits)
         shifted: list[z3.BoolRef] = [None] * BLOCK_BITS  # type: ignore[list-item]
         for i in range(BLOCK_BYTES):
-            src = TS.shift_rows_src(i)
+            src = PM.shift_rows_src(i)
             for k in range(8):
                 shifted[8 * i + k] = b[8 * src + k]
         out: list[z3.BoolRef] = [None] * BLOCK_BITS  # type: ignore[list-item]
@@ -730,9 +730,9 @@ def self_test() -> None:
         ref = [gf_mul(MC4[r][0], col[0]) ^ gf_mul(MC4[r][1], col[1])
                ^ gf_mul(MC4[r][2], col[2]) ^ gf_mul(MC4[r][3], col[3])
                for r in range(4)]
-        if TS.mix_column(col) != ref:
+        if PM.mix_column(col) != ref:
             raise SelfTestError(
-                f"mix_column{tuple(col)} is {TS.mix_column(col)}, expected "
+                f"mix_column{tuple(col)} is {PM.mix_column(col)}, expected "
                 f"the GF(2^8) MDS product {ref}")
     want = {1: 1, 2: 2, 3: 18, 4: 34}
     for rounds, blocks in want.items():
@@ -787,7 +787,7 @@ def self_test_inverse() -> None:
 def self_test_inverse_layers() -> None:
     """InvShiftRows and InvMixColumns invert their forward counterparts."""
     for i in range(BLOCK_BYTES):
-        if inv_shift_rows_src(TS.shift_rows_src(i)) != i:
+        if inv_shift_rows_src(PM.shift_rows_src(i)) != i:
             raise SelfTestError(
                 f"InvShiftRows does not invert ShiftRows at byte {i}")
     for i in range(32):

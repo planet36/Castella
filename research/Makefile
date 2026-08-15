@@ -17,6 +17,7 @@ all: $(BINS)
 test:
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for spec-conformance.py'; exit 1; }
 	python3 spec-conformance.py
+	python3 trail-model-crossvalidate.py
 
 # The built-in recipe for the implicit rule uses $^ instead of $<
 %: %.cpp

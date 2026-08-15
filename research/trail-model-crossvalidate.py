@@ -3,19 +3,19 @@
 
 # pylint: disable=invalid-name
 
-"""Check permute-trail-search.py's model of `P` against the spec model.
+"""Check permute_model's model of `P` against the spec model.
 
 Every active-S-box bound and every trail weight in research/README.md is a
-statement about the *model* in permute-trail-search.py, not directly about
-Castella.  That model is a third implementation of the permutation -- separate
-from the C++ and from spec-conformance.py -- and its layer machinery
-(`shift_rows_src`, `mix_column`, `transpose_map`) had never been compared with
-either.  The published AES bounds validate it at r=1, where Castella is pure
+statement about the *model* in permute_model.py, which permute-trail-search.py
+and the other solver programs all share, not directly about Castella.  That
+model is a third implementation of the permutation -- separate from the C++
+and from spec-conformance.py -- and its layer machinery (`shift_rows_src`,
+`mix_column`, `transpose_map`) had never been compared with either.  The published AES bounds validate it at r=1, where Castella is pure
 AES and the transpose has not yet acted; nothing validated it above that.
 
 This drives random state PAIRS through spec-conformance.py's `permute` -- the
 from-the-spec implementation that reproduces all 91 KATs -- and propagates
-their difference, in lockstep, through the trail model's own layers, feeding it
+their difference, in lockstep, through the shared model's own layers, feeding it
 the S-box output differences the concrete pair actually produces.  The two must
 agree byte for byte at every round count.
 
@@ -39,6 +39,9 @@ import os
 import random
 import sys
 import types
+from itertools import batched
+
+import permute_model as PM
 
 N = 16
 ROUND_COUNTS = (1, 2, 3, 4, 5, 6)
@@ -64,35 +67,35 @@ def load(name: str, filename: str) -> types.ModuleType:
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
 # pylint: disable=too-many-locals
-def propagate_with_trail_model(ts, sc, diff, xs, xps, rounds):
+def propagate_with_trail_model(sc, diff, xs, xps, rounds):
     """Propagate diff through the TRAIL MODEL's layers for `rounds` rounds.
 
     xs/xps are the concrete pair, advanced with the SPEC model, so the S-box
     output differences handed to the trail model are the real ones.
     """
-    tmap = ts.transpose_map(N)
+    tmap = PM.transpose_map(N)
     state = [list(block) for block in diff]
     for rnd in range(16 - rounds, 16):
-        for aes_rnd in range(ts.AES_NUM_ROUNDS):
+        for aes_rnd in range(PM.AES_NUM_ROUNDS):
             nxt = []
             for i in range(N):
                 douts = []
-                for b in range(ts.BLOCK_BYTES):
-                    src = ts.shift_rows_src(b)
+                for b in range(PM.BLOCK_BYTES):
+                    src = PM.shift_rows_src(b)
                     if state[i][src] == 0:
                         douts.append(0)
                         continue
-                    douts.append(ts.SBOX[xs[i][src]] ^ ts.SBOX[xps[i][src]])
+                    douts.append(PM.SBOX[xs[i][src]] ^ PM.SBOX[xps[i][src]])
                 block_out = []
-                for col in ts.batched(douts, 4):
-                    block_out += ts.mix_column(col)
+                for col in batched(douts, 4):
+                    block_out += PM.mix_column(col)
                 nxt.append(block_out)
             state = nxt
             xs = [sc.aesenc(bytes(xs[i]), sc.RC[rnd][aes_rnd][i])
                   for i in range(N)]
             xps = [sc.aesenc(bytes(xps[i]), sc.RC[rnd][aes_rnd][i])
                    for i in range(N)]
-        nxt = [[0] * ts.BLOCK_BYTES for _ in range(N)]
+        nxt = [[0] * PM.BLOCK_BYTES for _ in range(N)]
         for (i, b), (j, b2) in tmap.items():
             nxt[j][b2] = state[i][b]
         state = nxt
@@ -113,7 +116,6 @@ def random_pair(rng):
 
 def main() -> None:
     """Cross-validate at every round count and report."""
-    ts = load("trail_search", "permute-trail-search.py")
     sc = load("spec_model", "spec-conformance.py")
     rng = random.Random(int(sys.argv[1], 0) if len(sys.argv) > 1 else 0xC8)
 
@@ -125,13 +127,13 @@ def main() -> None:
                      for p, q in zip(sc.permute(list(x), rounds),
                                      sc.permute(list(xp), rounds))]
             got = propagate_with_trail_model(
-                ts, sc, diff, [list(b) for b in x], [list(b) for b in xp],
+                sc, diff, [list(b) for b in x], [list(b) for b in xp],
                 rounds)
             if [list(b) for b in truth] != got:
                 raise CrossValidationError(
                     f"{rounds} round(s): spec model gives "
-                    f"{ts.hex_state([list(b) for b in truth])}, trail model "
-                    f"gives {ts.hex_state(got)}")
+                    f"{PM.hex_state([list(b) for b in truth])}, trail model "
+                    f"gives {PM.hex_state(got)}")
             total += 1
         print(f"{rounds} round(s): {PAIRS_PER_ROUND_COUNT} pairs agree")
     print(f"{total} state pairs verified, 0 failed")

@@ -95,12 +95,10 @@ Usage
   python3 permute-invariant-subspaces.py --self-test
 
 Exits nonzero if any decided check finds an invariant subspace, so it can
-gate regressions.  Nothing here solves anything, but it imports
-permute-trail-search.py for the cross-validated layer machinery
-(shift_rows_src, mix_column, transpose_map) and spec-conformance.py for the
-round function and constant schedule -- so no layer is modelled twice, and
-z3 is required even though it is never used, because the trail search
-imports it at module scope.
+gate regressions.  Nothing here solves anything, but it imports permute_model
+for the cross-validated layer machinery (shift_rows_src, mix_column,
+transpose_map) and spec-conformance.py for the round function and constant
+schedule -- so no layer is modelled twice.
 """
 
 import argparse
@@ -109,7 +107,9 @@ import os
 import random
 import sys
 import types
-from itertools import combinations
+
+import permute_model as PM
+from itertools import batched, combinations
 
 N_BLOCKS = 16
 BLOCK_BYTES = 16
@@ -135,11 +135,10 @@ def load(name: str, filename: str) -> types.ModuleType:
     return module
 
 
-TS = load("trail_search", "permute-trail-search.py")
 SC = load("spec_model", "spec-conformance.py")
 
-SBOX = TS.SBOX
-DDT = TS.DDT
+SBOX = PM.SBOX
+DDT = PM.DDT
 
 
 def gf_mul(a: int, b: int) -> int:
@@ -262,17 +261,17 @@ def round_support(active: frozenset[int]) -> frozenset[int]:
     MixColumns output byte is active whenever any byte of its column is.
     """
     cur = set(active)
-    for _ in range(TS.AES_NUM_ROUNDS):
+    for _ in range(PM.AES_NUM_ROUNDS):
         after_sr = {pos(i, b) for i in range(N_BLOCKS)
                     for b in range(BLOCK_BYTES)
-                    if pos(i, TS.shift_rows_src(b)) in cur}
+                    if pos(i, PM.shift_rows_src(b)) in cur}
         nxt: set[int] = set()
         for i in range(N_BLOCKS):
             for c in range(4):
                 if any(pos(i, 4 * c + r) in after_sr for r in range(4)):
                     nxt |= {pos(i, 4 * c + r) for r in range(4)}
         cur = nxt
-    tmap = TS.transpose_map(N_BLOCKS)
+    tmap = PM.transpose_map(N_BLOCKS)
     return frozenset(pos(j, c) for (i, b), (j, c) in tmap.items()
                      if pos(i, b) in cur)
 
@@ -326,7 +325,7 @@ def one_round(state: list[bytes], rnd: int,
     control for section 5: it is the permutation the design would be if the
     constants did no symmetry-breaking at all.
     """
-    for aes_r in range(TS.AES_NUM_ROUNDS):
+    for aes_r in range(PM.AES_NUM_ROUNDS):
         state = [SC.aesenc(state[i],
                            ZERO_RC if zero_rc else SC.RC[rnd][aes_r][i])
                  for i in range(N_BLOCKS)]
@@ -400,7 +399,7 @@ def partition_basis(parts: list[list[int]]) -> list[int]:
 
 def apply_shift_rows(state: list[bytes]) -> list[bytes]:
     """ShiftRows on every block."""
-    return [bytes(blk[TS.shift_rows_src(b)] for b in range(BLOCK_BYTES))
+    return [bytes(blk[PM.shift_rows_src(b)] for b in range(BLOCK_BYTES))
             for blk in state]
 
 
@@ -409,8 +408,8 @@ def apply_mix_columns(state: list[bytes]) -> list[bytes]:
     out = []
     for blk in state:
         acc: list[int] = []
-        for col in TS.batched(blk, 4):
-            acc += TS.mix_column(col)
+        for col in batched(blk, 4):
+            acc += PM.mix_column(col)
         out.append(bytes(acc))
     return out
 
@@ -472,9 +471,9 @@ def self_test() -> None:
         ref = [gf_mul(MC4[r][0], col[0]) ^ gf_mul(MC4[r][1], col[1])
                ^ gf_mul(MC4[r][2], col[2]) ^ gf_mul(MC4[r][3], col[3])
                for r in range(4)]
-        if TS.mix_column(col) != ref:
+        if PM.mix_column(col) != ref:
             raise SelfTestError(
-                f"mix_column{tuple(col)} is {TS.mix_column(col)}, "
+                f"mix_column{tuple(col)} is {PM.mix_column(col)}, "
                 f"expected the GF(2^8) MDS product {ref}")
 
     # one_round must agree with the spec model's 1-round permutation, which
@@ -522,7 +521,7 @@ def check_skeleton_cancels() -> None:
 
     sr = [[0] * BLOCK_BYTES for _ in range(BLOCK_BYTES)]
     for b in range(BLOCK_BYTES):
-        sr[b][TS.shift_rows_src(b)] = 1
+        sr[b][PM.shift_rows_src(b)] = 1
     mc = [[0] * BLOCK_BYTES for _ in range(BLOCK_BYTES)]
     for col in range(4):
         for r in range(4):
@@ -539,7 +538,7 @@ def check_skeleton_cancels() -> None:
     sup = {0}
     for _ in range(2):
         after_sr = {b for b in range(BLOCK_BYTES)
-                    if TS.shift_rows_src(b) in sup}
+                    if PM.shift_rows_src(b) in sup}
         sup = {4 * col + r for col in range(4) for r in range(4)
                if any(4 * col + rr in after_sr for rr in range(4))}
     if len(sup) != BLOCK_BYTES:
@@ -629,7 +628,7 @@ def report_classes(bases: dict[str, list[int]],
             print(f"    {lname:<11} -> "
                   f"{' & '.join(lands) if lands else 'no class'}")
         rc_in = sum(1 for r in range(N_BLOCKS)
-                    for a in range(TS.AES_NUM_ROUNDS)
+                    for a in range(PM.AES_NUM_ROUNDS)
                     if state_to_int(list(SC.RC[r][a])) in echelons[name])
         print(f"    round constants lying in the class: {rc_in} of 48")
         if rc_in:

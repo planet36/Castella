@@ -384,6 +384,9 @@ def _cch_from_kat(f: dict[str, str]) -> CompressCastella:
 
 def kat_digest(typ: str, f: KatFields) -> bytes:
     """Compute the digest that one parsed KAT line calls for."""
+    # One return per KAT type keeps each type's construction under the name
+    # it belongs to, which is what makes this readable against SPEC.md.
+    # pylint: disable=too-many-return-statements
     # The primitive lines carry no message, and their "digest" is the raw
     # output: one round constant, or the whole permuted state.
     if typ == "rc":

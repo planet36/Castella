@@ -67,11 +67,15 @@ hex_to_bytes(const std::string_view s)
     return result;
 }
 
-/// Compare two byte spans in constant time (for equal lengths)
+/// Compare two byte spans without an early exit on the first difference (for equal lengths)
 /**
-* The comparison time depends only on the lengths, never on where the
-* contents differ, so a verifier cannot be used as a timing oracle for an
-* expected digest (relevant when the digest is a MAC).
+* Every byte is examined whatever the contents, so a verifier is not meant to
+* be usable as a timing oracle for an expected digest (relevant when the
+* digest is a MAC).
+*
+* C++ cannot express a timing guarantee.  \a diff is \c volatile so the
+* compiler must perform every accumulation, in order, rather than stop at the
+* first difference.
 */
 [[nodiscard]] inline bool
 equal_constant_time(const std::span<const std::byte> a,
@@ -80,7 +84,7 @@ equal_constant_time(const std::span<const std::byte> a,
     if (std::size(a) != std::size(b))
         return false;
 
-    unsigned int diff = 0;
+    volatile unsigned int diff = 0;
 
     for (size_t i = 0; i < std::size(a); ++i)
     {

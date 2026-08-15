@@ -148,7 +148,7 @@ private:
     */
     fixed_vector<std::byte, sizeof(state_), alignof(block_t)> input_bytes_;
 
-    mutable std::mutex mtx_;
+    std::mutex mtx_;
 
     /// The number of absorptions since the state was last mixed
     int16_t absorbs_since_mix_ = 0;

@@ -14,9 +14,10 @@ probability 4/256 = 2^-6) and the best weight found here measures how tight
 the byte-level bound is ("trail tightness").
 
 That reading requires A to be a *proven* MILP optimum.  Where the MILP only
-reached an incumbent -- N=16 at r >= 3, as of 2026-08-02 -- 6*A is not a
-lower bound on anything, and a trail found against it is a ceiling with no
-floor beneath it.  The program says which case it is on startup.
+reached an incumbent -- the cells in UNPROVEN_MIN_ACTIVE below -- 6*A is not
+a lower bound on anything, and a trail found against it is a ceiling with no
+floor beneath it.  The program reads those tables and says which case it is
+on startup.
 
 Model (two stages, both in z3)
 ------------------------------

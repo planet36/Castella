@@ -39,8 +39,8 @@ Prerequisites: the repository toolchain (GCC 14+, `make`) for the C++ programs �
 | `permute-multiplicity-verify.py` | nothing beyond Python 3 — it imports `spec-conformance.py` and solves nothing |
 | `permute-min-active-sboxes.py` | [PuLP](https://pypi.org/project/PuLP/) and [highspy](https://pypi.org/project/highspy/) — venv recipe in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 1.  highspy is needed for **every** invocation, not only the r ≥ 4 solves it alone can close: `--solver` defaults to `highs` and the script builds the HiGHS solver unconditionally, with no fallback.  `--solver cbc` drops it (CBC ships with PuLP) at the cost of proving nothing above r = 3.  On Arch, HiGHS is also packaged (`highs` + `python-highspy`), but PuLP is not, so the venv is required either way |
 | `permute-trail-search.py` | the [z3](https://github.com/Z3Prover/z3) solver (Arch `python-z3-solver`) |
-| `trail-model-crossvalidate.py` | z3 as well — it imports the trail search to reach its layer machinery |
-| `permute-invariant-subspaces.py` | z3 as well, for the same reason — it solves nothing itself |
+| `trail-model-crossvalidate.py` | nothing beyond Python 3 — its layer machinery comes from `permute_model.py` |
+| `permute-invariant-subspaces.py` | nothing beyond Python 3, for the same reason — it solves nothing itself |
 | `permute-division-property.py` | z3 |
 
 All commands run from `research/` unless noted.
@@ -193,10 +193,9 @@ The §4 MILP bounds are *lower* bounds on active S-boxes.  This row checks them 
 ```bash
 python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
 
-# The trail model IS a third implementation of P; this compares it with the
+# permute_model.py IS a third implementation of P; this compares it with the
 # KAT-verified one in spec-conformance.py.  240 random state pairs, r=1..6.
-# ~3 min.  It solves nothing itself but still needs z3: importing the trail
-# search runs that file's module-scope `import z3`.
+# 0.8 s, no z3 needed, and `make -C research test` runs it too.
 python3 trail-model-crossvalidate.py
 ```
 

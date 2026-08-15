@@ -115,15 +115,15 @@ free -h                                                       # -M is per proces
 | `python3 research/permute-invariant-subspaces.py` | the exhaustive byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
-| `python3 research/trail-model-crossvalidate.py` | The trail search models `P` a **third** time (beside the C++ and spec-conformance.py); this compares its difference propagation with the KAT-verified one, r = 1..6 | `240 state pairs verified, 0 failed`, ~3 min |
+| `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time (beside the C++ and spec-conformance.py); this compares its difference propagation with the KAT-verified one, r = 1..6.  Also run by `make -C research test` | `240 state pairs verified, 0 failed`, 0.8 s |
 | `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 6 s (2026-08-09, under the HiGHS default; the 25 s this row used to read is the CBC figure) |
 
 (Everything above except the last row and the two compiled ones runs on the system
 `python3`. The trail-search rows
-need z3, Arch `python-z3-solver`; `trail-model-crossvalidate.py`, `permute-division-property.py`
-and `permute-invariant-subspaces.py` need it too — the last of these solves nothing itself
-but imports the machinery. `permute-multiplicity-verify.py` needs only the standard library
+need z3, Arch `python-z3-solver`; `permute-division-property.py` needs it too.
+`trail-model-crossvalidate.py` and `permute-invariant-subspaces.py` do not: they take the
+layer machinery from `permute_model.py`, which is pure standard library. `permute-multiplicity-verify.py` needs only the standard library
 and `spec-conformance.py`. The two `./`-prefixed rows are compiled: `make -C research` first,
 which links google-benchmark into every binary in that directory, so the probes need it
 installed even though they benchmark nothing.)

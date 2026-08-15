@@ -63,6 +63,14 @@ TIME_LIMIT="${TIME_LIMIT:-14400}"
 # exceeded` after ONE trail, memory-bound rather than time-bound.
 MEM="${MEM:-2500}"
 
+# How many solvers may run at once.  Four at -M 2500 is the most a 16 GiB box
+# takes: six is 15 GB of worst-case allocation against 15 GiB with no swap.
+# RSS grows with ELAPSED TIME rather than with r -- one check() accumulates
+# learned clauses for its whole budget -- so a batch that looks safe at 20
+# minutes need not be at four hours.  The launch loop below waits rather than
+# exceed this, so passing all six round counts at once is safe.
+MAX_JOBS="${MAX_JOBS:-4}"
+
 mode=enumerate
 dry_run=false
 while getopts ':den' opt; do
@@ -122,7 +130,6 @@ esac
 
 $dry_run || mkdir -p -- "$OUT" || exit 1
 
-pids=()
 selected=0
 for R in "$@"; do
     r_mem=$MEM
@@ -143,19 +150,18 @@ for R in "$@"; do
         continue
     fi
 
+    # Hold at MAX_JOBS: wait for one to finish before starting another.
+    while (( $(jobs -rp | wc -l) >= MAX_JOBS )); do
+        wait -n
+    done
+
     "${cmd[@]}" > "$log" 2>&1 &
-    pids+=($!)
     echo "launched $mode r=$R pid $! -M $r_mem -> $log"
 done
 
 (( selected )) || exit 1
 $dry_run && exit 0
 
-# Run no more than four of these at once on a 16 GiB box: six at -M 2500 is 15
-# GB of worst-case allocation against 15 GiB with no swap.  RSS grows with
-# ELAPSED TIME rather than with r -- one check() accumulates learned clauses for
-# its whole budget -- so a batch that looks safe at 20 minutes need not be at
-# four hours.
-wait "${pids[@]}"
+wait
 grep -H -e 'best characteristic' -e 'cluster:.*NOTE' -e 'shell \(IN\)\?COMPLETE' \
     "$OUT/${mode}_r"*.log

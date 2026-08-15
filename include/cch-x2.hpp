@@ -123,56 +123,59 @@ public:
             }
         }
 
-#if defined(USE_LOCAL_STAGING_COPY)
-        using state_t = node_type::state_t;
-        using block_t = node_type::block_t;
-
-        // Compress whole chunks directly from the source buffers with the
-        // two states' work interleaved (the point of this class); the
-        // states are kept in local variables so that they may stay in
-        // registers across chunks, as in the single node's bulk loop.
-        if (std::size(src_a) >= node_a_.get_state_size_bytes())
+        if constexpr (node_type::USE_LOCAL_STAGING_COPY)
         {
-            state_t state_a = node_a_.state_;
-            state_t state_b = node_b_.state_;
-            auto absorbs_since_mix = node_a_.absorbs_since_mix_;
+            using state_t = node_type::state_t;
+            using block_t = node_type::block_t;
 
-            do
+            // Compress whole chunks directly from the source buffers with the
+            // two states' work interleaved (the point of this class); the
+            // states are kept in local variables so that they may stay in
+            // registers across chunks, as in the single node's bulk loop.
+            if (std::size(src_a) >= node_a_.get_state_size_bytes())
             {
-                simd_compress_aes_enc_r3_arr(
-                    state_a, reinterpret_cast<const block_t*>(std::data(src_a)));
-                simd_compress_aes_enc_r3_arr(
-                    state_b, reinterpret_cast<const block_t*>(std::data(src_b)));
+                state_t state_a = node_a_.state_;
+                state_t state_b = node_b_.state_;
+                auto absorbs_since_mix = node_a_.absorbs_since_mix_;
+
+                do
+                {
+                    simd_compress_aes_enc_r3_arr(
+                        state_a, reinterpret_cast<const block_t*>(std::data(src_a)));
+                    simd_compress_aes_enc_r3_arr(
+                        state_b, reinterpret_cast<const block_t*>(std::data(src_b)));
+
+                    src_a = src_a.subspan(node_a_.get_state_size_bytes());
+                    src_b = src_b.subspan(node_b_.get_state_size_bytes());
+
+                    // The lanes share one absorb schedule, so one counter
+                    // decides the mix for both states.
+                    if (node_a_.should_mix_state_(absorbs_since_mix))
+                    {
+                        Castella::permute(state_a, node_type::MIX_NUM_ROUNDS);
+                        Castella::permute(state_b, node_type::MIX_NUM_ROUNDS);
+                    }
+                } while (std::size(src_a) >= node_a_.get_state_size_bytes());
+
+                node_a_.state_ = state_a;
+                node_b_.state_ = state_b;
+                node_a_.absorbs_since_mix_ = absorbs_since_mix;
+                node_b_.absorbs_since_mix_ = absorbs_since_mix;
+            }
+        }
+        else
+        {
+            // Then, process whole chunks directly from the sources, bypassing the
+            // input buffers.
+            while (std::size(src_a) >= node_a_.get_state_size_bytes())
+            {
+                node_a_.absorb_(src_a);
+                node_b_.absorb_(src_b);
 
                 src_a = src_a.subspan(node_a_.get_state_size_bytes());
                 src_b = src_b.subspan(node_b_.get_state_size_bytes());
-
-                // The lanes share one absorb schedule, so one counter
-                // decides the mix for both states.
-                if (node_a_.should_mix_state_(absorbs_since_mix))
-                {
-                    Castella::permute(state_a, node_type::MIX_NUM_ROUNDS);
-                    Castella::permute(state_b, node_type::MIX_NUM_ROUNDS);
-                }
-            } while (std::size(src_a) >= node_a_.get_state_size_bytes());
-
-            node_a_.state_ = state_a;
-            node_b_.state_ = state_b;
-            node_a_.absorbs_since_mix_ = absorbs_since_mix;
-            node_b_.absorbs_since_mix_ = absorbs_since_mix;
+            }
         }
-#else
-        // Then, process whole chunks directly from the sources, bypassing the
-        // input buffers.
-        while (std::size(src_a) >= node_a_.get_state_size_bytes())
-        {
-            node_a_.absorb_(src_a);
-            node_b_.absorb_(src_b);
-
-            src_a = src_a.subspan(node_a_.get_state_size_bytes());
-            src_b = src_b.subspan(node_b_.get_state_size_bytes());
-        }
-#endif
 
         // Finally, store the remaining partial chunks.
         if (!std::empty(src_a))

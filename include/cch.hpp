@@ -35,20 +35,6 @@
 #include <utility>
 #include <vector>
 
-/*
-* The technique is usually called a local staging copy (also referred to as an
-* accumulator pattern, or from the compiler's side, what it enables: scalar
-* replacement of aggregates / register promotion). The idea: copy a member into
-* a local variable, mutate the local across the loop, write it back once at the
-* end. Because the local's address never escapes anywhere the compiler can't
-* track, the compiler can prove — via escape analysis, not type-based alias
-* analysis — that nothing else touches it, and can keep it in registers for the
-* loop's duration instead of reloading from memory every iteration. It
-* sidesteps std::byte's strict-aliasing exemption entirely rather than trying
-* to argue with it.
-*/
-#define USE_LOCAL_STAGING_COPY
-
 template <size_t N>
 struct compress_castella_hash_x2;
 
@@ -75,6 +61,22 @@ public:
     static_assert(MIX_RATE_MIN <= MIX_RATE_MAX);
     static_assert(MIX_RATE_MIN <= DEFAULT_MIX_RATE);
     static_assert(DEFAULT_MIX_RATE <= MIX_RATE_MAX);
+
+    /// Whether the bulk-absorb loops keep the state in a local staging copy
+    /**
+    * Such a loop mutates a local copy of the state and writes it back once at
+    * the end.  Nothing else can reach that local, so the compiler may keep it
+    * in registers for the whole loop.  The state member cannot be held that
+    * way: \c std::byte is exempt from strict aliasing, so the compiler must
+    * assume the source span may overlap it and reload the state each
+    * iteration.
+    *
+    * \c false selects the simpler loop, which is preserved for reference.
+    * The two paths produce the same digests.
+    *
+    * \c compress_castella_hash_x2 reads this one, so the two cannot disagree.
+    */
+    static constexpr bool USE_LOCAL_STAGING_COPY = true;
 
     /// The number of permutation rounds used by a periodic mix
     /**
@@ -311,44 +313,47 @@ private:
             }
         }
 
-#if defined(USE_LOCAL_STAGING_COPY)
-        // Compress whole chunks directly from the source, bypassing the
-        // input buffer.  The state is kept in a local variable so that it
-        // may stay in registers across chunks: src is a std::byte span, and
-        // std::byte is exempt from strict aliasing, so the compiler cannot
-        // otherwise rule out state_ and src overlapping.
-        if (std::size(src) >= get_state_size_bytes())
+        if constexpr (USE_LOCAL_STAGING_COPY)
         {
-            state_t state = state_;
-            auto absorbs_since_mix = absorbs_since_mix_;
-
-            do
+            // Compress whole chunks directly from the source, bypassing the
+            // input buffer.  The state is kept in a local variable so that it
+            // may stay in registers across chunks: src is a std::byte span, and
+            // std::byte is exempt from strict aliasing, so the compiler cannot
+            // otherwise rule out state_ and src overlapping.
+            if (std::size(src) >= get_state_size_bytes())
             {
-                simd_compress_aes_enc_r3_arr(
-                    state, reinterpret_cast<const block_t*>(std::data(src)));
+                state_t state = state_;
+                auto absorbs_since_mix = absorbs_since_mix_;
+
+                do
+                {
+                    simd_compress_aes_enc_r3_arr(
+                        state, reinterpret_cast<const block_t*>(std::data(src)));
+
+                    src = src.subspan(get_state_size_bytes());
+
+                    if (should_mix_state_(absorbs_since_mix))
+                    {
+                        // Periodically mix the state.
+                        Castella::permute(state, MIX_NUM_ROUNDS);
+                    }
+                } while (std::size(src) >= get_state_size_bytes());
+
+                state_ = state;
+                absorbs_since_mix_ = absorbs_since_mix;
+            }
+        }
+        else
+        {
+            // Then, process whole chunks directly from the source, bypassing the
+            // input buffer.
+            while (std::size(src) >= get_state_size_bytes())
+            {
+                absorb_(src);
 
                 src = src.subspan(get_state_size_bytes());
-
-                if (should_mix_state_(absorbs_since_mix))
-                {
-                    // Periodically mix the state.
-                    Castella::permute(state, MIX_NUM_ROUNDS);
-                }
-            } while (std::size(src) >= get_state_size_bytes());
-
-            state_ = state;
-            absorbs_since_mix_ = absorbs_since_mix;
+            }
         }
-#else
-        // Then, process whole chunks directly from the source, bypassing the
-        // input buffer.
-        while (std::size(src) >= get_state_size_bytes())
-        {
-            absorb_(src);
-
-            src = src.subspan(get_state_size_bytes());
-        }
-#endif
 
         // Finally, store the remaining partial chunk.
         if (!std::empty(src))

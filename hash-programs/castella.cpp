@@ -115,9 +115,10 @@ bool quiet = false;
 /// The --key-file path; empty means unkeyed
 std::string key_file_path;
 
-/// The key bytes read from --key-file; empty means unkeyed
+/// The secret key bytes read from --key-file; empty means unkeyed
 /**
-* Secret; zeroized before the program exits.
+* This buffer is zeroized before the program exits, on every path.  Transient
+* copies made by the I/O layer while reading the key file are not.
 */
 std::vector<std::byte> key_bytes;
 // }}}
@@ -584,14 +585,21 @@ read_key_file(const std::string& path, const int max_size_bytes)
     while (file.get(c))
     {
         if (std::ssize(key) >= max_size_bytes)
+        {
+            // errx exits without unwinding, so the key must be scrubbed here.
+            explicit_bzero(std::data(key), std::size(key));
             errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)",
                  path.c_str(), max_size_bytes);
+        }
 
         key.push_back(static_cast<std::byte>(c));
     }
 
     if (!file.eof())
+    {
+        explicit_bzero(std::data(key), std::size(key));
         errx(EXIT_FAILURE, "%s: could not read key file", path.c_str());
+    }
 
     if (std::empty(key))
         errx(EXIT_FAILURE, "%s: key file is empty", path.c_str());

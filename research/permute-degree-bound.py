@@ -162,30 +162,54 @@ def zero_sum_reach_layers(bounds: list[int], n: int) -> int:
 AES_NUM_ROUNDS = 3  # AES rounds per Castella round (Castella::AES_NUM_ROUNDS)
 
 
+class SelfTestError(Exception):
+    """An S-box degree or the AES validation disagrees with a known value."""
+
+
 def run_self_test() -> list[int]:
     """Validate the S-box degrees and the known AES integral distinguisher.
 
     Returns the forward delta_i, so the caller need not recompute them.
+
+    Raises SelfTestError on any mismatch.  Deliberately not `assert`: this
+    runs on every invocation, not only under --self-test, and an
+    assert-based version would pass vacuously under `python3 -O`.
     """
     d_fwd = sbox_deltas(SBOX)
     d_inv = sbox_deltas(INV_SBOX)
-    assert d_fwd[1] == 7 and d_inv[1] == 7, "AES S-box degree must be 7"
-    assert all(d_fwd[i] == 7 for i in range(1, 8)), "AES delta_i must be 7 for i<8"
-    assert all(d_inv[i] == 7 for i in range(1, 8)), \
-        "inverse AES delta_i must be 7 for i<8"
-    assert d_fwd[8] == 8 and d_inv[8] == 8, "product of all 8 coords is degree 8"
-    assert gamma_of(d_fwd) == 7.0, "AES S-box gamma must be 7"
+
+    def check(ok: bool, what: str) -> None:
+        if not ok:
+            raise SelfTestError(what)
+
+    check(d_fwd[1] == 7 and d_inv[1] == 7,
+          f"AES S-box degree must be 7, got {d_fwd[1]} forward, "
+          f"{d_inv[1]} inverse")
+    check(all(d_fwd[i] == 7 for i in range(1, 8)),
+          f"AES delta_i must be 7 for i<8, got {d_fwd[1:8]}")
+    check(all(d_inv[i] == 7 for i in range(1, 8)),
+          f"inverse AES delta_i must be 7 for i<8, got {d_inv[1:8]}")
+    check(d_fwd[8] == 8 and d_inv[8] == 8,
+          f"product of all 8 coords is degree 8, got {d_fwd[8]} forward, "
+          f"{d_inv[8]} inverse")
+    check(gamma_of(d_fwd) == 7.0,
+          f"AES S-box gamma must be 7, got {gamma_of(d_fwd)}")
     # The reported zero-sum reach doubles the forward reach on this basis.
-    assert gamma_of(d_inv) == gamma_of(d_fwd), \
-        "inverse S-box gamma must match the forward gamma"
+    check(gamma_of(d_inv) == gamma_of(d_fwd),
+          f"inverse S-box gamma must match the forward gamma, got "
+          f"{gamma_of(d_inv)} against {gamma_of(d_fwd)}")
 
     # AES-128 validation: the classic integral (Square) distinguisher covers
     # 3 rounds; degree must be < 127 through round 3 and reach 127 at round 4.
     aes = degree_after_layers(128, 7.0, d_fwd[1], 6)
-    assert aes[2] < 127, "AES round-3 degree bound must be < 127 (distinguisher)"
-    assert aes[3] >= 127, "AES round-4 degree bound must reach 127"
-    assert zero_sum_reach_layers(aes, 128) == 3, \
-        "AES zero-sum reach must be 3 rounds (matches the Square distinguisher)"
+    check(aes[2] < 127,
+          f"AES round-3 degree bound must be < 127 (distinguisher), "
+          f"got {aes[2]}")
+    check(aes[3] >= 127,
+          f"AES round-4 degree bound must reach 127, got {aes[3]}")
+    check(zero_sum_reach_layers(aes, 128) == 3,
+          "AES zero-sum reach must be 3 rounds (matches the Square "
+          f"distinguisher), got {zero_sum_reach_layers(aes, 128)}")
     return d_fwd
 
 

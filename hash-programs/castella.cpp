@@ -6,21 +6,17 @@
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"
 #include "encode.hpp"
-#include "fd-utils.h"
+#include "file_input.hpp"
 #include "fnv.hpp"
-#include "mmap_sigbus_guard.hpp"
 #include "parse_int.hpp"
 #include "quote_shell_always.hpp"
 #include "to_unsigned.hpp"
-#include "unique_fd.hpp"
 
 #include <algorithm>
-#include <cerrno>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
-#include <fcntl.h>
 #include <format>
 #include <fstream>
 #include <getopt.h>
@@ -31,9 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <sys/mman.h>
 #include <system_error>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -421,133 +415,6 @@ void process_options(int argc, char* argv[])
         errx(EXIT_FAILURE, "the --quiet option is only meaningful with --check");
 }
 
-// https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/sha512-stream.c;hb=HEAD#l36
-// Gnulib uses 32768 for the buffer size
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define BLOCKSIZE 32768
-#if BLOCKSIZE % 128 != 0
-# error "invalid BLOCKSIZE"
-#endif
-
-// helper
-/**
-* \retval true upon error
-* \retval false upon success
-* \note With a DuplexTree hash object, this read loop feeds the tree's
-* streaming pipeline: worker threads hash previously read chunks while this
-* thread is blocked in read().
-*/
-[[nodiscard]] bool
-process_file_read_fd(int fd, auto& hash_obj)
-{
-    std::vector<std::byte> buf(BLOCKSIZE);
-
-    ssize_t num_bytes_read = 0;
-    // https://www.man7.org/linux/man-pages/man3/read.3p.html#RETURN_VALUE
-    // read(3p) returns either an error code or the number of bytes read
-    while ((num_bytes_read = ::read(fd, std::data(buf), std::size(buf))) > 0)
-    {
-        hash_obj.add(std::span{buf}.first(static_cast<size_t>(num_bytes_read)));
-    }
-
-    return num_bytes_read < 0;
-}
-
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define SYSERR_PATH(PATH) \
-    std::system_error(std::make_error_code(std::errc{errno}), quote_shell_always(PATH));
-
-/// Hash the contents of the file at \a path into \a hash_obj
-/**
-* \param path the file path; "-" means stdin
-* \param hash_obj the hash object to absorb the file contents into
-* \exception std::system_error on I/O error
-*/
-void
-process_file(const std::string& path, auto& hash_obj)
-{
-    const unique_fd fd{(path == "-") ? ::dup(STDIN_FILENO) : ::open(path.c_str(), O_RDONLY)};
-
-    if (!fd.ok())
-        throw SYSERR_PATH(path);
-
-    // lock file for reading
-    if (acq_read_lock_fd(fd.get()) < 0)
-        throw SYSERR_PATH(path);
-
-    if (is_seekable(fd.get()))
-    {
-        if (fadvise_sequential_noreuse(fd.get()))
-            throw SYSERR_PATH(path);
-    }
-
-    if (use_mmap)
-    {
-        const auto file_size = get_file_size(fd.get());
-        if (file_size < 0)
-            throw SYSERR_PATH(path);
-
-        if (file_size < BLOCKSIZE)
-        {
-            if (process_file_read_fd(fd.get(), hash_obj))
-                throw SYSERR_PATH(path);
-            return;
-        }
-
-        const auto mmap_size = get_mmap_size(file_size);
-
-        void* mmap_addr = ::mmap(nullptr, mmap_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);
-
-        if (mmap_addr == MAP_FAILED)
-        {
-            // mmap may have failed because the file isn't memory-mappable.
-
-            if (process_file_read_fd(fd.get(), hash_obj))
-                throw SYSERR_PATH(path);
-            return;
-        }
-
-        if (madvise_sequential_willneed(mmap_addr, file_size))
-        {
-            const int saved_errno = errno;
-            (void)::munmap(mmap_addr, mmap_size);
-            errno = saved_errno;
-            throw SYSERR_PATH(path);
-        }
-
-        // The whole mapping is added in one call, which is what lets a
-        // DuplexTree hash object take its one-shot batch path: the file's
-        // chunks are hashed in place (no copying) by its worker threads.
-        // add() can throw (mutex failure, allocation failure, or a worker
-        // thread's exception propagating out of the tree), so the mapping is
-        // released on that path too before the exception propagates.  The
-        // scoped_region guard turns a concurrent truncation (SIGBUS on a
-        // worker) into a clean error, and unpublishes the region on scope
-        // exit; add() joins all workers before returning, so no thread touches
-        // the mapping afterwards.
-        try
-        {
-            const mmap_sigbus::scoped_region guard{
-                mmap_addr, static_cast<size_t>(file_size), quote_shell_always(path)};
-
-            hash_obj.add(mmap_addr, file_size);
-        }
-        catch (...)
-        {
-            (void)::munmap(mmap_addr, mmap_size);
-            throw;
-        }
-
-        if (::munmap(mmap_addr, mmap_size) < 0)
-            throw SYSERR_PATH(path);
-    }
-    else
-    {
-        if (process_file_read_fd(fd.get(), hash_obj))
-            throw SYSERR_PATH(path);
-    }
-}
-
 /// The maximum key size (in bytes) for the given chunk size
 /**
 * The key and its bytepad framing -- left_encode(chunk size) and
@@ -644,7 +511,9 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
     // so that the work can be spread across num_threads CPU cores.  The
     // digest depends on chunk_size but NEVER on num_threads, so any thread
     // count (and either I/O mode) produces the same output for the same
-    // input.
+    // input.  Streamed input parallelizes too: the read loop in
+    // process_file feeds the tree's streaming pipeline, so worker threads
+    // hash previously read chunks while it is blocked in read().
     Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix,
                                   keyed ? mac_function_name : function_name,
                                   custom, chunk_size_bytes, num_threads);
@@ -673,7 +542,7 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
         (void)hash_obj.add(zeros);
     }
 
-    process_file(path, hash_obj);
+    process_file(path, hash_obj, use_mmap);
 
     if (keyed)
     {

@@ -98,7 +98,7 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 ### Subprojects
 
 - **`include/`** — The header-only library and its shared helpers; the sole `-I` root (`config.mk`), so every subproject includes these by bare filename (which is why headers can move within `include/` without touching most `#include` lines).
-  - *Not here*: headers used only by the hash programs live in `hash-programs/` — `check_utils.hpp`, `fd-utils.h`, `fnv.hpp`, `mmap_sigbus_guard.hpp` (a SIGBUS guard that turns a concurrent truncation of an mmap'd file into a clean error instead of a crash), `unique_fd.hpp`.
+  - *Not here*: headers used only by the hash programs live in `hash-programs/` — `check_utils.hpp`, `fd-utils.h`, `file_input.hpp` (opening a file and feeding it to any hash object, by `read()` loop or mmap; what each program does with the bytes stays in that program), `fnv.hpp`, `mmap_sigbus_guard.hpp` (a SIGBUS guard that turns a concurrent truncation of an mmap'd file into a clean error instead of a crash), `unique_fd.hpp`.
 - **`examples/`** — Usage demonstrations that are also a real test suite; see `examples/CLAUDE.md`, which loads when working there.
 - **`tests/`** — The test programs. `tests/README.md` describes each one; `KAT.txt` is regenerated only on a deliberate format change.
 - **`research/`** — Standalone programs, and the evidence behind the design parameters and the security claims.

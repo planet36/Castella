@@ -14,6 +14,13 @@
 #include <array>
 #include <cstddef>
 
+#if !((defined(__x86_64__) && defined(__AES__)) || \
+      (defined(__aarch64__) && defined(__ARM_FEATURE_AES)))
+
+#error "AES instruction support required"
+
+#endif
+
 /// Perform 1 round of AES encryption with \a aes_round_key on \a data
 [[nodiscard]] static inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t aes_round_key) noexcept

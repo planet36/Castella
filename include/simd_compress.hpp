@@ -56,6 +56,13 @@
 
 #include <cstddef>
 
+#if !((defined(__x86_64__) && defined(__AES__)) || \
+      (defined(__aarch64__) && defined(__ARM_FEATURE_AES)))
+
+#error "AES instruction support required"
+
+#endif
+
 /// Compress (via 2 rounds of AES encryption) 2 128-bit SIMD registers into 1,
 /// non-symmetrically and non-linearly
 /**

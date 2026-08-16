@@ -48,34 +48,34 @@ echo "# Receive bytes from the service."
 
 echo
 echo "GET /squeeze  # The default value is used."
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze" | basenc --wrap=0 --base16 || exit ; echo
 
 sleep 4
 
 echo
 echo "GET /squeeze/  # The default value is used."
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/" | basenc --wrap=0 --base16 || exit ; echo
 
 sleep 4
 
 echo
 echo "GET /squeeze/0  # nothing (a.k.a. \"mute\" call)"
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/0" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/0" | basenc --wrap=0 --base16 || exit ; echo
 
 sleep 4
 
 echo
 echo "GET /squeeze/32"
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/32" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/32" | basenc --wrap=0 --base16 || exit ; echo
 
 sleep 4
 
 echo
 echo "GET /squeeze/asdf  # The default value is used."
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/asdf" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/asdf" | basenc --wrap=0 --base16 || exit ; echo
 
 sleep 4
 
 echo
 echo "GET /squeeze/999999  # The value is clamped by Castella."
-curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/999999" | basenc --wrap=0 --base58 || exit ; echo
+curl --fail --show-error --silent "$BASE_URL:$PORT/squeeze/999999" | basenc --wrap=0 --base16 || exit ; echo

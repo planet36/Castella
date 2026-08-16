@@ -155,13 +155,13 @@ print_usage()
 
     std::println("Squeeze 32 bytes from the Castella service:");
     std::println(R"(    curl --show-error --silent "http://{}:{}/squeeze/32" )"
-            "| basenc --wrap=0 --base58", default_host, default_port);
+            "| basenc --wrap=0 --base16", default_host, default_port);
     nl;
 
     std::println("Squeeze bytes (default={}) from the Castella service:",
             get_default_num_bytes_to_squeeze());
     std::println(R"(    curl --show-error --silent "http://{}:{}/squeeze" )"
-            "| basenc --wrap=0 --base58", default_host, default_port);
+            "| basenc --wrap=0 --base16", default_host, default_port);
     std::println("The default number is equal to half the capacity of the Castella service.");
     nl;
 

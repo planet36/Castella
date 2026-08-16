@@ -26,6 +26,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string.h> // explicit_bzero
 #include <string_view>
 #include <system_error>
 #include <utility>

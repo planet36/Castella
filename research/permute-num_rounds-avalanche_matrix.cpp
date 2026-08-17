@@ -257,8 +257,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    // 100 samples comfortably exceeds the n*p >= 10 threshold for the normal
-    // approximation to the binomial (p=0.5) used by calculate_metrics_avalanche_matrix.
+    // A cell count runs 0..n, so |z| cannot exceed sqrt(n).  Under ideal
+    // diffusion the largest of the 2048^2 cells sits near 5.5, so a smaller n
+    // makes max|z| report that ceiling instead of the data -- at n=20 every
+    // round gives exactly sqrt(20).  100 leaves about 2x headroom.
     int num_samples = 100;
     bool save_images = false;
 

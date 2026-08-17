@@ -93,34 +93,46 @@ public:
         }
     }
 
+    /// get the number of values pushed
     [[nodiscard]] constexpr auto num_data_values() const { return n; }
 
-    [[nodiscard]] constexpr auto mean() const { return M1; }
+    /// get the mean, or NaN if no values were pushed
+    [[nodiscard]] constexpr auto mean() const
+    {
+        return (n > 0) ? M1 : std::numeric_limits<T>::quiet_NaN();
+    }
 
-    [[nodiscard]] auto variance() const { return M2 / (n - 1); }
+    /// get the sample variance, or NaN if fewer than 2 values were pushed
+    [[nodiscard]] auto variance() const
+    {
+        return (n > 1) ? M2 / (n - 1) : std::numeric_limits<T>::quiet_NaN();
+    }
 
+    /// get the sample standard deviation, or NaN if fewer than 2 values were pushed
     [[nodiscard]] auto standard_deviation() const { return std::sqrt(variance()); }
 
+    /// get the skewness, or NaN if fewer than 2 values were pushed
     [[nodiscard]] auto skewness() const { return std::sqrt(n) * M3 / std::pow(M2, 1.5); }
 
+    /// get the kurtosis, or NaN if fewer than 2 values were pushed
     [[nodiscard]] auto kurtosis() const { return n * M4 / (M2 * M2) - 3; }
 
-    /// get the sum of the values
+    /// get the sum of the values, or 0 if none were pushed
     [[nodiscard]] constexpr auto sum() const { return _sum; }
 
-    /// get the minimum value
+    /// get the minimum value, or NaN if none were pushed
     [[nodiscard]] constexpr auto min() const { return _min; }
 
-    /// get the maximum value
+    /// get the maximum value, or NaN if none were pushed
     [[nodiscard]] constexpr auto max() const { return _max; }
 
-    /// get the sum of the absolute values
+    /// get the sum of the absolute values, or 0 if none were pushed
     [[nodiscard]] constexpr auto sum_abs() const { return _sum_abs; }
 
-    /// get the minimum absolute value
+    /// get the minimum absolute value, or NaN if none were pushed
     [[nodiscard]] constexpr auto min_abs() const { return _min_abs; }
 
-    /// get the maximum absolute value
+    /// get the maximum absolute value, or NaN if none were pushed
     [[nodiscard]] constexpr auto max_abs() const { return _max_abs; }
 
     template <std::floating_point T2>

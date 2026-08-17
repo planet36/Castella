@@ -11,7 +11,7 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
-if grep -q bytes_per_second "$1"; then
+if command grep -q bytes_per_second "$1"; then
 
     command grep median "$1" |
         sed -r -e 's|(/threads:[0-9]+)?_median||' |

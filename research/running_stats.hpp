@@ -36,14 +36,6 @@ private:
     long long n = 0;
 
 public:
-    /*
-    /// default ctor
-    running_stats()
-    {
-        clear();
-    }
-    */
-
     /// Reset all statistics to their initial state
     void clear()
     {

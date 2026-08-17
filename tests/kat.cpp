@@ -700,6 +700,8 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
 
     int64_t num_verified = 0;
     int64_t num_failed = 0;
+    // A malformed line is a distinct defect from a digest mismatch.
+    int64_t num_malformed = 0;
     int lineno = 0;
 
     std::string line;
@@ -742,7 +744,11 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         }
 
         if (!expected.has_value())
-            errx(EXIT_FAILURE, "%s: line %d: malformed KAT line", path, lineno);
+        {
+            ++num_malformed;
+            std::println(stderr, "{}: line {}: malformed KAT line", path, lineno);
+            continue;
+        }
 
         std::optional<std::vector<std::byte>> actual;
 
@@ -753,17 +759,28 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         }
         catch (const std::exception& e)
         {
-            errx(EXIT_FAILURE, "%s: line %d: %s", path, lineno, e.what());
+            ++num_malformed;
+            std::println(stderr, "{}: line {}: {}", path, lineno, e.what());
+            continue;
         }
 
         if (!actual.has_value())
-            errx(EXIT_FAILURE, "%s: line %d: malformed KAT line", path, lineno);
+        {
+            ++num_malformed;
+            std::println(stderr, "{}: line {}: malformed KAT line", path, lineno);
+            continue;
+        }
 
         // The out= field is redundant with the digest length; require
         // agreement so the file cannot self-contradict.
         if (get_int_field(fields, "out", 0, 512) != std::ssize(*expected))
-            errx(EXIT_FAILURE, "%s: line %d: out= does not match the digest length",
-                 path, lineno);
+        {
+            ++num_malformed;
+            std::println(stderr,
+                         "{}: line {}: out= does not match the digest length",
+                         path, lineno);
+            continue;
+        }
 
         if (*actual == *expected)
         {
@@ -778,9 +795,10 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         }
     }
 
-    std::println("{}: {} KATs verified, {} failed", path, num_verified, num_failed);
+    std::println("{}: {} KATs verified, {} failed, {} malformed", path,
+                 num_verified, num_failed, num_malformed);
 
-    if (num_failed > 0)
+    if (num_failed > 0 || num_malformed > 0)
         return EXIT_FAILURE;
 
     if (!expect_count.has_value())

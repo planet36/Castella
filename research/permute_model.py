@@ -5,7 +5,7 @@
 
 The AES pieces (S-box, DDT, ShiftRows, MixColumns, one aesenc round) and the
 simd_transpose map, factored out of permute-trail-search.py so that every
-program modelling `P` uses one implementation, validated in one place by
+program modeling `P` uses one implementation, validated in one place by
 self_test().
 
 Pure standard library: importing this must not require z3, so

@@ -20,7 +20,7 @@ Output bit j is *balanced* over a cube (its XOR-sum is provably 0) when
 vector e_j.  So an UNSAT here is the strong answer: it proves a
 distinguisher.  A SAT result proves nothing at all -- it says only that
 this technique fails to establish balancedness, since the division
-property is a sound over-approximation of the true monomial behaviour.
+property is a sound over-approximation of the true monomial behavior.
 Every "no distinguisher" statement below is therefore "none provable by
 this model", never "none exists".
 
@@ -837,7 +837,7 @@ def self_test_inverse_sbox() -> None:
     if not differing:
         raise SelfTestError(
             "INV_TABLE equals TABLE at every k: it was built from the "
-            "forward S-box, and the inverse direction is silently modelling "
+            "forward S-box, and the inverse direction is silently modeling "
             "the forward one")
 
 

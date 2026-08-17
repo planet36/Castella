@@ -38,7 +38,7 @@ A *program* is one generated unit of work — constructor parameters plus a call
 
 The deepest sweep run to date found no divergence: `-n 400000 --seed 0x1` verified **639 947 squeezes** in 40 min (2026-08-02).  Throughput is ~150 programs/s and scales linearly, so size a sweep from that; memory grows with the run and reached 1.5 GB at 400 k programs.
 
-Two `Castella::Duplex` conveniences that the specification does not describe are deliberately avoided rather than modelled, since they are C++ API behavior rather than digest behavior: `squeeze_bytes(n)` clamps *n* where the model asserts the range, and the raw-span `add_left_encoded`/`add_right_encoded` forms treat a null data pointer as a no-op.
+Two `Castella::Duplex` conveniences that the specification does not describe are deliberately avoided rather than modeled, since they are C++ API behavior rather than digest behavior: `squeeze_bytes(n)` clamps *n* where the model asserts the range, and the raw-span `add_left_encoded`/`add_right_encoded` forms treat a null data pointer as a no-op.
 
 ### `tests`
 

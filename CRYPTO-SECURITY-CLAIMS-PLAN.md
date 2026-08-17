@@ -188,7 +188,7 @@ The honest procedure:
    not a bound, so no further solving can revisit it.
 
    *Superseded 2026-08-02, twice in one day:* this step first read r=3 for b ≤ 399 (A=133)
-   and r=4 for b ≤ 675 (A=225), both timed-out incumbents mislabelled as optima; it was
+   and r=4 for b ≤ 675 (A=225), both timed-out incumbents mislabeled as optima; it was
    then corrected to superadditive floors of 138/174 at r = 4/5, which were sound but loose
    by 20% and 34%. The solved values above replace them. The 512-bit floor itself moved
    once: under A(4) = 225 it sat at **r=4** (6·225 = 1350 ≥ 1024), and refuting that figure
@@ -542,9 +542,9 @@ distinguisher reaching 4 rounds obliges `R*` = floor + 4, i.e. 7/7/7/9. It is st
 SPEC.md and CHALLENGES.md, it asks about *reach* rather than cost, and if it fires, `C` = 6
 is the row to examine first (§4.3, and now SPEC.md's margin rationale).
 
-**One gap is unmodelled rather than closed.** Rebound attacks are covered by a reasoned
+**One gap is unmodeled rather than closed.** Rebound attacks are covered by a reasoned
 margin argument, not by a search — the argument grants the attacker a free maximal-reach
 inbound and compares the outbound against the flat claim. That is a heuristic, it is
-labelled as one in SPEC.md and VERIFYING-CLAIMS.md § 14, and no rebound *search* is
+labeled as one in SPEC.md and VERIFYING-CLAIMS.md § 14, and no rebound *search* is
 queued. It is the honest weak point of the evidence base, and naming it here is not a
 proposal to fix it.

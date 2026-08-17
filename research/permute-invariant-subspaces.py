@@ -99,7 +99,7 @@ regressions, and 2 if a check could not be decided -- section 5's closure
 stalling, which is not a finding.  Nothing here solves anything, but it
 imports permute_model for the cross-validated layer machinery
 (shift_rows_src, mix_column, transpose_map) and spec-conformance.py for the
-round function and constant schedule -- so no layer is modelled twice.
+round function and constant schedule -- so no layer is modeled twice.
 """
 
 import argparse
@@ -226,7 +226,7 @@ def sbox_affine_census() -> dict[str, int]:
 
 
 def dim1_columns_surviving_mixcolumns() -> list[tuple[int, ...]]:
-    """Every all-1-dimensional column labelling MixColumns can preserve.
+    """Every all-1-dimensional column labeling MixColumns can preserve.
 
     A column of 1-dimensional local subspaces span{w_c} maps into a column
     of 1-dimensional spaces only if every nonzero MC4[r][c] * w_c hits the
@@ -373,7 +373,7 @@ def class_partitions() -> dict[str, list[list[int]]]:
     """The three symmetry classes, as partitions of the 256 byte positions.
 
     Each class is "the bytes within every part are equal".  Stating them this
-    way makes the S-box layer's behaviour a theorem rather than a
+    way makes the S-box layer's behavior a theorem rather than a
     measurement: the layer applies one function bytewise, so equal bytes stay
     equal, and EVERY partition class is preserved exactly.  Only the layers
     that move bytes between parts -- ShiftRows, MixColumns, the transpose --
@@ -574,10 +574,10 @@ def report_mixcolumns() -> list[str]:
     failures: list[str] = []
     print("== 2. MixColumns vs 1-dimensional local subspaces")
     cols = dim1_columns_surviving_mixcolumns()
-    print(f"  all-1-dim column labellings MixColumns preserves: {len(cols)}")
+    print(f"  all-1-dim column labelings MixColumns preserves: {len(cols)}")
     if cols:
         failures.append("section 2: MixColumns preserves a 1-dimensional "
-                        "local labelling")
+                        "local labeling")
     print("  => local dimension 1 is impossible; only 0 and 8 remain")
     return failures
 

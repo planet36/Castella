@@ -154,7 +154,7 @@ late. CBC never proved N=16 above r=3, at any limit up to 90 minutes, and §6 ar
 its decaying dual bound that nothing would. HiGHS proves r=3 in **16 s** against CBC's 72
 min — single-threaded, with a 0% gap, not needing the `gapAbs` trick at all — and then
 closes r=4, r=5 and r=6 outright. The commands below are HiGHS timings; the script picks it
-automatically when `highspy` is importable, and `--solver cbc` forces the old behaviour.
+automatically when `highspy` is importable, and `--solver cbc` forces the old behavior.
 **Before spending an hour on a larger `-t`, spend five minutes on a different solver.**
 
 Mechanics: each round count is solved independently, so a single table cell can be
@@ -169,7 +169,7 @@ run redirected to a file can be watched with `tail -f`. What the `status` column
 <pulp> research/permute-min-active-sboxes.py -N 4 -a 3 -r 4                       # 2m15,  all proven
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
 # Cross-solver check.  Re-proves a cell with the OTHER branch-and-bound on an
-# identical model, so a disagreement means a solver bug rather than a modelling
+# identical model, so a disagreement means a solver bug rather than a modeling
 # one (the model is checked separately, by the AES row in section 1).  r=3 is the
 # only cell CBC can close, so it is the only one this is available for -- 16 s
 # under HiGHS against ~72 min under CBC, and both must print 129 / optimal.
@@ -222,7 +222,7 @@ python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000 
 # closes.  Must return the SAME 1048 trails as the r = 1 command above, and report
 # complete.  Budget 7576 s: the flag rebuilds the model per trail, which is why it is
 # required above r = 1 and a large loss at r = 1 (README.md's notes give the comparison).
-# Run it when the flag's behaviour is in doubt, never as part of a routine refresh.
+# Run it when the flag's behavior is in doubt, never as part of a routine refresh.
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows \
     --cluster 5000 --fresh-instances --cluster-time-limit 12000
 

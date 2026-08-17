@@ -156,7 +156,7 @@ Define the adversary before hunting. Five surfaces, five adversaries — four of
   fact timed-out incumbents, and were each later refuted by a cheaper solution;
   `research/README.md` traces the cause to a solver wrapper that reported `optimal` for any
   run that ended holding an incumbent. Note the direction of the error: a larger `A` means a
-  smaller `2^−6·A`, so a mislabelled figure makes the bound look **stronger** than reality.
+  smaller `2^−6·A`, so a mislabeled figure makes the bound look **stronger** than reality.
   A reviewer who checks status labels is re-running the one audit this project is known to
   have failed.
 - **Out of scope (non-findings):** "the bounds cover single characteristics only," "no

@@ -18,7 +18,7 @@ if command grep -q bytes_per_second "$1"; then
         awk '{print $1, $7}' |
         sed -E -e 's/bytes_per_second=//' |
         sort -h -k 2 -r |
-        column --table || exit
+        column --table
 
 else
 

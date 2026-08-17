@@ -1130,9 +1130,10 @@ def main() -> None:
     else:
         num_active = args.active
         if num_active is None:
-            num_active = KNOWN_MIN_ACTIVE.get(key)
-            if num_active is None:
+            known = KNOWN_MIN_ACTIVE.get(key)
+            if known is None:
                 sys.exit("no known active-S-box count for this -N/-r; pass -A")
+            num_active = known
         # 6*A is a floor only when A is a converged MILP optimum.  Against an
         # incumbent -- or any hand-passed -A -- it is just the target's
         # arithmetic.
@@ -1171,6 +1172,10 @@ def main() -> None:
             print(f"[pattern {pattern_no}] activity pattern read from "
                   f"{args.pattern_file}")
         else:
+            # Both were built exactly when file_pattern is None, which is the
+            # branch this is.
+            assert pat_solver is not None
+            assert layers is not None
             t0 = time.monotonic()
             res = pat_solver.check()
             ta = time.monotonic() - t0

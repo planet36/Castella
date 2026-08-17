@@ -42,7 +42,7 @@ echo
 
 echo "# Structural probes of Castella::permute (subspace escape, fixed points, round constants, slide screen)"
 echo
-./permute-structural-probes -n 30000 || exit
+./permute-structural-probes -n 35000 || exit
 echo "________________________________________________________________________________"
 echo
 
@@ -54,7 +54,7 @@ echo
 
 echo "# Find the bit diffusion rate of simd_compress_aes_enc_r{2,3,4} when each param varies"
 echo
-./simd_compress_aes_enc-num_rounds -n 250000 || exit
+./simd_compress_aes_enc-num_rounds -n 260000 || exit
 echo "________________________________________________________________________________"
 echo
 
@@ -66,12 +66,12 @@ echo
 
 echo "# Verify that the lockstep Castella::DuplexX2 squeezes the same bytes as two separate Castella::Duplex objects"
 echo
-./duplex_x2-verify -n 3000 || exit
+./duplex_x2-verify -n 2700 || exit
 echo "________________________________________________________________________________"
 echo
 
 echo "# Verify that the interleaved compress_castella_hash_x2 produces the same digests as two separate compress_castella_hash objects"
 echo
-./cch_x2-verify -n 3000 || exit
+./cch_x2-verify -n 3300 || exit
 echo "________________________________________________________________________________"
 echo

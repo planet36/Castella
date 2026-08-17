@@ -486,7 +486,7 @@ probe_round_constants()
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    int num_samples = 1; // number of random samples to test
+    int num_samples = 100; // number of random samples to test
 
     {
         const char* short_options = "+n:";

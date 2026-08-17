@@ -94,11 +94,12 @@ Usage
   python3 permute-invariant-subspaces.py --offsets 4 --seed 1
   python3 permute-invariant-subspaces.py --self-test
 
-Exits nonzero if any decided check finds an invariant subspace, so it can
-gate regressions.  Nothing here solves anything, but it imports permute_model
-for the cross-validated layer machinery (shift_rows_src, mix_column,
-transpose_map) and spec-conformance.py for the round function and constant
-schedule -- so no layer is modelled twice.
+Exits 1 if any decided check finds an invariant subspace, so it can gate
+regressions, and 2 if a check could not be decided -- section 5's closure
+stalling, which is not a finding.  Nothing here solves anything, but it
+imports permute_model for the cross-validated layer machinery
+(shift_rows_src, mix_column, transpose_map) and spec-conformance.py for the
+round function and constant schedule -- so no layer is modelled twice.
 """
 
 import argparse
@@ -638,8 +639,13 @@ def report_classes(bases: dict[str, list[int]],
 
 
 def report_closure(bases: dict[str, list[int]], args) -> list[str]:
-    """Section 5: forced closure with a constant-free control beside it."""
-    failures: list[str] = []
+    """Section 5: forced closure with a constant-free control beside it.
+
+    Returns the checks it could not decide, never findings: a stalled closure
+    means this section reached no verdict, which is why `main` reports it
+    apart from the other sections and exits 2 rather than 1.
+    """
+    inconclusive: list[str] = []
     print(f"== 5. forced closure (last {args.rounds} rounds, "
           f"{args.offsets} random offsets + zero)")
     print("   control = the same closure with the round constants zeroed")
@@ -662,9 +668,9 @@ def report_closure(bases: dict[str, list[int]], args) -> list[str]:
               f"dim {worst}..{max(dims)} of {STATE_BITS}"
               f"   [control: 1 round {ctl1}, 2 rounds {ctl2}]")
         if worst < STATE_BITS:
-            failures.append(f"section 5: closure of '{name}' stalled at "
-                            f"dim {worst}; INCONCLUSIVE, not a finding")
-    return failures
+            inconclusive.append(f"section 5: closure of '{name}' stalled at "
+                                f"dim {worst}")
+    return inconclusive
 
 
 def print_conclusion() -> None:
@@ -710,10 +716,12 @@ def main() -> None:
 
     failures: list[str] = []
     for section in (report_sbox_census, report_mixcolumns, report_support,
-                    lambda: report_classes(bases, echelons),
-                    lambda: report_closure(bases, args)):
+                    lambda: report_classes(bases, echelons)):
         failures += section()
         print()
+    # Section 5 is kept apart: it yields undecided checks, not findings.
+    inconclusive = report_closure(bases, args)
+    print()
     print_conclusion()
 
     print()
@@ -722,6 +730,11 @@ def main() -> None:
         for f in failures:
             print(f"  - {f}")
         sys.exit(1)
+    if inconclusive:
+        print(f"{len(inconclusive)} check(s) could not be decided:")
+        for f in inconclusive:
+            print(f"  - {f}")
+        sys.exit(2)
     print("no invariant subspace exists in any class decided here")
 
 

@@ -202,7 +202,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     *
     * - _K_ is the key
     * - _X_ is the input data
-    * - _L_ is the requested output length
+    * - _L_ is the requested output length (in bits)
     * - _N_ is a function name string
     * - _S_ is a customization string
     */

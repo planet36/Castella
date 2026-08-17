@@ -10,8 +10,9 @@ statement about the *model* in permute_model.py, which permute-trail-search.py
 and the other solver programs all share, not directly about Castella.  That
 model is a third implementation of the permutation -- separate from the C++
 and from spec-conformance.py -- and its layer machinery (`shift_rows_src`,
-`mix_column`, `transpose_map`) had never been compared with either.  The published AES bounds validate it at r=1, where Castella is pure
-AES and the transpose has not yet acted; nothing validated it above that.
+`mix_column`, `transpose_map`) had never been compared with either.  The
+published AES bounds validate it at r=1, where Castella is pure AES and the
+transpose has not yet acted; nothing validated it above that.
 
 This drives random state PAIRS through spec-conformance.py's `permute` -- the
 from-the-spec implementation that reproduces all 91 KATs -- and propagates

@@ -108,9 +108,9 @@ import os
 import random
 import sys
 import types
+from itertools import batched, combinations
 
 import permute_model as PM
-from itertools import batched, combinations
 
 N_BLOCKS = 16
 BLOCK_BYTES = 16

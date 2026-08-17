@@ -123,8 +123,9 @@ import sys
 import time
 import types
 
-import permute_model as PM
 import z3
+
+import permute_model as PM
 
 BLOCK_BITS = 128
 BLOCK_BYTES = 16

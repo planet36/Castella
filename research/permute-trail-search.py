@@ -128,7 +128,7 @@ import z3
 from permute_model import (AES_NUM_ROUNDS, BLOCK_BYTES, DDT, DDT4_OUT,
                            DDT_ALLOWED, SBOX, SelfTestError, StateBytes,
                            hex_state, mix_column, shift_rows_src,
-                           transpose_map, xtime)
+                           transpose_map)
 from permute_model import self_test as model_self_test
 
 # How often --cluster reports partial progress, in seconds.

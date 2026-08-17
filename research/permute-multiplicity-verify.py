@@ -451,6 +451,7 @@ class Reduced:
                  rounds: int = 8) -> None:
         self.n = n
         self.sbox = sbox
+        self._inv_sbox: bytes | None = INV_SBOX if sbox is SBOX else None
         m = circulant(n)
         minv = mat_inv(m)
         # fwd[j][v]: what input byte j holding v contributes to a sub-round,
@@ -476,10 +477,22 @@ class Reduced:
             v = out ^ self.rc[rnd][sub][blk]
         return v
 
+    def _inverse_sbox(self) -> bytes:
+        """The inverse S-box, built on first use and kept.
+
+        Not built in `__init__`: the Part B controls construct `Reduced` with
+        deliberately non-bijective S-boxes and call only `forward()`.
+        """
+        if self._inv_sbox is None:
+            if sorted(self.sbox) != list(range(256)):
+                raise VerificationError(
+                    "the S-box is not a permutation of 0..255")
+            self._inv_sbox = bytes(self.sbox.index(x) for x in range(256))
+        return self._inv_sbox
+
     def inv_block_map(self, v: int, rnd: int, blk: int) -> int:
         """Its inverse, checked by round trip in `self_test_reduced`."""
-        inv_sbox = bytes(self.sbox.index(x) for x in range(256)) \
-            if self.sbox is not SBOX else INV_SBOX
+        inv_sbox = self._inverse_sbox()
         for sub in reversed(range(AES_ROUNDS_PER_ROUND)):
             v ^= self.rc[rnd][sub][blk]
             out = 0

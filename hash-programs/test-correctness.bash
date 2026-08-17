@@ -46,7 +46,7 @@ function assert_eq_cmd_str
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand  = %s\nactual   = %s\nexpected = %s\n' \
+        printf '%s FAIL:\ncommand     = %s\nactual      = %s\nexpected    = %s\n' \
             "${FUNCNAME[0]}" "$CMD" "$ACTUAL" "$EXPECTED" 1>&2
         return 1
     fi
@@ -88,7 +88,7 @@ function assert_eq_cmd_cmd
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand 1 = %s\noutput 1  = %q\ncommand 2 = %s\noutput 2  = %q\n' \
+        printf '%s FAIL:\ncommand 1   = %s\noutput 1    = %q\ncommand 2   = %s\noutput 2    = %q\n' \
             "${FUNCNAME[0]}" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
         return 1
     fi
@@ -130,7 +130,7 @@ function assert_neq_cmd_cmd
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand 1 = %s\noutput 1  = %q\ncommand 2 = %s\noutput 2  = %q\n' \
+        printf '%s FAIL:\ncommand 1   = %s\noutput 1    = %q\ncommand 2   = %s\noutput 2    = %q\n' \
             "${FUNCNAME[0]}" "$CMD1" "$ACTUAL1" "$CMD2" "$ACTUAL2" 1>&2
         return 1
     fi
@@ -153,7 +153,7 @@ function assert_eq_cmd_str_status
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand  = %s\nactual   = %s (exit status %d)\nexpected = %s (exit status %d)\n' \
+        printf '%s FAIL:\ncommand     = %s\nactual      = %s (exit status %d)\nexpected    = %s (exit status %d)\n' \
             "${FUNCNAME[0]}" "$CMD" "$ACTUAL" "$EXIT_STATUS" "$EXPECTED" "$EXPECTED_STATUS" 1>&2
         return 1
     fi
@@ -174,7 +174,7 @@ function assert_eq_cmd_exit_status
         ((PASS++))
     else
         ((FAIL++))
-        printf '%s FAIL:\ncommand  = %s\nactual   = %d\nexpected = %d\n' \
+        printf '%s FAIL:\ncommand     = %s\nactual      = %d\nexpected    = %d\n' \
             "${FUNCNAME[0]}" "$CMD" "$EXIT_STATUS" "$EXPECTED_STATUS" 1>&2
         return 1
     fi

@@ -65,7 +65,9 @@ NUM_ROUNDS_MIN()
     }
 }
 
+/// The maximum number of rounds in a Castella permutation
 inline constexpr int NUM_ROUNDS_MAX = 16;
+static_assert(NUM_ROUNDS_MAX == 16, "value is fixed by SPEC.md");
 
 static_assert(NUM_ROUNDS_MIN<2>() <= NUM_ROUNDS_MAX);
 static_assert(NUM_ROUNDS_MIN<4>() <= NUM_ROUNDS_MAX);
@@ -88,9 +90,11 @@ static_assert(NUM_ROUNDS_MIN<16>() <= NUM_ROUNDS_MAX);
 * \sa https://crypto.stackexchange.com/questions/44532/how-2-rounds-in-aes-achieve-full-diffusion
 */
 inline constexpr int AES_NUM_ROUNDS = 3;
+static_assert(AES_NUM_ROUNDS == 3, "value is fixed by SPEC.md");
 
 /// The maximum number of blocks in a Castella state
 inline constexpr int B_MAX = 16;
+static_assert(B_MAX == 16, "value is fixed by SPEC.md");
 
 /// The round constants for a single Castella round
 /**

@@ -24,7 +24,7 @@ The round constants are the successive states of a 128-bit [Galois LFSR](https:/
 
 The round constants are used as AES round keys.  A distinct round constant is used for every combination of permutation round, AES round, and state block, so no two blocks ever apply the same transformation.  The generator is deliberately unrelated to the AES round function so that the round constants share no structure with it.
 
-The round constants are generated at compile time.  Their number equals `Castella::NUM_ROUNDS_MAX × Castella::AES_NUM_ROUNDS × Castella::B_MAX`.  Raise those bounds if you need a larger instance.
+The round constants are generated at compile time.  Their number equals `Castella::NUM_ROUNDS_MAX × Castella::AES_NUM_ROUNDS × Castella::B_MAX` — 16 × 3 × 16 = 768.  All three values are fixed by [SPEC.md](SPEC.md); any other value produces different digests.
 
 ## The Castella Duplex Construction
 

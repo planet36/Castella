@@ -52,14 +52,14 @@ inline constexpr std::string_view default_host = "localhost";
 inline constexpr int default_port = 8080;
 const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
-/// The Castella service's hash object
+/// The Castella service's duplex object
 /**
 * Owned by a unique_ptr (it cannot be a plain global: the constructor
 * parameters are validated at run time and may throw).  Its destructor --
 * which zeroizes the state -- runs during normal static destruction, on
 * return from main and on std::exit (e.g. errx).
 */
-std::unique_ptr<Castella::Duplex> hash_obj;
+std::unique_ptr<Castella::Duplex> duplex_obj;
 
 std::mutex cv_mtx;
 
@@ -76,7 +76,7 @@ std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initializatio
 */
 std::remove_const_t<decltype(max_consec_bytes_sqzd)> consec_bytes_sqzd = 0;
 
-/// Released once entropy has been added to the \c hash_obj
+/// Released once entropy has been added to the \c duplex_obj
 /**
 * Entropy must be added before any connections are accepted.
 */
@@ -86,8 +86,8 @@ std::latch first_entropy_added{1};
 [[nodiscard]] int
 get_default_num_bytes_to_squeeze()
 {
-    if (hash_obj != nullptr)
-        return hash_obj->get_capacity_size_bytes() / 2;
+    if (duplex_obj != nullptr)
+        return duplex_obj->get_capacity_size_bytes() / 2;
     else
         return capacity_blocks * sizeof(Castella::block_t) / 2;
 }
@@ -140,7 +140,7 @@ print_usage()
     std::println("                 {}", str_join(std::to_array(SPDLOG_LEVEL_NAMES), ", "));
     std::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
     std::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
-    std::println("                 - The periodic entropy data added to the Castella hash object");
+    std::println("                 - The periodic entropy data added to the Castella duplex object");
     std::println("                 - The body data of requests & responses");
     nl;
 
@@ -209,7 +209,7 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
             err(EXIT_FAILURE, "getentropy");
         }
 
-        hash_obj->add(entropy_buf);
+        duplex_obj->add(entropy_buf);
 
         if (spdlog::should_log(spdlog::level::level_enum::trace))
         {
@@ -253,7 +253,7 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
     {
         std::unique_lock lock{cv_mtx};
 
-        const auto digest = hash_obj->squeeze_bytes(num_bytes_to_squeeze);
+        const auto digest = duplex_obj->squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_size = static_cast<decltype(consec_bytes_sqzd)>(std::ssize(digest));
 
@@ -330,9 +330,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     try
     {
-        hash_obj = std::make_unique<Castella::Duplex>(capacity_blocks, num_rounds,
-                                                      input_suffix, function_name,
-                                                      customization_str);
+        duplex_obj = std::make_unique<Castella::Duplex>(capacity_blocks, num_rounds,
+                                                        input_suffix, function_name,
+                                                        customization_str);
     }
     catch (const std::invalid_argument& ex)
     {
@@ -379,7 +379,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     svr.Post("/absorb",
              [](const httplib::Request& req, [[maybe_unused]] httplib::Response& res)
-             { hash_obj->add(req.body); });
+             { duplex_obj->add(req.body); });
 
     // no path parameter
     svr.Get("/squeeze", process_req_squeeze);
@@ -407,7 +407,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         errx(EXIT_FAILURE, "svr.bind_to_port(\"%s\", %d) failed", host.c_str(), port);
     }
 
-    // Block until entropy was added to the hash_obj.
+    // Block until entropy was added to the duplex_obj.
     // (getentropy failure exits the process, so this cannot hang.)
     first_entropy_added.wait();
     // Now ready to accept connections.

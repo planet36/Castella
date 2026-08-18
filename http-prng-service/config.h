@@ -11,7 +11,7 @@
 
 #include <string_view>
 
-/// Castella hash object parameters
+/// Castella duplex object parameters
 
 /**
 * \pre must be >= \c Castella::Duplex::C_MIN (2)

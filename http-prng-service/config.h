@@ -22,6 +22,8 @@ inline constexpr int capacity_blocks = 6;
 /**
 * \pre must be >= <code>Castella::NUM_ROUNDS_MIN<16>()</code> (3)
 * \pre must be <= \c Castella::NUM_ROUNDS_MAX (16)
+*
+* Embiggen the value as needed.
 */
 inline constexpr int num_rounds = 8;
 

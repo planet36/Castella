@@ -65,7 +65,6 @@ NUM_ROUNDS_MIN()
     }
 }
 
-// Embiggen the value as needed.
 inline constexpr int NUM_ROUNDS_MAX = 16;
 
 static_assert(NUM_ROUNDS_MIN<2>() <= NUM_ROUNDS_MAX);

@@ -20,7 +20,7 @@ FAIL=0
 # Without it a deleted assertion still reports "0 failed" and exits 0,
 # so the script could not report success on the assertions that did run.
 # Update this when assertions are added or removed.
-declare -r EXPECTED_ASSERTIONS=117
+declare -r EXPECTED_ASSERTIONS=138
 
 function assert_eq_cmd_str
 {
@@ -423,6 +423,48 @@ assert_eq_cmd_cmd \
     './cch --untagged - < ${CASTELLA_TMP}/test-100KB.txt | first_field' \
     './cch --untagged ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
+# Verify that an absent FILE reads standard input, exactly as an explicit '-'
+# does.  These compare the whole line rather than the digest alone: the name
+# printed for standard input is '-' either way.
+
+assert_eq_cmd_cmd \
+    './castella --untagged < ${CASTELLA_TMP}/test-100KB.txt' \
+    './castella --untagged - < ${CASTELLA_TMP}/test-100KB.txt'
+
+assert_eq_cmd_cmd \
+    './cch --untagged < ${CASTELLA_TMP}/test-100KB.txt' \
+    './cch --untagged - < ${CASTELLA_TMP}/test-100KB.txt'
+
+# Verify that multiple FILE arguments are hashed independently, in argument
+# order: the output must be the concatenation of the single-file runs.  '-'
+# may appear among them, so standard input is read in its argument position.
+
+assert_eq_cmd_cmd \
+    './castella --untagged ${CASTELLA_TMP}/test-100B.txt ${CASTELLA_TMP}/test-0B.txt ${CASTELLA_TMP}/test-1KiB.txt' \
+    '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt; ./castella --untagged ${CASTELLA_TMP}/test-0B.txt; ./castella --untagged ${CASTELLA_TMP}/test-1KiB.txt; }'
+
+assert_eq_cmd_cmd \
+    './cch --untagged ${CASTELLA_TMP}/test-100B.txt ${CASTELLA_TMP}/test-0B.txt ${CASTELLA_TMP}/test-1KiB.txt' \
+    '{ ./cch --untagged ${CASTELLA_TMP}/test-100B.txt; ./cch --untagged ${CASTELLA_TMP}/test-0B.txt; ./cch --untagged ${CASTELLA_TMP}/test-1KiB.txt; }'
+
+assert_eq_cmd_cmd \
+    './castella --untagged ${CASTELLA_TMP}/test-100B.txt - < ${CASTELLA_TMP}/test-0B.txt' \
+    '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt; ./castella --untagged - < ${CASTELLA_TMP}/test-0B.txt; }'
+
+# An unreadable FILE among several does not stop the run: the remaining files
+# are still hashed, on standard output where the error is not, and the exit
+# status reports the failure.  assert_eq_cmd_cmd requires success from both of
+# its commands, so the `|| true` carries the output comparison and the exit
+# status is asserted on its own.
+
+assert_eq_cmd_exit_status \
+    './castella --untagged ${CASTELLA_TMP}/test-100B.txt ${CASTELLA_TMP}/no-such-input ${CASTELLA_TMP}/test-1KiB.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_cmd \
+    '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt ${CASTELLA_TMP}/no-such-input ${CASTELLA_TMP}/test-1KiB.txt 2>/dev/null || true; }' \
+    '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt; ./castella --untagged ${CASTELLA_TMP}/test-1KiB.txt; }'
+
 # Verify that "--num-threads" NEVER affects the digest, in both programs.
 # The digest is defined by the hash tree alone (chunk boundaries fall at
 # fixed byte offsets, and chaining values are absorbed in chunk-index
@@ -652,11 +694,108 @@ assert_eq_cmd_str \
     './cch --untagged ${CASTELLA_TMP}/test-100KB.txt | ./cch --untagged --check -' \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
+# The '-c' short form is the same option as '--check'.
+
+assert_eq_cmd_str \
+    './castella --tag ${CASTELLA_TMP}/test-100KB.txt | ./castella -c -' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --tag ${CASTELLA_TMP}/test-100KB.txt | ./cch -c -' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+# Checkfiles on disk, for the --check forms that read a FILE rather than
+# standard input.
+
+./castella --tag "${CASTELLA_TMP}/test-100KB.txt" > "${CASTELLA_TMP}/castella-sums.txt" || exit
+./cch      --tag "${CASTELLA_TMP}/test-100KB.txt" > "${CASTELLA_TMP}/cch-sums.txt"      || exit
+
+# The same digest line, surrounded by the blank and '#' lines that --check
+# ignores.  Only a strictly empty line is blank -- a whitespace-only line is
+# an improperly formatted line -- so these are written with `echo ''`.
+
+{
+    echo '# a comment, ignored'
+    echo ''
+    cat "${CASTELLA_TMP}/castella-sums.txt"
+    echo ''
+    echo '#'
+} > "${CASTELLA_TMP}/castella-sums-comments.txt" || exit
+
+{
+    echo '# a comment, ignored'
+    echo ''
+    cat "${CASTELLA_TMP}/cch-sums.txt"
+    echo ''
+    echo '#'
+} > "${CASTELLA_TMP}/cch-sums-comments.txt" || exit
+
+# A checkfile holding nothing but ignored lines.
+
+printf '# nothing but a comment\n\n' > "${CASTELLA_TMP}/only-comments.txt" || exit
+
+# --check reads its digest lines from each FILE, not only from standard input.
+
+assert_eq_cmd_str \
+    './castella --check ${CASTELLA_TMP}/castella-sums.txt' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --check ${CASTELLA_TMP}/cch-sums.txt' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+# Every checkfile named is read, in argument order.
+
+assert_eq_cmd_cmd \
+    './castella --check ${CASTELLA_TMP}/castella-sums.txt ${CASTELLA_TMP}/castella-sums.txt' \
+    '{ ./castella --check ${CASTELLA_TMP}/castella-sums.txt; ./castella --check ${CASTELLA_TMP}/castella-sums.txt; }'
+
+# Blank lines and '#' lines are ignored silently, so folding standard error
+# into standard output must add nothing to the OK line.
+
+assert_eq_cmd_str \
+    './castella --check ${CASTELLA_TMP}/castella-sums-comments.txt 2>&1' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+assert_eq_cmd_str \
+    './cch --check ${CASTELLA_TMP}/cch-sums-comments.txt 2>&1' \
+    "'${CASTELLA_TMP}/test-100KB.txt': OK"
+
+# An ignored line is not a checksum line: a checkfile of nothing but blank and
+# '#' lines fails exactly as one holding no properly formatted line at all.
+
+assert_eq_cmd_str_status \
+    './castella --check ${CASTELLA_TMP}/only-comments.txt 2>/dev/null' \
+    '' \
+    1
+
+assert_eq_cmd_str_status \
+    './cch --check ${CASTELLA_TMP}/only-comments.txt 2>/dev/null' \
+    '' \
+    1
+
 # --quiet suppresses the OK lines (the exit status still reports success).
 
 assert_eq_cmd_str \
     './castella --tag ${CASTELLA_TMP}/test-100KB.txt | ./castella --check --quiet -' \
     ''
+
+assert_eq_cmd_str \
+    './cch --tag ${CASTELLA_TMP}/test-100KB.txt | ./cch --check --quiet -' \
+    ''
+
+# --quiet suppresses only the OK lines.  A FAILED line is still printed, on
+# standard output, and the exit status still reports the mismatch.
+
+assert_eq_cmd_str_status \
+    './castella --tag ${CASTELLA_TMP}/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./castella --check --quiet - 2>/dev/null' \
+    "'${CASTELLA_TMP}/test-0B.txt': FAILED" \
+    1
+
+assert_eq_cmd_str_status \
+    './cch --tag ${CASTELLA_TMP}/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./cch --check --quiet - 2>/dev/null' \
+    "'${CASTELLA_TMP}/test-0B.txt': FAILED" \
+    1
 
 # A digest of the wrong file must FAIL with a nonzero exit status.  (The
 # checkfile's digest of the 100 B file is relabeled as the empty file.)
@@ -793,6 +932,17 @@ assert_eq_cmd_exit_status \
 
 assert_eq_cmd_exit_status \
     './cch --mix-rate=2049 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+# --quiet is only meaningful with --check, and is rejected without it rather
+# than accepted and ignored.
+
+assert_eq_cmd_exit_status \
+    './castella --quiet ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './cch --quiet ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
     1
 
 # A missing file, and an unrecognized option, are errors for both programs.

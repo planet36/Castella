@@ -8,8 +8,8 @@
 #ifndef CPPHTTPLIB_HTTPLIB_H
 #define CPPHTTPLIB_HTTPLIB_H
 
-#define CPPHTTPLIB_VERSION "0.53.0"
-#define CPPHTTPLIB_VERSION_NUM "0x003500"
+#define CPPHTTPLIB_VERSION "0.53.1"
+#define CPPHTTPLIB_VERSION_NUM "0x003501"
 
 #ifdef _WIN32
 #if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0A00
@@ -136,6 +136,18 @@
 
 #ifndef CPPHTTPLIB_RANGE_MAX_COUNT
 #define CPPHTTPLIB_RANGE_MAX_COUNT 1024
+#endif
+
+// std::regex_match's backtracking implementation (most acutely on libstdc++)
+// recurses roughly once per matched character for quantified patterns such
+// as "(.*)", so a long enough path can exhaust the calling thread's stack; on
+// a default ~8MB thread stack that has been observed to take on the order of
+// a couple thousand characters for a simple pattern. 256 leaves a wide safety
+// margin below that (well under the 8192-byte request URI limit) while still
+// fitting any realistic route segment; raise it if a route legitimately needs
+// longer paths. Regex routes are never applied to paths longer than this.
+#ifndef CPPHTTPLIB_REGEX_ROUTE_PATH_MAX_LENGTH
+#define CPPHTTPLIB_REGEX_ROUTE_PATH_MAX_LENGTH 256
 #endif
 
 #ifndef CPPHTTPLIB_TCP_NODELAY
@@ -839,6 +851,15 @@ inline bool parse_url(const std::string &url, UrlComponents &uc) {
       }
 
       pos = close + 1;
+
+      // The IPv6 literal is the whole host, so ']' must be followed by a port,
+      // path, query or fragment delimiter (or the end of input). Otherwise the
+      // trailing bytes would be folded into the path while the connection
+      // still targets the bracketed address.
+      if (pos < url.size()) {
+        auto c = url[pos];
+        if (c != ':' && c != '/' && c != '?' && c != '#') { return false; }
+      }
     } else {
       auto end = url.find_first_of(":/?#", pos);
       if (end == std::string::npos) { end = url.size(); }
@@ -11591,6 +11612,10 @@ inline PathParamsMatcher::PathParamsMatcher(const std::string &pattern)
 inline bool PathParamsMatcher::match(Request &request) const {
   request.matches = std::smatch();
   request.path_params.clear();
+
+  // A pattern without parameters is just a literal path to compare against
+  if (param_names_.empty()) { return request.path == pattern(); }
+
   request.path_params.reserve(param_names_.size());
 
   // One past the position at which the path matched the pattern last time
@@ -11633,6 +11658,11 @@ inline bool PathParamsMatcher::match(Request &request) const {
 
 inline bool RegexMatcher::match(Request &request) const {
   request.path_params.clear();
+  // See CPPHTTPLIB_REGEX_ROUTE_PATH_MAX_LENGTH: an overlong path is treated as
+  // a non-match rather than risking a stack overflow in std::regex_match.
+  if (request.path.length() > CPPHTTPLIB_REGEX_ROUTE_PATH_MAX_LENGTH) {
+    return false;
+  }
   return std::regex_match(request.path, request.matches, regex_);
 }
 
@@ -12058,11 +12088,21 @@ inline Server::~Server() = default;
 
 inline std::unique_ptr<detail::MatcherBase>
 Server::make_matcher(const std::string &pattern) {
+  // Path params take precedence, so "/users/:id/(.*)" keeps being matched as
+  // a path params pattern
   if (pattern.find("/:") != std::string::npos) {
     return detail::make_unique<detail::PathParamsMatcher>(pattern);
-  } else {
-    return detail::make_unique<detail::RegexMatcher>(pattern);
   }
+
+  // A pattern with no regex metacharacter only has to be compared literally,
+  // which is what PathParamsMatcher already does when it captures no
+  // parameter, so std::regex is only worth building for the patterns that
+  // actually need it
+  if (pattern.find_first_of(".^$|()[]{}*+?\\") == std::string::npos) {
+    return detail::make_unique<detail::PathParamsMatcher>(pattern);
+  }
+
+  return detail::make_unique<detail::RegexMatcher>(pattern);
 }
 
 inline Server &Server::Get(const std::string &pattern, Handler handler) {
@@ -12704,15 +12744,12 @@ inline bool Server::read_content_core(
         }
       }
       if (has_data) {
-        auto result =
-            detail::read_content_without_length(strm, payload_max_length_, out);
-        if (result == detail::ReadContentResult::PayloadTooLarge) {
-          res.status = StatusCode::PayloadTooLarge_413;
-          return false;
-        } else if (result != detail::ReadContentResult::Success) {
-          return false;
-        }
-        return true;
+        // Route through the same decompressing reader used by the
+        // length-framed and chunked paths below, so payload_max_length_ is
+        // enforced on the decompressed size here too instead of only on the
+        // compressed wire bytes.
+        return detail::read_content(strm, req, payload_max_length_, res.status,
+                                    nullptr, out, true);
       }
     }
     return true;

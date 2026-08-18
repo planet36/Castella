@@ -20,13 +20,13 @@
 #include <compare>
 #include <concepts>
 #include <cstddef>
-#include <cstring>
 #include <initializer_list>
 #include <iterator>
 #include <new>
 #include <ranges>
 #include <span>
 #include <stdexcept>
+#include <string.h> // memset_explicit, explicit_bzero
 #include <type_traits>
 #include <utility>
 

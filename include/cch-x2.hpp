@@ -192,8 +192,8 @@ public:
 
     /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form; a null \a data_a or \a data_b is a no-op,
-    * ignoring \a len.
+    * The raw-data form; a null \a data_a or \a data_b is treated as an
+    * empty span, ignoring \a len.
     *
     * \param data_a the input data for node A
     * \param data_b the input data for node B
@@ -213,18 +213,11 @@ public:
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
 
-        // A null pointer means there is nothing to absorb (len is ignored;
-        // the DEBUG asserts above flag a nonzero one as a likely caller
-        // bug), and returning early behaves the same as substituting
-        // two empty spans -- without ever forming a span from a null
-        // pointer.  The single-node shim (compress_castella_hash::add)
-        // substitutes an empty span instead of returning because its span
-        // form must still throw if the state is finalized even when there
-        // is no input; this class has no such runtime check (it is an
-        // internal single-thread worker), so the plain early return
-        // suffices.  DuplexX2 does the same.
         if ((data_a == nullptr) || (data_b == nullptr))
+        {
+            add(std::span<const std::byte>{}, std::span<const std::byte>{});
             return;
+        }
 
         add(std::span{static_cast<const std::byte*>(data_a), len},
             std::span{static_cast<const std::byte*>(data_b), len});

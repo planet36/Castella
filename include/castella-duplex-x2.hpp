@@ -369,8 +369,8 @@ public:
 
     /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form; a null \a data_a or \a data_b is a no-op,
-    * ignoring \a len.
+    * The raw-data form; a null \a data_a or \a data_b is treated as an
+    * empty span, ignoring \a len.
     *
     * \param data_a the input data for duplex A
     * \param data_b the input data for duplex B
@@ -389,7 +389,10 @@ public:
 #endif
 
         if ((data_a == nullptr) || (data_b == nullptr))
+        {
+            add(std::span<const std::byte>{}, std::span<const std::byte>{});
             return;
+        }
 
         add(std::span{static_cast<const std::byte*>(data_a), len},
             std::span{static_cast<const std::byte*>(data_b), len});

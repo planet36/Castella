@@ -58,12 +58,18 @@ constexpr bool folded_path = false;
 /// The number of random states tried per (state size, round count)
 constexpr int num_trials = 32;
 
-/// The number of comparisons the four state sizes are expected to make
+/// The number of state sizes compared
+constexpr int num_state_sizes = 4;
+
+/// The number of comparisons the state sizes are expected to make
 /**
-* Four state sizes, each (NUM_ROUNDS_MAX + 1) round counts by num_trials.
-* Update it deliberately when any of those changes.
+* Every state size is compared at every round count from 0 through
+* \c Castella::NUM_ROUNDS_MAX, and every round count is tried \c num_trials
+* times.  A mismatch means a state size, a round count, or a trial was
+* skipped.
 */
-constexpr int EXPECTED_COMPARISONS = 2176;
+constexpr int EXPECTED_COMPARISONS =
+    num_state_sizes * (Castella::NUM_ROUNDS_MAX + 1) * num_trials;
 
 /// The state of an \a N-block permutation as plain bytes (comparable, printable)
 template <size_t N>
@@ -148,8 +154,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         (void)std::fflush(stdout);
         std::println(stderr,
-                     "expected {} comparisons, made {} -- a state size is missing, or "
-                     "EXPECTED_COMPARISONS is stale",
+                     "expected {} comparisons, made {} -- a state size, a round "
+                     "count, or a trial was skipped",
                      EXPECTED_COMPARISONS, num_comparisons);
         return EXIT_FAILURE;
     }

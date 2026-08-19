@@ -135,10 +135,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (argc > 1)
     {
-        // base 0: accept the "0x..." form this program prints
+        // Accept the "0x..." form this program prints.
+        constexpr int base = 0;
+
         const auto parsed_seed = parse_int<uint64_t>(
             argv[1], std::numeric_limits<uint64_t>::min(),
-            std::numeric_limits<uint64_t>::max(), 0);
+            std::numeric_limits<uint64_t>::max(), base);
 
         if (!parsed_seed.has_value())
             errx(EXIT_FAILURE, "invalid argument: SEED: \"%s\"", argv[1]);

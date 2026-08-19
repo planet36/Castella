@@ -76,7 +76,7 @@ using state_bytes_t = std::array<uint8_t, sizeof(Castella::arr_blocks<N>)>;
 */
 template <size_t N>
 [[nodiscard]] static int
-check_state_size(std::mt19937_64& rng)
+check_state_size(std::uniform_random_bit_generator auto& rng)
 {
     int num_comparisons = 0;
 

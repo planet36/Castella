@@ -67,7 +67,7 @@ template <typename MakeTree, typename GetDigest>
 void
 test_one_input(const std::string_view name, const MakeTree& make_tree,
                const GetDigest& get_digest, const std::span<const std::byte> input,
-               std::mt19937_64& rng)
+               std::uniform_random_bit_generator auto& rng)
 {
     // The single-threaded one-shot digest is the reference.
     const auto reference = [&] {

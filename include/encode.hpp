@@ -22,9 +22,9 @@
 #include <cstddef>
 #include <cstdint>
 
-static_assert(std::endian::native == std::endian::little,
-              "little-endian host required (left_encode/right_encode take the "
-              "low-order bytes of the native object representation)");
+// left_encode and right_encode take the low-order bytes of the native object
+// representation.
+static_assert(std::endian::native == std::endian::little, "little-endian host required");
 
 /// Unambiguously encode the integer into a buffer
 /**

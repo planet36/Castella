@@ -1190,7 +1190,8 @@ public:
         return *this;
     }
 
-    /// Squeeze half the capacity's worth of bytes from the outer state
+    /// Squeeze bytes from the outer state, and return them as a
+    /// `std::vector<std::byte>`
     // {{{
     /**
     * The number of bytes returned is equal to half the capacity.

@@ -181,7 +181,8 @@ public:
         return final_node_.squeeze_bytes(n);
     }
 
-    /// Squeeze half the capacity's worth of bytes from the final node
+    /// Squeeze bytes from the final node, and return them as a
+    /// `std::vector<std::byte>`
     /**
     * The number of bytes returned is equal to half the capacity.
     * See \c squeeze_bytes(int) for what the first call finalizes.

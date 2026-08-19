@@ -374,7 +374,7 @@ private:
         cur_input_byte_idx_ = 0;
     }
 
-    /// Absorb the input buffer into the state and apply the permutation function
+    /// Absorb the input buffer into the outer state and apply the permutation function
     // {{{
     /**
     * ## _CSF-0.1.pdf_

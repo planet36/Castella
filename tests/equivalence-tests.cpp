@@ -131,7 +131,7 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    uint64_t seed = UINT64_C(0x436173'74656c6c); // "Castell"
+    uint64_t seed = UINT64_C(0x43617374'656c6c61); // "Castella"
 
     if (argc > 1)
     {

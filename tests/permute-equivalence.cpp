@@ -117,7 +117,7 @@ check_state_size(std::uniform_random_bit_generator auto& rng)
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    uint64_t seed = UINT64_C(0x436173'74656c6c); // "Castell"
+    uint64_t seed = UINT64_C(0x43617374'656c6c61); // "Castella"
 
     if (argc > 1)
     {

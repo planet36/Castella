@@ -46,8 +46,8 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_DRIVER = HERE / "duplex-diff-driver"
 MODEL_PATH = HERE.parent / "research" / "spec-conformance.py"
 
-# "Castell" -- the same default seed as equivalence-tests.cpp
-DEFAULT_SEED = 0x436173_74656C6C
+# "Castella" -- the same default seed as equivalence-tests.cpp
+DEFAULT_SEED = 0x43617374_656C6C61
 SEED_MAX = 2**64  # exclusive, matching equivalence-tests' uint64_t seed
 
 

@@ -102,7 +102,7 @@ constexpr std::string_view kat_mac_function_name = "Castella-MAC";
 */
 constexpr int64_t EXPECTED_KATS = 91;
 
-/// The deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
+/// Get the deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
 [[nodiscard]] std::vector<std::byte>
 make_msg(const int len)
 {
@@ -116,7 +116,7 @@ make_msg(const int len)
     return msg;
 }
 
-/// One round constant, as bytes: <code>RC[r][aes_r][i]</code>
+/// Get one round constant, as bytes: <code>RC[r][aes_r][i]</code>
 /**
 * Pins the constant schedule on its own, so a wrong LFSR seed, stride or
 * emission order is caught here rather than as a wrong digest 200 lines
@@ -130,10 +130,10 @@ round_constant_bytes(const int r, const int aes_r, const int i)
     return {std::begin(rc), std::end(rc)};
 }
 
-/// The 256-byte state after <code>P(s, num_rounds)</code>
+/// Get the state after <code>P(s, num_rounds)</code>
 /**
 * \param counter_init false for the all-zero state, true for
-*        <code>s[i] = i mod 256</code> over the 256 state bytes
+*        <code>s[i] = i mod 256</code> over the total state bytes
 *
 * Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX
 * are the point: \c P uses the \e last \a num_rounds rounds' constants, so
@@ -192,7 +192,7 @@ tree_digest(const int capacity_blocks, const int num_rounds, const int input_suf
     return tree.squeeze_bytes(out);
 }
 
-/// The deterministic KAT key of length \a len: <code>key[i] = 255 - (i mod 256)</code>
+/// Get the deterministic KAT key of length \a len: <code>key[i] = 255 - (i mod 256)</code>
 [[nodiscard]] std::vector<std::byte>
 make_key(const int len)
 {
@@ -206,7 +206,7 @@ make_key(const int len)
     return key;
 }
 
-/// The keyed (MAC) digest, as SPEC.md's "The keyed (MAC) construction" defines it
+/// Get the keyed (MAC) digest, as SPEC.md's "The keyed (MAC) construction" defines it
 /**
 * A \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>.
@@ -251,7 +251,7 @@ mac_digest(const int capacity_blocks, const int num_rounds, const int input_suff
     return tree.squeeze_bytes(out);
 }
 
-/// The plain (untreed) Compress-Castella node digest
+/// Get the plain (untreed) Compress-Castella node digest
 /**
 * The \c cchtree lines exercise this node too, but only through the tree,
 * so a node-only fault shows up there as a wrong tree digest.  These

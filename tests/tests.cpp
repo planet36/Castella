@@ -51,12 +51,7 @@ int num_checks = 0;
 * active in every build.
 */
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK(...)           \
-    do                       \
-    {                        \
-        ++num_checks;        \
-        assert(__VA_ARGS__); \
-    } while (false)
+#define CHECK(...) do { ++num_checks; assert(__VA_ARGS__); } while (false)
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])

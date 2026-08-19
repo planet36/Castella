@@ -143,7 +143,9 @@ round_constant_bytes(const int r, const int aes_r, const int i)
 [[nodiscard]] std::vector<std::byte>
 permute_state(const bool counter_init, const int num_rounds)
 {
-    constexpr int STATE_BYTES = 256;
+    using state_t = Castella::arr_blocks<Castella::B_MAX>;
+
+    constexpr int STATE_BYTES = sizeof(state_t);
 
     std::array<std::byte, STATE_BYTES> flat{};
 
@@ -155,7 +157,7 @@ permute_state(const bool counter_init, const int num_rounds)
         }
     }
 
-    auto state = std::bit_cast<Castella::arr_blocks<16>>(flat);
+    auto state = std::bit_cast<state_t>(flat);
 
     Castella::permute(state, num_rounds);
 

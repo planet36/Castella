@@ -40,9 +40,9 @@ struct DuplexTreeNodePolicy final
     /// worker, so the streaming pipeline pays off.
     static constexpr bool USE_STREAMING_POOL = true;
 
-    int capacity_blocks;
-    int num_rounds;
-    int input_suffix;
+    const int capacity_blocks;
+    const int num_rounds;
+    const int input_suffix;
     std::string function_name;
     std::string customization_str;
 

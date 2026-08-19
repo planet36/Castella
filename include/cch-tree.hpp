@@ -32,7 +32,7 @@ struct compress_castella_tree_node_policy final
     /// parallelizes.
     static constexpr bool USE_STREAMING_POOL = false;
 
-    int mix_rate;
+    const int mix_rate;
 
     /// Construct a fresh node (its constructor validates the mix rate)
     [[nodiscard]] node_type make_node() const

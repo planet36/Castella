@@ -125,8 +125,7 @@ make_msg(const int len)
 [[nodiscard]] std::vector<std::byte>
 round_constant_bytes(const int r, const int aes_r, const int i)
 {
-    const auto rc = as_byte_span(Castella::round_constants[to_unsigned(r)][to_unsigned(aes_r)]
-                                                          [to_unsigned(i)]);
+    const auto rc = as_byte_span(Castella::round_constants.at(r).at(aes_r).at(i));
 
     return {std::begin(rc), std::end(rc)};
 }
@@ -152,7 +151,7 @@ permute_state(const bool counter_init, const int num_rounds)
     {
         for (int i = 0; i < STATE_BYTES; ++i)
         {
-            flat[to_unsigned(i)] = static_cast<std::byte>(i & 0xFF);
+            flat.at(i) = static_cast<std::byte>(i & 0xFF);
         }
     }
 

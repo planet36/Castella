@@ -224,7 +224,7 @@ private:
         absorb_();
     }
 
-    /// Add the bytes of \a src_a / \a src_b to the two input buffers (lane A / lane B)
+    /// Add \a src_a / \a src_b to the two input buffers (lane A / lane B)
     /**
     * The lockstep counterpart of \c Duplex::add_(): the two lanes absorb
     * different bytes but always the same number of them, so both duplexes

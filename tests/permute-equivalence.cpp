@@ -71,7 +71,7 @@ constexpr int num_state_sizes = 4;
 constexpr int EXPECTED_COMPARISONS =
     num_state_sizes * (Castella::NUM_ROUNDS_MAX + 1) * num_trials;
 
-/// The state of an \a N-block permutation as plain bytes (comparable, printable)
+/// The state of an \a N-block permutation as plain bytes
 template <size_t N>
 using state_bytes_t = std::array<uint8_t, sizeof(Castella::arr_blocks<N>)>;
 

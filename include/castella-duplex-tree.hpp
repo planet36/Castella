@@ -46,7 +46,7 @@ struct DuplexTreeNodePolicy final
     std::string function_name;
     std::string customization_str;
 
-    /// Construct a fresh node (the Duplex constructor validates the parameters)
+    /// Construct a fresh node
     [[nodiscard]] node_type make_node() const
     {
         return node_type{capacity_blocks, num_rounds, input_suffix, function_name,
@@ -67,7 +67,11 @@ struct DuplexTreeNodePolicy final
         return node.get_capacity_size_bytes();
     }
 
-    /// Write the node's chaining value into \a cv_dst (pads, permutes, copies)
+    /// Write the node's chaining value into \a cv_dst
+    /**
+    * Squeezing applies the padding rule, permutes the state, and copies the
+    * outer state into \a cv_dst.
+    */
     static void extract_cv(node_type& node, const std::span<std::byte> cv_dst)
     {
         (void)node.squeeze_to(cv_dst);
@@ -84,7 +88,10 @@ struct DuplexTreeNodePolicy final
     */
     using node_x2_type = DuplexX2;
 
-    /// Construct a fresh lockstep node pair (same parameters as \c make_node)
+    /// Construct a fresh lockstep node pair
+    /**
+    * Both duplexes get the same parameters \c make_node gives a single node.
+    */
     [[nodiscard]] node_x2_type make_node_x2() const
     {
         return node_x2_type{capacity_blocks, num_rounds, input_suffix, function_name,

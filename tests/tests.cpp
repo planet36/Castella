@@ -345,7 +345,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
-        // The minimum chunk size keeps the multi-chunk tests cheap.
+        // The minimum chunk size keeps the multi-chunk tests quick.
         constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 
         // Deterministic input data spanning several chunks (3 full + a 41-byte

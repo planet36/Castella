@@ -34,7 +34,7 @@ struct compress_castella_tree_node_policy final
 
     const int mix_rate;
 
-    /// Construct a fresh node (its constructor validates the mix rate)
+    /// Construct a fresh node
     [[nodiscard]] node_type make_node() const
     {
         return node_type{mix_rate};

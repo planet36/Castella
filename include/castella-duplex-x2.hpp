@@ -99,11 +99,7 @@ public:
     const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
-    /// Check the values of \c C, \c R, and \c NUM_ROUNDS (same constraints as \c Duplex)
-    /**
-    * \exception std::invalid_argument if any of \c C, \c R, or \c NUM_ROUNDS are
-    * invalid
-    */
+    /// \copydoc Duplex::check_constraints_
     void check_constraints_() const
     {
         if (C < Duplex::C_MIN)

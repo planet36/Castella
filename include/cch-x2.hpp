@@ -66,7 +66,7 @@ private:
 public:
     compress_castella_hash_x2() = default;
 
-    /// ctor (\a mix_rate as in \c compress_castella_hash; both nodes get it)
+    /// \copydoc compress_castella_hash::compress_castella_hash(int)
     explicit compress_castella_hash_x2(const int mix_rate) :
     node_a_{mix_rate},
     node_b_{mix_rate}

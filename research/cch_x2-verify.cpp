@@ -55,6 +55,16 @@ test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_piece
         pair.add(bytes_a, bytes_b);
     }
 
+    // A null pointer absorbs nothing in either lane, so these calls must
+    // leave both nodes exactly as the loop above left them.  The two
+    // separate nodes get no matching call, so the comparisons below fail if
+    // any of these absorbs.  This program builds with DEBUG, whose assert
+    // rejects a null pointer with a nonzero len, so len is 0 here.
+    const std::byte probe{};
+    pair.add(nullptr, nullptr, 0);
+    pair.add(nullptr, &probe, 0);
+    pair.add(&probe, nullptr, 0);
+
     const auto expected_a =
         hash_a.final_digest_bytes(compress_castella_hash<>::get_max_digest_size_bytes());
     const auto expected_b =

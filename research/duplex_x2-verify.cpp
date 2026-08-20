@@ -69,6 +69,16 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
         duplex_x2.add(bytes_a, bytes_b);
     }
 
+    // A null pointer absorbs nothing in either lane, so these calls must
+    // leave both duplexes exactly as the loop above left them.  The two
+    // separate duplexes get no matching call, so the comparisons below fail
+    // if any of these absorbs.  This program builds with DEBUG, whose assert
+    // rejects a null pointer with a nonzero len, so len is 0 here.
+    const std::byte probe{};
+    duplex_x2.add(nullptr, nullptr, 0);
+    duplex_x2.add(nullptr, &probe, 0);
+    duplex_x2.add(&probe, nullptr, 0);
+
     // Squeeze twice (successive squeezes must also stay in lockstep), with
     // a length that exercises the partial-block copy in squeeze_pair_to.
     int num_comparisons = 0;

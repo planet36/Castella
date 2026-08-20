@@ -393,9 +393,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // the add() calls (chunking depends only on byte offsets)
             const auto expected = tree_digest(X_sp);
 
-            // one byte at a time
             Castella::DuplexTree tree1(capacity_blocks, num_rounds, input_suffix,
                                        function_name, customization_str, chunk_size);
+            // Add one byte at a time
             for (const auto b : X)
             {
                 // deliberately the raw (const void*, size_t) shim, so it

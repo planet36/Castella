@@ -160,7 +160,9 @@ Verify all technical claims empirically (compile/run/test) before asserting them
 
 ## Code Style / Comments
 
-Keep code comments concise: prefer brief, accurate wording over verbose explanations. Avoid "load-bearing" phrasing and avoid over-compressing accuracy away.
+Write one idea per sentence. The habit to avoid is packing several ideas into one sentence and welding them together with a colon, a semicolon, or a dash. Semicolons are rare, colons introduce a real list rather than an explanation, and dashes come in pairs. A detail paragraph runs to about five lines.
+
+Keep code comments concise. Prefer brief, accurate wording over verbose explanations. Do not restate what the declaration already says. Avoid "load-bearing" phrasing and avoid over-compressing accuracy away.
 
 ## Build / Makefile
 

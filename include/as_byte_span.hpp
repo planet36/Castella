@@ -6,9 +6,9 @@
 * Each overload returns a view that's valid only while the referenced storage
 * remains valid.
 *
-* The span becomes dangling if the storage is destroyed, reallocated, or
-* (potentially) modified, or if the argument is a temporary (dangling at
-* full-expression end).
+* Beware of a dangling span.  The storage may be destroyed, reallocated, or
+* modified.  A temporary argument does not outlive the statement that creates
+* it.
 *
 * \file
 * \author Steven Ward

@@ -449,7 +449,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test that the chunk size is part of the digest format
+            // Test that different chunk sizes give different digests
             Castella::DuplexTree tree1(capacity_blocks, num_rounds, input_suffix,
                                        function_name, customization_str, chunk_size);
             Castella::DuplexTree tree2(capacity_blocks, num_rounds, input_suffix,
@@ -478,8 +478,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test that successive squeezes are distinct, and that add()
-            // after a squeeze throws
+            // Test that successive squeezes are distinct.  The first squeeze
+            // finalizes the tree, so a later add() throws.  Duplex allows it,
+            // because absorbing after a squeeze is what a duplex is for.
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str, chunk_size);
             tree.add(X_sp);
@@ -569,8 +570,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             try
             {
-                // Duplex parameter violations propagate from the (eagerly
-                // constructed) final node
+                // The tree constructor builds the final node, so a bad Duplex
+                // parameter throws from the tree constructor rather than from
+                // the first add()
                 constexpr int bad_capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
 
                 Castella::DuplexTree tree(bad_capacity_blocks, num_rounds, input_suffix,

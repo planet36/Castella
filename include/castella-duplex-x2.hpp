@@ -307,11 +307,11 @@ private:
         add_(as_byte_span(s), as_byte_span(s));
     }
 
-    /// Initialize the state (both lanes absorb the identical init stream)
+    /// Initialize the state (both lanes absorb the same construction-time bytes)
     /**
     * \pre \c zeroize_() has been called immediately prior to this invocation.
     *
-    * Byte-for-byte the same init stream as \c Duplex::init_(), so a
+    * Both lanes absorb byte for byte what \c Duplex::init_() absorbs, so a
     * \c DuplexX2 lane is interchangeable with a \c Duplex constructed with
     * the same parameters.
     */

@@ -65,8 +65,7 @@ struct compress_castella_tree_node_policy final
     * \c HAS_PAIRED_LEAF): adjacent full leaf chunks are hashed two at a
     * time on one thread by interleaving the two nodes' compression chains
     * in one bulk loop (see \c compress_castella_hash_x2 for why that
-    * pays; measured faster by
-    * research/simd_compress-two-state-benchmark.cpp).
+    * pays; the measured speedup is recorded in research/README.md).
     *
     * Guarded by the VAES flags even though the pair class itself is
     * portable, because the win exists only under VAES codegen: 256-bit

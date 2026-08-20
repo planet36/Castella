@@ -164,6 +164,8 @@ Write one idea per sentence. The habit to avoid is packing several ideas into on
 
 Keep code comments concise. Prefer brief, accurate wording over verbose explanations. Do not restate what the declaration already says. Avoid "load-bearing" phrasing and avoid over-compressing accuracy away.
 
+Use `\copydoc` only when the target documents the same parameters under the same names. It copies the `\param` and `\exception` lines along with the text, so an overload whose parameters are named differently draws "too many @param commands" from doxygen, and a block with its own `\exception` lines ends up carrying each one twice. Use `\copybrief` plus a specific paragraph in those cases.
+
 ## Build / Makefile
 
 Do not change build flags (e.g., `-std`) or other configuration based on unverified documentation; confirm the current value and justification before altering.

@@ -25,32 +25,34 @@
 // {{{
 /**
 * The throughput building block of cch leaf pairing (see
-* \c Castella::HashTree and the cch tree policy in cch-tree.hpp).  Unlike
-* \c Castella::DuplexX2, the two states are NOT packed into shared SIMD
-* registers: a cch node already compresses with full-width VAES
-* instructions, so nothing is gained by lane packing.  The win is
-* instruction-level: one cch state runs 8 independent 3-deep AES chains
-* per 256-byte chunk, but each chain is serial *across* chunks, so the
-* per-chunk critical path (3 chained \c vaesenc latencies) exceeds the
-* per-chunk AES throughput cost and leaves the AES units partly idle.
-* Interleaving a second state's chains in the same bulk loop fills those
-* idle slots -- measured faster than hashing the two inputs sequentially
-* (see research/simd_compress-two-state-benchmark.cpp).
+* \c Castella::HashTree and the cch tree policy in cch-tree.hpp).
 *
-* This class simply owns two ordinary nodes and drives their (private)
-* absorb machinery in one interleaved bulk loop, so the initial state,
-* mix-rate binding, padding, and finalization logic all remain in ONE
-* place (cch.hpp) -- each lane computes exactly what a standalone node
-* computes (verified by research/cch_x2-verify.cpp).  This class is an
-* execution-level optimization only and must never be digest-visible.
+* Unlike \c Castella::DuplexX2, the two states are NOT packed into shared SIMD
+* registers.  A cch node already compresses with full-width VAES instructions,
+* so nothing is gained by lane packing.
 *
-* Lockstep constrains only \c add: every absorbed piece must have the SAME
-* LENGTH in both lanes (the contents may differ), so the two nodes' mix
-* schedules stay aligned.  Finalization needs no lockstep (it is one
-* buffered absorb plus one permutation per node, amortized over a whole
-* leaf chunk), so \c final_digest_pair_to just finalizes each node.
+* The win is instruction-level.  One cch state runs 8 independent 3-deep AES
+* chains per 256-byte chunk, but each chain is serial *across* chunks.  The
+* per-chunk critical path of 3 chained \c vaesenc latencies therefore exceeds
+* the per-chunk AES throughput cost, leaving the AES units partly idle.
+* Interleaving a second state's chains in the same bulk loop fills those idle
+* slots, which measured faster than hashing the two inputs sequentially (see
+* research/simd_compress-two-state-benchmark.cpp).
 *
-* Like \c DuplexX2, this class is a single-thread worker's scratch object:
+* This class owns two ordinary nodes and drives their private absorb
+* machinery in one interleaved bulk loop.  The initial state, mix-rate
+* binding, padding, and finalization logic therefore all remain in ONE place,
+* cch.hpp, and each lane computes exactly what a standalone node computes
+* (verified by research/cch_x2-verify.cpp).  This class is an execution-level
+* optimization only and must never be digest-visible.
+*
+* Lockstep constrains only \c add.  Every absorbed piece must have the SAME
+* LENGTH in both lanes, though the contents may differ, so the two nodes' mix
+* schedules stay aligned.  Finalization needs no lockstep, being one buffered
+* absorb plus one permutation per node amortized over a whole leaf chunk, so
+* \c final_digest_pair_to just finalizes each node.
+*
+* Like \c DuplexX2, this class is a single-thread worker's scratch object.
 * \c add touches the nodes' internals without taking their mutexes.
 */
 // }}}
@@ -84,11 +86,10 @@ public:
     /// Consume the input data into node A and node B
     // {{{
     /**
-    * The lockstep counterpart of \c compress_castella_hash::add_: the two
-    * lanes absorb different bytes but always the same number of them, so
-    * both nodes buffer, compress, and mix on the same schedule -- which is
-    * what lets one bulk loop advance both states with interleaved
-    * instructions.
+    * The lockstep counterpart of \c compress_castella_hash::add_.  The two
+    * lanes absorb different bytes but always the same number of them, so both
+    * nodes buffer, compress, and mix on the same schedule.  That is what lets
+    * one bulk loop advance both states with interleaved instructions.
     *
     * \param src_a the input data for node A
     * \param src_b the input data for node B
@@ -102,7 +103,8 @@ public:
         assert(std::size(src_a) == std::size(src_b)); // lockstep
         assert(!node_a_.has_been_finalized_);
         assert(!node_b_.has_been_finalized_);
-        // The lockstep invariants: identical parameters, identical schedule.
+        // The lockstep invariants are identical parameters and an identical
+        // schedule.
         assert(node_a_.mix_rate_ == node_b_.mix_rate_);
         assert(node_a_.absorbs_since_mix_ == node_b_.absorbs_since_mix_);
         assert(node_a_.input_bytes_.reserved_unused() ==
@@ -135,8 +137,8 @@ public:
             using block_t = node_type::block_t;
 
             // Compress whole chunks directly from the source buffers with the
-            // two states' work interleaved (the point of this class); the
-            // states are kept in local variables so that they may stay in
+            // two states' work interleaved, which is the point of this class.
+            // The states are kept in local variables so that they may stay in
             // registers across chunks, as in the single node's bulk loop.
             if (std::size(src_a) >= node_a_.get_state_size_bytes())
             {
@@ -230,10 +232,10 @@ public:
 
     /// Get both nodes' final digest bytes, written into \a dst_a and \a dst_b
     /**
-    * Finalization is per-node (no lockstep needed): each node pads,
-    * applies its finalizing permutation, and copies its digest prefix.
-    * See \c compress_castella_hash::final_digest_to for the constraints
-    * on the destination sizes.
+    * Finalization is per-node and needs no lockstep.  Each node pads, applies
+    * its finalizing permutation, and copies its digest prefix.  See
+    * \c compress_castella_hash::final_digest_to for the constraints on the
+    * destination sizes.
     */
     void final_digest_pair_to(const std::span<std::byte> dst_a,
                               const std::span<std::byte> dst_b)

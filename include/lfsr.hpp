@@ -59,7 +59,7 @@ lfsr_from_bytes16(const std::string_view src)
     // sizeof(lfsr128_state_t) bytes, and no such object is available directly:
     // - The string literal is a const char[17] (trailing NUL), so its size
     //   does not match.
-    // - src is a pointer + length object; casting it would reinterpret
+    // - src is a pointer + length object.  Casting it would reinterpret
     //   the pointer's bits, not the characters.
     // - There is no constexpr memcpy.
     std::array<uint8_t, sizeof(lfsr128_state_t)> dst{};

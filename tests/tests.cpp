@@ -28,9 +28,11 @@
 
 /// The number of runtime checks \c main is expected to make
 /**
-* Without this the program cannot report success on the checks that did run:
-* every check that remains genuinely passes, so deleting one leaves the
-* program at exit 0.  Update it deliberately when tests are added or removed.
+* Without this the program cannot report success on the checks that did run.
+* Every check that remains genuinely passes, so deleting one leaves the
+* program at exit 0.
+*
+* Update it deliberately when tests are added or removed.
 *
 * The VAES-only DuplexX2 block contributes 5 of these, so the expected total
 * depends on the target.
@@ -222,10 +224,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
     {
         // The same five constraints on Castella::DuplexX2, which enforces them
-        // separately (castella-duplex-x2.hpp check_constraints_).  Guarded
-        // because the class exists only where the lane-paired path does; on
-        // every other target these constraints are Duplex's alone, tested
-        // above.
+        // separately in check_constraints_.  This is guarded because the class
+        // exists only where the lane-paired path does.  On every other target
+        // these constraints are Duplex's alone, tested above.
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
@@ -233,7 +234,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr int good_num_rounds = 6;
         constexpr int good_capacity_blocks = 4;
 
-        // The capture is required: passing the string_views by value odr-uses
+        // The capture is required.  Passing the string_views by value odr-uses
         // them, which clang rejects without one even though they are constexpr.
         const auto expect_invalid = [&](const int capacity_blocks, const int num_rounds)
         {
@@ -255,10 +256,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         };
 
         // Each value isolates one check, which is possible here and not for
-        // Duplex above: DuplexX2 validates C directly and has no R_MIN/R_MAX
-        // checks, whose equivalent bounds (R = B - C) subsume Duplex's C range.
-        // The out-of-range capacities are even, so that removing a C range
-        // check cannot be masked by the "C is odd" check.
+        // Duplex above.  DuplexX2 validates C directly, and its R checks run
+        // only under DEBUG, after the C checks.  The out-of-range capacities
+        // are even, so that removing a C range check cannot be masked by the
+        // "C is odd" check.
         static_assert(((Castella::Duplex::C_MIN + 1) % 2) != 0); // odd
         static_assert(((Castella::Duplex::C_MIN - 2) % 2) == 0);
         static_assert(((Castella::Duplex::C_MAX + 2) % 2) == 0);
@@ -348,18 +349,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // The minimum chunk size keeps the multi-chunk tests quick.
         constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 
-        // Deterministic input data spanning several chunks (3 full + a 41-byte
-        // partial trailing chunk, relative to the 1024-byte test chunk size
-        // above).  The odd trailing byte count exercises the partial-chunk
-        // path.  The fill is an affine byte generator: an odd multiplier is
-        // coprime to 256, so it has full period (every byte value appears once
-        // per 256-byte run) -- non-constant, non-repeating data so a bug that
-        // misplaces a byte offset actually perturbs the digest.
+        // Deterministic input data spanning several chunks, being 3 full ones
+        // and a 41-byte partial trailing chunk against the 1024-byte test
+        // chunk size above.  The odd trailing byte count exercises the
+        // partial-chunk path.
         //
-        // FROZEN: this exact size and fill feed the pinned tree KAT
-        // (1204a8d4..., asserted near the end of this block).  Changing either
-        // changes that digest, which must never change -- it would also require
-        // regenerating tests/KAT.txt and research/spec-conformance.py.
+        // The fill is an affine byte generator.  An odd multiplier is coprime
+        // to 256, so it has full period and every byte value appears once per
+        // 256-byte run.  That gives non-constant, non-repeating data, so a bug
+        // that misplaces a byte offset actually perturbs the digest.
+        //
+        // FROZEN.  This exact size and fill feed the pinned tree KAT,
+        // 1204a8d4..., asserted near the end of this block.  A change to either
+        // one changes that digest, which must never change.  It would also
+        // require regenerating tests/KAT.txt and research/spec-conformance.py.
         std::vector<std::byte> X(3 * chunk_size + 41);
         for (int i = 0; i < std::ssize(X); ++i)
         {
@@ -398,14 +401,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // Add one byte at a time
             for (const auto b : X)
             {
-                // deliberately the raw (const void*, size_t) shim, so it
-                // keeps regression coverage
+                // Deliberately the (const void*, size_t) overload, so that it
+                // keeps its regression coverage.
                 tree1.add(&b, 1);
             }
             CHECK(tree1.squeeze_bytes() == expected);
 
-            // pieces that do not divide the chunk size, so chunk boundaries
-            // are crossed mid-call
+            // Pieces that do not divide the chunk size, so chunk boundaries
+            // are crossed mid-call.
             Castella::DuplexTree tree2(capacity_blocks, num_rounds, input_suffix,
                                        function_name, customization_str, chunk_size);
             constexpr int piece_size = 1000;
@@ -418,9 +421,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test input lengths at the chunk boundaries; all digests must
-            // be pairwise distinct (in particular: empty vs 1 byte, and
-            // exactly k chunks vs k chunks + 1 byte)
+            // Test input lengths at the chunk boundaries.  All digests must be
+            // pairwise distinct, in particular empty against 1 byte, and
+            // exactly k chunks against k chunks plus 1 byte.
             constexpr std::array lens{
                 0,
                 1,
@@ -502,9 +505,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 std::println("std::logic_error: {}", ex.what());
             }
 
-            // A null/empty add after finalization must throw too, not
-            // silently no-op (the finalized check precedes the null-data
-            // short-circuit).
+            // A null or empty add after finalization must throw too, rather
+            // than silently do nothing.  The finalized check precedes the
+            // null-data short-circuit.
             try
             {
                 tree.add(std::span<const std::byte>{});
@@ -589,18 +592,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         {
             // Test the parallel bulk path against the sequential reference.
-            // The input is large enough (64 full chunks + a partial one)
-            // that a one-shot add() with several threads statically
-            // partitions the leaves across workers; with num_threads=1 the
-            // identical input takes the sequential chunk-by-chunk path.
+            // The input is large enough, at 64 full chunks and a partial one,
+            // that a one-shot add() with several threads statically partitions
+            // the leaves across workers.  With num_threads=1 the identical
+            // input takes the sequential chunk-by-chunk path.
             //
-            // 64 full chunks is comfortably above 2 * MIN_LEAF_CHUNKS_PER_WORKER
-            // (the batch path's arm-the-workers threshold), so 2/4/auto threads
-            // each get a real share of leaves; the 17-byte tail adds a partial
-            // chunk.  The size is deliberate (path selection + partial tail);
-            // the fill coefficients are arbitrary -- any odd multiplier gives
-            // full-period, non-degenerate data.  Unlike X, no KAT depends on Y:
-            // it is only ever checked against its own single-threaded digest.
+            // 64 full chunks is comfortably above the batch path's
+            // arm-the-workers threshold of 2 * MIN_LEAF_CHUNKS_PER_WORKER, so
+            // 2, 4, and auto threads each get a real share of leaves.  The
+            // 17-byte tail adds a partial chunk.
+            //
+            // The size is deliberate, driving path selection and the partial
+            // tail.  The fill coefficients are arbitrary, since any odd
+            // multiplier gives full-period, non-degenerate data.  Unlike X, no
+            // KAT depends on Y.  It is only ever checked against its own
+            // single-threaded digest.
             std::vector<std::byte> Y(64 * chunk_size + 17);
             for (int i = 0; i < std::ssize(Y); ++i)
             {
@@ -611,18 +617,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             // sequential reference
             const auto expected = tree_digest(Y_sp, 1);
 
-            // parallel, with different worker counts (hence different
-            // static partitions of the leaves)
+            // Run in parallel with different worker counts, which gives
+            // different static partitions of the leaves.
             CHECK(tree_digest(Y_sp, 2) == expected);
             CHECK(tree_digest(Y_sp, 4) == expected);
             CHECK(tree_digest(Y_sp, 0) == expected); // 0 = auto
 
-            // Piecewise adds (piece sizes are relative to the 1024-byte test
-            // chunk size, NOT DEFAULT_CHUNK_SIZE): 1000-byte pieces are too
-            // small for the batch path and flow through the streaming
-            // pipeline; 33000-byte pieces produce ~32-chunk batches
-            // (33000 / 1024 ~= 32) for the transient-worker path.  Both must
-            // reproduce the one-shot digest.
+            // Piecewise adds, where the piece sizes are relative to the
+            // 1024-byte test chunk size and NOT to DEFAULT_CHUNK_SIZE.
+            // 1000-byte pieces are too small for the batch path and flow
+            // through the streaming pipeline.  33000-byte pieces produce
+            // roughly 32-chunk batches for the transient-worker path.  Both
+            // must reproduce the one-shot digest.
             for (const int piece_size : {1000, 33'000})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
@@ -638,17 +644,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test the streaming pipeline: input fed in pieces no larger
-            // than a chunk never qualifies for the batch path, so with
-            // several threads the leaves are hashed by the persistent
-            // worker pool, in whatever order the workers finish -- and the
-            // digest must still equal the inline sequential reference.
+            // Test the streaming pipeline.  Input fed in pieces no larger than
+            // a chunk never qualifies for the batch path, so with several
+            // threads the leaves are hashed by the persistent worker pool, in
+            // whatever order the workers finish.  The digest must still equal
+            // the inline sequential reference.
             //
             // 48 full chunks is well past the pool-start threshold, giving the
-            // persistent pool real work; the 5-byte tail adds a partial chunk.
+            // persistent pool real work.  The 5-byte tail adds a partial chunk.
             // As with Y, the size drives path selection and the fill
-            // coefficients are arbitrary (odd multiplier => full period); no KAT
-            // depends on Z -- it is only checked against its own inline digest.
+            // coefficients are arbitrary, since an odd multiplier gives full
+            // period.  No KAT depends on Z.  It is only checked against its own
+            // inline digest.
             std::vector<std::byte> Z(48 * chunk_size + 5);
             for (int i = 0; i < std::ssize(Z); ++i)
             {
@@ -682,10 +689,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
 
             {
-                // Test that destroying an unfinalized tree whose pool is
-                // running (likely with jobs still in flight) neither hangs
-                // nor crashes: the destructor must wake, join, and discard
-                // the workers and the abandoned jobs.
+                // Test that destroying an unfinalized tree whose pool is still
+                // running, likely with jobs in flight, neither hangs nor
+                // crashes.  The destructor must wake, join, and discard the
+                // workers and the abandoned jobs.
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                           function_name, customization_str, chunk_size,
                                           4);
@@ -693,14 +700,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 {
                     tree.add(Z_sp.subspan(off, 1024));
                 }
-                // no squeeze_bytes(): the destructor runs on a live pipeline
+                // There is no squeeze_bytes() call here, so the destructor
+                // runs on a live pipeline.
             }
         }
 
         {
-            // Verify that the output matches the expected result.  This
-            // pins the tree digest format: the parallel implementation
-            // (Phase 2) must reproduce this digest exactly.
+            // Verify that the output matches the expected result.  This pins
+            // the tree digest format, so the parallel implementation must
+            // reproduce this digest exactly.
             const auto digest_bytes = tree_digest(X_sp);
 
             const std::string expected_result =

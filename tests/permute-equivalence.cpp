@@ -6,21 +6,24 @@
 * \file
 * \author Steven Ward
 *
-* \c Castella::permute selects the implementation: \c permute_folded on
-* x86-64 with VAES (the state stays in \c N/2 ymm registers for all rounds),
-* \c permute_generic everywhere else.  The two must be bit-identical --
-* otherwise every digest in this repo would depend on which path the build
-* selected.
+* \c Castella::permute selects one of two implementations.
 *
-* Without this program that relationship is only guarded transitively: a
-* folded build reproduces the same KATs that the generic pure-Python model
-* (research/spec-conformance.py) produces.  Here both paths run in ONE build
-* and are compared directly, over random states, for every supported state
-* size and every round count.  The comparison drives \c permute rather than
+* - \c permute_folded on x86-64 with VAES, where the state stays in
+*   \c N/2 ymm registers for all rounds.
+* - \c permute_generic everywhere else.
+*
+* The two must be bit-identical, otherwise every digest in this repo would
+* depend on which path the build selected.
+*
+* Without this program that relationship is only guarded transitively.  A
+* folded build reproduces the same KATs that the generic pure-Python model in
+* research/spec-conformance.py produces.  Here both paths run in ONE build and
+* are compared directly, over random states, for every supported state size
+* and every round count.  The comparison drives \c permute rather than
 * \c permute_folded, so it covers the dispatch too.
 *
 * On a build without the folded path (no VAES, or not x86-64), \c permute is
-* \c permute_generic, so the comparison is a tautology; the program says so
+* \c permute_generic, so the comparison is a tautology.  The program says so
 * rather than claiming coverage it does not have.
 *
 * Usage: permute-equivalence [SEED]
@@ -55,7 +58,7 @@ constexpr bool folded_path = true;
 constexpr bool folded_path = false;
 #endif
 
-/// The number of random states tried per (state size, round count)
+/// The number of random states tried per state size and round count
 constexpr int num_trials = 32;
 
 /// The number of state sizes compared

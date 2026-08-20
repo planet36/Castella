@@ -54,10 +54,10 @@ const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLI
 
 /// The Castella service's duplex object
 /**
-* Owned by a unique_ptr (it cannot be a plain global: the constructor
-* parameters are validated at run time and may throw).  Its destructor --
-* which zeroizes the state -- runs during normal static destruction, on
-* return from main and on std::exit (e.g. errx).
+* It cannot be a plain global, because the constructor validates its
+* parameters at run time and may throw.  The destructor zeroizes the state.
+* It runs during normal static destruction, on return from main and on
+* std::exit (from errx, for instance).
 */
 std::unique_ptr<Castella::Duplex> duplex_obj;
 

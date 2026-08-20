@@ -20,16 +20,19 @@
 
 /// The \c Castella::HashTree node policy for \c compress_castella_hash
 /**
-* Owns the only node parameter: the mix rate.
+* The mix rate is the only node parameter, and this owns it.
 */
 struct compress_castella_tree_node_policy final
 {
     using node_type = compress_castella_hash<>;
 
-    /// cch nodes hash a streamed chunk faster than it can be shipped to a
-    /// pool worker (the pool measured *slower* than inline hashing), so
-    /// streamed chunks are hashed inline; only the one-shot batch path
-    /// parallelizes.
+    /// Whether streamed chunks go through the worker pool
+    /**
+    * A cch node hashes a streamed chunk faster than the chunk can be shipped
+    * to a pool worker, and the pool measured slower than hashing inline.  So
+    * streamed chunks are hashed inline, and only the one-shot batch path
+    * parallelizes.
+    */
     static constexpr bool USE_STREAMING_POOL = false;
 
     const int mix_rate;
@@ -40,11 +43,11 @@ struct compress_castella_tree_node_policy final
         return node_type{mix_rate};
     }
 
-    /// The chaining value length: the maximum digest size
+    /// The chaining value length, which is the maximum digest size
     /**
-    * 64 bytes -- twice the 256-bit collision-resistance target of the
-    * 512-bit maximum digest -- so the tree's internal collision resistance
-    * never undercuts the nodes'.
+    * That is 64 bytes.  The 512-bit maximum digest targets 256-bit collision
+    * resistance, and 64 bytes is twice that, so the tree's internal collision
+    * resistance never undercuts the nodes'.
     */
     [[nodiscard]] static int cv_len(const node_type&) noexcept
     {
@@ -59,22 +62,23 @@ struct compress_castella_tree_node_policy final
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
-    /// The interleaved node-pair type enabling paired leaf hashing
+    /// The interleaved node-pair type
     /**
-    * Opts the tree into leaf pairing (see \c HashTree's
-    * \c HAS_PAIRED_LEAF): adjacent full leaf chunks are hashed two at a
-    * time on one thread by interleaving the two nodes' compression chains
-    * in one bulk loop (see \c compress_castella_hash_x2 for why that
-    * pays; the measured speedup is recorded in research/README.md).
+    * This enables paired leaf hashing.  It opts the tree into leaf pairing
+    * (see \c HashTree's \c HAS_PAIRED_LEAF), so adjacent full leaf chunks are
+    * hashed two at a time on one thread by interleaving the two nodes'
+    * compression chains in one bulk loop.  See \c compress_castella_hash_x2
+    * for why that pays.  The measured speedup is recorded in
+    * research/README.md.
     *
-    * Guarded by the VAES flags even though the pair class itself is
-    * portable, because the win exists only under VAES codegen: 256-bit
-    * aesenc gives one state just 8 independent 3-deep chains (latency
-    * left to fill), while 128-bit codegen already runs 16 chains per
-    * state and the pair is a wash at best, a real loss at worst in the
-    * compute-bound regimes (see the non-VAES findings
-    * in research/README.md).  Execution-level only; NEVER affects the
-    * digest.
+    * The VAES flags guard this even though the pair class itself is portable,
+    * because the win exists only under VAES codegen.  256-bit aesenc gives
+    * one state just 8 independent 3-deep chains, leaving latency to fill.
+    * 128-bit codegen already runs 16 chains per state, and there the pair is
+    * a wash at best and a real loss at worst in the compute-bound regimes
+    * (see the non-VAES findings in research/README.md).
+    *
+    * This is execution-level only and NEVER affects the digest.
     */
     using node_x2_type = compress_castella_hash_x2<>;
 
@@ -99,12 +103,12 @@ struct compress_castella_tree_node_policy final
 /**
 * A KangarooTwelve-style two-level tree hash built from
 * \c compress_castella_hash nodes so that hashing can use more than one CPU
-* core; see \c Castella::HashTree for the tree structure, domain
-* separation, thread-count independence, and the two parallel paths.
+* core.  See \c Castella::HashTree for the tree structure, domain separation,
+* thread-count independence, and the two parallel paths.
 *
 * NOTE: This class is *not* interoperable with plain
-* \c compress_castella_hash; the same input produces unrelated digests (by
-* design: the tree's role prefix separates the domains).
+* \c compress_castella_hash.  The same input produces unrelated digests.  That
+* is by design, since the tree's role prefix separates the domains.
 */
 // }}}
 struct compress_castella_tree final
@@ -118,11 +122,11 @@ public:
     /// ctor
     /**
     * \param mix_rate forwarded to every node's \c compress_castella_hash
-    *        constructor; see \c compress_castella_hash for its meaning
+    *        constructor (see \c compress_castella_hash for its meaning)
     * \param chunk_size_bytes the size (in bytes) of a full chunk; part of
     *        the digest format (different chunk sizes give different digests)
-    * \param num_threads the number of worker threads to use; 0 means one
-    *        per hardware thread; NEVER affects the digest
+    * \param num_threads the number of worker threads to use, where 0 means
+    *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid
     */
     explicit compress_castella_tree(const int mix_rate = node_type::DEFAULT_MIX_RATE,
@@ -134,10 +138,9 @@ public:
 
     /// Get the final digest bytes
     /**
-    * The first call finalizes the tree (absorbs the trailing chunk and the
-    * chunk count); after that, no more input may be added.  As with
-    * \c compress_castella_hash, successive calls return the same digest
-    * prefix.
+    * The first call finalizes the tree, absorbing the trailing chunk and the
+    * chunk count.  After that, no more input may be added.  Successive calls
+    * return the same digest prefix, as with \c compress_castella_hash.
     *
     * \param n the number of digest bytes to return
     * \return the first \a n bytes of the finalized final node's state

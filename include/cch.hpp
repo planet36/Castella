@@ -67,7 +67,7 @@ public:
     * Such a loop mutates a local copy of the state and writes it back once at
     * the end.  Nothing else can reach that local, so the compiler may keep it
     * in registers for the whole loop.  The state member cannot be held that
-    * way: \c std::byte is exempt from strict aliasing, so the compiler must
+    * way.  \c std::byte is exempt from strict aliasing, so the compiler must
     * assume the source span may overlap it and reload the state each
     * iteration.
     *
@@ -89,10 +89,12 @@ public:
     /**
     * One more than the full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN.
     * The finalizing permutation only needs to diffuse the last chunks across
-    * the lanes, but the floor is the empirically measured round count at
-    * which every output bit first depends on every input bit -- a bare
-    * threshold, not a quality margin -- so one extra round is kept as safety
-    * margin.  Finalization is a fixed per-digest cost; the savings over a
+    * the lanes.  The floor is a bare threshold rather than a quality margin,
+    * being the empirically measured round count at which every output bit
+    * first depends on every input bit, so one extra round is kept as safety
+    * margin.
+    *
+    * Finalization is a fixed per-digest cost.  The savings over a
     * \c NUM_ROUNDS_MAX finalization come from the many rounds shed, not from
     * this one.
     */
@@ -110,20 +112,19 @@ private:
     * collapsing absorption to a single lane.
     *
     * The constants continue the LFSR stream that produced
-    * \c Castella::round_constants, so they differ from every round constant
-    * (all states within one LFSR period are distinct).
+    * \c Castella::round_constants, so they differ from every round constant.
+    * All states within one LFSR period are distinct.
     */
     // }}}
     [[nodiscard]] static consteval state_t
     create_init_state_() noexcept
     {
-        // Continue the LFSR stream where Castella::round_constants left
-        // off, so this state's initial lanes are distinct from every
-        // round constant. Presumes round_constants' round -> aes_round ->
-        // block nesting order (see create_round_constants()); if that
-        // generation order/shape is ever reshaped, this must be updated
-        // to match, or cch's digests will silently change (catch via
-        // KAT.txt, not a compiler error).
+        // Continue the LFSR stream where Castella::round_constants left off,
+        // so this state's initial lanes are distinct from every round
+        // constant.  This presumes round_constants' round -> aes_round ->
+        // block nesting order (see create_round_constants()).  Reshaping that
+        // order requires updating this to match, or cch's digests change
+        // silently.  KAT.txt catches it, the compiler does not.
         constexpr auto last_rc = Castella::round_constants.back().back().back();
         auto lfsr = std::bit_cast<lfsr128_state_t>(last_rc);
 
@@ -191,10 +192,10 @@ private:
     /// Fold the mix rate into the initial state
     // {{{
     /**
-    * The mix rate affects the state only when a mix is performed, so without
-    * this, different mix rates produce identical digests for any input
-    * shorter than <code>mix_rate_ * get_state_size_bytes()</code> bytes (i.e.,
-    * when no mix is ever triggered before finalization).
+    * The mix rate affects the state only when a mix is performed.  Without
+    * this, different mix rates would produce identical digests for any input
+    * short enough that no mix is ever triggered before finalization, meaning
+    * under <code>mix_rate_ * get_state_size_bytes()</code> bytes.
     *
     * XORing the mix rate into every lane preserves the distinctness of the
     * initial lane values.
@@ -317,9 +318,9 @@ private:
         {
             // Compress whole chunks directly from the source, bypassing the
             // input buffer.  The state is kept in a local variable so that it
-            // may stay in registers across chunks: src is a std::byte span, and
-            // std::byte is exempt from strict aliasing, so the compiler cannot
-            // otherwise rule out state_ and src overlapping.
+            // may stay in registers across chunks.  src is a std::byte span,
+            // and std::byte is exempt from strict aliasing, so the compiler
+            // cannot otherwise rule out state_ and src overlapping.
             if (std::size(src) >= get_state_size_bytes())
             {
                 state_t state = state_;
@@ -389,9 +390,9 @@ private:
     /// Finalize (on the first call) and copy the digest prefix into \a dst (no locking)
     // {{{
     /**
-    * The shared core of \c final_digest_bytes and \c final_digest_to: add
-    * the padding bytes and apply the finalizing permutation (once), then
-    * copy the first \c std::size(dst) bytes of the state into \a dst.
+    * The shared core of \c final_digest_bytes and \c final_digest_to.  It adds
+    * the padding bytes, applies the finalizing permutation once, then copies
+    * the first \c std::size(dst) bytes of the state into \a dst.
     *
     * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
     */
@@ -410,9 +411,9 @@ private:
         assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));
 #endif
 
-        // Guard the memcpy: on an empty dst, std::data(dst) may be null,
-        // and memcpy(null, ..., 0) is undefined behavior (its pointer
-        // arguments are declared never-null).
+        // Guard the memcpy.  On an empty dst, std::data(dst) may be null, and
+        // memcpy(null, ..., 0) is undefined behavior, because its pointer
+        // arguments are declared never-null.
         if (!std::empty(dst))
         {
             (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
@@ -428,13 +429,13 @@ public:
     /// ctor
     // {{{
     /**
-    * \param mix_rate the number of absorptions between periodic mixes; 0 disables mixing
+    * \param mix_rate the number of absorptions between periodic mixes, where 0 disables mixing
     * \exception std::invalid_argument if \a mix_rate violates a constraint
     *            (see \c check_constraints_)
-    * \exception std::range_error if \a mix_rate does not fit \c mix_rate_
-    *            (an \c int16_t); the member-init \c narrow_cast runs before
-    *            the body, so a wildly out-of-range value reports this rather
-    *            than the above
+    * \exception std::range_error if \a mix_rate does not fit \c mix_rate_, an
+    *            \c int16_t.  The member-init \c narrow_cast runs before the
+    *            body, so a wildly out-of-range value reports this rather than
+    *            the above
     */
     // }}}
     explicit compress_castella_hash(const int mix_rate) :
@@ -453,10 +454,10 @@ public:
 
     ~compress_castella_hash()
     {
-        // Not a correctness guarantee: destroying an object while a member
-        // call is in flight is already a caller error.  The lock is kept
-        // because it costs nothing uncontended and makes zeroize_() run
-        // after such a call rather than underneath it.
+        // This is not a correctness guarantee.  Destroying an object while a
+        // member call is in flight is already a caller error.  The lock costs
+        // nothing uncontended and makes zeroize_() run after such a call
+        // rather than underneath it.
         std::scoped_lock lock{mtx_};
 
         zeroize_();
@@ -476,8 +477,8 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        // The finalized check is unconditional -- even an empty (or
-        // null-data) span throws, agreeing with add("").
+        // The finalized check is unconditional.  Even an empty span throws,
+        // and so does one with null data, which agrees with add("").
         if (has_been_finalized_)
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");
@@ -490,8 +491,8 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as an empty span, ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.  A null \a data is
+    * treated as an empty span, ignoring \a len.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -516,7 +517,7 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The string form: equivalent to the byte-span form.
+    * The string form, equivalent to the byte-span form.
     *
     * \param s the input data
     * \return a reference to this object (to enable method chaining)
@@ -563,7 +564,7 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note The size of \a dst is clamped to \c get_max_digest_size_bytes(), as
-    *       \a n is in \c final_digest_bytes(int); anything past that is left
+    *       \a n is in \c final_digest_bytes(int).  Anything past that is left
     *       untouched.
     */
     // }}}

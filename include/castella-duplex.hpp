@@ -172,8 +172,8 @@ private:
 
     /// The input buffer
     /**
-    * Sized for the largest possible rate (no per-object allocation, same as
-    * \c DuplexX2); only the first \c R blocks are used.
+    * Sized for the largest possible rate, so there is no per-object
+    * allocation, the same as \c DuplexX2.  Only the first \c R blocks are used.
     */
     arr_blocks<R_MAX> input_blocks_{};
 
@@ -495,9 +495,9 @@ private:
     /// Finish a squeeze and copy the outer state into \a dst (no locking)
     // {{{
     /**
-    * The shared core of \c squeeze_bytes and \c squeeze_to: add the input
-    * suffix, apply the padding rule, then copy the first \c std::size(dst)
-    * bytes of the outer state into \a dst.
+    * The shared core of \c squeeze_bytes and \c squeeze_to.  It adds the input
+    * suffix, applies the padding rule, then copies the first
+    * \c std::size(dst) bytes of the outer state into \a dst.
     *
     * \pre \c std::size(dst) <= \c get_rate_size_bytes()
     */
@@ -514,9 +514,10 @@ private:
         assert(std::cmp_less_equal(std::size(dst), get_rate_size_bytes()));
 #endif
 
-        // Guard the memcpy: on a mute squeeze (empty dst, e.g. squeeze_bytes(0))
-        // std::data(dst) may be null, and memcpy(null, ..., 0) is undefined
-        // behavior (its pointer arguments are declared never-null).
+        // Guard the memcpy.  On a mute squeeze, such as squeeze_bytes(0), dst
+        // is empty and std::data(dst) may be null.  memcpy(null, ..., 0) is
+        // undefined behavior, because its pointer arguments are declared
+        // never-null.
         if (!std::empty(dst))
         {
             (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
@@ -661,10 +662,10 @@ private:
     /// Unambiguously encode the byte string into the input buffer
     // {{{
     /**
-    * The right_encode counterpart of \c left_encode_bytes_(): the byte string
+    * The right_encode counterpart of \c left_encode_bytes_().  The byte string
     * 𝑆 is followed by its right-encoded length, so it may be parsed
-    * unambiguously from the end of the string.  This is useful when the
-    * length of 𝑆 is not known until the end of 𝑆 is reached.
+    * unambiguously from the end of the string.  This is useful when the length
+    * of 𝑆 is not known until the end of 𝑆 is reached.
     *
     * Return 𝑆 || right_encode(len(𝑆)).
     */
@@ -788,12 +789,12 @@ public:
     * \param capacity_blocks the size (in blocks) of the capacity
     * \param num_rounds the number of rounds to perform in the Castella permutation function
     * \param input_suffix the byte to append to the input buffer before squeezing
-    * \param function_name a string for algorithm domain separation; like \e N in cSHAKE terminology
-    * \param customization_str a string for user-defined domain separation; like \e S in cSHAKE terminology
+    * \param function_name a string for algorithm domain separation (like \e N in cSHAKE terminology)
+    * \param customization_str a string for user-defined domain separation (like \e S in cSHAKE terminology)
     * \exception std::invalid_argument if \a capacity_blocks or \a num_rounds
     *            violates a constraint (see \c check_constraints_)
     * \exception std::range_error if either does not fit the member it
-    *            initializes; the member-init \c narrow_cast runs first, so a
+    *            initializes.  The member-init \c narrow_cast runs first, so a
     *            wildly out-of-range value reports this rather than the above
     * \pre \a capacity_blocks is even
     */
@@ -810,7 +811,7 @@ public:
     {
         check_constraints_();
 
-        // The members are zero-initialized; init_ requires it.
+        // The members are zero-initialized, as required by init_.
         init_(function_name, customization_str);
     }
 
@@ -848,8 +849,8 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as an empty span, ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.  A null \a data is
+    * treated as an empty span, ignoring \a len.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -873,7 +874,7 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The string form: equivalent to the byte-span form.
+    * The string form, equivalent to the byte-span form.
     *
     * \param s the input data
     * \return a reference to this object (to enable method chaining)
@@ -892,9 +893,9 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note A span with null data absorbs nothing -- not even the encoded
-    *       length 0 -- unlike an empty span with non-null data (e.g. of ""),
-    *       which absorbs left_encode(0).
+    * \note A span with null data absorbs nothing, not even the encoded length
+    *       0.  An empty span with non-null data, such as one of "", instead
+    *       absorbs left_encode(0).
     */
     // }}}
     Duplex& add_left_encoded(const std::span<const std::byte> src)
@@ -911,9 +912,9 @@ public:
 
     /// \copybrief add_left_encoded(std::span<const std::byte>)
     /**
-    * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as a span with null data, which absorbs nothing -- not
-    * even left_encode(0) -- ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.  A null \a data is
+    * treated as a span with null data, which absorbs nothing, not even
+    * left_encode(0), and \a len is ignored.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -937,18 +938,18 @@ public:
 
     /// \copybrief add_left_encoded(std::span<const std::byte>)
     /**
-    * The string form: equivalent to the byte-span form.
+    * The string form, equivalent to the byte-span form.
     *
     * \param s the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \warning \c ""sv and \c std::string_view{} are not interchangeable here,
     *          though they compare equal and are in most C++ code.  The first
-    *          has non-null \c data() and absorbs \c left_encode(0); the second
-    *          has null \c data() and absorbs nothing, exactly as if this were
-    *          never called.  The two therefore give different digests, so
-    *          substituting one for the other is a digest change, not a
-    *          refactor.
+    *          has non-null \c data() and absorbs \c left_encode(0).  The
+    *          second has null \c data() and absorbs nothing, exactly as if
+    *          this were never called.  The two therefore give different
+    *          digests, so substituting one for the other is a digest change,
+    *          not a refactor.
     */
     Duplex& add_left_encoded(const std::string_view s)
     {
@@ -963,9 +964,9 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note A span with null data absorbs nothing -- not even the encoded
-    *       length 0 -- unlike an empty span with non-null data (e.g. of ""),
-    *       which absorbs right_encode(0).
+    * \note A span with null data absorbs nothing, not even the encoded length
+    *       0.  An empty span with non-null data, such as one of "", instead
+    *       absorbs right_encode(0).
     */
     // }}}
     Duplex& add_right_encoded(const std::span<const std::byte> src)
@@ -982,9 +983,9 @@ public:
 
     /// \copybrief add_right_encoded(std::span<const std::byte>)
     /**
-    * The raw-data form: equivalent to the byte-span form; a null \a data
-    * is treated as a span with null data, which absorbs nothing -- not
-    * even right_encode(0) -- ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.  A null \a data is
+    * treated as a span with null data, which absorbs nothing, not even
+    * right_encode(0), and \a len is ignored.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -1008,7 +1009,7 @@ public:
 
     /// \copybrief add_right_encoded(std::span<const std::byte>)
     /**
-    * The string form: equivalent to the byte-span form.
+    * The string form, equivalent to the byte-span form.
     *
     * \param s the input data
     * \return a reference to this object (to enable method chaining)

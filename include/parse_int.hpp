@@ -90,7 +90,7 @@ parse_int(std::string_view s,
 * \param option_name the option name, used in the error message
 * \return the parsed value
 * \note On a null, malformed, or out-of-range value this prints a diagnostic
-*       and exits (via \c errx); it does not return.
+*       and exits via \c errx.  It does not return.
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
@@ -123,7 +123,7 @@ parse_option_int(const char* optarg, const int min, const int max, const char* o
 * \return the parsed value
 * \note The parsed value is bounded only by the range of \c int.
 * \note On a null, malformed, or out-of-range value this prints a diagnostic
-*       and exits (via \c errx); it does not return.
+*       and exits via \c errx.  It does not return.
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const char* option_name)
@@ -140,7 +140,7 @@ parse_option_int(const char* optarg, const char* option_name)
 * \param default_value the value returned if the variable is not set
 * \return the parsed value, or \a default_value if the variable is not set
 * \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits (via \c errx); it does not return.
+*       exits via \c errx.  It does not return.
 */
 [[nodiscard]] inline int
 parse_env_int(const char* name, const int min, const int max, const int default_value)

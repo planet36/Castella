@@ -10,7 +10,7 @@ BINS = $(basename $(SRCS))
 all: $(BINS)
 
 # `./kat` recomputes each digest from that line's own fields, so it cannot see
-# KAT.txt drifting from generate()'s sweeps; the diff does.  On a difference,
+# KAT.txt drifting from generate()'s sweeps.  The diff does.  On a difference,
 # regenerate with `./kat --generate > KAT.txt` and re-run spec-conformance.py.
 test: all
 	@command -v python3 >/dev/null || { echo 'make test: python3 is required for duplex-diff-fuzz.py'; exit 1; }

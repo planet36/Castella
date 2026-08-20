@@ -3,20 +3,20 @@
 
 # pylint: disable=invalid-name
 
-"""Differential fuzzer: Castella::Duplex against the SPEC.md model.
+"""Differential fuzzer for Castella::Duplex against the SPEC.md model.
 
-Generates random programs of duplex API calls -- interleaved add,
-add_left_encoded, add_right_encoded, apply_padding_rule and squeeze_bytes,
-over random constructor parameters -- and checks that the C++ library and the
-independent Python model in spec-conformance.py agree on every squeeze.
+Generates random programs of duplex API calls (interleaved add,
+add_left_encoded, add_right_encoded, apply_padding_rule and squeeze_bytes)
+over random constructor parameters.  It then checks that the C++ library and
+the independent Python model in spec-conformance.py agree on every squeeze.
 
-A program is one generated unit of work: constructor parameters plus a call
-sequence ending in at least one squeeze.  It is not a single comparison -- one
-program yields as many comparisons as it has squeezes, which is why the summary
-counts both.
+A program is one generated unit of work, meaning constructor parameters plus a
+call sequence ending in at least one squeeze.  It is not a single comparison.
+One program yields as many comparisons as it has squeezes, which is why the
+summary counts both.
 
-This covers what KAT.txt cannot: every duplex KAT is a single add followed by a
-single squeeze, so split and streamed adds, both encoding entry points,
+This covers what KAT.txt cannot.  Every duplex KAT is a single add followed by
+a single squeeze, so split and streamed adds, both encoding entry points,
 explicit padding, and successive squeezes are otherwise unverified against the
 spec.
 
@@ -27,7 +27,8 @@ The C++ side is driven by duplex-diff-driver, which must be built first:
 
 The whole run is batched through one driver process, because the pure-Python
 model is the slow side.  The seed defaults to a fixed value so `make test` is
-deterministic; pass --seed to explore new programs, as with equivalence-tests.
+deterministic.  Pass --seed to explore new programs, as with
+equivalence-tests.
 
 Usage: python3 duplex-diff-fuzz.py [-n PROGRAMS] [--seed SEED] [--driver PATH]
 """
@@ -84,12 +85,12 @@ model = load_model()
 
 # ---- Program generation
 
-# The full legal parameter ranges, mirrored by hand from the headers -- C_MIN
-# and C_MAX in castella-duplex.hpp, NUM_ROUNDS_MIN<16>() and NUM_ROUNDS_MAX in
-# castella-permute.hpp, whose comment invites raising it.  Nothing here can
-# import them, and widening one there fails no test: it just leaves the fuzzer
-# covering less than the library allows.  spec-conformance.py raises
-# ValueError on the same bounds and needs the same edit.
+# The full legal parameter ranges, mirrored by hand from the headers.  They
+# are C_MIN and C_MAX in castella-duplex.hpp, and NUM_ROUNDS_MIN<16>() and
+# NUM_ROUNDS_MAX in castella-permute.hpp.  Nothing here can import them, and
+# widening one there fails no test.  It just leaves the fuzzer covering less
+# than the library allows.  spec-conformance.py raises ValueError on the same
+# bounds and needs the same edit.
 CAPACITIES = (2, 4, 6, 8)  # even
 ROUNDS_MIN = 3
 ROUNDS_MAX = 16
@@ -100,19 +101,20 @@ INT_VALUES = (0, 1, 2, 127, 128, 254, 255, 256, 257, 65535, 65536, 65537,
               2**24 - 1, 2**24, 2**32 - 1, 2**32, 2**56 - 1, 2**56,
               2**64 - 1)
 
-# Ops that absorb; a squeeze is appended separately.
+# Ops that absorb.  A squeeze is appended separately.
 ABSORB_OPS = ("add", "addle", "addre", "addlei", "addrei", "pad")
 
 
-# One op: its name, then the operand it takes -- bytes, an integer, or nothing.
-# The name fixes the arity, and the two sides destructure rather than index, so
-# each shape can be spelled out and a malformed op fails to type-check here.
+# One op is its name, then the operand it takes (bytes, an integer, or
+# nothing).  The name fixes the arity, and the two sides destructure rather
+# than index, so each shape can be spelled out and a malformed op fails to
+# type-check here.
 type Op = tuple[str] | tuple[str, bytes] | tuple[str, int]
 
 
 @dataclass(frozen=True)
 class Program:
-    """One generated program: constructor parameters plus a list of ops."""
+    """One generated program, holding constructor parameters and a list of ops."""
 
     prog_id: str
     C: int
@@ -247,7 +249,7 @@ def annotate_driver_error(message: str, script: str) -> str:
 
 
 def run_driver(driver: Path, script: str) -> dict[str, list[str]]:
-    """Run every program through one driver process; return per-program digests."""
+    """Run every program through one driver process, returning per-program digests."""
     try:
         proc = subprocess.run([str(driver)], input=script, capture_output=True,
                               text=True, check=False)
@@ -276,7 +278,7 @@ def run_driver(driver: Path, script: str) -> dict[str, list[str]]:
 
 
 def report_failure(program: Program, expected: list[str], got: list[str]) -> None:
-    """Print a diverging program: its script, then every differing squeeze."""
+    """Print a diverging program, showing its script and every differing squeeze."""
     print(f"FAILED: program {program.prog_id}:")
     for line in script_lines(program):
         print(f"    {line}")

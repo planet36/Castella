@@ -46,36 +46,38 @@ namespace Castella
 // {{{
 /**
 * The throughput building block of VAES leaf batching (see
-* \c Castella::HashTree): both duplexes share one lane-paired state
-* (\c arr_blocks_x2 -- duplex A in the low 128-bit lanes, duplex B in the
-* high lanes), so one \c permute_x2 call permutes both.  The VAES AES
-* rounds and the lane-local AVX2 transpose never mix the lanes, so the
-* result is bit-identical to running two separate \c Duplex objects
-* (verified by research/duplex_x2-verify.cpp) -- this class is an
+* \c Castella::HashTree).  Both duplexes share one lane-paired state
+* (\c arr_blocks_x2), with duplex A in the low 128-bit lanes and duplex B in
+* the high lanes, so one \c permute_x2 call permutes both.
+*
+* The VAES AES rounds and the lane-local AVX2 transpose never mix the lanes,
+* so the result is bit-identical to running two separate \c Duplex objects
+* (verified by research/duplex_x2-verify.cpp).  This class is an
 * execution-level optimization only and must never be digest-visible.
 *
-* Lockstep is what makes the sharing possible, and it constrains the API:
-* every absorbed piece must have the SAME LENGTH in both lanes (the
-* contents may differ), so that the two duplexes' permutation schedules
-* stay aligned.  A caller whose two byte streams differ in length must fall
-* back to two separate \c Duplex objects (see the byte-width fallback in
+* Lockstep is what makes the sharing possible, and it constrains the API.
+* Every absorbed piece must have the SAME LENGTH in both lanes, though the
+* contents may differ, so that the two duplexes' permutation schedules stay
+* aligned.  A caller whose two byte streams differ in length must fall back to
+* two separate \c Duplex objects (see the byte-width fallback in
 * \c HashTree::hash_leaf_pair_into_).
 *
-* Compared to \c Duplex, this class has no mutex (it is a single-thread
-* worker's scratch object), no method chaining, and only the members leaf
-* hashing needs: \c add and \c squeeze_pair_to.
+* Compared to \c Duplex, this class has no mutex, because it is a
+* single-thread worker's scratch object.  It also has no method chaining, and
+* only the members leaf hashing needs, which are \c add and
+* \c squeeze_pair_to.
 */
 // }}}
 struct alignas(block_x2_t) DuplexX2 final
 {
 private:
-    /// The lane-paired state: duplex A in the low lanes, duplex B in the high lanes
+    /// The lane-paired state, with duplex A in the low lanes and duplex B in the high lanes
     arr_blocks_x2<Duplex::B> state_x2_{};
 
-    /// The input buffers, one per lane; always at the same fill level
+    /// The input buffers, one per lane, always at the same fill level
     /**
-    * Sized for the largest possible rate (no per-object allocation, like
-    * \c Duplex); only the first \c R blocks are used.
+    * Sized for the largest possible rate, so there is no per-object
+    * allocation, as in \c Duplex.  Only the first \c R blocks are used.
     */
     arr_blocks<Duplex::R_MAX> input_blocks_a_{};
 
@@ -141,9 +143,9 @@ private:
 
     /// Absorb both input buffers into their lanes and apply the paired permutation
     /**
-    * The lockstep counterpart of \c Duplex::absorb_(): each lane XORs its
-    * own input buffer into its own rate blocks, then one \c permute_x2
-    * call permutes both duplexes.
+    * The lockstep counterpart of \c Duplex::absorb_().  Each lane XORs its
+    * own input buffer into its own rate blocks, then one \c permute_x2 call
+    * permutes both duplexes.
     */
     void absorb_() noexcept
     {
@@ -222,7 +224,7 @@ private:
 
     /// Add \a src_a / \a src_b to the two input buffers (lane A / lane B)
     /**
-    * The lockstep counterpart of \c Duplex::add_(): the two lanes absorb
+    * The lockstep counterpart of \c Duplex::add_().  The two lanes absorb
     * different bytes but always the same number of them, so both duplexes
     * fill, absorb, and permute on the same schedule.
     */
@@ -277,8 +279,9 @@ private:
 
     /// Unambiguously encode the integer into both input buffers
     /**
-    * The identical byte stream \c Duplex::left_encode_ absorbs, absorbed by
-    * both lanes (used only for the init stream, which is the same in both).
+    * Both lanes absorb the identical byte stream that \c Duplex::left_encode_
+    * absorbs.  Only the construction-time bytes use this, and they are the
+    * same in both lanes.
     */
     void left_encode_(const std::unsigned_integral auto x) noexcept
     {
@@ -328,7 +331,7 @@ public:
     * \exception std::invalid_argument if \a capacity_blocks or \a num_rounds
     *            violates a constraint (see \c check_constraints_)
     * \exception std::range_error if a value does not fit the member it
-    *            initializes; the member-init \c narrow_cast runs first, so a
+    *            initializes.  The member-init \c narrow_cast runs first, so a
     *            wildly out-of-range value reports this rather than the above
     */
     explicit DuplexX2(const int capacity_blocks,
@@ -343,7 +346,7 @@ public:
     {
         check_constraints_();
 
-        // The members are zero-initialized; init_ requires it.
+        // The members are zero-initialized, as required by init_.
         init_(function_name, customization_str);
     }
 
@@ -405,10 +408,10 @@ public:
 
     /// Squeeze bytes from both duplexes' outer states
     /**
-    * The lockstep counterpart of \c Duplex::squeeze_to: adds the input
-    * suffix, applies the padding rule (once -- both lanes pad and permute
-    * together), then copies the first bytes of each lane's outer state
-    * into its destination.
+    * The lockstep counterpart of \c Duplex::squeeze_to.  It adds the input
+    * suffix, then applies the padding rule once, since both lanes pad and
+    * permute together.  It then copies the first bytes of each lane's outer
+    * state into its destination.
     *
     * \param dst_a the destination for duplex A's bytes
     * \param dst_b the destination for duplex B's bytes
@@ -461,7 +464,7 @@ public:
                             _mm256_extracti128_si256(state_x2_[i], 1));
             (void)std::memcpy(out_b, std::data(tmp), num_bytes_remaining);
 
-            // tmp held outer-state bytes beyond those squeezed; wipe it.
+            // tmp held outer-state bytes beyond those squeezed, so wipe it.
             explicit_bzero(std::data(tmp), sizeof(tmp));
         }
     }

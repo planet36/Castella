@@ -8,14 +8,16 @@
 *
 * The central contract of \c Castella::HashTree is that the digest is a
 * function of the node parameters, the tree geometry, and the input bytes
-* ONLY -- never of the add() call granularity, the thread count, or which
-* parallel path executed.  The fixed tests in tests.cpp exercise that
-* contract at hand-picked points; this program hammers it with randomized
-* inputs at adversarial sizes: for each size, the single-threaded one-shot
-* digest is the reference, and every combination of {one-shot, randomly
-* split adds} x {thread counts} must reproduce it -- covering the batch
-* path (with different static leaf partitions), the streaming pipeline,
-* the inline path, and the paired-leaf variants of each.
+* ONLY.  It never depends on the add() call granularity, the thread count, or
+* which parallel path executed.
+*
+* The fixed tests in tests.cpp exercise that contract at hand-picked points.
+* This program hammers it with randomized inputs at adversarial sizes.  For
+* each size the single-threaded one-shot digest is the reference, and every
+* combination of {one-shot, randomly split adds} x {thread counts} must
+* reproduce it.  That covers the batch path with its different static leaf
+* partitions, the streaming pipeline, the inline path, and the paired-leaf
+* variants of each.
 *
 * Usage: equivalence-tests [SEED]
 *
@@ -76,9 +78,9 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
         return get_digest(tree);
     }();
 
-    // One-shot adds at other thread counts: the batch path, with a
-    // different static partition of the leaves per count (0 = one thread
-    // per hardware thread).
+    // One-shot adds at other thread counts exercise the batch path.  Each
+    // count gives a different static partition of the leaves.  A count of 0
+    // means one thread per hardware thread.
     for (const int num_threads : {0, 2, 3, 8})
     {
         auto tree = make_tree(num_threads);
@@ -92,12 +94,11 @@ test_one_input(const std::string_view name, const MakeTree& make_tree,
         }
     }
 
-    // Randomly split adds.  Sub-chunk pieces exercise the buffering and
-    // (for DuplexTree, with several threads) the streaming pipeline;
-    // multi-chunk pieces exercise the mixed small-batch handoff.  Chunk
-    // boundaries fall wherever the random split points put them relative
-    // to the fixed byte offsets -- which is exactly the property under
-    // test.
+    // Randomly split adds.  Sub-chunk pieces exercise the buffering, and for
+    // DuplexTree with several threads they exercise the streaming pipeline.
+    // Multi-chunk pieces exercise the mixed small-batch handoff.  Chunk
+    // boundaries fall wherever the random split points put them, which is
+    // exactly the property under test.
     for (const int max_piece_len : {300, 3 * chunk_size + 1})
     {
         for (const int num_threads : {1, 4})
@@ -160,9 +161,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     //   - around 256 chunks: the left_encode of leaf index 255 is one
     //     byte, of 256 two, so these inputs cross the paired-leaf
     //     byte-width fallback
-    // Every input length is verified once per tree configuration: DuplexTree,
-    // then compress_castella_tree at each mix rate.  Pinned so that a deleted
-    // length or a deleted configuration cannot pass quietly.
+    // Every input length is verified once per tree configuration.  That means
+    // DuplexTree, then compress_castella_tree at each mix rate.  The count is
+    // pinned so that a deleted length or configuration cannot pass quietly.
     constexpr int EXPECTED_VERIFICATIONS = 76;
     int num_verified = 0;
 

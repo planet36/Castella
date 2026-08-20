@@ -163,11 +163,11 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
 /// Transpose each 128-bit lane of \a x (treating it as two independent 2x2 matrices of \c uint64_t) using AVX2 intrinsics
 /**
 * The AVX2 integer unpack instructions operate within each 128-bit lane
-* independently, so this is the 2x2 SSE2 network above lifted verbatim to
-* ymm registers: the low lanes of x[0..1] are transposed as one 2x2 matrix
-* and the high lanes as another, with no cross-lane movement.  This is what
-* lets two independent Castella states be permuted in lockstep, one state
-* per lane (see \c Castella::permute_x2).
+* independently, so this is the 2x2 SSE2 network above lifted verbatim to ymm
+* registers.  The low lanes of x[0..1] are transposed as one 2x2 matrix and
+* the high lanes as another, with no cross-lane movement.  This is what lets
+* two independent Castella states be permuted in lockstep, one state per lane
+* (see \c Castella::permute_x2).
 */
 static void
 simd_transpose(std::array<__m256i, 2>& x) noexcept
@@ -181,8 +181,8 @@ simd_transpose(std::array<__m256i, 2>& x) noexcept
 
 /// Transpose each 128-bit lane of \a x (treating it as two independent 4x4 matrices of \c uint32_t) using AVX2 intrinsics
 /**
-* The 4x4 SSE2 network above lifted verbatim to ymm registers (the AVX2
-* integer unpacks are lane-local); see the 2x2 overload for the rationale.
+* The 4x4 SSE2 network above lifted verbatim to ymm registers, since the AVX2
+* integer unpacks are lane-local.  See the 2x2 overload for the rationale.
 */
 static void
 simd_transpose(std::array<__m256i, 4>& x) noexcept
@@ -200,8 +200,8 @@ simd_transpose(std::array<__m256i, 4>& x) noexcept
 
 /// Transpose each 128-bit lane of \a x (treating it as two independent 8x8 matrices of \c uint16_t) using AVX2 intrinsics
 /**
-* The 8x8 SSE2 network above lifted verbatim to ymm registers (the AVX2
-* integer unpacks are lane-local); see the 2x2 overload for the rationale.
+* The 8x8 SSE2 network above lifted verbatim to ymm registers, since the AVX2
+* integer unpacks are lane-local.  See the 2x2 overload for the rationale.
 */
 static void
 simd_transpose(std::array<__m256i, 8>& x) noexcept
@@ -238,7 +238,7 @@ simd_transpose(std::array<__m256i, 8>& x) noexcept
 /**
 * The AVX2 integer unpack instructions operate within each 128-bit lane
 * independently, so this is the 16x16 SSE2 network above lifted verbatim to
-* ymm registers: the low lanes of x[0x0..0xf] are transposed as one 16x16
+* ymm registers.  The low lanes of x[0x0..0xf] are transposed as one 16x16
 * byte matrix and the high lanes as another, with no cross-lane movement.
 * This is what lets two independent Castella states be permuted in lockstep,
 * one state per lane (see \c Castella::permute_x2).
@@ -332,13 +332,14 @@ simd_transpose_folded(std::array<__m256i, 1>& x) noexcept
 
 /// Transpose one 4x4 matrix of \c uint32_t stored in the folded (row j, row j+2) layout using AVX2 intrinsics
 /**
-* The matrix is held in 2 ymm registers with x[j] = [row j | row j+2]
-* (rows 0-1, named A-B, in the low 128-bit lanes; rows 2-3, named C-D, in
-* the high lanes), and the result is produced in the same layout.  Same
-* network as the 16x16 folded overload below, shrunk to one unpack level:
-* per lane, the dword unpacks transpose the 2x4 submatrix, the qword
-* unpacks pair column c with column c+2, and the final qword permute
-* rejoins each column's halves; see the 16x16 overload for the rationale.
+* The matrix is held in 2 ymm registers with x[j] = [row j | row j+2].  Rows
+* 0-1, named A-B, are in the low 128-bit lanes, and rows 2-3, named C-D, are
+* in the high lanes.  The result is produced in the same layout.
+*
+* This is the same network as the 16x16 folded overload below, shrunk to one
+* unpack level.  Per lane, the dword unpacks transpose the 2x4 submatrix, the
+* qword unpacks pair column c with column c+2, and the final qword permute
+* rejoins each column's halves.  See the 16x16 overload for the rationale.
 */
 static void
 simd_transpose_folded(std::array<__m256i, 2>& x) noexcept
@@ -358,24 +359,27 @@ simd_transpose_folded(std::array<__m256i, 2>& x) noexcept
 
 /// Transpose one 8x8 matrix of \c uint16_t stored in the folded (row j, row j+4) layout using AVX2 intrinsics
 /**
-* The matrix is held in 4 ymm registers with x[j] = [row j | row j+4]
-* (rows 0-3, named A-D, in the low 128-bit lanes; rows 4-7, named E-H, in
-* the high lanes), and the result is produced in the same layout.  Same
-* network as the 16x16 folded overload below, shrunk to two unpack levels:
-* per lane, the word/dword unpacks transpose the 4x8 submatrix, the qword
-* unpacks pair column c with column c+4, and the final qword permute
-* rejoins each column's halves; see the 16x16 overload for the rationale.
+* The matrix is held in 4 ymm registers with x[j] = [row j | row j+4].  Rows
+* 0-3, named A-D, are in the low 128-bit lanes, and rows 4-7, named E-H, are
+* in the high lanes.  The result is produced in the same layout.
+*
+* This is the same network as the 16x16 folded overload below, shrunk to two
+* unpack levels.  Per lane, the word and dword unpacks transpose the 4x8
+* submatrix, the qword unpacks pair column c with column c+4, and the final
+* qword permute rejoins each column's halves.  See the 16x16 overload for the
+* rationale.
 */
 static void
 simd_transpose_folded(std::array<__m256i, 4>& x) noexcept
 {
-    // Low lanes: rows A-D; high lanes: rows E-H (same network per lane).
+    // Rows A-D are in the low lanes and rows E-H in the high lanes.  The
+    // network is the same in each.
     const __m256i AB_03 = _mm256_unpacklo_epi16(x[0], x[1]);
     const __m256i AB_47 = _mm256_unpackhi_epi16(x[0], x[1]);
     const __m256i CD_03 = _mm256_unpacklo_epi16(x[2], x[3]);
     const __m256i CD_47 = _mm256_unpackhi_epi16(x[2], x[3]);
 
-    // Per lane: two full 4-element columns of the lane's 4x8 submatrix.
+    // Per lane, two full 4-element columns of the lane's 4x8 submatrix.
     const __m256i ABCD_01 = _mm256_unpacklo_epi32(AB_03, CD_03);
     const __m256i ABCD_23 = _mm256_unpackhi_epi32(AB_03, CD_03);
     const __m256i ABCD_45 = _mm256_unpacklo_epi32(AB_47, CD_47);
@@ -396,25 +400,27 @@ simd_transpose_folded(std::array<__m256i, 4>& x) noexcept
 
 /// Transpose one 16x16 matrix of \c uint8_t stored in the folded (row j, row j+8) layout using AVX2 intrinsics
 /**
-* The matrix is held in 8 ymm registers with x[j] = [row j | row j+8]
-* (rows 0-7, named A-H, in the low 128-bit lanes; rows 8-15, named I-P, in
-* the high lanes), and the result is produced in the same layout -- which
-* is what lets consecutive transposes chain in registers without ever
-* spilling the state to memory.
+* The matrix is held in 8 ymm registers with x[j] = [row j | row j+8].  Rows
+* 0-7, named A-H, are in the low 128-bit lanes, and rows 8-15, named I-P, are
+* in the high lanes.  The result is produced in the same layout, which is what
+* lets consecutive transposes chain in registers without ever spilling the
+* state to memory.
 *
-* The first three unpack levels are the standard byte-matrix network run
-* per lane: the low lanes transpose the top 8x16 submatrix (rows A-H) and
-* the high lanes the bottom (rows I-P), leaving each lane of the level-4
-* outputs holding two 8-byte column vectors [col c | col c+8] of its
-* submatrix.  A final qword permute ([q0 q1 | q2 q3] -> [q0 q2 | q1 q3])
-* rejoins the top and bottom halves of each column, restoring the folded
-* layout.  Total: 32 in-lane unpacks + 8 cross-lane permutes (the plain
-* 16-register network needs 64 unpacks).
+* The first three unpack levels are the standard byte-matrix network run per
+* lane.  The low lanes transpose the top 8x16 submatrix (rows A-H) and the
+* high lanes the bottom (rows I-P), leaving each lane of the level-4 outputs
+* holding two 8-byte column vectors [col c | col c+8] of its submatrix.  A
+* final qword permute ([q0 q1 | q2 q3] -> [q0 q2 | q1 q3]) rejoins the top and
+* bottom halves of each column, restoring the folded layout.
+*
+* That is 32 in-lane unpacks and 8 cross-lane permutes.  The plain 16-register
+* network needs 64 unpacks.
 */
 static void
 simd_transpose_folded(std::array<__m256i, 8>& x) noexcept
 {
-    // Low lanes: rows A-H; high lanes: rows I-P (same network per lane).
+    // Rows A-H are in the low lanes and rows I-P in the high lanes.  The
+    // network is the same in each.
     const __m256i AB_07 = _mm256_unpacklo_epi8(x[0], x[1]);
     const __m256i AB_8f = _mm256_unpackhi_epi8(x[0], x[1]);
     const __m256i CD_07 = _mm256_unpacklo_epi8(x[2], x[3]);
@@ -433,7 +439,7 @@ simd_transpose_folded(std::array<__m256i, 8>& x) noexcept
     const __m256i EFGH_8b = _mm256_unpacklo_epi16(EF_8f, GH_8f);
     const __m256i EFGH_cf = _mm256_unpackhi_epi16(EF_8f, GH_8f);
 
-    // Per lane: two full 8-byte columns of the lane's 8x16 submatrix.
+    // Per lane, two full 8-byte columns of the lane's 8x16 submatrix.
     const __m256i ABCDEFGH_01 = _mm256_unpacklo_epi32(ABCD_03, EFGH_03);
     const __m256i ABCDEFGH_23 = _mm256_unpackhi_epi32(ABCD_03, EFGH_03);
     const __m256i ABCDEFGH_45 = _mm256_unpacklo_epi32(ABCD_47, EFGH_47);
@@ -454,9 +460,10 @@ simd_transpose_folded(std::array<__m256i, 8>& x) noexcept
     const __m256i COL_6e = _mm256_unpacklo_epi64(ABCDEFGH_67, ABCDEFGH_ef);
     const __m256i COL_7f = _mm256_unpackhi_epi64(ABCDEFGH_67, ABCDEFGH_ef);
 
-    // COL_c8 qwords are [c(top) c+8(top) | c(bottom) c+8(bottom)]; swapping
-    // the middle qwords joins each column's halves: [col c | col c+8] =
-    // [output row c | output row c+8], the folded layout again.
+    // COL_c8 qwords are [c(top) c+8(top) | c(bottom) c+8(bottom)].  Swapping
+    // the middle qwords joins each column's halves, giving [col c | col c+8],
+    // which is [output row c | output row c+8].  That is the folded layout
+    // again.
     constexpr int q0_q2_q1_q3 = 0b11'01'10'00;
     x[0] = _mm256_permute4x64_epi64(COL_08, q0_q2_q1_q3);
     x[1] = _mm256_permute4x64_epi64(COL_19, q0_q2_q1_q3);

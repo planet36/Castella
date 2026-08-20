@@ -199,10 +199,10 @@ aes_enc_arr(simd_arr_t<N>& arr,
 
 /// Perform \a aes_num_rounds rounds of AES encryption on each element of the lane-paired \a arr
 /**
-* The lane-paired counterpart of \c aes_enc_arr: element \c i of \a arr
-* holds block \c i of two independent states, one state per 128-bit lane,
-* and both lanes use the same \c aes_round_keys[aes_r][i] (broadcast to both
-* lanes) as their AES round key in AES round \c aes_r.
+* The lane-paired counterpart of \c aes_enc_arr.  Element \c i of \a arr holds
+* block \c i of two independent states, one state per 128-bit lane.  In AES
+* round \c aes_r both lanes use the same key, \c aes_round_keys[aes_r][i],
+* broadcast to both lanes.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
@@ -223,12 +223,13 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 
 /// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr with 256-bit round keys
 /**
-* Unlike the overload above (which broadcasts one 128-bit key to both
-* lanes), each element's key here is a full 256-bit value, so the two
-* lanes of an element may use different 128-bit round keys.  Used by the
-* register-resident single-state \c Castella::permute, whose folded N-block
-* state pairs blocks \c i and \c i+N/2 in one element (with correspondingly
-* folded round constants).
+* Each element's key here is a full 256-bit value, so the two lanes of an
+* element may use different 128-bit round keys.  The overload above instead
+* broadcasts one 128-bit key to both lanes.
+*
+* This is what the register-resident single-state \c Castella::permute needs.
+* Its folded N-block state pairs blocks \c i and \c i+N/2 in one element, and
+* the round constants are folded to match.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
@@ -255,10 +256,12 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 * In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its
 * AES round key.
 *
-* This is the fallback for targets without VAES; the overload above does the
-* same thing two elements at a time.  It cannot say \c \\copydoc, because the
-* two differ only by a \c requires clause, which doxygen does not use to tell
-* overloads apart -- naming the other one there resolves back to this one.
+* This is the fallback for targets without VAES.  The overload above does the
+* same thing two elements at a time.
+*
+* It cannot say \c \\copydoc.  The two differ only by a \c requires clause,
+* which doxygen does not use to tell overloads apart, so naming the other one
+* there resolves back to this one.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
@@ -311,7 +314,7 @@ aes_enc_inv_arr(simd_arr_t<N>& arr,
 /// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
 /**
 * The AES round keys are applied in reverse order of \c aes_enc_arr.  This is
-* the fallback for targets without VAES; see the note on the corresponding
+* the fallback for targets without VAES.  See the note on the corresponding
 * \c aes_enc_arr overload for why it does not use \c \\copydoc.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>

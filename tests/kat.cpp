@@ -41,12 +41,13 @@
 * on the thread count, so no thread count appears in the format.
 *
 * The first two types pin the primitives directly rather than through a
-* construction: "rc" is one round constant \c RC[r][aes_r][i], and
-* "permute" is the whole 256-byte state after <code>P(s, rounds)</code>
-* from either the all-zero state (\c init=zero) or <code>s[i] = i mod
-* 256</code> (\c init=counter).  Their digest= is that raw output, not a
-* digest.  Without them an LFSR or transpose fault first shows up as a
-* wrong duplex digest, with the whole specification in between.
+* construction.  "rc" is one round constant \c RC[r][aes_r][i].  "permute" is
+* the whole 256-byte state after <code>P(s, rounds)</code> from either the
+* all-zero state (\c init=zero) or <code>s[i] = i mod 256</code>
+* (\c init=counter).  Their digest= is that raw output, not a digest.
+*
+* Without them an LFSR or transpose fault first shows up as a wrong duplex
+* digest, with the whole specification in between.
 */
 
 #include "../hash-programs/check_utils.hpp"
@@ -135,10 +136,10 @@ round_constant_bytes(const int r, const int aes_r, const int i)
 * \param counter_init false for the all-zero state, true for
 *        <code>s[i] = i mod 256</code> over the total state bytes
 *
-* Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX
-* are the point: \c P uses the \e last \a num_rounds rounds' constants, so
-* a first-N implementation reproduces the 16-round vector and fails every
-* shorter one.
+* Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX are
+* the point, because \c P uses the \e last \a num_rounds rounds' constants.
+* A first-N implementation therefore reproduces the 16-round vector and fails
+* every shorter one.
 */
 [[nodiscard]] std::vector<std::byte>
 permute_state(const bool counter_init, const int num_rounds)
@@ -212,9 +213,9 @@ make_key(const int len)
 /**
 * A \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>.
-* The key block is exactly chunk 0, so \a msg keeps its chunk alignment;
-* this mirrors \c compute_file_digest in hash-programs/castella.cpp, but is
-* written from the specification rather than sharing its code.
+* The key block is exactly chunk 0, so \a msg keeps its chunk alignment.  This
+* mirrors \c compute_file_digest in hash-programs/castella.cpp, but is written
+* from the specification rather than sharing its code.
 *
 * \exception std::invalid_argument if the framed key does not fit in one chunk
 */
@@ -553,7 +554,10 @@ get_int_field(const field_list& fields, const std::string_view key, const int mi
     return parsed;
 }
 
-/// Get a hexadecimal field decoded as a byte string; an empty value is allowed
+/// Get a hexadecimal field decoded as a byte string
+/**
+* An empty value is allowed.
+*/
 [[nodiscard]] std::optional<std::string>
 get_hex_string_field(const field_list& fields, const std::string_view key)
 {
@@ -573,7 +577,10 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
     return std::string{reinterpret_cast<const char*>(std::data(*bytes)), std::size(*bytes)};
 }
 
-/// Recompute the digest of one KAT line; \c std::nullopt if the line is malformed
+/// Recompute the digest of one KAT line
+/**
+* \retval std::nullopt if the line is malformed
+*/
 [[nodiscard]] std::optional<std::vector<std::byte>>
 recompute_kat_line(const std::string_view type, const field_list& fields, const int out)
 {
@@ -684,11 +691,11 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
 /// Verify every KAT in the file at \a path
 /**
 * \param path the KAT file to read
-* \param expect_count if set, the number of KATs the file must hold; a
-*        file holding fewer is a failure rather than a success on what it
+* \param expect_count if set, the number of KATs the file must hold, so that
+*        a file holding fewer is a failure rather than a success on what it
 *        did hold
-* \return the program exit status: \c EXIT_SUCCESS only if the file was
-*         readable, held at least one KAT, held \a expect_count of them
+* \return the program exit status.  It is \c EXIT_SUCCESS only if the file
+*         was readable, held at least one KAT, held \a expect_count of them
 *         when that is set, and every KAT matched
 */
 [[nodiscard]] int
@@ -772,7 +779,7 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
             continue;
         }
 
-        // The out= field is redundant with the digest length; require
+        // The out= field is redundant with the digest length.  Require
         // agreement so the file cannot self-contradict.
         if (get_int_field(fields, "out", 0, 512) != std::ssize(*expected))
         {
@@ -807,7 +814,7 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
 
     if (num_verified != *expect_count)
     {
-        // Keep the summary above this line: stdout is block-buffered when
+        // Keep the summary above this line.  stdout is block-buffered when
         // redirected, so without the flush it would appear after it.
         (void)std::fflush(stdout);
         std::println(stderr,

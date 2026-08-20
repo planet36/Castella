@@ -125,10 +125,10 @@ parallel_hash_like(const std::string_view X,
     Castella::Duplex final_node(capacity_blocks, num_rounds, input_suffix, function_name,
                                 customization_str);
 
-    // The chaining value length is the capacity size (twice the security
-    // strength), as in ParallelHash, whose leaves squeeze twice the security
-    // strength (256 or 512 bits) -- and the same rule as
-    // Castella::DuplexTree::CV_LEN.
+    // The chaining value length is the capacity size, which is twice the
+    // security strength.  ParallelHash uses the same rule, since its leaves
+    // squeeze twice the security strength (256 or 512 bits).
+    // Castella::DuplexTree::CV_LEN follows it too.
     const int cv_len = final_node.get_capacity_size_bytes();
 
     // 2. z = left_encode(B).
@@ -137,10 +137,10 @@ parallel_hash_like(const std::string_view X,
     // 1. n = ceil(len(X) / B).
     // 3. for i = 0 to n-1:
     //        z = z || cSHAKE(X_i, 2*security_strength, "", "").
-    // The leaf is a plain (empty N and S) duplex, as in ParallelHash, whose
-    // leaves are cSHAKE with empty N and S (i.e. SHAKE).  A leaf does not
-    // absorb its block index; each CV is bound to its position by the
-    // fixed-length concatenation order alone.
+    // The leaf is a plain duplex with empty N and S, as in ParallelHash,
+    // whose leaves are cSHAKE with empty N and S (that is, SHAKE).  A leaf
+    // does not absorb its block index.  Each CV is bound to its position by
+    // the fixed-length concatenation order alone.
     size_t n = 0;
     for (size_t off = 0; off < X.size(); off += B, ++n)
     {
@@ -690,7 +690,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 256; // bits
         constexpr std::string_view X{"Don't make me run!  I'm full of chocolate!"};
-        constexpr size_t B = 8;    // bytes; the last block is partial
+        constexpr size_t B = 8;    // bytes, and the last block is partial
         constexpr size_t B_2 = 12; // a different block size
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
@@ -740,7 +740,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 512; // bits
         constexpr std::string_view X{"Stupid sexy Flanders!"};
-        constexpr size_t B = 8;    // bytes; the last block is partial
+        constexpr size_t B = 8;    // bytes, and the last block is partial
         constexpr size_t B_2 = 12; // a different block size
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
@@ -790,7 +790,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 256; // bits
         constexpr std::string_view X{"You don't win friends with salad."};
-        constexpr size_t B = 8; // bytes; the last block is partial
+        constexpr size_t B = 8; // bytes, and the last block is partial
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";
@@ -841,7 +841,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 512; // bits
         constexpr std::string_view X{"I'm not popular enough to be different."};
-        constexpr size_t B = 8; // bytes; the last block is partial
+        constexpr size_t B = 8; // bytes, and the last block is partial
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";

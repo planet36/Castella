@@ -807,12 +807,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
         }
-        // The DuplexTree hash object allocates (per-batch CV arrays, the
-        // pipeline's slot ring, up to a --chunk-size buffer, worker Duplex
-        // objects) and rethrows worker-thread exceptions out of add() and
-        // squeeze_bytes(), so std::bad_alloc is now reachable here.
-        // Report and continue with the remaining files instead of letting
-        // it escape main() to std::terminate.
+        // DuplexTree allocates, and it rethrows worker-thread exceptions out
+        // of add() and squeeze_bytes(), so std::bad_alloc is reachable here.
+        // Report it and continue with the remaining files rather than let it
+        // escape main() to std::terminate.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

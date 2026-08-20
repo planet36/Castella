@@ -33,10 +33,10 @@ using arr_blocks = simd_arr_t<N>;
 
 #if defined(__x86_64__) && defined(__AVX__)
 
-/// A lane-paired block: block \c i of two independent states, one per 128-bit lane
+/// A lane-paired block holding block \c i of two independent states, one per 128-bit lane
 using block_x2_t = uint8x16x2_t;
 
-/// A lane-paired state: two independent states, state A in the low lanes and state B in the high lanes
+/// A lane-paired state holding state A in the low lanes and state B in the high lanes
 template <size_t N>
 using arr_blocks_x2 = simd_arr_x2_t<N>;
 
@@ -102,17 +102,19 @@ static_assert(B_MAX == 16, "value is fixed by SPEC.md");
 * \c i in AES round \c aes_r.  The round constants are not secret.
 *
 * A [round][block][AES round] nesting would be possible if creation and
-* consumption were both reshaped, but it would pessimize the key loads:
+* consumption were both reshaped, but it would pessimize the key loads.
 * \c aes_enc_arr applies one AES round to two adjacent blocks per 256-bit
-* instruction, so each key fetch wants adjacent blocks' keys for the SAME
-* AES round to be contiguous -- block must be the fastest-varying index.
-* With AES round innermost, adjacent blocks' keys would sit
-* \c AES_NUM_ROUNDS blocks apart, splitting every 256-bit key load in two.
-* The nesting is also frozen now: the LFSR assigns the constants' values in
-* generation order (and cch's \c create_init_state_ continues the same
-* stream), so reshaping it would change every digest (pinned by
-* tests/KAT.txt).  The folded VAES table \c round_constants_folded is
-* derived from this one and does not dictate its shape.
+* instruction, so each key fetch wants adjacent blocks' keys for the SAME AES
+* round to be contiguous.  Block must be the fastest-varying index.  With AES
+* round innermost, adjacent blocks' keys would sit \c AES_NUM_ROUNDS blocks
+* apart, splitting every 256-bit key load in two.
+*
+* The nesting is also frozen now.  The LFSR assigns the constants' values in
+* generation order, and cch's \c create_init_state_ continues the same stream,
+* so reshaping it would change every digest (pinned by tests/KAT.txt).
+*
+* The folded VAES table \c round_constants_folded is derived from this one and
+* does not dictate its shape.
 */
 using round_constants_t = std::array<arr_blocks<B_MAX>, AES_NUM_ROUNDS>;
 
@@ -195,17 +197,17 @@ inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>()
 /// The round constants for a single Castella round, folded for the register-resident \a N-block permutation
 /**
 * \c round_constants_folded_t<N>[aes_r][j] is the 256-bit AES round key for
-* folded state element \c j (which holds blocks \c j and \c j+N/2) in AES
-* round \c aes_r: \c round_constants[aes_r][j] in the low 128-bit lane and
-* \c round_constants[aes_r][j+N/2] in the high lane.
+* folded state element \c j in AES round \c aes_r.  Element \c j holds blocks
+* \c j and \c j+N/2.  The key is \c round_constants[aes_r][j] in the low
+* 128-bit lane and \c round_constants[aes_r][j+N/2] in the high lane.
 */
 template <size_t N>
 using round_constants_folded_t = std::array<simd_arr_x2_t<N / 2>, AES_NUM_ROUNDS>;
 
 /// Create the folded round constants for state size \a N (see \c round_constants_folded_t)
 /**
-* Derived from \c round_constants (never regenerated), so the two tables
-* can never disagree.
+* Derived from the existing \c round_constants, so the two tables always hold
+* identical values.
 */
 template <size_t N, size_t NUM_ROUNDS>
 [[nodiscard]] static consteval auto
@@ -232,7 +234,7 @@ create_round_constants_folded() noexcept
     return result;
 }
 
-/// The Castella round constants for state size \a N, folded (identical values to \c round_constants)
+/// The Castella round constants for state size \a N, folded
 template <size_t N>
 inline constexpr auto round_constants_folded = create_round_constants_folded<N, NUM_ROUNDS_MAX>();
 
@@ -246,9 +248,9 @@ inline constexpr auto round_constants_folded = create_round_constants_folded<N, 
 * \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 *
-* The round structure is described by \c permute, which calls this where the
-* folded path does not exist.  It is defined everywhere so that a build
-* having both can compare them: they must be bit-identical
+* \c permute describes the round structure and calls this where the folded
+* path does not exist.  This is defined everywhere so that a build having both
+* can compare them, since they must be bit-identical
 * (tests/permute-equivalence.cpp).
 */
 template <size_t N>
@@ -280,10 +282,10 @@ permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 *
 * Bit-identical to \c permute_generic, which describes the round structure
-* (with \c permute).  The state is held in \c N/2 ymm registers for all
+* along with \c permute.  The state is held in \c N/2 ymm registers for all
 * rounds instead of bouncing through memory between the AES rounds' 256-bit
-* accesses and the transpose's 128-bit accesses -- a 256-bit load spanning
-* two 128-bit stores defeats store-to-load forwarding.
+* accesses and the transpose's 128-bit accesses.  A 256-bit load spanning two
+* 128-bit stores defeats store-to-load forwarding.
 */
 template <size_t N>
 static void
@@ -296,9 +298,9 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
     assert(num_rounds <= NUM_ROUNDS_MAX);
 #endif
 
-    // Fold the state into N/2 ymm registers: element j = [block j |
-    // block j+N/2].  This layout is preserved by simd_transpose_folded,
-    // so the whole permutation runs register-resident; the state touches
+    // Fold the state into N/2 ymm registers, with element j holding
+    // [block j | block j+N/2].  simd_transpose_folded preserves that layout,
+    // so the whole permutation runs register-resident.  The state touches
     // memory only here and at the unfold below.
     simd_arr_x2_t<N / 2> state_folded;
 
@@ -345,8 +347,8 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 * then <code>permute(x, n2)</code> would equal a fixed public function of
 * <code>permute(x, n1)</code> for any <code>n1 < n2</code>.
 *
-* This selects the implementation: \c permute_folded on x86-64 with VAES
-* (every supported \a N), \c permute_generic everywhere else.  The two are
+* This is a wrapper.  It calls \c permute_folded on x86-64 with VAES, at
+* every supported \a N, and \c permute_generic everywhere else.  The two are
 * bit-identical, so the choice never affects a digest.
 */
 // }}}
@@ -372,14 +374,16 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 * \pre \a num_rounds ≥ \c 0
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 *
-* Equivalent to calling \c permute on each state separately: the VAES
-* instructions apply an independent AES round per 128-bit lane (both lanes
-* using the same round constants -- see the lane-paired \c aes_enc_arr), and
-* the AVX2 unpack instructions of the lane-paired \c simd_transpose are
-* lane-local, so the two states never mix.  The point is throughput: one
-* transpose network serves both states, and two chunks' worth of permutation
-* work is in flight on one core (see \c Castella::DuplexTree leaf batching,
-* which uses the 16-block geometry of \c Castella::Duplex).
+* Equivalent to calling \c permute on each state separately.  The VAES
+* instructions apply an independent AES round per 128-bit lane, with both
+* lanes using the same round constants (see the lane-paired \c aes_enc_arr).
+* The AVX2 unpack instructions of the lane-paired \c simd_transpose are
+* lane-local, so the two states never mix.
+*
+* The point is throughput.  One transpose network serves both states, and two
+* chunks' worth of permutation work is in flight on one core (see
+* \c Castella::DuplexTree leaf batching, which uses the 16-block geometry of
+* \c Castella::Duplex).
 */
 // }}}
 template <size_t N>

@@ -385,9 +385,8 @@ public:
     * \param data_a the input data for duplex A
     * \param data_b the input data for duplex B
     * \param len the size (in bytes) of BOTH inputs
-    * \note A null pointer with a nonzero \a len is well defined -- nothing
-    *       is absorbed -- but is almost certainly a caller bug, so a
-    *       \c -DDEBUG build asserts on it.
+    * \note A null pointer with a nonzero \a len is almost certainly a caller
+    *       bug, so a \c -DDEBUG build asserts on it.
     */
     void add(const void* data_a, const void* data_b, const size_t len) noexcept
     {

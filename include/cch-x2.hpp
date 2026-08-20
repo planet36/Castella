@@ -200,9 +200,8 @@ public:
     * \param len the size (in bytes) of BOTH inputs
     * \pre \c len is the size of both inputs (lockstep)
     * \pre neither node has been finalized
-    * \note A null pointer with a nonzero \a len is well defined -- nothing
-    *       is absorbed -- but is almost certainly a caller bug, so a
-    *       \c -DDEBUG build asserts on it.
+    * \note A null pointer with a nonzero \a len is almost certainly a caller
+    *       bug, so a \c -DDEBUG build asserts on it.
     */
     void add(const void* data_a, const void* data_b, const size_t len)
     {

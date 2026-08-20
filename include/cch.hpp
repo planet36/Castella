@@ -498,9 +498,8 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
-    * \note A null \a data with a nonzero \a len is well defined -- nothing
-    *       is absorbed -- but is almost certainly a caller bug, so a
-    *       \c -DDEBUG build asserts on it.
+    * \note A null \a data with a nonzero \a len is almost certainly a caller
+    *       bug, so a \c -DDEBUG build asserts on it.
     */
     compress_castella_hash& add(const void* data, size_t len)
     {

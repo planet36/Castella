@@ -72,8 +72,14 @@ public:
     node_b_{mix_rate}
     {}
 
-    // Copying and moving are implicitly disabled (node_type is neither
-    // copyable nor movable), and each node zeroizes itself on destruction.
+    // Disable copying and moving
+    compress_castella_hash_x2(const compress_castella_hash_x2&) = delete;
+    compress_castella_hash_x2& operator=(const compress_castella_hash_x2&) = delete;
+    compress_castella_hash_x2(compress_castella_hash_x2&&) = delete;
+    compress_castella_hash_x2& operator=(compress_castella_hash_x2&&) = delete;
+
+    // Each node zeroizes itself, so nothing is left for this to do
+    ~compress_castella_hash_x2() = default;
 
     /// Consume the input data into node A and node B
     // {{{

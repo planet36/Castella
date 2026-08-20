@@ -115,6 +115,16 @@ private:
         if ((C % 2) != 0)
             throw std::invalid_argument("Castella::DuplexX2: C is odd");
 
+#if defined(DEBUG)
+        // {{{ These checks aren't necessary if other tests passed.
+        if (R < Duplex::R_MIN)
+            throw std::invalid_argument("Castella::DuplexX2: R < R_MIN");
+
+        if (R > Duplex::R_MAX)
+            throw std::invalid_argument("Castella::DuplexX2: R > R_MAX");
+        // }}}
+#endif
+
         if (NUM_ROUNDS < NUM_ROUNDS_MIN<Duplex::B>())
             throw std::invalid_argument(
                 "Castella::DuplexX2: NUM_ROUNDS < NUM_ROUNDS_MIN<B>()");

@@ -377,7 +377,7 @@ public:
         add_(byte_sp_a, byte_sp_b);
     }
 
-    /// \copydoc add(std::span<const std::byte>, std::span<const std::byte>)
+    /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
     /**
     * The raw-data form.  A null \a data_a or \a data_b makes the whole call
     * absorb nothing in either lane, ignoring \a len.

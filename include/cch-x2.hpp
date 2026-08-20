@@ -192,8 +192,8 @@ public:
 
     /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form; a null \a data_a or \a data_b is treated as an
-    * empty span, ignoring \a len.
+    * The raw-data form.  A null \a data_a or \a data_b makes the whole call
+    * absorb nothing in either lane, ignoring \a len.
     *
     * \param data_a the input data for node A
     * \param data_b the input data for node B

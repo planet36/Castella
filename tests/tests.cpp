@@ -38,9 +38,9 @@
 * depends on the target.
 */
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
-constexpr int EXPECTED_CHECKS = 71;
+constexpr int EXPECTED_CHECKS = 73;
 #else
-constexpr int EXPECTED_CHECKS = 66;
+constexpr int EXPECTED_CHECKS = 68;
 #endif
 
 /// The number of runtime checks made so far
@@ -337,6 +337,35 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         const auto digest_bytes2 = hash_obj2.squeeze_bytes();
 
         CHECK(digest_bytes == digest_bytes2);
+    }
+
+    {
+        // Test the raw-data overloads with a null pointer and a zero length.
+        // Each must match the same call made with an empty span, and the two
+        // encoded forms must still absorb their encoded length of 0.
+        constexpr int capacity_blocks = 4;
+        constexpr int num_rounds = 6;
+
+        Castella::Duplex hash_obj(capacity_blocks, num_rounds);
+        Castella::Duplex hash_obj2(capacity_blocks, num_rounds);
+        Castella::Duplex hash_obj3(capacity_blocks, num_rounds);
+
+        hash_obj.add(nullptr, 0);
+        hash_obj.add_left_encoded(nullptr, 0);
+        hash_obj.add_right_encoded(nullptr, 0);
+
+        hash_obj2.add(std::span<const std::byte>{});
+        hash_obj2.add_left_encoded(std::span<const std::byte>{});
+        hash_obj2.add_right_encoded(std::span<const std::byte>{});
+
+        // hash_obj3 absorbs nothing at all.
+
+        const auto digest_raw = hash_obj.squeeze_bytes();
+        const auto digest_span = hash_obj2.squeeze_bytes();
+        const auto digest_empty = hash_obj3.squeeze_bytes();
+
+        CHECK(digest_raw == digest_span);
+        CHECK(digest_raw != digest_empty);
     }
 
     {

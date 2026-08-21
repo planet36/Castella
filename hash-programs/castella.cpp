@@ -44,20 +44,19 @@ inline constexpr std::string_view mac_function_name = "Castella-MAC";
 
 /// The absolute maximum key size (in bytes)
 /**
-* The key must also fit in one tree chunk together with its bytepad
-* framing (see \c compute_file_digest); with the minimum chunk size that
-* allows 1014 bytes, far beyond any real key.
+* The key must also fit in one tree chunk together with its bytepad framing
+* (see \c compute_file_digest).  At the minimum chunk size that limit is 1014
+* bytes, far beyond any real key.
 */
 inline constexpr int key_size_max = 4096;
 
 // {{{ default values for options
 inline constexpr int default_input_suffix = 1;
 
-// The minimum claimed round counts (SPEC.md "Margin rationale"): capacity
-// C <= 6 needs R >= 6; C = 8 (digests 49..64 bytes) needs R >= 8.  When
-// --rounds is not given, the default is derived from the digest size so the
-// program's out-of-box instances are always claimed (see
-// get_necessary_num_rounds).
+// The minimum claimed round counts (SPEC.md "Margin rationale").  Capacity
+// C <= 6 needs R >= 6.  C = 8, which covers digests of 49 to 64 bytes, needs
+// R >= 8.  When --rounds is not given, get_necessary_num_rounds derives the
+// default from the digest size, so the out-of-box instances are all claimed.
 inline constexpr int num_rounds_claimed_small = 6;
 inline constexpr int num_rounds_claimed_large = 8;
 static_assert(num_rounds_claimed_small >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
@@ -73,9 +72,8 @@ static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
 
 inline constexpr std::string_view default_customization_str = "hash";
 
-// The chunk size is part of the digest format (different chunk sizes give
-// different digests), unlike the thread count, which never affects the
-// digest.
+// The chunk size is part of the digest format.  Different chunk sizes give
+// different digests.
 inline constexpr int default_chunk_size = Castella::DuplexTree::DEFAULT_CHUNK_SIZE;
 
 // 0 requests one worker thread per available hardware thread.
@@ -85,10 +83,10 @@ inline constexpr int default_num_threads = 0;
 // {{{ options
 auto input_suffix = default_input_suffix;
 
-// Unset until --rounds is parsed; when unset, the round count is derived
-// per digest size at each use site (see resolve_num_rounds).  Left
-// unresolved here so a --check run can derive the right count for each
-// checkfile line's own digest length, not the command line's --size.
+// Unset until --rounds is parsed.  While it is unset, each use site derives
+// the round count from its own digest size (see resolve_num_rounds).  That
+// lets a --check run follow each checkfile line's digest length rather than
+// the command line's --size.
 std::optional<int> num_rounds_given;
 
 auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
@@ -107,10 +105,10 @@ bool check_mode = false;
 
 bool quiet = false;
 
-/// The --key-file path; empty means unkeyed
+/// The --key-file path, or empty when unkeyed
 std::string key_file_path;
 
-/// The secret key bytes read from --key-file; empty means unkeyed
+/// The secret key bytes read from --key-file, or empty when unkeyed
 /**
 * This buffer is zeroized before the program exits, on every path.  Transient
 * copies made by the I/O layer while reading the key file are not.
@@ -194,11 +192,10 @@ print_usage()
     std::println("  -c, --check");
     std::println("        Read digest lines from each FILE (or standard input) and verify them.");
     std::println("        Both output formats are accepted.  A tag line carries the");
-    std::println("        digest-relevant options itself; for an untagged line, --chunk-size,");
-    std::println("        --custom, --rounds, and --suffix must be given the same values that");
-    std::println("        produced it.  The output size is inferred from the digest length.");
-    std::println("        Keyed digests verify only with the same --key-file (digest lines never");
-    std::println("        contain the key).");
+    std::println("        digest-relevant options itself.  An untagged line needs the same");
+    std::println("        --chunk-size, --custom, --rounds, and --suffix that produced it.");
+    std::println("        The output size is inferred from the digest length.");
+    std::println("        Keyed digests verify only with the same --key-file.");
     std::println("        Empty lines and lines starting with '#' are ignored.");
     std::println("        (A FILE whose name contains a newline cannot be verified.)");
 
@@ -214,19 +211,19 @@ print_usage()
     std::println("        (default={})", quote_shell_always(default_customization_str));
 
     std::println("  --key-file=FILE");
-    std::println("        Compute a keyed hash (a MAC).  The key is the exact bytes of FILE");
-    std::println("        (at least 1 byte; at most the smaller of {} bytes and the chunk", key_size_max);
-    std::println("        size minus 10).  The KMAC structure is followed at tree scale: the");
-    std::println("        function name becomes {}, the encoded key (bytepad to one", quote_shell_always(mac_function_name));
-    std::println("        tree chunk) is absorbed ahead of FILE, and the right-encoded output");
+    std::println("        Compute a keyed hash (a MAC).  The key is the exact bytes of FILE.");
+    std::println("        It is at least 1 byte, and at most the smaller of {} bytes and the", key_size_max);
+    std::println("        chunk size minus 10.  The KMAC structure is followed at tree scale.");
+    std::println("        The function name becomes {}, the key is bytepadded to one", quote_shell_always(mac_function_name));
+    std::println("        tree chunk and absorbed ahead of FILE, and the right-encoded output");
     std::println("        size is absorbed last, so MACs of different sizes are unrelated.");
-    std::println("        The key never appears in the output; see --check.");
+    std::println("        The key never appears in the output.  See --check.");
 
     std::println("  --no-mmap");
     std::println("        Do not use memory mapping to read FILE.");
 
     std::println("  --num-threads=NUM");
-    std::println("        Specify the maximum number of worker threads used to hash chunks.");
+    std::println("        Specify the maximum number of worker threads that hash chunks.");
     std::println("        0 means one thread per available hardware thread.");
     std::println("        The digest does not depend on the number of threads.");
     std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
@@ -237,12 +234,12 @@ print_usage()
     std::println("        (only meaningful with --check)");
 
     std::println("  --rounds=NUM_ROUNDS");
-    std::println("        Specify the number of rounds to perform in the Castella permutation function.");
+    std::println("        Specify the number of rounds in the Castella permutation function.");
     std::println("        The security claim (SPEC.md) covers only rounds >= 6, or >= 8 when");
-    std::println("        SIZE > 48; fewer rounds are reduced-round targets (CHALLENGES.md).");
-    std::println("        When omitted, the default tracks the claim: {} rounds for SIZE <= 48,",
+    std::println("        SIZE > 48.  Fewer rounds are reduced-round targets (CHALLENGES.md).");
+    std::println("        When omitted, the default tracks the claim.  It is {} rounds for",
                  num_rounds_claimed_small);
-    std::println("        {} for SIZE > 48.", num_rounds_claimed_large);
+    std::println("        SIZE <= 48, and {} for SIZE > 48.", num_rounds_claimed_large);
     std::println("        (minimum={}) (maximum={})",
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
@@ -274,8 +271,8 @@ print_usage()
     std::println("");
 
     std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize best; piped input is also multithreaded,");
-    std::println("but its throughput is limited by the reading thread.");
+    std::println("Memory-mapped files parallelize best.  Piped input is also multithreaded,");
+    std::println("but the reading thread limits its throughput.");
     std::println("");
 
     std::println("https://github.com/planet36/Castella");
@@ -401,8 +398,6 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_SUFFIX:
-            // No range check: an out-of-byte-range suffix is rejected later by
-            // the narrow_cast in the Duplex constructor (unchanged behavior).
             input_suffix = parse_option_int(optarg, std::numeric_limits<int>::min(),
                                              std::numeric_limits<int>::max(), "--suffix");
             break;
@@ -418,9 +413,9 @@ void process_options(int argc, char* argv[])
 
 /// The maximum key size (in bytes) for the given chunk size
 /**
-* The key and its bytepad framing -- left_encode(chunk size) and
-* left_encode(key size), at most 5 bytes each -- must fit in one tree
-* chunk (see \c compute_file_digest).
+* The key and its bytepad framing must fit in one tree chunk (see
+* \c compute_file_digest).  The framing is left_encode(chunk size) and
+* left_encode(key size), at most 5 bytes each.
 */
 [[nodiscard]] constexpr int
 max_key_size_bytes(const int chunk_size_bytes) noexcept
@@ -432,8 +427,9 @@ max_key_size_bytes(const int chunk_size_bytes) noexcept
 
 /// Read the key from the file at \a path, or exit with an error
 /**
-* The key is the file's exact bytes.  Read byte by byte (never seek), so
-* pipes and process substitution work, e.g. --key-file=<(pass show x).
+* The key is the file's exact bytes.  The file is read byte by byte, without
+* seeking, so pipes and process substitution work.  One example is
+* --key-file=<(pass show x).
 */
 [[nodiscard]] std::vector<std::byte>
 read_key_file(const std::string& path, const int max_size_bytes)
@@ -445,8 +441,8 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
     std::vector<std::byte> key;
     // Reserve the whole permitted size up front so the buffer never
-    // reallocates: a growing key would otherwise strand un-scrubbed copies
-    // of earlier prefixes in freed heap (only the final buffer is zeroized).
+    // reallocates.  A growing key would otherwise strand un-scrubbed copies of
+    // earlier prefixes in freed heap.  Only the final buffer is zeroized.
     key.reserve(to_unsigned(max_size_bytes));
 
     char c = 0;
@@ -477,10 +473,10 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
 /// Hash the contents of the file at \a path and return the digest
 /**
-* The construction+hash+squeeze shared by the normal and --check modes.
-* The parameters that are digest-relevant are explicit (a --tag check line
-* carries its own values); the ones that are not (\c num_threads,
-* \c use_mmap via \c process_file) are taken from the globals.
+* The construction, hash, and squeeze shared by the normal and --check modes.
+* The digest-relevant parameters are explicit, because a --tag check line
+* carries its own values.  The rest come from the globals, namely
+* \c num_threads and \c use_mmap (through \c process_file).
 *
 * When \a key is nonempty, the KMAC structure (SP 800-185 Section 4) is
 * followed at tree scale:
@@ -488,11 +484,12 @@ read_key_file(const std::string& path, const int max_size_bytes)
 *     newX = bytepad(encode_string(K), CHUNK_SIZE) || X || right_encode(L)
 *
 * with the function name \c mac_function_name instead of \c function_name.
-* The bytepad width is the tree chunk size (KMAC uses the rate), so the
-* key block is exactly chunk 0 -- absorbed directly by the (now keyed)
-* final node -- and FILE's bytes keep their chunk alignment.  The trailing
-* right_encode(L) makes MACs of different output sizes unrelated (an
-* unkeyed digest of a smaller size is a truncation; a MAC must not be).
+* The bytepad width is the tree chunk size, where KMAC uses the rate.  The key
+* block is therefore exactly chunk 0, absorbed directly by the now keyed final
+* node, and FILE's bytes keep their chunk alignment.
+*
+* The trailing right_encode(L) makes MACs of different output sizes unrelated.
+* An unkeyed digest of a smaller size is a truncation, and a MAC must not be.
 *
 * \exception std::system_error on I/O error
 * \exception std::invalid_argument if a parameter is invalid, or if the
@@ -508,12 +505,9 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
 
     const bool keyed = !std::empty(key);
 
-    // A DuplexTree (not a plain Duplex): FILE is hashed as a chunked tree
-    // so that the work can be spread across num_threads CPU cores.  The
-    // digest depends on chunk_size but NEVER on num_threads, so any thread
-    // count (and either I/O mode) produces the same output for the same
-    // input.  Streamed input parallelizes too: the read loop in
-    // process_file feeds the tree's streaming pipeline, so worker threads
+    // FILE is hashed as a chunked tree, so the work can spread across
+    // num_threads CPU cores.  Streamed input parallelizes too.  The read loop
+    // in process_file feeds the tree's streaming pipeline, so worker threads
     // hash previously read chunks while it is blocked in read().
     Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix,
                                   keyed ? mac_function_name : function_name,
@@ -633,9 +627,9 @@ parse_tagged_line(std::string_view s, check_line& out)
 
 /// Parse an untagged line (digest, two spaces, FILE)
 /**
-* The digest-relevant options are taken from the command line.  The FILE
-* is shell-quoted (what this program emits); a bare FILE spanning the rest
-* of the line is also accepted.
+* The digest-relevant options are taken from the command line.  The FILE is
+* shell-quoted, which is what this program emits.  A bare FILE spanning the
+* rest of the line is also accepted.
 */
 [[nodiscard]] bool
 parse_untagged_line(std::string_view s, check_line& out)
@@ -673,9 +667,9 @@ parse_untagged_line(std::string_view s, check_line& out)
         out.path = s;
     }
 
-    // An untagged line does not carry its rounds; when --rounds is not on
-    // the check command line, derive it from this line's own digest length (not
-    // the command line's --size, which is irrelevant in --check mode).
+    // An untagged line does not carry its rounds.  When --rounds is not on the
+    // check command line, derive it from this line's own digest length.  The
+    // command line's --size is irrelevant in --check mode.
     out.rounds = resolve_num_rounds(static_cast<int>(std::ssize(out.expected_digest)));
     out.suffix = input_suffix;
     out.custom = customization_str;
@@ -719,7 +713,7 @@ verify_check_line(const std::string_view line, check_totals& totals)
         return;
     }
 
-    // Constant-time: --custom may be a secret key (a MAC), and then the
+    // Compare in constant time.  --custom may be a secret key, and then the
     // comparison must not be a timing oracle for the expected digest.
     if (equal_constant_time(digest_bytes, parsed.expected_digest))
     {
@@ -809,8 +803,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
         // DuplexTree allocates, and it rethrows worker-thread exceptions out
         // of add() and squeeze_bytes(), so std::bad_alloc is reachable here.
-        // Report it and continue with the remaining files rather than let it
-        // escape main() to std::terminate.
+        // Report it and continue with the remaining files.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

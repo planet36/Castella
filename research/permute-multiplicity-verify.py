@@ -6,13 +6,13 @@
 """Verify the even-multiplicity zero-sum argument numerically.
 
 permute-division-property.py *decides* balancedness with a solver, and its
-positive answers are UNSATs -- sound, but only as sound as the model's
-wiring.  The results it produced were then explained by a hand proof: over a
-full-block cube round 1 is a bijection on that block, the transpose hands
-every block one active byte, each of whose 256 values therefore repeats
-2^120 times, and 2^120 is even, so the XOR-sum vanishes.  That argument
-never mentions AES, which is why it was also applied to `P^-1` and the two
-halves composed into a 4-round inside-out zero-sum.
+positive answers are UNSATs.  Those are sound, but only as sound as the
+model's wiring.  The results it produced were then explained by a hand proof.
+Over a full-block cube round 1 is a bijection on that block, the transpose
+hands every block one active byte, each of whose 256 values therefore repeats
+2^120 times, and 2^120 is even, so the XOR-sum vanishes.  That argument never
+mentions AES, which is why it was also applied to `P^-1` and the two halves
+composed into a 4-round inside-out zero-sum.
 
 Nothing had checked the argument itself.  This program does, two ways that
 fail independently.
@@ -28,46 +28,50 @@ implementation of SPEC.md, pinned to the C++ by tests/KAT.txt):
 2. therefore output byte (b, j) depends on input block j alone, so a cube
    filling block 0 reaches exactly the 16 bytes (b, 0) -- the upper bound is
    exact given 1, the lower bound is measured;
-3. `A` restricted to a block is a bijection -- proven, not sampled: the
-   S-box is a permutation (exhaustive), and the rest of `aesenc` is F2-affine
-   with an invertible 128x128 linear part (exact rank);
+3. `A` restricted to a block is a bijection, proven rather than sampled.
+   The S-box is an exhaustively checked permutation, and the rest of `aesenc`
+   is F2-affine with an invertible 128x128 linear part, by exact rank.
 4. a bijection on 2^128 sends each output byte value to exactly 2^120
    preimages, and 2^120 is even.
 
 Premise 3 is stronger than the argument needs, which the controls in Part B
-make concrete: a deliberately 2-to-1 S-box is not a bijection, doubles every
-preimage count, and the zero-sum survives it, while an S-box with one
-collision and one unreachable value -- 254 values of odd multiplicity --
-destroys it at a single round.  Bijectivity is one way to get even
-multiplicity, not the thing being used.
+make concrete.  A deliberately 2-to-1 S-box is not a bijection, doubles every
+preimage count, and the zero-sum survives it.  An S-box with one collision and
+one unreachable value, so 254 values of odd multiplicity, destroys it at a
+single round.  Bijectivity is one way to get even multiplicity, not the thing
+being used.
 
 Part B -- the conclusion, brute-forced at reduced width
 ------------------------------------------------------
 Premises can all hold and the composition still be misread, so Part B drops
-the argument entirely and sums the actual XORs.  The cube must be
-enumerable, which 2^128 is not, so the state shrinks to an N x N byte matrix
-with the same shape: N blocks of N bytes, a round is a bijective block map
-on every row followed by the byte transpose, and the block map is three
-sub-rounds of S-box, MDS circulant and a round constant.  Every quantity the
-argument uses survives the shrink -- the transpose still exchanges block and
-byte indices, and the multiplicity becomes 256^(N-1), still even.  N = 2 is
-2^16 states and runs in 3 s; N = 3 is 2^24 and took 35 min.  Both give the
-same table, every cell, which is the point of running the second one.
+the argument entirely and sums the actual XORs.  The cube must be enumerable,
+which 2^128 is not, so the state shrinks to an N x N byte matrix with the same
+shape.  There are N blocks of N bytes, a round is a bijective block map on
+every row followed by the byte transpose, and the block map is three
+sub-rounds of S-box, MDS circulant, and a round constant.
+
+Every quantity the argument uses survives the shrink.  The transpose still
+exchanges block and byte indices, and the multiplicity becomes 256^(N-1),
+still even.  N = 2 is 2^16 states and runs in 3 s, and N = 3 is 2^24 and took
+35 min.  Both give the same table, every cell, which is the point of running
+the second one.
 
 Note this is *not* the `N` of permute-trail-search.py, which keeps 16-byte
-blocks and shrinks their number; that reduction leaves the cube at 2^128 and
+blocks and shrinks their number.  That reduction leaves the cube at 2^128 and
 so cannot be enumerated.
 
 What the two parts found
 ------------------------
 The forward 2-round result is confirmed on both counts.  The 4-round
-inside-out figure is **refuted**: it needs one cube whose two ends both
+inside-out figure is **refuted**.  It needs one cube whose two ends both
 balance, and the two halves were run on different cubes.  The solver's
 backward mode takes its cube in post-transpose coordinates (documented in
-build_trail), so `--inside-out 2 2 -c block` gives the forward half a *row*
-of the byte matrix and the backward half a *column* -- and no state has both.
-Measured, per cube, at N = 2 and N = 3: a row reaches forward 2 / backward 1,
-a column forward 1 / backward 2.  Either way the inside-out reach is 3.
+build_trail), so `--inside-out 2 2 -c block` gives the forward half a *row* of
+the byte matrix and the backward half a *column*, and no state has both.
+
+Measured per cube at N = 2 and N = 3, a row reaches forward 2 and backward 1,
+and a column forward 1 and backward 2.  Either way the inside-out reach is
+3.
 
 Usage
 -----
@@ -152,9 +156,9 @@ def check_decomposition(rng: random.Random, trials: int = 200) -> None:
         st = random_state(rng)
         if transpose(aes_phase(st)) != SC.permute(st, 1):
             raise VerificationError(
-                "one round is not transpose(aes_phase(.)): the decomposition "
-                "the whole argument rests on does not reproduce the shipped "
-                "permutation")
+                "one round is not transpose(aes_phase(.)), so the "
+                "decomposition the whole argument rests on does not reproduce "
+                "the shipped permutation")
     print(f"  [A1] one round == transpose(block-local AES phase), "
           f"{trials} random states: OK")
 
@@ -162,9 +166,9 @@ def check_decomposition(rng: random.Random, trials: int = 200) -> None:
 def check_block_locality(rng: random.Random, trials: int = 8) -> None:
     """Premise 1, measured: AES-phase block i depends on input block i only.
 
-    Both directions: changing another block must never move block i, and
-    changing block i itself must always move it -- the second is what stops
-    a phase that ignored its input from passing.
+    Both directions are checked.  Changing another block must never move block
+    i, and changing block i itself must always move it.  The second is what
+    stops a phase that ignored its input from passing.
     """
     moved_by_self = 0
     for _ in range(trials):
@@ -192,9 +196,9 @@ def check_cube_reaches_one_byte_per_block(rng: random.Random,
                                           trials: int = 64) -> None:
     """Premise 2: a cube filling block 0 reaches exactly bytes (b, 0).
 
-    Given premise 1 the upper bound is exact -- output byte (b, j) is
-    aes_phase(state[j])[b], so only j = 0 can move.  What sampling adds is
-    the lower bound: every one of the 16 positions really does move.
+    Given premise 1 the upper bound is exact, since output byte (b, j) is
+    aes_phase(state[j])[b], so only j = 0 can move.  What sampling adds is the
+    lower bound, that every one of the 16 positions really does move.
     """
     reached: set[tuple[int, int]] = set()
     for _ in range(trials):
@@ -241,13 +245,12 @@ def f2_rank(rows: list[int]) -> int:
 def check_block_bijective(rng: random.Random, trials: int = 2000) -> None:
     """Premise 3: one block's AES round map is a bijection on 2^128.
 
-    Proven rather than sampled, in two exact pieces.  `aesenc` is
-    SubBytes then an F2-affine tail (ShiftRows, MixColumns, AddRoundKey), so
-    peel SubBytes off by feeding S^-1 of the value wanted after it; what is
-    left must be affine, and an affine map is bijective exactly when its
-    linear part has full rank.  The rank is exact; the sampling only
-    confirms the tail really is affine, which a nonlinear map would fail
-    immediately.
+    Proven rather than sampled, in two exact pieces.  `aesenc` is SubBytes
+    then an F2-affine tail of ShiftRows, MixColumns, and AddRoundKey, so peel
+    SubBytes off by feeding S^-1 of the value wanted after it.  What is left
+    must be affine, and an affine map is bijective exactly when its linear
+    part has full rank.  The rank is exact, and the sampling only confirms the
+    tail really is affine, which a nonlinear map would fail immediately.
     """
     if sorted(SBOX) != list(range(256)):
         raise VerificationError("the S-box is not a permutation of 0..255")
@@ -331,12 +334,13 @@ def check_inside_out_cube_coordinates() -> None:
 
     permute-division-property.py builds `P^-1` as (A^-1 . T)^r with the
     LEADING transpose dropped, so its `--inverse` cube lives in the
-    coordinates that feed the first inverse AES round -- one transpose away
-    from the middle state.  The forward build drops the TRAILING transpose
-    instead, which only relabels outputs, so its cube *is* the middle state.
-    Feeding the same bit-set to both halves therefore names two different
-    sets of middle states unless the transpose fixes that set, and here it
-    does not: a block is a row of the byte matrix and its image is a column.
+    coordinates that feed the first inverse AES round, one transpose away from
+    the middle state.  The forward build drops the TRAILING transpose instead,
+    which only relabels outputs, so its cube *is* the middle state.
+
+    Feeding the same bit-set to both halves therefore names two different sets
+    of middle states unless the transpose fixes that set, and here it does
+    not.  A block is a row of the byte matrix, and its image is a column.
     """
     tagged = [bytes([BLOCK_BYTES * i + j for j in range(BLOCK_BYTES)])
               for i in range(N_BLOCKS)]
@@ -599,7 +603,7 @@ def base_state(n: int, seed: int) -> list[int]:
 
 
 def check_multiplicity_histogram(red: Reduced, base: list[int]) -> None:
-    """The mechanism itself, measured: one active byte, even multiplicity.
+    """The mechanism itself, measured as one active byte of even multiplicity.
 
     This is the literal content of the argument's middle step.  After round
     1 and the transpose, every block must hold exactly one varying byte, and
@@ -694,8 +698,8 @@ def part_b(n: int, seed: int, max_r: int) -> int:
 def part_b_controls(seed: int) -> None:
     """Controls that must move the verdict, at N = 2 where they are instant.
 
-    Three of them, each aimed at a different way the brute force could be
-    passing for the wrong reason: the constants are supposed to be
+    There are three of them, each aimed at a different way the brute force
+    could be passing for the wrong reason.  The constants are supposed to be
     irrelevant, the block map is supposed to be irrelevant beyond
     bijectivity, and bijectivity itself is supposed to matter.
     """
@@ -844,10 +848,10 @@ def main() -> None:
         print(f"  inside-out, best over the {len(CUBE_KINDS)} cubes measured: "
               f"{best} round(s), not 4.  `--inside-out 2 2 -c block` gives "
               f"its two halves DIFFERENT middle-state cubes (A7), so it does "
-              f"not exhibit a 4-round zero-sum; and the argument cannot reach "
-              f"4 from one cube, since forward 2 needs the cube to fill a row "
-              f"and backward 2 needs it to fill a column.  Not claimed: that "
-              f"no cube anywhere reaches 4.")
+              f"not exhibit a 4-round zero-sum.  The argument cannot reach 4 "
+              f"from one cube either, since forward 2 needs the cube to fill "
+              f"a row and backward 2 needs it to fill a column.  This does "
+              f"not claim that no cube anywhere reaches 4.")
 
 
 if __name__ == "__main__":

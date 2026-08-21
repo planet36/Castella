@@ -6,10 +6,10 @@
 * \file
 * \author Steven Ward
 *
-* Measures the AES stage in isolation (no transpose), with the real workload
-* shape: \c Castella::AES_NUM_ROUNDS rounds and per-block round keys taken
-* from \c Castella::round_constants.  The permute benchmarks only ever
-* exercise these functions fused with the transpose;
+* Measures the AES stage in isolation, without the transpose, in the real
+* workload shape.  That is \c Castella::AES_NUM_ROUNDS rounds with per-block
+* round keys taken from \c Castella::round_constants.  The permute benchmarks
+* only ever exercise these functions fused with the transpose.
 * aes_enc_arr_cast-benchmark predates them and measures local single-round,
 * shared-key prototypes instead.
 *

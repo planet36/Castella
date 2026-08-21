@@ -182,12 +182,8 @@ function assert_eq_cmd_exit_status
 
 # Print the first whitespace-separated field of each input line
 #
-# This replaces `cut -w -f 1`, which needs coreutils >= 9.11 (released
-# 2026-04-20).  On anything older, `cut` rejects `-w` and the assertions below
-# fail as if the digests had changed, which is the worst way for this script to
-# break: it is the gate rerun after every digest-relevant change.  Doing it in
-# the shell also spawns no process -- measured an order of magnitude cheaper
-# than either `cut` form across the ~100 call sites.
+# Doing it in the shell spawns no process, an order of magnitude cheaper than
+# `cut` across the ~100 call sites here.
 function first_field
 {
     local INPUT_LINE
@@ -212,8 +208,7 @@ function first_field
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 # A private directory per run, so concurrent runs cannot delete each other's
-# inputs.  mktemp honours $TMPDIR and creates the directory 0700.  Only the
-# leading directory varies; the basenames are unchanged.
+# inputs.  mktemp honors $TMPDIR and creates the directory 0700.
 CASTELLA_TMP=$(mktemp --directory) || exit
 
 # Remove the created files at the end of every run, including failed or
@@ -231,10 +226,6 @@ yes "$LINE" | head --bytes 1M    > "${CASTELLA_TMP}/test-1MiB.txt"  || exit
 set -o pipefail
 
 # Verify command output with known output
-#
-# NOTE: castella computes a chunked tree hash (Castella::DuplexTree) as of
-# 2026-07-05; the castella digests below were regenerated for the tree
-# format.
 #
 # `first_field` reads the untagged digest format, so the assertions below pass
 # --untagged rather than rely on the default format.
@@ -296,8 +287,8 @@ assert_eq_cmd_str \
     3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e22a32d96452965e8add103afae3cdfd11
 
 # Verify known output for input sizes that exercise boundary conditions.
-# (1 MiB is a multiple of every internal block size, so it cannot detect
-# regressions in padding, partial-chunk, or short-read handling.)
+# 1 MiB is a multiple of every internal block size, so it cannot detect
+# regressions in padding, partial-chunk, or short-read handling.
 
 CUSTOM='hash'
 ROUNDS=3
@@ -345,8 +336,8 @@ assert_neq_cmd_cmd \
     './castella --untagged --size=16 ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
     './castella --untagged --size=32 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
-# Verify that the default ROUNDS is 6 when SIZE <= 48.
-# (See SPEC.md "Margin rationale")
+# Verify that the default ROUNDS is 6 when SIZE <= 48.  See SPEC.md "Margin
+# rationale".
 
 assert_eq_cmd_cmd \
     './castella --untagged --size=48            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
@@ -356,8 +347,8 @@ assert_neq_cmd_cmd \
     './castella --untagged --size=48            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
     './castella --untagged --size=48 --rounds=8 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
-# Verify that the default ROUNDS is 8 when SIZE > 48.
-# (See SPEC.md "Margin rationale")
+# Verify that the default ROUNDS is 8 when SIZE > 48.  See SPEC.md "Margin
+# rationale".
 
 assert_eq_cmd_cmd \
     './castella --untagged --size=49            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
@@ -373,10 +364,10 @@ assert_neq_cmd_cmd \
     './castella --untagged --suffix=105 ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
     './castella --untagged --suffix=184 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
-# Verify "--no-mmap" option produces the same output.  The I/O mode is
+# Verify the "--no-mmap" option produces the same output.  The I/O mode is
 # orthogonal to every digest parameter, so one parameter set per program
-# suffices; the partial-trailing-chunk read path is covered by test-100KB.txt
-# below.
+# suffices.  test-100KB.txt below covers the partial-trailing-chunk read
+# path.
 
 assert_eq_cmd_cmd \
     "./castella --untagged --custom='hash'           --rounds=3  --suffix=0   ${CASTELLA_TMP}/test-1MiB.txt | first_field" \
@@ -392,7 +383,7 @@ assert_eq_cmd_cmd \
 
 # Verify "--no-mmap" produces the same output for an input size that is large
 # enough to be memory-mapped and is not a multiple of any internal block size.
-# (Inputs smaller than the read block size never take the mmap path.)
+# Inputs smaller than the read block size never take the mmap path.
 
 assert_eq_cmd_cmd \
     './castella --untagged           ${CASTELLA_TMP}/test-100KB.txt | first_field' \
@@ -403,9 +394,9 @@ assert_eq_cmd_cmd \
     './cch --untagged --no-mmap ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
 # Verify reading from standard input produces the same output as reading from
-# a file.  A pipe exercises the non-seekable path, where read may return
-# counts that are not a multiple of the chunk size; a redirected file
-# exercises the seekable (memory-mappable) standard input path.
+# a file.  A pipe exercises the non-seekable path, where read may return counts
+# that are not a multiple of the chunk size.  A redirected file exercises the
+# seekable standard input path, which can be memory-mapped.
 
 assert_eq_cmd_cmd \
     'cat ${CASTELLA_TMP}/test-100KB.txt | ./castella --untagged - | first_field' \
@@ -424,8 +415,8 @@ assert_eq_cmd_cmd \
     './cch --untagged ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
 # Verify that an absent FILE reads standard input, exactly as an explicit '-'
-# does.  These compare the whole line rather than the digest alone: the name
-# printed for standard input is '-' either way.
+# does.  These compare the whole line rather than the digest alone, because the
+# name printed for standard input is '-' either way.
 
 assert_eq_cmd_cmd \
     './castella --untagged < ${CASTELLA_TMP}/test-100KB.txt' \
@@ -436,7 +427,7 @@ assert_eq_cmd_cmd \
     './cch --untagged - < ${CASTELLA_TMP}/test-100KB.txt'
 
 # Verify that multiple FILE arguments are hashed independently, in argument
-# order: the output must be the concatenation of the single-file runs.  '-'
+# order.  The output must be the concatenation of the single-file runs.  '-'
 # may appear among them, so standard input is read in its argument position.
 
 assert_eq_cmd_cmd \
@@ -451,10 +442,10 @@ assert_eq_cmd_cmd \
     './castella --untagged ${CASTELLA_TMP}/test-100B.txt - < ${CASTELLA_TMP}/test-0B.txt' \
     '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt; ./castella --untagged - < ${CASTELLA_TMP}/test-0B.txt; }'
 
-# An unreadable FILE among several does not stop the run: the remaining files
-# are still hashed, on standard output where the error is not, and the exit
+# An unreadable FILE among several does not stop the run.  The remaining files
+# are still hashed on standard output, where the error is not, and the exit
 # status reports the failure.  assert_eq_cmd_cmd requires success from both of
-# its commands, so the `|| true` carries the output comparison and the exit
+# its commands, so the `|| true` carries the output comparison, and the exit
 # status is asserted on its own.
 
 assert_eq_cmd_exit_status \
@@ -465,18 +456,19 @@ assert_eq_cmd_cmd \
     '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt ${CASTELLA_TMP}/no-such-input ${CASTELLA_TMP}/test-1KiB.txt 2>/dev/null || true; }' \
     '{ ./castella --untagged ${CASTELLA_TMP}/test-100B.txt; ./castella --untagged ${CASTELLA_TMP}/test-1KiB.txt; }'
 
-# Verify that "--num-threads" NEVER affects the digest, in both programs.
-# The digest is defined by the hash tree alone (chunk boundaries fall at
-# fixed byte offsets, and chaining values are absorbed in chunk-index
-# order), never by which thread hashes which chunk, so every thread count
-# must agree in every I/O mode: memory-mapped (the one-shot batch path),
-# --no-mmap (the streaming path), and piped standard input (non-seekable
-# reads).  The 1 MiB file is a whole number of tree chunks for both
-# programs; the 100 KB file ends in a partial trailing chunk.
+# Verify that "--num-threads" never affects the digest, in both programs.  The
+# hash tree alone defines the digest.  Chunk boundaries fall at fixed byte
+# offsets, and chaining values are absorbed in chunk-index order, so which
+# thread hashes which chunk cannot matter.  Every thread count must agree in
+# every I/O mode: memory-mapped (the one-shot batch path), --no-mmap (the
+# streaming path), and piped standard input (non-seekable reads).
+#
+# The 1 MiB file is a whole number of tree chunks for both programs.  The
+# 100 KB file ends in a partial trailing chunk.
 
-# The single-threaded run is the invariance baseline; every other thread
-# setting -- minimal parallelism (2) and one-per-hardware-thread (0) -- must
-# reproduce it in every I/O mode.
+# The single-threaded run is the invariance baseline.  Every other thread
+# setting must reproduce it in every I/O mode, both minimal parallelism (2)
+# and one-per-hardware-thread (0).
 for NT in 2 0
 do
     assert_eq_cmd_cmd \
@@ -532,8 +524,8 @@ assert_neq_cmd_cmd \
     './cch --untagged --chunk-size=32768 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
 # Verify that a non-default "--chunk-size" is also independent of the thread
-# count and the I/O mode.  4096 makes the 100 KB file span 24 full chunks
-# plus a partial one.
+# count and the I/O mode.  At 4096 the 100 KB file spans 24 full chunks and a
+# partial one.
 
 assert_eq_cmd_cmd \
     './castella --untagged --chunk-size=4096 --num-threads=0           ${CASTELLA_TMP}/test-100KB.txt | first_field' \
@@ -586,9 +578,9 @@ assert_eq_cmd_str \
     './cch --untagged --mix-rate=258 --size=32 ${CASTELLA_TMP}/test-64KiB.txt | first_field' \
     a1bb08ddfb736a5e10ad5a75488876556905dbaf6e41b762d16ddb24ceaa8ff1
 
-# Verify the output format selection.  The tagged format is the default;
-# --untagged selects the reversed style.  (These pin the whole line, so
-# they also pin the format of the tag itself.)
+# Verify the output format selection.  The tagged format is the default, and
+# --untagged selects the reversed style.  These pin the whole line, so they
+# also pin the format of the tag itself.
 
 assert_eq_cmd_str \
     './castella ${CASTELLA_TMP}/test-100B.txt' \
@@ -624,7 +616,7 @@ assert_eq_cmd_cmd \
     './cch --tag --untagged ${CASTELLA_TMP}/test-100B.txt' \
     './cch --untagged ${CASTELLA_TMP}/test-100B.txt'
 
-# Verify the "--check" and "--tag" modes: digests produced by each program
+# Verify the "--check" and "--tag" modes.  Digests produced by each program
 # must verify with the same program, in both output formats.
 
 # The default output is a tag line, which carries its own digest-relevant
@@ -674,9 +666,9 @@ assert_eq_cmd_str \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
 # --tag and --untagged select the output format, which --check does not
-# produce, so both are accepted and ignored with --check.  (A script that
-# fixes the output mode once may pass the same flag to the producer and to
-# the verifier.)
+# produce, so both are accepted and ignored with --check.  A script that fixes
+# the output mode once may pass the same flag to the producer and to the
+# verifier.
 
 assert_eq_cmd_str \
     './castella --tag ${CASTELLA_TMP}/test-100KB.txt | ./castella --tag --check -' \
@@ -694,7 +686,7 @@ assert_eq_cmd_str \
     './cch --untagged ${CASTELLA_TMP}/test-100KB.txt | ./cch --untagged --check -' \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
-# The '-c' short form is the same option as '--check'.
+# '-c' is the short form of '--check'.
 
 assert_eq_cmd_str \
     './castella --tag ${CASTELLA_TMP}/test-100KB.txt | ./castella -c -' \
@@ -711,8 +703,8 @@ assert_eq_cmd_str \
 ./cch      --tag "${CASTELLA_TMP}/test-100KB.txt" > "${CASTELLA_TMP}/cch-sums.txt"      || exit
 
 # The same digest line, surrounded by the blank and '#' lines that --check
-# ignores.  Only a strictly empty line is blank -- a whitespace-only line is
-# an improperly formatted line -- so these are written with `echo ''`.
+# ignores.  Only a strictly empty line is blank, and a whitespace-only line is
+# an improperly formatted line, so these are written with `echo ''`.
 
 {
     echo '# a comment, ignored'
@@ -761,8 +753,9 @@ assert_eq_cmd_str \
     './cch --check ${CASTELLA_TMP}/cch-sums-comments.txt 2>&1' \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
-# An ignored line is not a checksum line: a checkfile of nothing but blank and
-# '#' lines fails exactly as one holding no properly formatted line at all.
+# An ignored line is not a checksum line.  A checkfile of nothing but blank
+# and '#' lines fails exactly as one holding no properly formatted line at
+# all.
 
 assert_eq_cmd_str_status \
     './castella --check ${CASTELLA_TMP}/only-comments.txt 2>/dev/null' \
@@ -830,8 +823,9 @@ assert_eq_cmd_str_status \
 printf 'Squishee' > "${CASTELLA_TMP}/test-key1.bin" || exit
 printf 'Duff'     > "${CASTELLA_TMP}/test-key2.bin" || exit
 
-# Known answer (pins the MAC format: bytepad'd encode_string of the key as
-# chunk 0, function name "Castella-MAC", trailing right_encode of the size).
+# Known answer, which pins the MAC format: the bytepadded encode_string of the
+# key as chunk 0, the function name "Castella-MAC", and the trailing
+# right_encode of the size.
 
 assert_eq_cmd_str \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field' \
@@ -860,9 +854,9 @@ assert_neq_cmd_cmd \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=16 ${CASTELLA_TMP}/test-100KB.txt | first_field' \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field | head -c 32'
 
-# A keyed digest verifies only with the same key: --check with the right
-# key succeeds, and with the wrong key or no key it must FAIL (the key is
-# never in the digest line).
+# A keyed digest verifies only with the same key.  --check with the right key
+# succeeds.  With the wrong key or no key it must FAIL, because the key is
+# never in the digest line.
 
 assert_eq_cmd_str \
     './castella --tag --key-file=${CASTELLA_TMP}/test-key1.bin ${CASTELLA_TMP}/test-100KB.txt | ./castella --check --key-file=${CASTELLA_TMP}/test-key1.bin -' \

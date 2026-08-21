@@ -6,12 +6,13 @@
 * \file
 * For k chosen input bits (a "cube"), the XOR-sum of P over all 2^k
 * assignments of those bits is zero in every output bit whose algebraic
-* degree in the cube variables is less than k -- and trivially in every
-* output bit that does not depend on them at all.  This probe counts, per
-* round count and cube size, the output bits whose cube sums vanish for
-* every one of NUM_BASES random base states (a random bit's sums survive
-* all bases with probability 2^-NUM_BASES, so surviving bits indicate
-* structure, not chance).
+* degree in the cube variables is less than k.  It is also trivially zero in
+* every output bit that does not depend on them at all.
+*
+* This probe counts, per round count and cube size, the output bits whose
+* cube sums vanish for every one of NUM_BASES random base states.  A random
+* bit's sums survive all bases with probability 2^-NUM_BASES, so surviving
+* bits indicate structure rather than chance.
 *
 * Two cube placements:
 *
@@ -143,6 +144,7 @@ count_surviving_bits(const int num_rounds, const int k,
     return count_set_bits(surviving);
 }
 
+/// Probe one cube placement across every round count and cube size
 /// \return the number of failed checks
 static int
 probe_placement(const std::string_view name, const bool single_block, const int num_samples)

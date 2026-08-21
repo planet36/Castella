@@ -14,10 +14,10 @@ export NUM_THREADS
 # Should be an odd number for simpler median
 BENCHMARK_REPS=${BENCHMARK_REPS:-5}
 
-# Pin to one CPU per thread: mid-run core migration adds noise that can invert
-# small effects.  CPU affinity is inherited across the benchmarks' ASLR
-# re-exec.  With NUM_THREADS=1 this is "taskset -c 0-0", keeping results
-# comparable with the recorded measurements (all pinned to core 0).
+# Pin to one CPU per thread.  Mid-run core migration adds noise that can
+# invert small effects.  CPU affinity is inherited across the benchmarks' ASLR
+# re-exec.  With NUM_THREADS=1 this is "taskset -c 0-0", which keeps results
+# comparable with the recorded measurements, all pinned to core 0.
 PIN_CMD=()
 if command -v taskset > /dev/null
 then

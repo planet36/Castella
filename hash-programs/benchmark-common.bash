@@ -14,12 +14,12 @@ export LC_ALL=C
 FILE_SIZE=${FILE_SIZE:-500M}
 
 # A private directory per run, so concurrent runs cannot clobber each other's
-# input.  mktemp honours $TMPDIR: on a tmpfs /tmp the input stays RAM-resident,
-# which is what the cache-hot comparisons in README.md measure.
+# input.  mktemp honors $TMPDIR.  On a tmpfs /tmp the input stays RAM-resident,
+# which is what README.md's cache-hot comparisons measure.
 CASTELLA_TMP=$(mktemp --directory) || exit
 
-# Remove the generated input file at the end of every run (the trap is set
-# before the generation so a failed or interrupted run is cleaned up too)
+# Remove the generated input file at the end of every run, including an
+# interrupted one.
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > "${CASTELLA_TMP}/test.txt" || exit
@@ -29,21 +29,20 @@ DATETIME=$(date -u +'%Y%m%dT%H%M%S')
 
 mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
-# Optional low-noise mode for the parameter-sweep scripts: CPU_LIST pins the
-# run via taskset (affinity is inherited by the hash program); NUM_THREADS is
-# passed as --num-threads (default 0 = one thread per hardware thread).  Pair
+# Optional low-noise mode for the parameter-sweep scripts.  CPU_LIST pins the
+# run via taskset, and the hash program inherits the affinity.  NUM_THREADS is
+# passed as --num-threads, where 0 means one thread per hardware thread.  Pair
 # them, e.g.:
 #   CPU_LIST=0 NUM_THREADS=1 bash benchmark.castella.rounds.bash
-# (research/run-benchmarks.bash always pins instead: its microbenchmarks are
-# single-threaded by default, while these sweeps default to all cores, so
-# here pinning must be opt-in.)
+# Pinning is opt-in here because these sweeps default to all cores.
 #
-# CPU_LIST also selects the core for PIN below, which is not opt-in, so setting
-# it moves benchmark.hash-programs.bash's single-threaded rows too.  Core 0 is
-# the default rather than the recommendation: it is the boot CPU, and takes the
-# tick, RCU housekeeping and (under the default IRQ affinity) a disproportionate
-# share of interrupts, which an affinity mask does not move away.  On bare metal
-# prefer a non-zero core, and one whose SMT sibling is idle or also yours.
+# CPU_LIST also selects the core for PIN below, which is not opt-in.  Setting it
+# moves benchmark.hash-programs.bash's single-threaded rows too.
+#
+# Core 0 is the default rather than the recommendation.  It is the boot CPU, and
+# takes the tick, RCU housekeeping, and a disproportionate share of interrupts
+# under the default IRQ affinity.  An affinity mask moves none of that away.  On
+# bare metal prefer a non-zero core whose SMT sibling is idle or also yours.
 NUM_THREADS=${NUM_THREADS:-0}
 PIN_CMD=()
 if [[ -n "${CPU_LIST:-}" ]] && command -v taskset > /dev/null
@@ -51,9 +50,10 @@ then
     PIN_CMD=(taskset -c "$CPU_LIST")
 fi
 
-# For pinning individual single-threaded commands to one core (rather than the
-# whole hyperfine invocation): CPU_LIST, or core 0 if unset.  Unlike PIN_CMD
-# this is spliced into a command string that `hyperfine --shell=none` splits on
-# whitespace, so CPU_LIST must contain none: 4 and 4,5 work, '4, 5' does not.
+# Pins an individual single-threaded command to one core, rather than the whole
+# hyperfine invocation.  The core is CPU_LIST, or core 0 if unset.  Unlike
+# PIN_CMD this is spliced into a command string that `hyperfine --shell=none`
+# splits on whitespace, so CPU_LIST must contain no spaces.  4 and 4,5 work,
+# '4, 5' does not.
 PIN=
 command -v taskset > /dev/null && PIN="taskset -c ${CPU_LIST:-0} "

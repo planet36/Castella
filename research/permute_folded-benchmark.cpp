@@ -8,14 +8,14 @@
 *
 * On x86-64 with VAES, \c Castella::permute dispatches to
 * \c Castella::permute_folded for every supported state size, so the generic
-* path it replaced is unreachable there -- but it is still defined, as
-* \c Castella::permute_generic (the implementation \c permute uses on targets
-* without VAES), so the two can be called side by side:
+* path it replaced is unreachable there.  It is still defined as
+* \c Castella::permute_generic, which is what \c permute uses on targets
+* without VAES, so the two can be called side by side:
 *
-*   - generic<N>: AES on 256-bit pairs of blocks, then the 128-bit
-*     transpose network -- the state round-trips through memory every
-*     round, and each 256-bit AES load spans two 128-bit transpose stores
-*     (defeating store-to-load forwarding)
+*   - generic<N>: AES on 256-bit pairs of blocks, then the 128-bit transpose
+*     network.  The state round-trips through memory every round, and each
+*     256-bit AES load spans two 128-bit transpose stores, which defeats
+*     store-to-load forwarding.
 *   - folded<N>: fold, N/2 ymm-resident rounds, unfold
 *
 * Benchmarks are registered generic/folded adjacent per (N, num_rounds) so

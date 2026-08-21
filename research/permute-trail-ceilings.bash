@@ -14,16 +14,19 @@
 # WHY BOTH, AND IN THIS ORDER.  A --cluster 1 probe accepts z3's first answer,
 # and that is systematically the heaviest its bound allows, so the descent
 # stalls above trails that are inside a shell it has already satisfied.
-# Re-asking the satisfied cap for MANY trails reaches them.  Running the
-# enumeration is not optional polish: it lowered every ceiling from r = 3 up,
-# six for six, and at r = 3 it produced a weight-823 characteristic in a shell
-# whose cap 823 the descent had asked for directly and been refused -- twice,
-# once with the full 14400 s.  An `unknown` is never evidence of absence.
+# Re-asking the satisfied cap for MANY trails reaches them.
 #
-# Neither lever needs a new activity pattern or a new seed; both work inside the
-# differential of a trail already in hand.  Get that trail first from a
-# --patterns/--random-seed sweep (r = 3, 4) or from the imported MILP pattern
-# (r >= 5), then descend, then enumerate.  See ../research/README.md.
+# Running the enumeration is not optional polish.  It lowered every ceiling
+# from r = 3 up, six for six.  At r = 3 it produced a weight-823
+# characteristic in a shell whose cap 823 the descent had asked for directly
+# and been refused twice, once with the full 14400 s.  An `unknown` is never
+# evidence of absence.
+#
+# Neither lever needs a new activity pattern or a new seed, and both work
+# inside the differential of a trail already in hand.  Get that trail first
+# from a --patterns or --random-seed sweep at r = 3 and 4, or from the imported
+# MILP pattern at r >= 5.  Then descend, then enumerate.  See
+# ../research/README.md.
 #
 # RESULTS THIS REPRODUCES, as recorded:
 #     r     sweep   descent   enumeration
@@ -33,14 +36,15 @@
 #     6     1887      1857       1856
 #     7     2473      2448       2447
 #     8     2725      2705       2699
-# The enumerations all ran out of clock with their shells INCOMPLETE, which
-# costs a CEILING nothing -- any trail below the cap is itself the result -- but
-# voids the DP(differential | pattern) sum each one prints.  Three of the six
-# (r = 3, 5, 8) returned their best trail LAST, which looked budget-limited --
-# but re-running all six on 2026-08-08, three of them at TIME_LIMIT=28800, moved
-# NO ceiling.  Do not expect a longer budget to.  At the default 14400 this
-# script reproduces the table above trail for trail, so it regenerates the
-# recorded ceilings rather than searching for new ones.
+# The enumerations all ran out of clock with their shells INCOMPLETE.  That
+# costs a CEILING nothing, since any trail below the cap is itself the result,
+# but it voids the DP(differential | pattern) sum each one prints.
+#
+# Three of the six, at r = 3, 5, and 8, returned their best trail LAST, which
+# looked budget-limited.  Re-running all six on 2026-08-08, three of them at
+# TIME_LIMIT=28800, moved NO ceiling.  Do not expect a longer budget to.  At
+# the default 14400 this script reproduces the table above trail for trail, so
+# it regenerates the recorded ceilings rather than searching for new ones.
 
 set -u
 
@@ -48,27 +52,28 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 SEARCH="$SCRIPT_DIR/permute-trail-search.py"
 PATTERNS="$SCRIPT_DIR/patterns"
 
-# Output directory for the logs.  Defaults to results/, which is gitignored, as
-# with run-benchmarks.bash.  Raw solver logs are not kept in the repository --
-# the tables in README.md are the record.
+# Output directory for the logs.  Defaults to results/, which is gitignored,
+# as with run-benchmarks.bash.  Raw solver logs are not kept in the
+# repository, and the tables in README.md are the record.
 OUT="${OUT:-$SCRIPT_DIR/results}"
 
-# Per-solver-call and per-enumeration budgets, in seconds.  These are the values
-# the recorded runs used; the enumerations wanted every second of theirs.
+# Per-solver-call and per-enumeration budgets, in seconds.  These are the
+# values the recorded runs used, and the enumerations wanted every second of
+# theirs.
 TIME_LIMIT="${TIME_LIMIT:-14400}"
 
 # -M is PER PROCESS and these probes grow to ~2 GB over a few hours, so a
-# parallel batch needs N * MEM within RAM -- eight at 2500 left 1.8 GiB of 15
-# GiB free.  r = 5 overrides this below; at 2500 it ends `unknown: max. memory
+# parallel batch needs N * MEM within RAM.  Eight at 2500 left 1.8 GiB of 15
+# GiB free.  r = 5 overrides this below.  At 2500 it ends `unknown: max. memory
 # exceeded` after ONE trail, memory-bound rather than time-bound.
 MEM="${MEM:-2500}"
 
 # How many solvers may run at once.  Four at -M 2500 is the most a 16 GiB box
-# takes: six is 15 GB of worst-case allocation against 15 GiB with no swap.
-# RSS grows with ELAPSED TIME rather than with r -- one check() accumulates
-# learned clauses for its whole budget -- so a batch that looks safe at 20
-# minutes need not be at four hours.  The launch loop below waits rather than
-# exceed this, so passing all six round counts at once is safe.
+# takes, because six is 15 GB of worst-case allocation against 15 GiB with no
+# swap.  RSS grows with ELAPSED TIME rather than with r, since one check()
+# accumulates learned clauses for its whole budget, so a batch that looks safe
+# at 20 minutes need not be at four hours.  The launch loop below waits rather
+# than exceed this, so passing all six round counts at once is safe.
 MAX_JOBS="${MAX_JOBS:-4}"
 
 mode=enumerate
@@ -84,11 +89,11 @@ done
 shift $((OPTIND - 1))
 (($# > 0)) || { echo "usage: ${0##*/} [-d|-e] [-n] R [R...]" >&2; exit 2; }
 
-# The recipe table: for each round count, the pattern source, the z3 seed that
-# found its best trail, and the shell offset K relative to that trail's weight.
-# K is NEGATIVE -- the shell is `weight <= best + K`.  These three numbers are
-# the non-obvious input to every recorded ceiling and are not derivable from
-# anything else in the repository.
+# The recipe table.  For each round count it gives the pattern source, the z3
+# seed that found its best trail, and the shell offset K relative to that
+# trail's weight.  K is NEGATIVE, since the shell is `weight <= best + K`.
+# These three numbers are the non-obvious input to every recorded ceiling, and
+# they are not derivable from anything else in the repository.
 #
 #   r  source                              seed   K     cap = best + K
 #   3  -A 129 --patterns 13                  11  -17     841 - 17 = 824
@@ -114,12 +119,12 @@ recipe() {
     esac
 }
 
-# --weight-encoding totalizer is required, not a tuning choice: under the pb
-# default the shell returns nothing at all, failing to find even trails that
-# provably satisfy its constraints.  --encoding rows is the default but is
-# spelled out here because it is what makes the instance tractable at this
-# width, and --no-minimize because minimization has never once helped -- 31
-# attempts at 600 s each produced 0 improvements.
+# --weight-encoding totalizer is required rather than a tuning choice.  Under
+# the pb default the shell returns nothing at all, failing to find even trails
+# that provably satisfy its constraints.  --encoding rows is the default, but
+# it is spelled out here because it is what makes the instance tractable at
+# this width.  --no-minimize is spelled out because minimization has never once
+# helped, with 31 attempts at 600 s each producing 0 improvements.
 COMMON=(--no-minimize --encoding rows --weight-encoding totalizer
         -t "$TIME_LIMIT" --cluster-time-limit "$TIME_LIMIT")
 
@@ -139,7 +144,7 @@ for R in "$@"; do
     fi
     selected=$((selected + 1))
     log="$OUT/${mode}_r$R.log"
-    # -u because the log is the only view into a run that lasts hours: the
+    # -u because the log is the only view into a run that lasts hours.  The
     # rate-limited --cluster progress line exists so that a stall and steady
     # progress look different from outside, and block buffering hides it.
     cmd=(nice -n 19 python3 -u "$SEARCH" "${SEL[@]}" "${MODE_ARGS[@]}"

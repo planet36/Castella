@@ -6,11 +6,11 @@
 * \file
 * \author Steven Ward
 *
-* The program-specific parts of a check mode -- recognizing its own line
-* formats and recomputing a digest -- live in each program.  This header
-* holds the format-neutral parts: hex parsing, constant-time digest
-* comparison, the consume-style line parsing primitives, and the
-* checkfile-driving loop with its md5sum-style accounting and exit status.
+* The program-specific parts of a check mode live in each program.  Those are
+* recognizing its own line formats and recomputing a digest.  This header holds
+* the format-neutral parts: hex parsing, constant-time digest comparison, the
+* consume-style line parsing primitives, and the checkfile-driving loop with
+* its md5sum-style accounting and exit status.
 */
 
 #pragma once
@@ -69,9 +69,9 @@ hex_to_bytes(const std::string_view s)
 
 /// Compare two byte spans without an early exit on the first difference (for equal lengths)
 /**
-* Every byte is examined whatever the contents, so a verifier is not meant to
-* be usable as a timing oracle for an expected digest (relevant when the
-* digest is a MAC).
+* Every byte is examined whatever the contents, so a verifier is not usable as
+* a timing oracle for an expected digest.  That matters when the digest is a
+* MAC.
 *
 * C++ cannot express a timing guarantee.  \a diff is \c volatile so the
 * compiler must perform every accumulation, in order, rather than stop at the
@@ -130,9 +130,9 @@ consume_int(std::string_view& s, const int min, const int max, int& value) noexc
 
 /// Consume a shell-quoted string (the \c quote_shell_always encoding) from the front of \a s
 /**
-* The inverse of \c quote_shell_always: a single-quoted string in which
-* every embedded single quote is encoded as <code>'\''</code> (close,
-* escaped quote, reopen).
+* The inverse of \c quote_shell_always.  The input is a single-quoted string
+* in which every embedded single quote is encoded as <code>'\''</code>
+* (close, escaped quote, reopen).
 *
 * \param s the input; on success, the quoted string is removed from its front
 * \param out the decoded string is appended to it
@@ -181,9 +181,9 @@ struct check_totals final
 
     /// Whether every listed file was read and matched
     /**
-    * Improperly formatted lines alone do not fail the run (they only
-    * warn), matching the md5sum convention -- unless NO valid line was
-    * found at all, which the checkfile loop reports separately.
+    * Improperly formatted lines only warn, and alone they do not fail the
+    * run, matching the md5sum convention.  The exception is a checkfile with
+    * no valid line at all, which the checkfile loop reports separately.
     */
     [[nodiscard]] bool all_ok() const noexcept
     {
@@ -199,12 +199,12 @@ struct check_totals final
 * the per-file OK/FAILED result, and updates the totals.  After all
 * checkfiles, the md5sum-style summary warnings are printed to stderr.
 *
-* \param checkfile_paths the files containing the lines to verify; "-"
+* \param checkfile_paths the files containing the lines to verify, where "-"
 *        means standard input
 * \param verify_line callable as <code>verify_line(std::string_view line,
 *        check_totals& totals)</code>
-* \return the program exit status: \c EXIT_SUCCESS only if every checkfile
-*         was readable, every listed file matched, and at least one
+* \return the program exit status, which is \c EXIT_SUCCESS only if every
+*         checkfile was readable, every listed file matched, and at least one
 *         properly formatted line was found in each checkfile
 */
 template <typename VerifyLine>

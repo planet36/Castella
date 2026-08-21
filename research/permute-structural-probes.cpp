@@ -6,26 +6,26 @@
 * \file
 * Three probes supporting the security claim's evidence section (SPEC.md):
 *
-* 1. Structured-subspace escape: states from three symmetry classes the
-*    transpose maps to each other (all blocks equal, constant-byte blocks,
-*    symmetric byte matrix) must leave the classes after one round and show
-*    no residual structure or weakened diffusion afterward.
-* 2. Fixed-point screen: no structured candidate state (all-same-byte
-*    states) is a fixed point of P, or maps to its own transpose.
-*    (A generic fixed-point search over a 2048-bit state is infeasible;
-*    this is only a screen of the candidates symmetry would suggest.)
-* 3. Round-constant properties asserted in SPEC.md: the first constant is
-*    the seed string, all 768 are distinct and nonzero, and no constant is
-*    a bitwise shift of its predecessor in generation order.  Plus a
-*    slide-resistance screen: no whole-round shift relates two rounds'
-*    constants by a fixed XOR difference (an affine self-similar schedule,
-*    which is what a slide -- with or without a twist -- would need).
-*    Distinctness alone only rules out the zero difference.
+* 1. Structured-subspace escape.  States from three symmetry classes that the
+*    transpose maps to each other must leave the classes after one round, and
+*    show no residual structure or weakened diffusion afterward.  The classes
+*    are all blocks equal, constant-byte blocks, and a symmetric byte matrix.
+* 2. Fixed-point screen.  No structured candidate state, meaning an
+*    all-same-byte state, is a fixed point of P or maps to its own transpose.
+*    A generic fixed-point search over a 2048-bit state is infeasible, so
+*    this is only a screen of the candidates symmetry would suggest.
+* 3. Round-constant properties asserted in SPEC.md.  The first constant is
+*    the seed string, all 768 are distinct and nonzero, and no constant is a
+*    bitwise shift of its predecessor in generation order.  A
+*    slide-resistance screen follows: no whole-round shift relates two
+*    rounds' constants by a fixed XOR difference.  Such an affine
+*    self-similar schedule is what a slide would need, with or without a
+*    twist, and distinctness alone only rules out the zero difference.
 *
-* Probes 2 and 3 are pass/fail (nonzero exit on any violation).  Probe 1's
-* tables are informational: compare the residual-structure means against
-* the printed random-model expectations (deviations at 1 round are
-* expected; they must vanish as rounds increase).
+* Probes 2 and 3 are pass/fail, with a nonzero exit on any violation.  Probe
+* 1's tables are informational.  Compare the residual-structure means against
+* the printed random-model expectations.  Deviations at 1 round are expected,
+* and they must vanish as rounds increase.
 */
 
 #if !defined(DEBUG)
@@ -125,7 +125,7 @@ is_constant_byte_blocks(const bytes_t& b)
     return true;
 }
 
-/// symmetric byte matrix (dimension 136 bytes)
+/// Whether the byte matrix is symmetric (dimension 136 bytes)
 static bool
 is_symmetric(const bytes_t& b)
 {
@@ -144,7 +144,7 @@ in_any_subspace(const bytes_t& b)
 
 // ---- residual-structure statistics (random-model expectations in the table headers)
 
-/// pairs i<j with M[i][j] == M[j][i]; E = 120/256 for a random state
+/// Count the pairs i<j with M[i][j] == M[j][i] (expectation 120/256 for a random state)
 static int
 count_symmetric_pairs(const bytes_t& b)
 {
@@ -155,7 +155,7 @@ count_symmetric_pairs(const bytes_t& b)
     return result;
 }
 
-/// (block pair, position) triples with equal bytes; E = 120*16/256 = 7.5 for a random state
+/// Count the (block pair, position) triples with equal bytes (expectation 120*16/256 = 7.5)
 static int
 count_cross_block_equal_bytes(const bytes_t& b)
 {
@@ -167,7 +167,7 @@ count_cross_block_equal_bytes(const bytes_t& b)
     return result;
 }
 
-/// (block, position pair) triples with equal bytes; E = 16*120/256 = 7.5 for a random state
+/// Count the (block, position pair) triples with equal bytes (expectation 16*120/256 = 7.5)
 static int
 count_within_block_equal_bytes(const bytes_t& b)
 {
@@ -252,7 +252,7 @@ flip_symmetric(bytes_t& b)
     const auto j = static_cast<int>(arc4random_uniform(B));
     const uint8_t bit = 1U << arc4random_uniform(8);
     mat(b, i, j) ^= bit;
-    if (i != j) // i == j flips one byte; a second XOR would cancel it
+    if (i != j) // i == j flips one byte, and a second XOR would cancel it
         mat(b, j, i) ^= bit;
 }
 
@@ -429,13 +429,14 @@ probe_round_constants()
     }
 
     {
-        // Slide-resistance screen.  A slide (with a twist) needs the round
-        // function to repeat up to a fixed XOR offset: some whole-round shift
-        // s and difference d with rc[round r+s] = rc[round r] XOR d at every
-        // within-round position.  Distinctness only rules out d=0; this rules
-        // out any fixed d, so no two rounds are affinely related.  The slide
-        // unit is a whole Castella round (48 = AES_NUM_ROUNDS x 16 blocks of
-        // constants), so only whole-round shifts are relevant.
+        // Slide-resistance screen.  A slide with a twist needs the round
+        // function to repeat up to a fixed XOR offset, meaning some
+        // whole-round shift s and difference d with
+        // rc[round r+s] = rc[round r] XOR d at every within-round position.
+        // Distinctness only rules out d=0, and this rules out any fixed d, so
+        // no two rounds are affinely related.  The slide unit is a whole
+        // Castella round, 48 = AES_NUM_ROUNDS x 16 blocks of constants, so
+        // only whole-round shifts are relevant.
         constexpr int per_round = Castella::AES_NUM_ROUNDS * Castella::B_MAX;
         const auto num_rounds = static_cast<int>(std::ssize(flat)) / per_round;
         int num_affine_shifts = 0;
@@ -515,7 +516,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     int num_failures = 0;
 
-    std::println("## Probe 1: structured-subspace escape (informational tables; re-entries are failures)");
+    std::println("## Probe 1: structured-subspace escape (informational tables, but re-entries are failures)");
     std::println("");
     num_failures += probe_subspace_escape(num_samples);
 

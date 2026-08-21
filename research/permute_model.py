@@ -8,12 +8,13 @@ simd_transpose map, factored out of permute-trail-search.py so that every
 program modeling `P` uses one implementation, validated in one place by
 self_test().
 
-Pure standard library: importing this must not require z3, so
-trail-model-crossvalidate.py can gate it from `make test` unconditionally.
+Pure standard library, so importing this must not require z3.  That lets
+trail-model-crossvalidate.py gate it from `make test` unconditionally.
 
 spec-conformance.py must NEVER import this module.  It is the independent
 from-the-spec implementation that trail-model-crossvalidate.py checks this
-model against; sharing code between them would make that comparison circular.
+model against, and sharing code between them would make that comparison
+circular.
 """
 
 from collections.abc import Sequence
@@ -147,9 +148,9 @@ AESENC_VECTORS = [
 def self_test() -> None:
     """Sanity-check the S-box, DDT, and AES round model against known values.
 
-    Raises SelfTestError on any mismatch.  Deliberately not `assert`: this
-    runs on every invocation, not only under --self-test, and an
-    assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch.  It deliberately does not use
+    `assert`.  This runs on every invocation, not only under --self-test, and
+    an assert-based version would pass vacuously under `python3 -O`.
     """
     for din, want in ((0x00, 0x63), (0x53, 0xED), (0xFF, 0x16)):
         if SBOX[din] != want:
@@ -181,7 +182,7 @@ def hex_state(state_bytes: StateBytes) -> str:
                     for block in state_bytes)
 
 
-# Run on import, like the DDT4_OUT check above: every program that models `P`
+# Run on import, like the DDT4_OUT check above.  Every program that models `P`
 # then gets the same validated layers, so no importer has to remember to check
 # what it borrows.  1.7 ms against a 29 ms import.
 self_test()

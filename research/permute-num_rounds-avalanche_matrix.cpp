@@ -33,8 +33,8 @@ const std::string images_output_directory = "results";
 
 /// Save the avalanche matrix as a grayscale PGM image
 /**
-* Each pixel encodes \c |z| for one matrix cell: black (0) is \c z≈0 (ideal),
-* brightening toward white as \c |z| grows, clamped at \a z_clamp.
+* Each pixel encodes \c |z| for one matrix cell.  Black (0) is the ideal
+* \c z≈0, brightening toward white as \c |z| grows, clamped at \a z_clamp.
 * \note This is a diagnostic aid, not essential output: on any I/O error, a
 * warning is printed to stderr and the function returns without throwing.
 */
@@ -259,7 +259,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // A cell count runs 0..n, so |z| cannot exceed sqrt(n).  Under ideal
     // diffusion the largest of the 2048^2 cells sits near 5.5, so a smaller n
-    // makes max|z| report that ceiling instead of the data -- at n=20 every
+    // makes max|z| report that ceiling instead of the data.  At n=20 every
     // round gives exactly sqrt(20).  100 leaves about 2x headroom.
     int num_samples = 100;
     bool save_images = false;

@@ -11,13 +11,13 @@
 *
 *   - permute-pair-sequential: two calls to \c Castella::permute
 *   - permute_x2: one call to \c Castella::permute_x2 on the lane-paired
-*     representation (packing is done once, outside the timed loop, as leaf
-*     batching would: a paired leaf stays packed for its whole chunk)
+*     representation.  Packing is done once, outside the timed loop, as leaf
+*     batching would, since a paired leaf stays packed for its whole chunk.
 *
-* The AES rounds already use VAES in both variants (adjacent blocks of one
-* state pair into ymm registers in \c aes_enc_arr), so any speedup here
-* comes from the transpose: one lane-local AVX2 unpack network serves both
-* states, halving shuffle work per state.
+* The AES rounds already use VAES in both variants, because adjacent blocks
+* of one state pair into ymm registers in \c aes_enc_arr.  Any speedup here
+* comes from the transpose, where one lane-local AVX2 unpack network serves
+* both states, halving the shuffle work per state.
 */
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)

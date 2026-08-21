@@ -14,11 +14,12 @@
 * and that the forward permutation moved the state at all.
 *
 * This is what keeps permute_inv generic while permute is not.  Under VAES,
-* permute dispatches to permute_folded; the inverse has no folded form and is
-* always permute_generic, so a successful round trip says the folded forward
-* path agrees with the one the unchanged inverse was written against.
-* tests/permute-equivalence.cpp compares the two forward paths directly; this
-* program is the check that does not depend on either of them being right.
+* permute dispatches to permute_folded.  The inverse has no folded form and
+* is always permute_generic, so a successful round trip says the folded
+* forward path agrees with the one the unchanged inverse was written against.
+* tests/permute-equivalence.cpp compares the two forward paths directly, and
+* this program is the check that does not depend on either of them being
+* right.
 */
 
 #if !defined(DEBUG)

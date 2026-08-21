@@ -30,29 +30,32 @@ layers.
 Direction and interpretation
 ----------------------------
 This is an UPPER bound on the degree.  Its cryptanalytic use is the
-attacker's: a permutation whose degree over r rounds is provably < n-1 has a
-(higher-order / integral / zero-sum) distinguisher over those r rounds
-(summing over a cube of dimension one above the degree yields zero).  A
+attacker's.  A permutation whose degree over r rounds is provably < n-1 has a
+higher-order, integral, or zero-sum distinguisher over those r rounds, because
+summing over a cube of dimension one above the degree yields zero.  A
 Boura-Canteaut zero-sum built from the middle covers r_fwd + r_bwd rounds
 whenever the forward degree over r_fwd rounds and the inverse degree over
-r_bwd rounds are both <= n-2.  So the round at which this bound reaches n-1
-is where the degree-based distinguisher construction stops -- an upper bound
-on that construction's reach, not a proof that no distinguisher exists beyond
-it (that needs a degree lower bound / division property, out of scope).
+r_bwd rounds are both <= n-2.
 
-For the flat sponge claim this is characterization, not a claim requirement:
-like Keccak-f -- whose full-round permutation has zero-sums precisely because
-its chi layer has degree 2 -- Castella concedes that P is not a random
-permutation.  The point of interest is how SHORT the reach is: the AES S-box
-degree (7) is far higher than chi's (2), so the reach is a few rounds rather
-than near-full.
+So the round at which this bound reaches n-1 is where the degree-based
+distinguisher construction stops.  That is an upper bound on the
+construction's reach, not a proof that no distinguisher exists beyond it.
+Proving that needs a degree lower bound or a division property, which is out
+of scope here.
+
+For the flat sponge claim this is characterization rather than a claim
+requirement.  Castella concedes that P is not a random permutation, as
+Keccak-f does, whose full-round permutation has zero-sums precisely because
+its chi layer has degree 2.  The point of interest is how SHORT the reach is.
+The AES S-box degree of 7 is far higher than chi's 2, so the reach is a few
+rounds rather than near-full.
 
 Validation
 ----------
-Run on AES itself (n=128, same S-box) the bound must reproduce the known
-integral-distinguisher reach: degree < 127 through 3 rounds (the Square
-distinguisher), reaching full degree at round 4.  --self-test checks this and
-the S-box delta_i values.
+Run on AES itself, at n=128 with the same S-box, the bound must reproduce the
+known integral-distinguisher reach.  That is degree < 127 through 3 rounds,
+the Square distinguisher, reaching full degree at round 4.  --self-test checks
+this and the S-box delta_i values.
 
 Usage
 -----
@@ -171,9 +174,9 @@ def run_self_test() -> list[int]:
 
     Returns the forward delta_i, so the caller need not recompute them.
 
-    Raises SelfTestError on any mismatch.  Deliberately not `assert`: this
-    runs on every invocation, not only under --self-test, and an
-    assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch.  It deliberately does not use
+    `assert`.  This runs on every invocation, not only under --self-test, and
+    an assert-based version would pass vacuously under `python3 -O`.
     """
     d_fwd = sbox_deltas(SBOX)
     d_inv = sbox_deltas(INV_SBOX)
@@ -199,8 +202,9 @@ def run_self_test() -> list[int]:
           f"inverse S-box gamma must match the forward gamma, got "
           f"{gamma_of(d_inv)} against {gamma_of(d_fwd)}")
 
-    # AES-128 validation: the classic integral (Square) distinguisher covers
-    # 3 rounds; degree must be < 127 through round 3 and reach 127 at round 4.
+    # AES-128 validation.  The classic integral (Square) distinguisher covers
+    # 3 rounds, so the degree must be < 127 through round 3 and reach 127 at
+    # round 4.
     aes = degree_after_layers(128, 7.0, d_fwd[1], 6)
     check(aes[2] < 127,
           f"AES round-3 degree bound must be < 127 (distinguisher), "
@@ -265,8 +269,9 @@ def main() -> None:
           f"= {total_reach_layers / AES_NUM_ROUNDS:.2f} Castella rounds.")
     print(f"Default permutation: 6 Castella rounds = {AES_NUM_ROUNDS * 6} AES "
           f"rounds.  Higher-capacity instances run 8.")
-    print("This bounds the degree-based distinguisher construction only; it is "
-          "an upper bound on degree, not a proof of security beyond the reach.")
+    print("This bounds the degree-based distinguisher construction only.  It "
+          "is an upper bound on degree, not a proof of security beyond the "
+          "reach.")
 
 
 if __name__ == "__main__":

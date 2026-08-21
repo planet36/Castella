@@ -15,42 +15,44 @@ Each state byte carries one binary "activity" variable per layer (1 = the byte
 difference is nonzero).  One Castella round is modeled as:
 
   1. AES_NUM_ROUNDS AES rounds per block.  Per AES round:
-     - SubBytes: a byte permutation of values, identity on activity patterns.
-       Every active byte entering an S-box layer counts as one active S-box.
-     - ShiftRows: a byte permutation; activity variables are re-indexed.
-       (aesenc applies ShiftRows before SubBytes; the order is irrelevant for
-       activity counting.)  Byte layout of a block is AES column-major:
-       byte index = 4*col + row; row r is rotated left by r.
-     - MixColumns: MDS with (differential) branch number 5.  Per column, with
-       indicator d = "column is active":
+     - SubBytes is a byte permutation of values, and the identity on activity
+       patterns.  Every active byte entering an S-box layer counts as one
+       active S-box.
+     - ShiftRows is a byte permutation, so activity variables are re-indexed.
+       aesenc applies ShiftRows before SubBytes, and the order is irrelevant
+       for activity counting.  The byte layout of a block is AES
+       column-major, with byte index = 4*col + row, and row r rotated left
+       by r.
+     - MixColumns is MDS with differential branch number 5.  Per column, with
+       the indicator d = "column is active":
          v <= d              for each of the 8 in/out bytes v
          sum(in) + sum(out) >= 5*d
          sum(in) >= d, sum(out) >= d   (MixColumns is invertible)
-     - AddRoundKey: XOR with a round constant; constants cancel in XOR
+     - AddRoundKey is an XOR with a round constant.  Constants cancel in XOR
        differences, so the model is independent of the round constants.
-  2. Transpose: the state is an NxN matrix of (16/N)-byte words; byte k of
-     word j of block i moves to byte k of word i of block j.  A permutation
-     of the state bytes; activity variables are re-indexed.
+  2. Transpose.  The state is an NxN matrix of (16/N)-byte words, and byte k
+     of word j of block i moves to byte k of word i of block j.  It is a
+     permutation of the state bytes, so activity variables are re-indexed.
 
 The objective minimizes the total S-box layer activity over all rounds,
 subject to the input difference being nonzero.
 
 Interpretation
 --------------
-The truncated model is a relaxation: every real differential characteristic
+The truncated model is a relaxation.  Every real differential characteristic
 maps to a feasible activity pattern, so the optimum A is a LOWER bound on the
 number of active S-boxes of any characteristic, and
 
   DP(characteristic) <= 2^(-6*A)
 
 using the AES S-box maximum differential probability 4/256 = 2^-6.  The same
-bound applies to linear trails (the linear branch number of MixColumns is
+bound applies to linear trails.  The linear branch number of MixColumns is
 also 5, and the S-box maximum absolute correlation is 2^-3, giving
-correlation <= 2^(-3*A)).
+correlation <= 2^(-3*A).
 
 This bounds single characteristics only.  It says nothing about differential
-clustering, rebound/start-in-the-middle attacks, or other structural
-distinguishers, so it is a necessary -- not sufficient -- condition for
+clustering, rebound or start-in-the-middle attacks, or other structural
+distinguishers, so it is a necessary rather than sufficient condition for
 security.
 
 Validation
@@ -71,9 +73,9 @@ only route to a trail at N=16 above r=4, where the trail search's own pattern
 stage has never returned one while this model solves the cell in minutes.
 
 Requires the PuLP package (pip install pulp), which bundles the CBC solver,
-and highspy for --solver highs.  Install both: --solver defaults to cbc when
+and highspy for --solver highs.  Install both.  --solver defaults to cbc when
 highspy is absent, and CBC has never proved N=16 above r=3 at any time limit
-tried, where HiGHS closes r=4, 5 and 6 (RE-DERIVATION-RUNBOOK.md).
+tried, where HiGHS closes r=4, 5, and 6 (RE-DERIVATION-RUNBOOK.md).
 """
 
 import argparse
@@ -84,8 +86,9 @@ import re
 import sys
 import tempfile
 
-# Optional third-party MILP solver (see module docstring); may be absent when
-# linting, so silence the import-error rather than making it a hard dependency.
+# Optional third-party MILP solver (see the module docstring).  It may be
+# absent when linting, so the import-error is silenced rather than made a hard
+# dependency.
 import pulp  # pylint: disable=import-error
 
 from permute_model import BLOCK_BYTES, shift_rows_src, transpose_map
@@ -112,10 +115,10 @@ def build_model(num_blocks: int, num_rounds: int, aes_num_rounds: int
     """Build the MILP whose optimum is the minimum active S-box count.
 
     Also returns the state entering each S-box layer, indexed
-    [t*aes_num_rounds + a][block][byte] -- the same layout, built by the same
-    recurrence, that permute-trail-search.py's build_pattern_solver returns as
-    its Layers.  That is what makes a solved pattern transplantable into its
-    stage B (see --dump-pattern).
+    [t*aes_num_rounds + a][block][byte].  That is the same layout, built by
+    the same recurrence, that permute-trail-search.py's build_pattern_solver
+    returns as its Layers, and it is what makes a solved pattern
+    transplantable into its stage B (see --dump-pattern).
     """
     prob = pulp.LpProblem(
         f"castella_min_active_sboxes_N{num_blocks}_r{num_rounds}",
@@ -144,10 +147,10 @@ def build_model(num_blocks: int, num_rounds: int, aes_num_rounds: int
             # layer's arrangement.
             layer_states.append(state)
 
-            # Nothing after the last S-box layer can affect the objective:
-            # the bytes it produces appear in no other constraint, so the
-            # MixColumns below is satisfiable whatever enters it.  (The
-            # transpose that follows creates no variables either way.)
+            # Nothing after the last S-box layer can affect the objective.
+            # The bytes it produces appear in no other constraint, so the
+            # MixColumns below is satisfiable whatever enters it, and the
+            # transpose that follows creates no variables either way.
             if t == num_rounds - 1 and a == aes_num_rounds - 1:
                 break
 
@@ -166,7 +169,8 @@ def build_model(num_blocks: int, num_rounds: int, aes_num_rounds: int
                     prob += pulp.lpSum(col_out) >= d
             state = nxt
 
-        # Transpose: re-index the activity variables (no new variables).
+        # Transpose, which re-indexes the activity variables without adding
+        # any.
         nxt = [[None] * BLOCK_BYTES for _ in range(num_blocks)]
         for (i, b), (j, b2) in tmap.items():
             nxt[j][b2] = state[i][b]
@@ -288,8 +292,9 @@ AES_VALIDATION_BOUNDS = ((1, 1), (2, 5), (3, 9), (4, 25))
 def self_test(args: argparse.Namespace) -> None:
     """Check the model against the published AES bounds.
 
-    Raises SelfTestError on any mismatch.  Deliberately not `assert`: an
-    assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch.  It deliberately does not use
+    `assert`, because an assert-based version would pass vacuously under
+    `python3 -O`.
     """
     for aes_rounds, want in AES_VALIDATION_BOUNDS:
         cell = argparse.Namespace(**vars(args))
@@ -391,13 +396,13 @@ def main() -> None:
                          args, r, prob, layer_states)
 
 
-# The objective is a sum of binary variables, so the optimum is an integer:
-# once the dual bound exceeds incumbent - 1 the incumbent is provably optimal,
+# The objective is a sum of binary variables, so the optimum is an integer.
+# Once the dual bound exceeds incumbent - 1 the incumbent is provably optimal,
 # and grinding the gap to 0 proves nothing further.  gapAbs = 0.99 lets a
-# solver stop there.  It is what made N=16 r=3 tractable under CBC (proven in
-# 72 min, having failed to close in 90 without it); HiGHS derives the same
-# thing itself ("Objective function is integral") and has closed r <= 6 with a
-# 0% gap, so there the tolerance has never been the binding stopping rule.
+# solver stop there.  It is what made N=16 r=3 tractable under CBC, proven in
+# 72 min after failing to close in 90 without it.  HiGHS derives the same thing
+# itself ("Objective function is integral") and has closed r <= 6 with a 0%
+# gap, so there the tolerance has never been the binding stopping rule.
 GAP_ABS = 0.99
 
 
@@ -410,11 +415,11 @@ def solve_round(prob: pulp.LpProblem, args: argparse.Namespace,
         return highs_dual_bound(prob)
 
     with tempfile.TemporaryDirectory() as tmp:
-        # CBC writes its dual bound to the log and nowhere else: PuLP's
-        # command-line backend does not surface it (only the Windows COINMP
-        # path sets LpProblem.bestBound), so capture and parse it.  logPath
-        # *replaces* msg, so -v cannot also stream to stdout -- instead keep
-        # the log where the user can watch it live.
+        # CBC writes its dual bound to the log and nowhere else.  PuLP's
+        # command-line backend does not surface it, since only the Windows
+        # COINMP path sets LpProblem.bestBound, so capture and parse it.
+        # logPath *replaces* msg, so -v cannot also stream to stdout, and
+        # instead the log is kept where the user can watch it live.
         if args.verbose:
             log_path = f"cbc-N{args.num_blocks}-a{args.aes_rounds}-r{r}.log"
             print(f"# CBC log: {log_path}  (watch with: tail -f {log_path})")
@@ -428,8 +433,8 @@ def solve_round(prob: pulp.LpProblem, args: argparse.Namespace,
 
 def report_round(prob: pulp.LpProblem, r: int, dual: float | None) -> None:
     """Print one result row, distinguishing a proof from an incumbent."""
-    # Only sol_status proves optimality: when a solver stops on the time limit
-    # with an integer incumbent, PuLP rewrites prob.status to Optimal and
+    # Only sol_status proves optimality.  When a solver stops on the time
+    # limit with an integer incumbent, PuLP rewrites prob.status to Optimal and
     # records the distinction in sol_status alone.
     if prob.sol_status == pulp.LpSolutionOptimal:
         a_min = round(prob.objective.value())

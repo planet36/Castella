@@ -8,23 +8,20 @@
 * \author Steven Ward
 *
 * A file memory-mapped for hashing can be truncated by another process after
-* its size was sampled (a TOCTOU that no advisory lock prevents); touching a
+* its size was sampled, a TOCTOU that no advisory lock prevents.  Touching a
 * page past the new end of file then raises SIGBUS.  Without a handler the
 * process dies with "Bus error (core dumped)" instead of the graceful error
 * every other I/O failure gets.
 *
-* siglongjmp-based recovery is unusable here: the tree hashes take a batch
-* path that hashes the mapping on worker threads, so the fault is delivered to
-* the faulting worker and cannot longjmp to a sigjmp_buf established on another
-* thread.  A truncated file has no meaningful digest anyway, so the handler
-* reports the path and \c _exit()s async-signal-safely rather than resuming.
-* Only one mapping is active at a time (files are hashed sequentially), so a
-* single published region suffices; an unrelated SIGBUS is re-raised with the
-* default disposition so normal crash semantics are preserved.
+* A truncated file has no meaningful digest, so the handler reports the path
+* and \c _exit()s async-signal-safely rather than resuming.  Only one mapping
+* is active at a time, because files are hashed sequentially, so a single
+* published region suffices.  An unrelated SIGBUS is re-raised with the default
+* disposition, which preserves normal crash semantics.
 *
-* Usage: while a mapping is being hashed, keep a \c scoped_region alive over
-* the \c add() call; it installs the handler (once), publishes the region, and
-* unpublishes it on scope exit (including exceptions).
+* While a mapping is being hashed, keep a \c scoped_region alive over the
+* \c add() call.  It installs the handler once, publishes the region, and
+* unpublishes it on scope exit, including on an exception.
 */
 // }}}
 
@@ -51,7 +48,7 @@ inline std::string message;
 /// So only the first of several simultaneously-faulting workers prints
 inline std::atomic_flag reported;
 
-/// SIGBUS handler: clean exit on a fault in the published region, else re-raise
+/// SIGBUS handler that exits cleanly on a fault in the published region
 extern "C" inline void
 handler(int sig, siginfo_t* info, void* /*ucontext*/)
 {

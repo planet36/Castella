@@ -14,10 +14,9 @@
 *   - squeeze(C=…,num_rounds=…): repeated \c squeeze_to of a rate-size
 *     buffer (the PRNG usage; every call pads and permutes)
 *
-* The absorb rates previously quoted in the READMEs were derived from
-* permutation times (rate bytes ÷ time per permutation); this benchmark
-* measures them.  A duplex is inherently sequential, so both loops are
-* latency-chained by construction.
+* This benchmark measures the absorb rates directly, rather than deriving
+* them from permutation times.  A duplex is inherently sequential, so both
+* loops are latency-chained by construction.
 */
 
 #include "castella-duplex.hpp"

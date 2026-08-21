@@ -169,8 +169,8 @@ operator+(const running_stats<T>& a, const running_stats<T>& b)
         4 * delta * (a.n * b.M3 - b.n * a.M3) / combined.n;
 
     // The remaining members combine directly, the same way push() accumulates
-    // them.  fmin/fmax carry the empty-object NaN sentinel through: merging an
-    // empty object leaves the other one's extrema.
+    // them.  fmin and fmax carry the empty-object NaN sentinel through, so
+    // merging an empty object leaves the other one's extrema.
     combined._sum = a._sum + b._sum;
     combined._min = std::fmin(a._min, b._min);
     combined._max = std::fmax(a._max, b._max);

@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # Sweep --num-threads in each I/O mode (mmap, --no-mmap, piped stdin) for
-# castella and cch.  The digest never depends on the thread count or the I/O
-# mode; these sweeps measure how the run time responds to threads in each
-# mode.  Observations from past runs are recorded in README.md.
+# castella and cch.  These sweeps measure how the run time responds to threads
+# in each mode.  Observations from past runs are recorded in README.md.
 
 test -x castella || exit
 test -x cch || exit
@@ -13,8 +12,8 @@ test -x cch || exit
 # shellcheck source=benchmark-common.bash
 source ./benchmark-common.bash
 
-# Default: powers of 2 up to nproc, then nproc itself (so the hardware
-# ceiling is always measured, without duplicating a power of 2)
+# Powers of 2 up to nproc, then nproc itself, so the hardware ceiling is
+# always measured.
 NPROC=$(nproc)
 DEFAULT_THREAD_COUNTS=1
 for ((T = 2; T < NPROC; T *= 2))

@@ -7,14 +7,14 @@
 
 This is a from-scratch Python implementation of the Castella permutation,
 duplex, tree mode, and Compress-Castella hash, written from SPEC.md alone
-(not translated from the C++).  It exists to prove that the specification
-is complete and unambiguous: if this program reproduces every digest in
-the KAT file, an implementer needs nothing but SPEC.md.
+rather than translated from the C++.  It exists to prove that the
+specification is complete and unambiguous.  If this program reproduces every
+digest in the KAT file, an implementer needs nothing but SPEC.md.
 
 Usage: python3 spec-conformance.py [path/to/KAT.txt]
 
-Pure Python, no dependencies.  Verifying all 91 KATs takes several seconds
-(the point is independence, not speed).
+Pure Python, no dependencies.  Verifying all 91 KATs takes several seconds,
+since the point is independence rather than speed.
 """
 
 import sys
@@ -23,11 +23,11 @@ from functools import partial
 from pathlib import Path
 from typing import NoReturn, Protocol
 
-# Every check below raises rather than asserts: `python3 -O` strips
-# asserts, and tests/duplex-diff-fuzz.py relies on the parameter bounds
-# here to catch drift against the ones it mirrors by hand.  Parameter
-# violations raise ValueError, matching the std::invalid_argument the
-# C++ throws for the same conditions.
+# Every check below raises rather than asserts.  `python3 -O` strips asserts,
+# and tests/duplex-diff-fuzz.py relies on the parameter bounds here to catch
+# drift against the ones it mirrors by hand.  Parameter violations raise
+# ValueError, matching the std::invalid_argument the C++ throws for the same
+# conditions.
 
 
 class ModelInvariantError(Exception):
@@ -299,8 +299,8 @@ class CompressCastella:
 class TreeNode(Protocol):
     """All the tree needs of a node: it absorbs bytes.
 
-    Extraction is not here -- Duplex squeezes and CompressCastella
-    digests -- so tree_digest takes it as a separate callable.
+    Extraction is not here, because Duplex squeezes where CompressCastella
+    digests, so tree_digest takes it as a separate callable.
     """
 
     def add(self, data: bytes) -> None:
@@ -388,7 +388,7 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
     # it belongs to, which is what makes this readable against SPEC.md.
     # pylint: disable=too-many-return-statements
     # The primitive lines carry no message, and their "digest" is the raw
-    # output: one round constant, or the whole permuted state.
+    # output, either one round constant or the whole permuted state.
     if typ == "rc":
         return RC[int(f["r"])][int(f["aes_r"])][int(f["i"])]
     if typ == "permute":
@@ -437,7 +437,7 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
 
 
 def verify_kat_file(path: str, expect_count: int | None = None) -> int:
-    """Verify every KAT in the file; return 0 on full success, 1 otherwise.
+    """Verify every KAT in the file, returning 0 on full success and 1 otherwise.
 
     If expect_count is given, the file must hold exactly that many
     vectors: verifying fewer is a failure, not a success on a short file.

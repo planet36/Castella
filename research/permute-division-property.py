@@ -7,39 +7,40 @@
 
 permute-degree-bound.py bounds the algebraic degree from above, which says
 where a degree-based zero-sum construction stops working, not how long an
-integral distinguisher actually is.  permute-zero_sum-probes.cpp measures
-the real thing but only over *random* cubes of dimension <= 16.  This
-program computes the bit-based division property (Todo; Xiang et al.),
-which decides balancedness exactly for a chosen cube -- including the
-structured, byte-aligned cubes the random probes cannot express.
+integral distinguisher actually is.  permute-zero_sum-probes.cpp measures the
+real thing, but only over *random* cubes of dimension <= 16.  This program
+computes the bit-based division property (Todo, Xiang et al.), which decides
+balancedness exactly for a chosen cube, including the structured,
+byte-aligned cubes the random probes cannot express.
 
 Direction, which is the thing to get right
 ------------------------------------------
-Output bit j is *balanced* over a cube (its XOR-sum is provably 0) when
-**no division trail** runs from the input division property to the unit
-vector e_j.  So an UNSAT here is the strong answer: it proves a
-distinguisher.  A SAT result proves nothing at all -- it says only that
-this technique fails to establish balancedness, since the division
-property is a sound over-approximation of the true monomial behavior.
-Every "no distinguisher" statement below is therefore "none provable by
-this model", never "none exists".
+Output bit j is *balanced* over a cube, meaning its XOR-sum is provably 0,
+when **no division trail** runs from the input division property to the unit
+vector e_j.  So an UNSAT here is the strong answer, and it proves a
+distinguisher.  A SAT result proves nothing at all.  It says only that this
+technique fails to establish balancedness, since the division property is a
+sound over-approximation of the true monomial behavior.  Every "no
+distinguisher" statement below is therefore "none provable by this model",
+never "none exists".
 
 Model
 -----
 A division trail is a sequence of division-property vectors, one per
 layer, each a valid transition of that layer.
 
-* **S-box.**  k -> u is valid iff some monomial x^v with v >= k (bitwise)
-  appears in the ANF of the product y^u.  The table is computed here from
-  the actual AES S-box by Mobius transform and reduced to the minimal u
-  per k, which loses nothing: a division property set is only meaningful
-  up to its minimal elements, since u' >= u is already covered by u.
-* **Linear layers** (MixColumns over GF(2^8), ShiftRows, the transpose)
-  use the standard COPY/XOR decomposition: each input bit's value is split
-  among the outputs it feeds (COPY), and each output bit is the integer
-  sum of what reaches it (XOR), which forbids the 1+1 case automatically
-  because the output is a 0/1 variable.  ShiftRows and the transpose are
-  byte permutations and are pure re-indexing -- no variables.
+* **S-box.**  k -> u is valid iff some monomial x^v with v >= k bitwise
+  appears in the ANF of the product y^u.  The table is computed here from the
+  actual AES S-box by Mobius transform and reduced to the minimal u per k,
+  which loses nothing.  A division property set is only meaningful up to its
+  minimal elements, since u' >= u is already covered by u.
+* **Linear layers** are MixColumns over GF(2^8), ShiftRows, and the
+  transpose, and they use the standard COPY/XOR decomposition.  Each input
+  bit's value is split among the outputs it feeds (COPY), and each output bit
+  is the integer sum of what reaches it (XOR), which forbids the 1+1 case
+  automatically because the output is a 0/1 variable.  ShiftRows and the
+  transpose are byte permutations, so they are pure re-indexing and create no
+  variables.
 
 Why this is tractable on a 2048-bit state
 -----------------------------------------
@@ -51,34 +52,36 @@ permutation, and only the blocks that can carry a nonzero division
 property need variables at all.
 
 The pruning is sound because an S-box can never take a nonzero input
-division property to a zero output one: the ANF of y^0 is the constant 1,
-so u = 0 requires v = 0 >= k, i.e. k = 0.  All-zero output therefore
-forces all-zero input through a whole block.  Asking for the output to be
-exactly e_j thus forces every block other than the target's to be
-entirely zero, and those blocks are omitted rather than solved for.  The
-live block count is 1 at r = 1, **2** at r = 2, 18 at r = 3 and 34 at
-r = 4 for a cube inside one block -- linear growth, not exponential.
+division property to a zero output one.  The ANF of y^0 is the constant 1, so
+u = 0 requires v = 0 >= k, which means k = 0.  All-zero output therefore
+forces all-zero input through a whole block.
+
+Asking for the output to be exactly e_j thus forces every block other than
+the target's to be entirely zero, and those blocks are omitted rather than
+solved for.  For a cube inside one block the live block count is 1 at r = 1,
+**2** at r = 2, 18 at r = 3, and 34 at r = 4, which is linear growth rather
+than exponential.
 
 Validation
 ----------
-Run on AES itself (same S-box, same MixColumns) the model must reproduce
-the Square distinguisher: with one active byte, all 128 output bits are
-balanced after 3 rounds and not after 4.  --validate checks both
-directions; the negative one matters as much as the positive, since a
-model that proved everything balanced would also "reproduce" the first.
+Run on AES itself, with the same S-box and MixColumns, the model must
+reproduce the Square distinguisher.  With one active byte, all 128 output bits
+are balanced after 3 rounds and not after 4.  --validate checks both
+directions.  The negative one matters as much as the positive, since a model
+that proved everything balanced would also "reproduce" the first.
 
---validate --inverse gates the P^-1 layers the same way, but **at 2
-rounds, not 3**.  That is not a weaker cipher: `aes_round` is SB, SR, MC
-and so ends on a linear layer, while `inv_aes_round` is MC^-1, SR^-1,
-SB^-1 and ends on an S-box.  A division property crosses a linear layer
-untouched and never survives an S-box, so counting whole rounds leaves
-the two directions one nonlinear layer out of step.  Measured: AES^-1 is
-128/128 balanced at 1 and 2 rounds and 0/128 at 3.
+--validate --inverse gates the P^-1 layers the same way, but **at 2 rounds,
+not 3**.  That is not a weaker cipher.  `aes_round` is SB, SR, MC and so ends
+on a linear layer, while `inv_aes_round` is MC^-1, SR^-1, SB^-1 and ends on an
+S-box.  A division property crosses a linear layer untouched and never
+survives an S-box, so counting whole rounds leaves the two directions one
+nonlinear layer out of step.  Measured, AES^-1 is 128/128 balanced at 1 and 2
+rounds and 0/128 at 3.
 
-Two consequences for an inside-out zero-sum, both adverse to the backward
-half: it reaches one S-box layer less than its round count suggests, so
-the halves must not be budgeted symmetrically; and it costs ~2.5x the
-variables per round, since InvMixColumns has 472 nonzero bit-matrix
+There are two consequences for an inside-out zero-sum, both adverse to the
+backward half.  It reaches one S-box layer less than its round count suggests,
+so the halves must not be budgeted symmetrically.  It also costs about 2.5x
+the variables per round, since InvMixColumns has 472 nonzero bit-matrix
 entries against MixColumns's 184.
 
 Inside-out, and the coordinate trap in it
@@ -227,7 +230,7 @@ INV_MC_BITS = mc_bit_matrix(INV_MC4)
 def inv_shift_rows_src(byte_idx: int) -> int:
     """The input byte index that InvShiftRows moves to byte_idx.
 
-    Inverse of PM.shift_rows_src as a permutation: rows shift right where
+    Inverse of PM.shift_rows_src as a permutation, so rows shift right where
     the forward map shifts left.
     """
     col, row = divmod(byte_idx, 4)
@@ -330,10 +333,10 @@ class Model:
     def inv_aes_round(self, bits: list[z3.BoolRef]) -> list[z3.BoolRef]:
         """InvMixColumns, InvShiftRows, InvSubBytes on one 128-bit block.
 
-        aes_round's three layers in reverse, each inverted -- the layer
-        order of `aes_enc_inv` in include/aes_enc.hpp (aesimc then
-        aesdeclast).  Round constants are absent here exactly as they are
-        in the forward direction: XOR with a constant does not change a
+        aes_round's three layers in reverse, each inverted.  That is the
+        layer order of `aes_enc_inv` in include/aes_enc.hpp, aesimc then
+        aesdeclast.  Round constants are absent here exactly as they are in
+        the forward direction, because XOR with a constant does not change a
         division property.
         """
         mixed: list[z3.BoolRef] = [None] * BLOCK_BITS  # type: ignore[list-item]
@@ -363,11 +366,11 @@ def live_blocks(cube_blocks: set[int], target_block: int,
                 rounds: int) -> list[set[int]]:
     """Which blocks need variables at each round, 1-based index 0..rounds-1.
 
-    Forward reachability: the transpose sends block i's 16 bytes to 16
-    different blocks, so one active block at round t makes every block
-    reachable at round t+1.  Backward need: the final state must be e_j,
-    and an all-zero block output forces an all-zero block input, so only
-    the target's block is live in the last round.
+    Forward reachability comes from the transpose, which sends block i's 16
+    bytes to 16 different blocks, so one active block at round t makes every
+    block reachable at round t+1.  The backward need is that the final state
+    must be e_j, and an all-zero block output forces an all-zero block input,
+    so only the target's block is live in the last round.
     """
     reach = [set(cube_blocks)]
     for _ in range(1, rounds):
@@ -382,27 +385,29 @@ def build_trail(m: Model, cube_bits: set[int], target_block: int,
                 ) -> list[z3.BoolRef] | None:
     """Build a division trail from the cube into `target_block`.
 
-    Returns that block's 128 output bits, so one build serves all 128
-    target offsets -- the model's shape depends on which block the target
-    sits in, never on which bit within it.  Returns None when the block is
-    unreachable from the cube, in which case every one of its output bits
-    is a constant and so balanced, with nothing to solve.
+    Returns that block's 128 output bits, so one build serves all 128 target
+    offsets.  The model's shape depends on which block the target sits in,
+    never on which bit within it.  Returns None when the block is unreachable
+    from the cube, in which case every one of its output bits is a constant
+    and so balanced, with nothing to solve.
 
     With `inverse`, the same wiring models `P^-1` instead of `P`, for the
-    backward half of an inside-out zero-sum: each round applies three
+    backward half of an inside-out zero-sum.  Each round applies three
     *inverse* AES rounds, and the transposes sit between rounds exactly as
     they do forward.
 
-    On the dropped transpose, which differs between the two directions.
-    `P` is (T . A)^r, so the forward build drops the *trailing* T: it is a
-    bit permutation of the output and only relabels which bit is asked
-    about.  `P^-1` is (A^-1 . T)^r, so the mirrored build drops the
-    *leading* T instead -- and that one is not free, since permuting the
-    input relabels the cube.  Dropping it means the cube is specified in
-    the coordinates that feed the first inverse AES round, which is the
-    backward analogue of "a whole block" and the convention these results
-    are stated in.  A cube given in pre-transpose coordinates is a
-    different cube, not the same one written differently.
+    The dropped transpose differs between the two directions.  `P` is
+    (T . A)^r, so the forward build drops the *trailing* T, which is a bit
+    permutation of the output and only relabels which bit is asked about.
+    `P^-1` is (A^-1 . T)^r, so the mirrored build drops the *leading* T
+    instead, and that one is not free, since permuting the input relabels the
+    cube.
+
+    Dropping it means the cube is specified in the coordinates that feed the
+    first inverse AES round, which is the backward analogue of "a whole block"
+    and the convention these results are stated in.  A cube given in
+    pre-transpose coordinates is a different cube, not the same one written
+    differently.
     """
     cube_blocks = {b // BLOCK_BITS for b in cube_bits}
     live = live_blocks(cube_blocks, target_block, rounds)
@@ -461,7 +466,7 @@ def scan_block(m: Model, out: list[z3.BoolRef],
     """Check all 128 offsets of one target block.
 
     Returns (balanced, unknown, stopped_at).  stopped_at is the offset that
-    ended the scan early (-1 if it ran to the end); the caller reports it,
+    ended the scan early, or -1 if it ran to the end.  The caller reports it,
     since only the caller knows the block and round count.
     """
     balanced = unknown = 0
@@ -485,9 +490,9 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
     """Report balancedness over all 2048 output bits.
 
     One model per target block, reused across that block's 128 offsets via
-    assumptions: building dominates solving here, and the model's shape
-    does not depend on the offset.  Returns True when every bit is
-    balanced.  With `inverse`, propagates through `P^-1`.
+    assumptions.  Building dominates solving here, and the model's shape does
+    not depend on the offset.  Returns True when every bit is balanced.  With
+    `inverse`, propagates through `P^-1`.
     """
     balanced = unknown = 0
     reported = False
@@ -547,12 +552,12 @@ def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
          inverse: bool) -> bool:
     """One direction of an inside-out zero-sum; True when it is balanced.
 
-    `rounds` = 0 is balanced by definition and costs no solving: over an
-    affine cube of dimension d >= 1 every coordinate sums to zero (each
-    free coordinate takes both values 2^(d-1) times, each fixed one is
-    added 2^d times), so the identity map already zero-sums.  Allowing it
-    is what makes `--inside-out 2 0` reproduce the one-directional result
-    and act as a consistency check on the two-directional machinery.
+    `rounds` = 0 is balanced by definition and costs no solving.  Over an
+    affine cube of dimension d >= 1 every coordinate sums to zero, since each
+    free coordinate takes both values 2^(d-1) times and each fixed one is
+    added 2^d times, so the identity map already zero-sums.  Allowing it is
+    what makes `--inside-out 2 0` reproduce the one-directional result and act
+    as a consistency check on the two-directional machinery.
     """
     which = "P^-1 backward" if inverse else "P forward"
     if rounds == 0:
@@ -567,14 +572,15 @@ def transpose_cube_bits(cube_bits: set[int]) -> set[int]:
     """Re-express a middle-state cube in the backward build's coordinates.
 
     The two directions do not read a bit-set the same way.  `build_trail`
-    drops the *trailing* transpose going forward, which only relabels
-    output bits, so a forward cube IS the middle state.  It drops the
-    *leading* one going backward, so a backward cube is taken one
-    transpose past the middle state.  Handing both halves the same
-    bit-set therefore names two different sets of states -- for `block` a
-    row of the byte matrix forward and a column backward -- and their
-    round counts cannot be added.  Applying the transpose here is what
-    makes `inside_out`'s two halves share one cube.
+    drops the *trailing* transpose going forward, which only relabels output
+    bits, so a forward cube IS the middle state.  It drops the *leading* one
+    going backward, so a backward cube is taken one transpose past the middle
+    state.
+
+    Handing both halves the same bit-set therefore names two different sets of
+    states, for `block` a row of the byte matrix forward and a column
+    backward, and their round counts cannot be added.  Applying the transpose
+    here is what makes `inside_out`'s two halves share one cube.
 
     Bit index = 128*block + 8*byte + k, and the transpose exchanges block
     and byte, so the bit within the byte is carried across untouched.
@@ -591,16 +597,13 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
                timeout_s: float, count: bool) -> bool:
     """Zero-sum running P forward r_fwd rounds and P^-1 backward r_bwd.
 
-    The two halves are *independent* given the cube: both consume the same
-    middle-state division property and propagate outward, so there is no
-    joint constraint and no combined model.  What they do NOT share is a
-    coordinate system, so the backward half is given
-    `transpose_cube_bits(cube_bits)` rather than `cube_bits`; see there.
-    With that, both halves describe the same set of middle states and the
-    zero-sum over r_fwd + r_bwd rounds holds exactly when each is
-    balanced.  A revision before 2026-08-04 passed the same bit-set to
-    both and summed the result, which reported a 4-round zero-sum that
-    does not exist.
+    The two halves are *independent* given the cube.  Both consume the same
+    middle-state division property and propagate outward, so there is no joint
+    constraint and no combined model.  What they do NOT share is a coordinate
+    system, so the backward half is given `transpose_cube_bits(cube_bits)`
+    rather than `cube_bits` (see there).  With that, both halves describe the
+    same set of middle states, and the zero-sum over r_fwd + r_bwd rounds
+    holds exactly when each is balanced.
 
     Balancedness is required on ALL 2048 bits of each end, not one bit.  A
     single balanced output bit is a distinguisher for one direction, but a
@@ -608,13 +611,14 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     ends, so a partial result on either half establishes nothing here.
 
     Read a negative here as weak, and expect one even where a zero-sum is
-    known.  The backward half of a `block` cube spreads over all 16
-    blocks, so the sparse pruning keeps only the target's and the cube
-    collapses to the single byte reaching it -- balance over 2^8 being a
-    far harder thing to prove than over 2^128, the very construction this
-    file's results rest on comes back "not provably balanced".  That is
-    the usual SAT direction: it bounds the technique, never `P`.  The
-    reach is established instead by the counting argument and the brute
+    known.  The backward half of a `block` cube spreads over all 16 blocks, so
+    the sparse pruning keeps only the target's and the cube collapses to the
+    single byte reaching it.  Balance over 2^8 is far harder to prove than
+    over 2^128, so the very construction this file's results rest on comes
+    back "not provably balanced".
+
+    That is the usual SAT direction, which bounds the technique and never `P`.
+    The reach is established instead by the counting argument and the brute
     force in permute-multiplicity-verify.py.
     """
     print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "
@@ -647,7 +651,7 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
 
 def aes_scan(active_bytes: set[int], rounds: int, timeout_s: float,
              count: bool, inverse: bool = False) -> None:
-    """The same machinery on plain AES: one block, `rounds` AES rounds."""
+    """The same machinery on plain AES, over one block and `rounds` AES rounds."""
     cube = {8 * b + k for b in active_bytes for k in range(8)}
     which = "AES^-1" if inverse else "AES"
     balanced = 0
@@ -687,16 +691,18 @@ SQUARE_BOUNDARY = {False: 3, True: 2}
 def validate(timeout_s: float, inverse: bool = False) -> None:
     """Reproduce AES's Square distinguisher, in both directions.
 
-    "Both directions" here means the positive and negative gates -- N
-    rounds balanced, N+1 not -- which is what stops a model that proves
-    everything balanced from passing.  With `inverse`, the same pair runs
-    against the inverse cipher at its own boundary (see SQUARE_BOUNDARY;
-    it is 2, not 3).  If the inverse layers were mis-wired -- a transposed
-    InvMixColumns, the wrong ShiftRows sign, INV_TABLE built from the
-    forward S-box -- the boundary moves off 2 and one of the two gates
-    fails.  What this does NOT catch is a wrong round *boundary*, since
-    both gates would shift together; `self_test_inverse` covers the pieces
-    and the concrete round-trip covers their composition.
+    "Both directions" here means the positive and negative gates, N rounds
+    balanced and N+1 not, which is what stops a model that proves everything
+    balanced from passing.  With `inverse`, the same pair runs against the
+    inverse cipher at its own boundary, which is 2 rather than 3 (see
+    SQUARE_BOUNDARY).
+
+    If the inverse layers were mis-wired, by a transposed InvMixColumns, the
+    wrong ShiftRows sign, or an INV_TABLE built from the forward S-box, the
+    boundary moves off 2 and one of the two gates fails.  What this does NOT
+    catch is a wrong round *boundary*, since both gates would shift together.
+    `self_test_inverse` covers the pieces, and the concrete round-trip covers
+    their composition.
     """
     which = "AES^-1" if inverse else "AES"
     good = SQUARE_BOUNDARY[inverse]
@@ -874,20 +880,22 @@ def main() -> None:
                          "the first that is not")
     ap.add_argument("--inside-out", type=int, nargs=2,
                     metavar=("FWD", "BWD"), default=None,
-                    help="zero-sum from a middle state: run P forward FWD "
+                    help="zero-sum from a middle state.  Run P forward FWD "
                          "rounds and P^-1 backward BWD from ONE cube, "
                          "covering FWD+BWD.  --cube names the cube in "
-                         "middle-state coordinates; the backward half reads "
-                         "it through the transpose.  Either may be 0.  "
-                         "Overrides --rounds/--inverse")
+                         "middle-state coordinates, and the backward half "
+                         "reads it through the transpose.  Either may be 0.  "
+                         "Overrides --rounds and --inverse")
     ap.add_argument("--inverse", action="store_true",
-                    help="propagate through P^-1 instead of P: the backward "
-                         "half of an inside-out zero-sum.  The cube is taken "
-                         "in the coordinates that feed the first inverse AES "
-                         "round (see build_trail on the dropped transpose)")
+                    help="propagate through P^-1 instead of P, which is the "
+                         "backward half of an inside-out zero-sum.  The cube "
+                         "is taken in the coordinates that feed the first "
+                         "inverse AES round (see build_trail on the dropped "
+                         "transpose)")
     ap.add_argument("--validate", action="store_true",
-                    help="reproduce AES's Square distinguisher and exit; "
-                         "honours --inverse, which gates the inverse layers")
+                    help="reproduce AES's Square distinguisher and exit.  "
+                         "It honors --inverse, which gates the inverse "
+                         "layers")
     ap.add_argument("--self-test", action="store_true",
                     help="check this program's own pieces and exit")
     args = ap.parse_args()

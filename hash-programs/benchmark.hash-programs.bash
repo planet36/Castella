@@ -8,10 +8,9 @@ test -x cch || exit
 # shellcheck source=benchmark-common.bash
 source ./benchmark-common.bash
 
-# The single-threaded rows (the external sequential tools and the
-# --num-threads=1 rows) are prefixed with ${PIN} to reduce scheduler noise --
-# pinned to CPU_LIST, or to core 0 if it is unset; the multithreaded rows stay
-# unpinned.
+# The single-threaded rows are prefixed with ${PIN} to reduce scheduler noise.
+# Those are the external sequential tools and the --num-threads=1 rows.  The
+# multithreaded rows stay unpinned.
 
 # How to get openssl digest algorithms
 # XXX: some of the algorithms give this error: Error setting digest

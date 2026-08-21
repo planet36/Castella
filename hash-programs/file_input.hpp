@@ -6,12 +6,12 @@
 * \file
 * \author Steven Ward
 *
-* What each program does with the bytes -- which tree it builds, and how
-* that tree spreads the work -- lives in each program, next to where it
-* constructs its hash object.  This header holds the parts that are the
-* same for any hash object: opening and locking the file, choosing
-* between a read() loop and a memory mapping, and releasing the mapping
-* on every path out.
+* What each program does with the bytes lives in that program, next to where
+* it constructs its hash object.  That covers which tree it builds, and how
+* the tree spreads the work.  This header holds the parts that are the same
+* for any hash object: opening and locking the file, choosing between a
+* read() loop and a memory mapping, and releasing the mapping on every path
+* out.
 */
 
 #pragma once
@@ -123,15 +123,17 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
             throw SYSERR_PATH(path);
         }
 
-        // The whole mapping is added in one call, which is what lets a tree
-        // hash object take its one-shot batch path: the file's chunks are
-        // hashed in place (no copying) by its worker threads.  add() can
-        // throw (mutex failure, allocation failure, or a worker thread's
-        // exception propagating out of the tree), so the mapping is released
-        // on that path too before the exception propagates.  The
-        // scoped_region guard turns a concurrent truncation (SIGBUS on a
+        // The whole mapping is added in one call, which lets a tree hash
+        // object take its one-shot batch path.  Its worker threads then hash
+        // the file's chunks in place, without copying.
+        //
+        // add() can throw on a mutex failure, an allocation failure, or a
+        // worker thread's exception propagating out of the tree.  The mapping
+        // is released on that path too, before the exception propagates.
+        //
+        // The scoped_region guard turns a concurrent truncation (SIGBUS on a
         // worker) into a clean error, and unpublishes the region on scope
-        // exit; add() joins all workers before returning, so no thread
+        // exit.  add() joins all workers before returning, so no thread
         // touches the mapping afterwards.
         try
         {

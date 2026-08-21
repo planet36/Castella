@@ -6,20 +6,20 @@
 """Search Castella::permute for invariant subspaces, exactly.
 
 permute-structural-probes.cpp screens the three symmetry classes the
-transpose makes natural with 10^4 random samples per class, and says so:
-absence of evidence in 10^4 samples is not evidence of absence.  This
-program replaces the sampling with exhaustive computation wherever the
-structure permits, and says exactly where it cannot.
+transpose makes natural with 10^4 random samples per class, and says so.
+Absence of evidence in 10^4 samples is not evidence of absence.  This program
+replaces the sampling with exhaustive computation wherever the structure
+permits, and says exactly where it cannot.
 
 Why Castella specifically
 -------------------------
 The transpose swaps block and byte indices, which is precisely the symmetry
-an invariant-subspace attack looks for.  The design intent (castella-permute.hpp,
-quoting Keccak's "Making of", 8.7) is that the round constants disrupt it.
-Sections 4 and 5 below turn that intent into a decided statement: for two of
-the three classes every layer except the constant addition preserves the class,
-so the constants are not merely helpful, they are the *only* thing standing in
-the way -- and the condition they must satisfy is stated exactly.
+an invariant-subspace attack looks for.  The design intent is that the round
+constants disrupt it (castella-permute.hpp, quoting Keccak's "Making of",
+8.7).  Sections 4 and 5 below turn that intent into a decided statement.  For
+two of the three classes every layer except the constant addition preserves
+the class, so the constants are the *only* thing standing in the way, and the
+condition they must satisfy is stated exactly.
 
 What an invariant subspace needs
 --------------------------------
@@ -68,25 +68,27 @@ Sections
 Do not analyze the S-box-deleted round
 --------------------------------------
 It is tempting to delete the S-boxes and study the resulting 256x256 matrix
-over GF(2^8).  That map is strictly weaker than Castella: composed over one
-round its rows have weight 12, not 16, because (MC.SR)^3 cancels over
-GF(2^8), while real support propagation reaches all 16 bytes of a block
-after two AES rounds.  Conclusions drawn from the skeleton would understate
+over GF(2^8).  That map is strictly weaker than Castella.  Composed over one
+round its rows have weight 12 rather than 16, because (MC.SR)^3 cancels over
+GF(2^8), while real support propagation reaches all 16 bytes of a block after
+two AES rounds.  Conclusions drawn from the skeleton would understate
 diffusion.  Every section here keeps the S-box layers where they are.
 
 Scope
 -----
-Sections 1-3 are exhaustive over the byte-aligned class -- every subspace
-that is a direct sum of per-byte subspaces -- and over every coset of one,
-since the S-box census quantifies over all 256 offsets per byte.  Sections
-4-5 cover named non-byte-aligned classes: exact for each coset tested, but
-the offsets are sampled, so they are a screen over offsets rather than a
-proof for all of them.  A general subspace of F_2^2048 that is neither
-byte-aligned nor one of the named classes is not covered by anything here;
-no feasible computation covers it, which is why the attack literature
-restricts the same way.  The empty support (a fixed point) is likewise out
-of reach exhaustively and stays the screen it already is in
-permute-structural-probes.cpp.
+Sections 1-3 are exhaustive over the byte-aligned class, meaning every
+subspace that is a direct sum of per-byte subspaces, and over every coset of
+one, since the S-box census quantifies over all 256 offsets per byte.
+
+Sections 4-5 cover named non-byte-aligned classes.  They are exact for each
+coset tested, but the offsets are sampled, so they are a screen over offsets
+rather than a proof for all of them.
+
+A general subspace of F_2^2048 that is neither byte-aligned nor one of the
+named classes is not covered by anything here.  No feasible computation covers
+it, which is why the attack literature restricts the same way.  The empty
+support, a fixed point, is likewise out of reach exhaustively and stays the
+screen it already is in permute-structural-probes.cpp.
 
 Usage
 -----
@@ -258,7 +260,7 @@ def dim1_columns_surviving_mixcolumns() -> list[tuple[int, ...]]:
 def round_support(active: frozenset[int]) -> frozenset[int]:
     """Propagate a byte-support set through one Castella round.
 
-    No cancellation is possible: an S-box sits on every byte, so a
+    No cancellation is possible.  An S-box sits on every byte, so a
     MixColumns output byte is active whenever any byte of its column is.
     """
     cur = set(active)
@@ -323,7 +325,7 @@ def one_round(state: list[bytes], rnd: int,
     """Apply Castella round `rnd` (its own constants) to a 16-block state.
 
     With zero_rc the round constants are replaced by zero, which is the
-    control for section 5: it is the permutation the design would be if the
+    control for section 5.  It is the permutation the design would be if the
     constants did no symmetry-breaking at all.
     """
     for aes_r in range(PM.AES_NUM_ROUNDS):
@@ -373,11 +375,11 @@ def class_partitions() -> dict[str, list[list[int]]]:
     """The three symmetry classes, as partitions of the 256 byte positions.
 
     Each class is "the bytes within every part are equal".  Stating them this
-    way makes the S-box layer's behavior a theorem rather than a
-    measurement: the layer applies one function bytewise, so equal bytes stay
-    equal, and EVERY partition class is preserved exactly.  Only the layers
-    that move bytes between parts -- ShiftRows, MixColumns, the transpose --
-    and the round-constant addition can break one.
+    way makes the S-box layer's behavior a theorem rather than a measurement.
+    The layer applies one function bytewise, so equal bytes stay equal, and
+    EVERY partition class is preserved exactly.  Only the round-constant
+    addition and the layers that move bytes between parts can break one, and
+    those are ShiftRows, MixColumns, and the transpose.
     """
     by_byte: dict[int, list[int]] = {}
     by_block: dict[int, list[int]] = {}
@@ -441,11 +443,11 @@ def forced_closure(basis: list[int], offset: int, rf,
     Any subspace W containing the given basis with rf(offset + W) inside
     rf(offset) + W must contain rf(offset ^ u) ^ rf(offset) for every u in W.
     Each vector added below is therefore forced, so a result of `limit` is a
-    PROOF that no proper invariant subspace contains this coset -- while a
-    smaller result is inconclusive, because only a generating set is
-    processed, not every element.  Section 5 prints a constant-free control
-    beside every figure so that a `limit` result cannot be mistaken for a
-    test that simply always explodes.
+    PROOF that no proper invariant subspace contains this coset.  A smaller
+    result is inconclusive, because only a generating set is processed rather
+    than every element.  Section 5 prints a constant-free control beside every
+    figure so that a `limit` result cannot be mistaken for a test that simply
+    always explodes.
     """
     ech = Echelon()
     queue: list[int] = []
@@ -503,11 +505,11 @@ def self_test() -> None:
 def check_skeleton_cancels() -> None:
     """Check that the S-box-deleted round really does cancel.
 
-    This is the trap the module docstring warns about: (MC.SR)^3 has row
-    weight 12 over GF(2^8), while support propagation -- which no
-    cancellation can reach, because an S-box sits on every byte -- is full at
-    16 after two AES rounds.  If these ever agreed, the warning would be
-    stale and the S-box-deleted shortcut would be legitimate.
+    This is the trap the module docstring warns about.  (MC.SR)^3 has row
+    weight 12 over GF(2^8), while support propagation is full at 16 after two
+    AES rounds.  No cancellation can reach that propagation, because an S-box
+    sits on every byte.  If these ever agreed, the warning would be stale and
+    the S-box-deleted shortcut would be legitimate.
     """
     def mat_mul(A, B):
         n = len(A)
@@ -641,9 +643,9 @@ def report_classes(bases: dict[str, list[int]],
 def report_closure(bases: dict[str, list[int]], args) -> list[str]:
     """Section 5: forced closure with a constant-free control beside it.
 
-    Returns the checks it could not decide, never findings: a stalled closure
-    means this section reached no verdict, which is why `main` reports it
-    apart from the other sections and exits 2 rather than 1.
+    Returns the checks it could not decide, never findings.  A stalled
+    closure means this section reached no verdict, which is why `main` reports
+    it apart from the other sections and exits 2 rather than 1.
     """
     inconclusive: list[str] = []
     print(f"== 5. forced closure (last {args.rounds} rounds, "
@@ -676,18 +678,19 @@ def report_closure(bases: dict[str, list[int]], args) -> list[str]:
 def print_conclusion() -> None:
     """The synthesis of the five sections."""
     print("== conclusion")
-    print("  Sections 1-3 are exhaustive: Castella::permute has NO invariant")
+    print("  Sections 1-3 are exhaustive.  Castella::permute has NO invariant")
     print("  subspace that is a direct sum of per-byte subspaces, at any")
     print("  coset, other than the whole space and a single point.")
     print("  Section 4 shows what the round constants actually do, and that")
-    print("  it is not decoration: ShiftRows, MixColumns and the S-box layer")
-    print("  preserve 'equal blocks' and 'constant blocks', and the transpose")
-    print("  maps each onto the other, so with the constants removed the pair")
-    print("  is exactly invariant and two constant-free rounds fix each class")
-    print("  (section 5's control reaches dim 128, the class itself).  The")
-    print("  constants are the ONLY layer that breaks it, and none of the 48")
-    print("  lies in either class.  The symmetric-matrix class is broken by")
-    print("  ShiftRows and MixColumns as well, so it does not rely on them.")
+    print("  it is not decoration.  ShiftRows, MixColumns, and the S-box")
+    print("  layer preserve 'equal blocks' and 'constant blocks', and the")
+    print("  transpose maps each onto the other, so with the constants")
+    print("  removed the pair is exactly invariant and two constant-free")
+    print("  rounds fix each class.  Section 5's control reaches dim 128, the")
+    print("  class itself.  The constants are the ONLY layer that breaks it,")
+    print("  and none of the 48 lies in either class.  The symmetric-matrix")
+    print("  class is broken by ShiftRows and MixColumns as well, so it does")
+    print("  not rely on them.")
 
 
 def main() -> None:

@@ -6,10 +6,10 @@
 * \file
 * \author Steven Ward
 *
-* For several mix rates and random equal-length-but-different-content
-* input sequences, verify that \c compress_castella_hash_x2 produces
+* For several mix rates and random input sequences of equal length but
+* different content, verify that \c compress_castella_hash_x2 produces
 * exactly the digests that two separate \c compress_castella_hash objects
-* produce.  This is the correctness contract of cch leaf pairing: the
+* produce.  That is the correctness contract of cch leaf pairing.  The
 * interleaved path must be execution-level only, never digest-visible.
 */
 
@@ -107,7 +107,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         num_samples = 1;
     }
 
-    // 0 disables periodic mixing; small rates mix within a few chunks.
+    // 0 disables periodic mixing, and small rates mix within a few chunks.
     constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
                                  compress_castella_hash<>::MIX_RATE_MAX};
 
@@ -117,13 +117,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         for (const auto mix_rate : mix_rates)
         {
-            // Small pieces: exercise the buffered (partial-chunk) path and
+            // Small pieces exercise the buffered partial-chunk path, and
             // piece boundaries that do not divide the 256-byte chunk.
             num_comparisons += test_cch_x2(mix_rate, 1500, 8);
 
-            // One big piece: exercise the interleaved bulk loop, crossing
-            // the mix boundary even at the default mix rate
-            // (300 chunks > 256).
+            // One big piece exercises the interleaved bulk loop, crossing
+            // the mix boundary even at the default mix rate, since 300
+            // chunks is more than 256.
             num_comparisons += test_cch_x2(mix_rate, 300 * 256, 1);
         }
     }

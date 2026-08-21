@@ -12,8 +12,8 @@
 *     permute_x2(pack_states(A, B), num_rounds)
 *
 * unpacks to exactly (permute(A, num_rounds), permute(B, num_rounds)).
-* This is the correctness contract of the VAES leaf-batching optimization:
-* the paired path must be execution-level only, never digest-visible.
+* That is the correctness contract of the VAES leaf-batching optimization.
+* The paired path must be execution-level only, never digest-visible.
 */
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)

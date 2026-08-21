@@ -21,16 +21,17 @@ the S-box output differences the concrete pair actually produces.  The two must
 agree byte for byte at every round count.
 
 It also checks that constant injection is difference-transparent, which the
-trail model assumes by omitting constants entirely: the spec model XORs a round
-constant into both lanes, and if injection were not an XOR (say an addition mod
-256) the difference would depend on it and the two would part company here.
+trail model assumes by omitting constants entirely.  The spec model XORs a
+round constant into both lanes.  If injection were not an XOR, say an addition
+mod 256, the difference would depend on it and the two would part company
+here.
 
 What this deliberately does NOT check is *which* constant goes where.  Fault
-injection confirms it: zeroing an entry of the spec model's schedule is the one
-corruption of the four tried that this test does not catch, because both lanes
-get the same constant and it cancels.  That is correct rather than a gap -- a
-differential is constant-independent, so the trail model has no schedule to be
-wrong about.  The schedule is covered by the KATs instead.
+injection confirms that.  Zeroing an entry of the spec model's schedule is the
+one corruption of the four tried that this test does not catch, because both
+lanes get the same constant and it cancels.  That is correct rather than a
+gap.  A differential is constant-independent, so the trail model has no
+schedule to be wrong about.  The KATs cover the schedule instead.
 
 Exits nonzero on any disagreement, so it can gate regressions.
 """

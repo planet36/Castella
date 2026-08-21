@@ -6,11 +6,11 @@
 * \file
 * \author Steven Ward
 *
-* For every valid (capacity_blocks, num_rounds) combination and random
-* equal-length-but-different-content input sequences, verify that
+* For every valid (capacity_blocks, num_rounds) combination and random input
+* sequences of equal length but different content, verify that
 * \c Castella::DuplexX2 squeezes exactly the bytes that two separate
-* \c Castella::Duplex objects squeeze.  This is the correctness contract of
-* the VAES leaf-batching optimization: the paired path must be
+* \c Castella::Duplex objects squeeze.  That is the correctness contract of
+* the VAES leaf-batching optimization.  The paired path must be
 * execution-level only, never digest-visible.
 */
 
@@ -49,8 +49,9 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
     Castella::DuplexX2 duplex_x2{capacity_blocks, num_rounds, input_suffix, function_name,
                                  customization_str};
 
-    // Absorb a random number of random-length pieces; the two lanes get
-    // different bytes but always the same length (the lockstep constraint).
+    // Absorb a random number of random-length pieces.  The two lanes get
+    // different bytes, but always the same length, which is the lockstep
+    // constraint.
     const auto num_pieces = arc4random_uniform(8);
 
     for (uint32_t piece = 0; piece < num_pieces; ++piece)

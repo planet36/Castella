@@ -6,31 +6,31 @@
 * \file
 * \author Steven Ward
 *
-* Design probe for "cch leaf pairing" (and beyond): would an interleaved
-* compress_castella_hash node group (N states advanced in lockstep on one
-* thread) beat N sequential nodes?  The N=2 result motivated
-* compress_castella_hash_x2 (include/cch-x2.hpp); N=3 and N=4 ask
-* whether a wider group is worth building.
+* Design probe for cch leaf pairing and beyond.  Would an interleaved
+* compress_castella_hash node group, meaning N states advanced in lockstep on
+* one thread, beat N sequential nodes?  The N=2 result motivated
+* compress_castella_hash_x2 (include/cch-x2.hpp).  N=3 and N=4 ask whether a
+* wider group is worth building.
 *
-* Each benchmark hashes N equal-size buffers with N independent states
-* using the cch absorb loop (simd_compress_aes_enc_r3_arr per 256-byte
-* chunk, plus the periodic mix permute at the default mix rate):
+* Each benchmark hashes N equal-size buffers with N independent states using
+* the cch absorb loop.  That is simd_compress_aes_enc_r3_arr per 256-byte
+* chunk, plus the periodic mix permute at the default mix rate.
 *
-*   - sequential: buffer 0 start to finish with state 0, then buffer 1
-*     with state 1, ... (what N single-leaf hashes do today)
-*   - interleaved: one loop advancing all N states chunk by chunk (the
-*     instruction-level overlap an interleaved node group achieves)
+*   - sequential: buffer 0 start to finish with state 0, then buffer 1 with
+*     state 1, and so on, which is what N single-leaf hashes do today
+*   - interleaved: one loop advancing all N states chunk by chunk, which is
+*     the instruction-level overlap an interleaved node group achieves
 *
-* If interleaved does not clearly beat sequential, a wider node group has
-* no headroom: the states' independent 3-deep VAES chains already saturate
-* the AES units or the memory system.  Buffer sizes span L1 to DRAM to
-* separate those two regimes.
+* If interleaved does not clearly beat sequential, a wider node group has no
+* headroom, because the states' independent 3-deep VAES chains already
+* saturate the AES units or the memory system.  Buffer sizes span L1 to DRAM
+* to separate those two regimes.
 *
-* A register-file limit was the other candidate -- one state is 8 ymm
-* registers, so 2 states already fill all 16 and 3-4 must spill between
-* chunks -- and the measurements refute it: at a fixed total footprint,
-* N=3 and N=4 match the pair everywhere below L2 (research/README.md).
-* What a wider group costs is footprint, which is why both modes exist.
+* A register-file limit was the other candidate, since one state is 8 ymm
+* registers, so 2 states already fill all 16 and 3 or 4 must spill between
+* chunks.  The measurements refute it.  At a fixed total footprint, N=3 and
+* N=4 match the pair everywhere below L2 (research/README.md).  What a wider
+* group costs is footprint, which is why both modes exist.
 *
 * The benchmark itself is portable to any AES-capable target (the absorb
 * loop and permutation have non-VAES and ARM fallbacks), so the question
@@ -60,7 +60,7 @@
 #include <utility>
 #include <vector>
 
-/// The node whose bulk loop this benchmark replicates: the one the cch tree uses
+/// The node whose bulk loop this benchmark replicates, the one the cch tree uses
 using node_t = compress_castella_hash<>;
 
 using state_t = node_t::state_t;
@@ -73,26 +73,26 @@ inline constexpr int MIX_RATE = node_t::DEFAULT_MIX_RATE;
 /// The rounds of the periodic mix permute in \c compress_castella_hash::absorb_
 inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
 
-/// Per-buffer sizes: the working set is \a N times one of these
+/// Per-buffer sizes, where the working set is \a N times one of these
 /**
 * An unbroken power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 8 MiB,
-* plus 128 MiB for DRAM.  The density is the point: a widening group crosses
-* a cache boundary at some size, and only neighbouring sizes tell a boundary
+* plus 128 MiB for DRAM.  The density is the point.  A widening group crosses
+* a cache boundary at some size, and only neighboring sizes tell a boundary
 * apart from noise.  Sampling the levels alone once produced a 512 KiB
-* "anomaly" that its neighbours later showed to be noise (research/README.md).
+* "anomaly" that its neighbors later showed to be noise (research/README.md).
 *
 * Two sizes carry meaning beyond their regime.  1 KiB is \c CHUNK_SIZE_MIN,
 * the low end of the legal \c --chunk-size range, and only four absorbs, so
 * it bounds how short a buffer the pair can still pay on.  64 KiB is the
-* operating point: the tree's \c DEFAULT_CHUNK_SIZE, so an N-wide leaf group
-* holds exactly N of them, and also the mix period (256 absorbs x a 256-byte
-* state), so a leaf mixes once.
+* operating point.  It is the tree's \c DEFAULT_CHUNK_SIZE, so an N-wide leaf
+* group holds exactly N of them, and it is also the mix period of 256 absorbs
+* over a 256-byte state, so a leaf mixes once.
 *
-* The ladder is deliberately hardware-independent: it spans L1 to DRAM on
-* any current CPU without naming a cache size, so which rung sits at which
-* level is read off the run rather than assumed here.  google-benchmark
-* prints the host's cache sizes in its header, and research/README.md
-* records them alongside the run it interpreted.
+* The ladder is deliberately hardware-independent.  It spans L1 to DRAM on any
+* current CPU without naming a cache size, so which rung sits at which level is
+* read off the run rather than assumed here.  google-benchmark prints the
+* host's cache sizes in its header, and research/README.md records them
+* alongside the run it interpreted.
 */
 inline constexpr std::array buf_sizes{
     1UL << 10,
@@ -112,12 +112,12 @@ inline constexpr std::array buf_sizes{
     128UL << 20,
 };
 
-/// Total working sets: the same regimes, held at the total rather than per buffer
+/// Total working sets, the same regimes held at the total rather than per buffer
 /**
 * Derived rather than written out, so each total is the 2-state working set of
 * the size at the same index by construction.  That is what makes the \a N = 2
-* rows of the two modes the same configuration -- the control that exposed this
-* run's cache-level noise -- and a hand-maintained copy could drift out of it.
+* rows of the two modes the same configuration, the control that exposed this
+* run's cache-level noise, and a hand-maintained copy could drift out of it.
 */
 inline constexpr auto total_sizes = []
 {
@@ -129,7 +129,7 @@ inline constexpr auto total_sizes = []
     return result;
 }();
 
-/// One absorb of the cch bulk loop: compress one 256-byte chunk, maybe mix
+/// One absorb of the cch bulk loop, compressing one 256-byte chunk and maybe mixing
 /**
 * \pre the size of \a chunk is at least \c state_size_bytes
 */
@@ -156,7 +156,7 @@ hash_buffer(state_t& state, const std::byte* src, const int len,
     }
 }
 
-/// The shared setup of both benchmark bodies: N random buffers and N random states
+/// The shared setup of both benchmark bodies, N random buffers and N random states
 template <int N>
 struct bench_data final
 {
@@ -236,8 +236,8 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
 /// The per-buffer size that puts \a total_bytes of working set behind \a n states
 /**
 * Rounded down to a whole number of chunks, so every state absorbs only full
-* chunks; the N buffers together then cover \a total_bytes to within one chunk
-* per state.
+* chunks.  The N buffers together then cover \a total_bytes to within one
+* chunk per state.
 */
 [[nodiscard]] static constexpr int
 buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
@@ -250,10 +250,10 @@ buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
 /**
 * Names carry sizes from 512 B to 256 MiB.  A whole number of 256-byte chunks
 * rarely divides a power of two once split three ways, so requiring an exact
-* unit falls back to bytes and prints \c 8388096_B; one decimal place gives
-* \c 8_MiB, and the sizes a reader has to tell apart differ by far more than
-* that.  This is a label, not a measurement -- the buffer size the benchmark
-* actually uses is \c buf_size_for_total.
+* unit falls back to bytes and prints \c 8388096_B.  One decimal place gives
+* \c 8_MiB instead, and the sizes a reader has to tell apart differ by far
+* more than that.  This is a label rather than a measurement, and the buffer
+* size the benchmark actually uses is \c buf_size_for_total.
 */
 [[nodiscard]] static std::string
 format_size(const size_t bytes)
@@ -268,9 +268,9 @@ format_size(const size_t bytes)
         return std::format("{}_{}", digits, unit);
     };
 
-    // Pick the unit the value rounds to at least 1.0 in, not the one it reaches
-    // exactly: 1 MiB less a chunk is 1023.8 KiB, which would leave one row of a
-    // group in different units from its siblings.
+    // Pick the unit the value rounds to at least 1.0 in, not the one it
+    // reaches exactly.  1 MiB less a chunk is 1023.8 KiB, which would leave
+    // one row of a group in different units from its siblings.
     const auto rounds_to_one = [bytes](const size_t unit)
     { return bytes * 20 >= unit * 19; };
 
@@ -347,14 +347,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // The same regimes with the working set held at the total rather than per
     // buffer, so that comparing N = 3 or 4 against the pair varies only the
     // group width.  In the fixed-per-buffer rows above, a wider group also
-    // touches proportionally more memory -- realistic, since a tree leaf hashes
-    // a fixed-size chunk however many leaves run, but it means those rows cannot
-    // separate "wider is slower" from "wider fell out of this cache level".
+    // touches proportionally more memory.  That is realistic, since a tree
+    // leaf hashes a fixed-size chunk however many leaves run, but it means
+    // those rows cannot separate "wider is slower" from "wider fell out of
+    // this cache level".
     //
     // The name reports the total each row actually covers, not the one
-    // requested: a buffer is a whole number of 256-byte chunks, so at the
-    // smallest total N = 3 lands on 1536 B rather than 2048 (75%) and the
-    // footprints are no longer equal.  Every other row is within 2%.
+    // requested.  A buffer is a whole number of 256-byte chunks, so at the
+    // smallest total N = 3 lands on 1536 B rather than 2048, which is 75%, and
+    // the footprints are no longer equal.  Every other row is within 2%.
     for (const auto total_size : total_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {

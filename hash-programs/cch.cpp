@@ -37,9 +37,8 @@ static_assert(default_digest_size_bytes <= max_digest_size_bytes);
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 
-// The chunk size is part of the digest format (different chunk sizes give
-// different digests), unlike the thread count, which never affects the
-// digest.
+// The chunk size is part of the digest format.  Different chunk sizes give
+// different digests.
 inline constexpr int default_chunk_size = compress_castella_tree::DEFAULT_CHUNK_SIZE;
 
 // 0 requests one worker thread per available hardware thread.
@@ -98,9 +97,9 @@ print_usage()
     std::println("  -c, --check");
     std::println("        Read digest lines from each FILE (or standard input) and verify them.");
     std::println("        Both output formats are accepted.  A tag line carries the");
-    std::println("        digest-relevant options itself; for an untagged line, --chunk-size");
-    std::println("        and --mix-rate must be given the same values that produced it.  The");
-    std::println("        output size is inferred from the digest length.");
+    std::println("        digest-relevant options itself.  An untagged line needs the same");
+    std::println("        --chunk-size and --mix-rate that produced it.  The output size is");
+    std::println("        inferred from the digest length.");
     std::println("        Empty lines and lines starting with '#' are ignored.");
     std::println("        (A FILE whose name contains a newline cannot be verified.)");
 
@@ -122,7 +121,7 @@ print_usage()
     std::println("        Do not use memory mapping to read FILE.");
 
     std::println("  --num-threads=NUM");
-    std::println("        Specify the maximum number of worker threads used to hash chunks.");
+    std::println("        Specify the maximum number of worker threads that hash chunks.");
     std::println("        0 means one thread per available hardware thread.");
     std::println("        The digest does not depend on the number of threads.");
     std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
@@ -159,10 +158,11 @@ print_usage()
     std::println("");
 
     std::println("Within each node:");
-    std::println("The internal state is initialized with distinct per-lane constants, and the mix rate is folded into it (so different RATE values produce distinct digests).");
-    std::println("Input data is absorbed into the internal state via a one-way compression function.");
-    std::println("The internal state is mixed by the Castella permutation function every RATE absorptions, ensuring full state diffusion.");
-    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed into the internal state via the compression function.");
+    std::println("The internal state is initialized with distinct per-lane constants.");
+    std::println("The mix rate is folded into it, so different RATE values produce distinct digests.");
+    std::println("Input data is absorbed into the state by a one-way compression function.");
+    std::println("The Castella permutation function mixes the state every RATE absorptions, which diffuses it fully.");
+    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed by the compression function.");
     std::println("The Castella permutation function is then applied to the state to produce the digest.");
     std::println("");
 
@@ -254,8 +254,9 @@ void process_options(int argc, char* argv[])
             break;
 
         case OPTION_HASH_MIX_RATE:
-            // 0 (disable periodic mixing) or [MIX_RATE_MIN, MIX_RATE_MAX];
-            // MIX_RATE_MIN is 1, so the valid values are contiguous.
+            // 0 disables periodic mixing.  Otherwise the range is
+            // [MIX_RATE_MIN, MIX_RATE_MAX], and MIX_RATE_MIN is 1, so the
+            // valid values are contiguous.
             mix_rate = parse_option_int(optarg, 0,
                                          compress_castella_hash<>::MIX_RATE_MAX,
                                          "--mix-rate");
@@ -287,11 +288,10 @@ void process_options(int argc, char* argv[])
 
 /// Hash the contents of the file at \a path and return the digest
 /**
-* The construction+hash+finalization shared by the normal and --check
-* modes.  The parameters that are digest-relevant are explicit (a --tag
-* check line carries its own values); the ones that are not
-* (\c num_threads, \c use_mmap via \c process_file) are taken from the
-* globals.
+* The construction, hash, and finalization shared by the normal and --check
+* modes.  The digest-relevant parameters are explicit, because a --tag check
+* line carries its own values.  The rest come from the globals, namely
+* \c num_threads and \c use_mmap (through \c process_file).
 *
 * \exception std::system_error on I/O error
 * \exception std::invalid_argument if a parameter is invalid
@@ -300,14 +300,11 @@ void process_options(int argc, char* argv[])
 compute_file_digest(const std::string& path, const int digest_size,
                     const int rate, const int chunk_size_bytes)
 {
-    // A compress_castella_tree (not a plain compress_castella_hash): FILE
-    // is hashed as a chunked tree so that the work can be spread across
-    // num_threads CPU cores.  The digest depends on chunk_size but NEVER
-    // on num_threads, so any thread count (and either I/O mode) produces
-    // the same output for the same input.  Only memory-mapped input
-    // parallelizes: a CCH node hashes a chunk faster than it could be
-    // handed to another core (see USE_STREAMING_POOL), so the chunks fed
-    // by process_file's read loop are hashed inline on this thread.
+    // FILE is hashed as a chunked tree, so the work can spread across
+    // num_threads CPU cores.  Only memory-mapped input parallelizes.  A cch
+    // node hashes a chunk faster than it could be handed to another core (see
+    // USE_STREAMING_POOL), so the chunks fed by process_file's read loop are
+    // hashed inline on this thread.
     compress_castella_tree hash_obj{rate, chunk_size_bytes, num_threads};
 
     process_file(path, hash_obj, use_mmap);
@@ -353,8 +350,9 @@ parse_tagged_line(std::string_view s, check_line& out)
     if (!consume_prefix(s, ",mix-rate="))
         return false;
 
-    // 0 (disable periodic mixing) or [MIX_RATE_MIN, MIX_RATE_MAX];
-    // MIX_RATE_MIN is 1, so the valid values are contiguous.
+    // 0 disables periodic mixing.  Otherwise the range is [MIX_RATE_MIN,
+    // MIX_RATE_MAX], and MIX_RATE_MIN is 1, so the valid values are
+    // contiguous.
     if (!consume_int(s, 0, compress_castella_hash<>::MIX_RATE_MAX, out.mix_rate))
         return false;
 
@@ -529,12 +527,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
         }
-        // The tree hash object allocates (per-batch CV arrays, up to a
-        // --chunk-size buffer, worker node objects) and rethrows
-        // worker-thread exceptions out of add() and final_digest_bytes(),
-        // so std::bad_alloc is now reachable here.  Report and continue
-        // with the remaining files instead of letting it escape main() to
-        // std::terminate.
+        // The tree hash object allocates per-batch CV arrays, a buffer of up
+        // to --chunk-size, and worker node objects.  It also rethrows
+        // worker-thread exceptions out of add() and final_digest_bytes(), so
+        // std::bad_alloc is reachable here.  Report it and continue with the
+        // remaining files.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

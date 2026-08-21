@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// POSIX fd and mmap utilities: size queries, page alignment, and access-pattern hints.
+/// POSIX fd and mmap utilities for size queries, page alignment, and access-pattern hints.
 /**
 * \file
 * \author Steven Ward
@@ -55,8 +55,8 @@ get_file_size(const int fd)
 
 /// Computes a page-aligned mapping size for a given file size.
 /**
-* Rounds \p file_size up to the nearest multiple of the system page size,
-* as returned by \c sysconf(_SC_PAGESIZE). If \p file_size is zero, returns
+* Rounds \p file_size up to the nearest multiple of the system page size, as
+* returned by \c sysconf(_SC_PAGESIZE).  If \p file_size is zero, returns
 * exactly one page so that the mapping is never empty.
 *
 * \note Assumes \c sysconf(_SC_PAGESIZE) succeeds and returns a positive
@@ -90,18 +90,18 @@ get_mmap_size(const size_t file_size)
 * Applies an \c F_RDLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLKW, blocking until the lock is available.
 *
-* The lock is an Open File Description (OFD) lock, associated with the
-* open file description rather than the process. Unlike traditional POSIX
-* advisory locks (\c F_SETLKW), OFD locks are:
-*   - not released when another file descriptor referring to the same
-*     open file description is closed;
-*   - not shared among threads of the same process — each thread acquires
-*     and releases independently.
+* The lock is an Open File Description (OFD) lock, associated with the open
+* file description rather than the process.  Unlike traditional POSIX advisory
+* locks (\c F_SETLKW), OFD locks are:
+*   - not released when another file descriptor referring to the same open
+*     file description is closed
+*   - not shared among threads of the same process, so each thread acquires
+*     and releases independently
 *
-* Multiple readers may hold the lock simultaneously; the call blocks only
-* if a write lock is currently held by another open file description.
+* Multiple readers may hold the lock simultaneously.  The call blocks only if
+* another open file description holds a write lock.
 *
-* \param fd  Open file descriptor to lock. Must be open for reading.
+* \param fd  Open file descriptor to lock.  Must be open for reading.
 * \return    \c 0 on success, \c -1 on error (with \c errno set by
 *            \c fcntl(2)).
 *
@@ -139,18 +139,18 @@ acq_read_lock_fd(int fd)
 * Applies an \c F_WRLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLKW, blocking until the lock is available.
 *
-* The lock is an Open File Description (OFD) lock, associated with the
-* open file description rather than the process. Unlike traditional POSIX
-* advisory locks (\c F_SETLKW), OFD locks are:
-*   - not released when another file descriptor referring to the same
-*     open file description is closed;
-*   - not shared among threads of the same process — each thread acquires
-*     and releases independently.
+* The lock is an Open File Description (OFD) lock, associated with the open
+* file description rather than the process.  Unlike traditional POSIX advisory
+* locks (\c F_SETLKW), OFD locks are:
+*   - not released when another file descriptor referring to the same open
+*     file description is closed
+*   - not shared among threads of the same process, so each thread acquires
+*     and releases independently
 *
 * The call blocks until all read and write locks held by other open file
-* descriptions are released. Only one writer may hold the lock at a time.
+* descriptions are released.  Only one writer may hold the lock at a time.
 *
-* \param fd  Open file descriptor to lock. Must be open for writing.
+* \param fd  Open file descriptor to lock.  Must be open for writing.
 * \return    \c 0 on success, \c -1 on error (with \c errno set by
 *            \c fcntl(2)).
 *

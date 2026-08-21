@@ -82,13 +82,12 @@ void copy_bytes_into_memcpy(std::span<const std::byte> src, std::span<std::byte>
     }
     // src size <= dst size
 
-    // Guard the memcpy:
-    // std::data(src)/std::data(dst) may be null, and memcpy with a null
-    // pointer argument is undefined behavior even when the count is zero
-    // (its pointer arguments are declared never-null).  A non-empty src
-    // implies a non-empty dst here (src size <= dst size after the clamp),
-    // so this one check keeps both pointers valid and skips the zero-count
-    // copy.
+    // Guard the memcpy.  std::data(src) and std::data(dst) may be null, and
+    // memcpy with a null pointer argument is undefined behavior even when the
+    // count is zero, because its pointer arguments are declared never-null.
+    // A non-empty src implies a non-empty dst here, since src size <= dst
+    // size after the clamp, so this one check keeps both pointers valid and
+    // skips the zero-count copy.
     if (!std::empty(src))
     {
         (void)std::memcpy(std::data(dst), std::data(src), src.size_bytes());

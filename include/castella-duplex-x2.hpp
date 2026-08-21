@@ -363,17 +363,17 @@ public:
         zeroize_();
     }
 
-    /// Consume \a byte_sp_a into duplex A and \a byte_sp_b into duplex B
+    /// Consume \a src_a into duplex A and \a src_b into duplex B
     /**
-    * \param byte_sp_a the input data for duplex A
-    * \param byte_sp_b the input data for duplex B
-    * \pre \c std::size(byte_sp_a) == \c std::size(byte_sp_b) (lockstep: the
+    * \param src_a the input data for duplex A
+    * \param src_b the input data for duplex B
+    * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep: the
     *      lanes may absorb different bytes, never different lengths)
     */
-    void add(const std::span<const std::byte> byte_sp_a,
-             const std::span<const std::byte> byte_sp_b) noexcept
+    void add(const std::span<const std::byte> src_a,
+             const std::span<const std::byte> src_b) noexcept
     {
-        add_(byte_sp_a, byte_sp_b);
+        add_(src_a, src_b);
     }
 
     /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)

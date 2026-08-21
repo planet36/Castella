@@ -1720,14 +1720,14 @@ public:
     /// Consume the input data into the tree
     // {{{
     /**
-    * \param byte_sp the input data
+    * \param src the input data
     * \return a reference to the derived tree (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Derived& add(const std::span<const std::byte> byte_sp)
+    Derived& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1739,7 +1739,7 @@ public:
         if (has_been_finalized_)
             throw std::logic_error("Castella::HashTree::add: tree has been finalized");
 
-        add_(byte_sp);
+        add_(src);
 
         return derived_();
     }

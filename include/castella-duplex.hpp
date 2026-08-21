@@ -849,15 +849,13 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as an empty span, ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \note A null \a data with a nonzero \a len is almost certainly a caller
-    *       bug, so a \c -DDEBUG build asserts on it.
+    * \pre \a data is not null, unless \a len is 0 (asserted in a \c -DDEBUG build)
     */
     Duplex& add(const void* data, size_t len)
     {
@@ -865,9 +863,6 @@ public:
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
-
-        if (data == nullptr)
-            return add(std::span<const std::byte>{});
 
         return add(std::span{static_cast<const std::byte*>(data), len});
     }
@@ -908,15 +903,13 @@ public:
 
     /// \copybrief add_left_encoded(std::span<const std::byte>)
     /**
-    * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as an empty span, ignoring \a len, so it absorbs left_encode(0).
+    * The raw-data form, equivalent to the byte-span form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \note A null \a data with a nonzero \a len is almost certainly a caller
-    *       bug, so a \c -DDEBUG build asserts on it.
+    * \pre \a data is not null, unless \a len is 0 (asserted in a \c -DDEBUG build)
     */
     Duplex& add_left_encoded(const void* data, size_t len)
     {
@@ -924,9 +917,6 @@ public:
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
-
-        if (data == nullptr)
-            return add_left_encoded(std::span<const std::byte>{});
 
         return add_left_encoded(std::span{static_cast<const std::byte*>(data), len});
     }
@@ -967,15 +957,13 @@ public:
 
     /// \copybrief add_right_encoded(std::span<const std::byte>)
     /**
-    * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as an empty span, ignoring \a len, so it absorbs right_encode(0).
+    * The raw-data form, equivalent to the byte-span form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \note A null \a data with a nonzero \a len is almost certainly a caller
-    *       bug, so a \c -DDEBUG build asserts on it.
+    * \pre \a data is not null, unless \a len is 0 (asserted in a \c -DDEBUG build)
     */
     Duplex& add_right_encoded(const void* data, size_t len)
     {
@@ -983,9 +971,6 @@ public:
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
-
-        if (data == nullptr)
-            return add_right_encoded(std::span<const std::byte>{});
 
         return add_right_encoded(std::span{static_cast<const std::byte*>(data), len});
     }

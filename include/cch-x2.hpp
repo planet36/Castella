@@ -200,16 +200,14 @@ public:
 
     /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
     /**
-    * The raw-data form.  A null \a data_a or \a data_b makes the whole call
-    * absorb nothing in either lane, ignoring \a len.
+    * The raw-data form.
     *
     * \param data_a the input data for node A
     * \param data_b the input data for node B
     * \param len the size (in bytes) of BOTH inputs
     * \pre \c len is the size of both inputs (lockstep)
     * \pre neither node has been finalized
-    * \note A null pointer with a nonzero \a len is almost certainly a caller
-    *       bug, so a \c -DDEBUG build asserts on it.
+    * \pre neither pointer is null, unless \a len is 0 (asserted in a \c -DDEBUG build)
     */
     void add(const void* data_a, const void* data_b, const size_t len)
     {
@@ -219,12 +217,6 @@ public:
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
-
-        if ((data_a == nullptr) || (data_b == nullptr))
-        {
-            add(std::span<const std::byte>{}, std::span<const std::byte>{});
-            return;
-        }
 
         add(std::span{static_cast<const std::byte*>(data_a), len},
             std::span{static_cast<const std::byte*>(data_b), len});

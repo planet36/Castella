@@ -1746,16 +1746,14 @@ public:
 
     /// \copybrief add(std::span<const std::byte>)
     /**
-    * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as an empty span, ignoring \a len.
+    * The raw-data form, equivalent to the byte-span form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
     * \return a reference to the derived tree (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
-    * \note A null \a data with a nonzero \a len is almost certainly a caller
-    *       bug, so a \c -DDEBUG build asserts on it.
+    * \pre \a data is not null, unless \a len is 0 (asserted in a \c -DDEBUG build)
     */
     Derived& add(const void* data, size_t len)
     {
@@ -1763,9 +1761,6 @@ public:
         // NOLINTNEXTLINE(readability-simplify-boolean-expr)
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
-
-        if (data == nullptr)
-            return add(std::span<const std::byte>{});
 
         return add(std::span{static_cast<const std::byte*>(data), len});
     }

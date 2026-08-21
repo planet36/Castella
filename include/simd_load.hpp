@@ -41,7 +41,5 @@ simd_load16(const std::span<const std::byte> src) noexcept
 [[nodiscard]] static inline uint8x16_t
 simd_load16(const void* src) noexcept
 {
-    uint8x16_t dst{};
-    (void)std::memcpy(&dst, src, sizeof(dst));
-    return dst;
+    return simd_load16(std::span{static_cast<const std::byte*>(src), sizeof(uint8x16_t)});
 }

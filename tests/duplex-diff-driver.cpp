@@ -79,14 +79,6 @@ hex_nibble(const char c)
 * empty byte string as "-", because a zero-length field cannot be read from a
 * whitespace-delimited line.
 *
-* The bytes are carried in a \c std::string rather than a
-* <code>std::vector<std::byte></code> because \c std::string::data() is never
-* null, even when the string is empty.  An empty vector's \c data() may be
-* null.  The \c add_left_encoded and \c add_right_encoded span overloads treat
-* a null data pointer as a no-op, which is a C++-side API convenience with no
-* counterpart in the specification or the Python model.  Without the string it
-* would show up as a spurious divergence on every empty-payload program.
-*
 * \param hex the hexadecimal characters to decode, or "-" for no bytes
 * \return the decoded bytes
 * \exception std::invalid_argument if \a hex has an odd length or holds a

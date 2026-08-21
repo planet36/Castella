@@ -814,8 +814,6 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
 
     if (num_verified != *expect_count)
     {
-        // Keep the summary above this line.  stdout is block-buffered when
-        // redirected, so without the flush it would appear after it.
         (void)std::fflush(stdout);
         std::println(stderr,
                      "{}: expected {} KATs, verified {} -- the file is "

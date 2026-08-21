@@ -885,8 +885,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (num_passed != EXPECTED_CHECKS)
     {
-        // Keep the summary above this line: stdout is block-buffered when
-        // redirected, so without the flush it would appear after it.
         (void)std::fflush(stdout);
         std::println(stderr,
                      "expected {} checks, made {} -- an example is missing, or "

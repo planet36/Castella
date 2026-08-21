@@ -244,7 +244,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     }
     catch (const std::exception& e)
     {
-        // Flush the results already written before reporting on stderr.
         (void)std::fflush(stdout);
         std::println(stderr, "error: line {}: {}", lineno, e.what());
         return EXIT_FAILURE;

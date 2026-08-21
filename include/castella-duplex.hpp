@@ -893,17 +893,13 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note A span with null data absorbs nothing, not even the encoded length
-    *       0.  An empty span with non-null data, such as one of "", instead
-    *       absorbs left_encode(0).
+    * \note An empty span absorbs left_encode(0), whether or not its data is
+    *       null.
     */
     // }}}
     Duplex& add_left_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
-
-        if (std::data(src) == nullptr)
-            return *this;
 
         left_encode_bytes_(src);
 
@@ -913,8 +909,7 @@ public:
     /// \copybrief add_left_encoded(std::span<const std::byte>)
     /**
     * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as a span with null data, which absorbs nothing, not even
-    * left_encode(0), and \a len is ignored.
+    * treated as an empty span, ignoring \a len, so it absorbs left_encode(0).
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -943,13 +938,6 @@ public:
     * \param s the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
-    * \warning \c ""sv and \c std::string_view{} are not interchangeable here,
-    *          though they compare equal and are in most C++ code.  The first
-    *          has non-null \c data() and absorbs \c left_encode(0).  The
-    *          second has null \c data() and absorbs nothing, exactly as if
-    *          this were never called.  The two therefore give different
-    *          digests, so substituting one for the other is a digest change,
-    *          not a refactor.
     */
     Duplex& add_left_encoded(const std::string_view s)
     {
@@ -964,17 +952,13 @@ public:
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note A span with null data absorbs nothing, not even the encoded length
-    *       0.  An empty span with non-null data, such as one of "", instead
-    *       absorbs right_encode(0).
+    * \note An empty span absorbs right_encode(0), whether or not its data is
+    *       null.
     */
     // }}}
     Duplex& add_right_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
-
-        if (std::data(src) == nullptr)
-            return *this;
 
         right_encode_bytes_(src);
 
@@ -984,8 +968,7 @@ public:
     /// \copybrief add_right_encoded(std::span<const std::byte>)
     /**
     * The raw-data form, equivalent to the byte-span form.  A null \a data is
-    * treated as a span with null data, which absorbs nothing, not even
-    * right_encode(0), and \a len is ignored.
+    * treated as an empty span, ignoring \a len, so it absorbs right_encode(0).
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data

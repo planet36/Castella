@@ -20,18 +20,6 @@
 
 /// Load 16 bytes from \a src into a \c uint8x16_t
 /**
-* \pre \a src points to at least 16 bytes of data
-*/
-[[nodiscard]] static inline uint8x16_t
-simd_load16(const void* src) noexcept
-{
-    uint8x16_t dst{};
-    (void)std::memcpy(&dst, src, sizeof(dst));
-    return dst;
-}
-
-/// Load 16 bytes from \a src into a \c uint8x16_t
-/**
 * \pre the size of \a src is at least 16
 */
 [[nodiscard]] static inline uint8x16_t
@@ -43,5 +31,17 @@ simd_load16(const std::span<const std::byte> src) noexcept
 
     uint8x16_t dst{};
     (void)std::memcpy(&dst, std::data(src), sizeof(dst));
+    return dst;
+}
+
+/// Load 16 bytes from \a src into a \c uint8x16_t
+/**
+* \pre \a src points to at least 16 bytes of data
+*/
+[[nodiscard]] static inline uint8x16_t
+simd_load16(const void* src) noexcept
+{
+    uint8x16_t dst{};
+    (void)std::memcpy(&dst, src, sizeof(dst));
     return dst;
 }

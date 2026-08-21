@@ -10,6 +10,7 @@
 #pragma once
 
 #include "as_byte_span.hpp"
+#include "broadcast.hpp"
 #include "castella-permute.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
@@ -19,7 +20,6 @@
 #include "to_unsigned.hpp"
 
 #include <algorithm>
-#include <array>
 #include <bit>
 #if defined(DEBUG)
 #include <cassert>
@@ -203,9 +203,7 @@ private:
     // }}}
     void bind_mix_rate_() noexcept
     {
-        std::array<uint16_t, sizeof(block_t) / sizeof(uint16_t)> mix_rate_copies{};
-        mix_rate_copies.fill(static_cast<uint16_t>(mix_rate_));
-        const auto mix_rate_block = std::bit_cast<block_t>(mix_rate_copies);
+        const auto mix_rate_block = broadcast_u16(to_unsigned(mix_rate_));
 
         for (auto& lane : state_)
         {

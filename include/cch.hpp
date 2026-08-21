@@ -81,7 +81,7 @@ public:
     /// The number of permutation rounds used by a periodic mix
     /**
     * The full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN, without the
-    * extra round \c FINAL_NUM_ROUNDS adds.
+    * extra round \c FINAL_MIX_NUM_ROUNDS adds.
     */
     static constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>();
 
@@ -98,8 +98,8 @@ public:
     * \c NUM_ROUNDS_MAX finalization come from the many rounds shed, not from
     * this one.
     */
-    static constexpr int FINAL_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>() + 1;
-    static_assert(FINAL_NUM_ROUNDS <= Castella::NUM_ROUNDS_MAX);
+    static constexpr int FINAL_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>() + 1;
+    static_assert(FINAL_MIX_NUM_ROUNDS <= Castella::NUM_ROUNDS_MAX);
 
 private:
     /// Create the initial state
@@ -402,7 +402,7 @@ private:
         if (!has_been_finalized_)
         {
             add_padding_bytes_();
-            Castella::permute(state_, FINAL_NUM_ROUNDS);
+            Castella::permute(state_, FINAL_MIX_NUM_ROUNDS);
             has_been_finalized_ = true;
         }
 

@@ -71,7 +71,7 @@ inline constexpr int state_size_bytes = sizeof(state_t);
 inline constexpr int MIX_RATE = node_t::DEFAULT_MIX_RATE;
 
 /// The rounds of the periodic mix permute in \c compress_castella_hash::absorb_
-inline constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
+inline constexpr int PERIODIC_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS>();
 
 /// Per-buffer sizes, where the working set is \a N times one of these
 /**
@@ -141,7 +141,7 @@ absorb_chunk(state_t& state, const std::byte* chunk, int& absorbs_since_mix) noe
 
     if (++absorbs_since_mix >= MIX_RATE)
     {
-        Castella::permute(state, MIX_NUM_ROUNDS);
+        Castella::permute(state, PERIODIC_MIX_NUM_ROUNDS);
         absorbs_since_mix = 0;
     }
 }

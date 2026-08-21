@@ -83,7 +83,7 @@ public:
     * The full-bit-diffusion floor \c Castella::NUM_ROUNDS_MIN, without the
     * extra round \c FINAL_MIX_NUM_ROUNDS adds.
     */
-    static constexpr int MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>();
+    static constexpr int PERIODIC_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N>();
 
     /// The number of permutation rounds used at finalization
     /**
@@ -266,7 +266,7 @@ private:
         if (should_mix_state_(absorbs_since_mix_))
         {
             // Periodically mix the state.
-            Castella::permute(state_, MIX_NUM_ROUNDS);
+            Castella::permute(state_, PERIODIC_MIX_NUM_ROUNDS);
         }
     }
 
@@ -336,7 +336,7 @@ private:
                     if (should_mix_state_(absorbs_since_mix))
                     {
                         // Periodically mix the state.
-                        Castella::permute(state, MIX_NUM_ROUNDS);
+                        Castella::permute(state, PERIODIC_MIX_NUM_ROUNDS);
                     }
                 } while (std::size(src) >= get_state_size_bytes());
 

@@ -160,8 +160,8 @@ public:
                     // decides the mix for both states.
                     if (node_a_.should_mix_state_(absorbs_since_mix))
                     {
-                        Castella::permute(state_a, node_type::MIX_NUM_ROUNDS);
-                        Castella::permute(state_b, node_type::MIX_NUM_ROUNDS);
+                        Castella::permute(state_a, node_type::PERIODIC_MIX_NUM_ROUNDS);
+                        Castella::permute(state_b, node_type::PERIODIC_MIX_NUM_ROUNDS);
                     }
                 } while (std::size(src_a) >= node_a_.get_state_size_bytes());
 

@@ -73,7 +73,7 @@ hex_to_bytes(const std::string_view s)
 * a timing oracle for an expected digest.  That matters when the digest is a
 * MAC.
 *
-* C++ cannot express a timing guarantee.  \a diff is \c volatile so the
+* C++ cannot express a timing guarantee.  \c diff is \c volatile so the
 * compiler must perform every accumulation, in order, rather than stop at the
 * first difference.
 */

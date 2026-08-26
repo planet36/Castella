@@ -53,7 +53,7 @@ hex_to_bytes(const std::string_view s)
 
     std::vector<std::byte> result(std::size(s) / 2);
 
-    for (size_t i = 0; i < std::size(result); ++i)
+    for (std::size_t i = 0; i < std::size(result); ++i)
     {
         const int hi = nibble_val(s[2 * i]);
         const int lo = nibble_val(s[2 * i + 1]);
@@ -86,7 +86,7 @@ equal_constant_time(const std::span<const std::byte> a,
 
     volatile unsigned int diff = 0;
 
-    for (size_t i = 0; i < std::size(a); ++i)
+    for (std::size_t i = 0; i < std::size(a); ++i)
     {
         diff |= std::to_integer<unsigned int>(a[i] ^ b[i]);
     }
@@ -123,7 +123,7 @@ consume_int(std::string_view& s, const int min, const int max, int& value) noexc
     if ((ec != std::errc{}) || (parsed < min) || (parsed > max))
         return false;
 
-    s.remove_prefix(static_cast<size_t>(ptr - std::data(s)));
+    s.remove_prefix(static_cast<std::size_t>(ptr - std::data(s)));
     value = parsed;
     return true;
 }

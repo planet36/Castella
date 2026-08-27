@@ -26,7 +26,7 @@ extern "C" {
 * sockets, and other non-seekable descriptors.
 *
 * \param fd  Open file descriptor to test.
-* \return    \c true if \p fd is seekable, \c false otherwise.
+* \return    \c true if \a fd is seekable, \c false otherwise.
 */
 static inline bool
 is_seekable(const int fd)
@@ -75,11 +75,11 @@ roundm_up(size_t n, size_t m)
 
 /// Computes a page-aligned mapping size for a given file size.
 /**
-* If \p file_size is zero, returns exactly one page so that the mapping is never empty.
+* If \a file_size is zero, returns exactly one page so that the mapping is never empty.
 *
 * \param file_size  Logical size of the file in bytes.
-* \return           Smallest page-aligned size >= \p file_size, or one full
-*                   page if \p file_size is zero.
+* \return           Smallest page-aligned size >= \a file_size, or one full
+*                   page if \a file_size is zero.
 */
 static inline size_t
 get_mmap_size(const size_t file_size)

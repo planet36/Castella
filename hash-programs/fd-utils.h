@@ -53,14 +53,19 @@ get_file_size(const int fd)
     return statbuf.st_size;
 }
 
+/// Get the system page size (in bytes)
+/**
+* \c sysconf cannot fail for \c _SC_PAGESIZE, so there is no error check.
+*/
+static inline size_t
+get_page_size(void)
+{
+    return (size_t)sysconf(_SC_PAGESIZE);
+}
+
 /// Computes a page-aligned mapping size for a given file size.
 /**
-* Rounds \p file_size up to the nearest multiple of the system page size, as
-* returned by \c sysconf(_SC_PAGESIZE).  If \p file_size is zero, returns
-* exactly one page so that the mapping is never empty.
-*
-* \note Assumes \c sysconf(_SC_PAGESIZE) succeeds and returns a positive
-*       power-of-two value.
+* If \p file_size is zero, returns exactly one page so that the mapping is never empty.
 *
 * \param file_size  Logical size of the file in bytes.
 * \return           Smallest page-aligned size >= \p file_size, or one full
@@ -69,9 +74,7 @@ get_file_size(const int fd)
 static inline size_t
 get_mmap_size(const size_t file_size)
 {
-    // Presume that sysconf(_SC_PAGESIZE) will not fail.
-    // NOLINTNEXTLINE(hicpp-use-auto,modernize-use-auto)
-    const size_t page_size = (size_t)sysconf(_SC_PAGESIZE);
+    const size_t page_size = get_page_size();
 
     if (file_size == 0)
         return page_size;

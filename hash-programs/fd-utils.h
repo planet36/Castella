@@ -63,6 +63,16 @@ get_page_size(void)
     return (size_t)sysconf(_SC_PAGESIZE);
 }
 
+/// Round \a n up to a multiple of \a m
+/**
+* \pre \a m > 0
+*/
+static inline size_t
+roundm_up(size_t n, size_t m)
+{
+    return (n + m - 1) / m * m;
+}
+
 /// Computes a page-aligned mapping size for a given file size.
 /**
 * If \p file_size is zero, returns exactly one page so that the mapping is never empty.
@@ -76,16 +86,7 @@ get_mmap_size(const size_t file_size)
 {
     const size_t page_size = get_page_size();
 
-    if (file_size == 0)
-        return page_size;
-
-    const size_t remainder = file_size % page_size;
-
-    if (remainder == 0)
-        return file_size;
-
-    // align on page boundary
-    return file_size + (page_size - remainder);
+    return file_size == 0 ? page_size : roundm_up(file_size, page_size);
 }
 
 /// Acquires a blocking OFD read (shared) lock on an entire file.

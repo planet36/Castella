@@ -75,18 +75,18 @@ roundm_up(size_t n, size_t m)
 
 /// Computes a page-aligned mapping size for a given file size.
 /**
-* If \a file_size is zero, returns exactly one page so that the mapping is never empty.
+* If \a num_bytes is zero, returns exactly one page so that the mapping is never empty.
 *
-* \param file_size  Logical size of the file in bytes.
-* \return           Smallest page-aligned size >= \a file_size, or one full
-*                   page if \a file_size is zero.
+* \param num_bytes  Logical size of the file in bytes.
+* \return           Smallest page-aligned size >= \a num_bytes, or one full
+*                   page if \a num_bytes is zero.
 */
 static inline size_t
-get_mmap_size(const size_t file_size)
+get_mmap_size(const size_t num_bytes)
 {
     const size_t page_size = get_page_size();
 
-    return file_size == 0 ? page_size : roundm_up(file_size, page_size);
+    return num_bytes == 0 ? page_size : roundm_up(num_bytes, page_size);
 }
 
 /// Acquires a blocking OFD read (shared) lock on an entire file.

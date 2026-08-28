@@ -82,7 +82,7 @@ roundm_up(size_t n, size_t m)
 *                   page if \a num_bytes is zero.
 */
 static inline size_t
-get_mmap_size(const size_t num_bytes)
+get_mapping_size(const size_t num_bytes)
 {
     const size_t page_size = get_page_size();
 

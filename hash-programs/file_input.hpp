@@ -102,7 +102,7 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
             return;
         }
 
-        const auto mmap_size = get_mmap_size(file_size);
+        const auto mmap_size = get_mapping_size(file_size);
 
         void* mmap_addr = ::mmap(nullptr, mmap_size, PROT_READ, MAP_PRIVATE, fd.get(), 0);
 

@@ -9,6 +9,7 @@
 #include "encode.hpp"
 #include "file_input.hpp"
 #include "fnv.hpp"
+#include "locked_allocator.hpp"
 #include "parse_int.hpp"
 #include "quote_shell_always.hpp"
 #include "to_unsigned.hpp"
@@ -110,12 +111,19 @@ bool quiet = false;
 std::string key_file_path;
 
 /// A buffer of key bytes
-using key_buffer = std::vector<std::byte>;
+/** The allocator zeroizes the storage on deallocation. */
+using key_buffer = locked_bytes;
 
 /// The secret key bytes read from --key-file, or empty when unkeyed
 /**
-* This buffer is zeroized before the program exits, on every path.  Transient
-* copies made by the I/O layer while reading the key file are not.
+* This has static storage duration, so it is deallocated when the program
+* exits normally or through exit().  A DEBUG build that aborts on a failed
+* assertion skips that, and it is also the build that still writes cores.
+*
+* Copies of the key elsewhere are neither zeroized nor locked.  The I/O layer
+* makes one while reading the key file, and hashing makes another in the
+* tree's chunk buffer.  In a release build, disabling core dumps covers every
+* copy, and the lock on this buffer covers only this one.
 */
 key_buffer key_bytes;
 // }}}
@@ -433,6 +441,11 @@ max_key_size_bytes(const int chunk_size_bytes) noexcept
 /**
 * The key is the file's exact bytes.  This never seeks, so pipes and process
 * substitution work.  One example is --key-file=<(pass show x).
+*
+* The loop takes one byte at a time from the stream's buffer, so the check
+* against \a max_size_bytes catches an oversized file on the first byte past
+* the limit.  Filling that stream buffer is what reads the file, so the key
+* also passes through unlocked heap on the way in.
 */
 [[nodiscard]] key_buffer
 read_key_file(const std::string& path, const int max_size_bytes)
@@ -443,9 +456,9 @@ read_key_file(const std::string& path, const int max_size_bytes)
         errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
 
     key_buffer key;
-    // Reserve the whole permitted size up front so the buffer never
-    // reallocates.  A growing key would otherwise strand un-scrubbed copies of
-    // earlier prefixes in freed heap.  Only the final buffer is zeroized.
+    // Reserving the whole permitted size keeps the key in one locked page.  It
+    // also means push_back never reallocates, so no allocation failure can
+    // escape this try block.
     try
     {
         key.reserve(to_unsigned(max_size_bytes));
@@ -462,7 +475,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
         if (std::ssize(key) >= max_size_bytes)
         {
             // errx exits without unwinding, so the local key must be scrubbed here.
-            explicit_bzero(std::data(key), std::size(key));
+            key = key_buffer{}; // deallocate
             errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)",
                  path.c_str(), max_size_bytes);
         }
@@ -473,7 +486,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
     if (!file.eof())
     {
         // errx exits without unwinding, so the local key must be scrubbed here.
-        explicit_bzero(std::data(key), std::size(key));
+        key = key_buffer{}; // deallocate
         errx(EXIT_FAILURE, "%s: could not read key file", path.c_str());
     }
 

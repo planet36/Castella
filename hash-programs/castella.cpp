@@ -445,7 +445,15 @@ read_key_file(const std::string& path, const int max_size_bytes)
     // Reserve the whole permitted size up front so the buffer never
     // reallocates.  A growing key would otherwise strand un-scrubbed copies of
     // earlier prefixes in freed heap.  Only the final buffer is zeroized.
-    key.reserve(to_unsigned(max_size_bytes));
+    try
+    {
+        key.reserve(to_unsigned(max_size_bytes));
+    }
+    catch (const std::exception& ex)
+    {
+        errx(EXIT_FAILURE, "%s: could not allocate the key buffer: %s",
+             path.c_str(), ex.what());
+    }
 
     char c = 0;
     while (file.get(c))

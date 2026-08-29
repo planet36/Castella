@@ -73,13 +73,11 @@ roundm_up(size_t n, size_t m)
     return (n + m - 1) / m * m;
 }
 
-/// Computes a page-aligned mapping size for a given file size.
+/// Get the whole-page size of the mapping that holds \a num_bytes
 /**
-* If \a num_bytes is zero, returns exactly one page so that the mapping is never empty.
+* \c mmap rejects a length of 0, so a zero request gets one page.
 *
-* \param num_bytes  Logical size of the file in bytes.
-* \return           Smallest page-aligned size >= \a num_bytes, or one full
-*                   page if \a num_bytes is zero.
+* \return the page size if \a num_bytes is 0
 */
 static inline size_t
 get_mapping_size(const size_t num_bytes)

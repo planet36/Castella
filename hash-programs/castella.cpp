@@ -430,9 +430,8 @@ max_key_size_bytes(const int chunk_size_bytes) noexcept
 
 /// Read the key from the file at \a path, or exit with an error
 /**
-* The key is the file's exact bytes.  The file is read byte by byte, without
-* seeking, so pipes and process substitution work.  One example is
-* --key-file=<(pass show x).
+* The key is the file's exact bytes.  This never seeks, so pipes and process
+* substitution work.  One example is --key-file=<(pass show x).
 */
 [[nodiscard]] key_buffer
 read_key_file(const std::string& path, const int max_size_bytes)
@@ -453,7 +452,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
     {
         if (std::ssize(key) >= max_size_bytes)
         {
-            // errx exits without unwinding, so the key must be scrubbed here.
+            // errx exits without unwinding, so the local key must be scrubbed here.
             explicit_bzero(std::data(key), std::size(key));
             errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)",
                  path.c_str(), max_size_bytes);
@@ -464,6 +463,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
     if (!file.eof())
     {
+        // errx exits without unwinding, so the local key must be scrubbed here.
         explicit_bzero(std::data(key), std::size(key));
         errx(EXIT_FAILURE, "%s: could not read key file", path.c_str());
     }

@@ -5,6 +5,7 @@
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"
+#include "disable_core_dumps.h"
 #include "encode.hpp"
 #include "file_input.hpp"
 #include "fnv.hpp"
@@ -743,6 +744,10 @@ verify_check_line(const std::string_view line, check_totals& totals)
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
+#if !defined(DEBUG)
+    disable_core_dumps();
+#endif
+
     int exit_status = EXIT_SUCCESS;
 
     process_options(argc, argv);

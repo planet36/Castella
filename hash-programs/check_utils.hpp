@@ -16,6 +16,7 @@
 #pragma once
 
 #include <charconv>
+#include <cinttypes>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -259,21 +260,21 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
         }
         else if (totals.num_malformed > num_malformed_before)
         {
-            warnx("WARNING: %jd line(s) improperly formatted",
-                  static_cast<intmax_t>(totals.num_malformed - num_malformed_before));
+            warnx("WARNING: %" PRId64 " line(s) improperly formatted",
+                  totals.num_malformed - num_malformed_before);
         }
     }
 
     if (totals.num_unreadable > 0)
     {
-        warnx("WARNING: %jd listed file(s) could not be read",
-              static_cast<intmax_t>(totals.num_unreadable));
+        warnx("WARNING: %" PRId64 " listed file(s) could not be read",
+              totals.num_unreadable);
     }
 
     if (totals.num_mismatched > 0)
     {
-        warnx("WARNING: %jd computed checksum(s) did NOT match",
-              static_cast<intmax_t>(totals.num_mismatched));
+        warnx("WARNING: %" PRId64 " computed checksum(s) did NOT match",
+              totals.num_mismatched);
     }
 
     return (every_checkfile_ok && totals.all_ok()) ? EXIT_SUCCESS : EXIT_FAILURE;

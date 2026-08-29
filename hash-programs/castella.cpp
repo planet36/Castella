@@ -108,12 +108,15 @@ bool quiet = false;
 /// The --key-file path, or empty when unkeyed
 std::string key_file_path;
 
+/// A buffer of key bytes
+using key_buffer = std::vector<std::byte>;
+
 /// The secret key bytes read from --key-file, or empty when unkeyed
 /**
 * This buffer is zeroized before the program exits, on every path.  Transient
 * copies made by the I/O layer while reading the key file are not.
 */
-std::vector<std::byte> key_bytes;
+key_buffer key_bytes;
 // }}}
 
 /// Given the number of bytes to squeeze (D), get the necessary capacity (C) in blocks
@@ -431,7 +434,7 @@ max_key_size_bytes(const int chunk_size_bytes) noexcept
 * seeking, so pipes and process substitution work.  One example is
 * --key-file=<(pass show x).
 */
-[[nodiscard]] std::vector<std::byte>
+[[nodiscard]] key_buffer
 read_key_file(const std::string& path, const int max_size_bytes)
 {
     std::ifstream file(path, std::ios::binary);
@@ -439,7 +442,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
     if (!file.is_open())
         errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
 
-    std::vector<std::byte> key;
+    key_buffer key;
     // Reserve the whole permitted size up front so the buffer never
     // reallocates.  A growing key would otherwise strand un-scrubbed copies of
     // earlier prefixes in freed heap.  Only the final buffer is zeroized.

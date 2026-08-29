@@ -28,7 +28,6 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <string.h> // explicit_bzero
 #include <string_view>
 #include <system_error>
 #include <utility>
@@ -788,9 +787,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // to hash.
         exit_status = run_check_files(paths, verify_check_line);
 
-        if (!key_bytes.empty())
-            explicit_bzero(std::data(key_bytes), std::size(key_bytes));
-
         return exit_status;
     }
 
@@ -840,9 +836,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             exit_status = EXIT_FAILURE;
         }
     }
-
-    if (!key_bytes.empty())
-        explicit_bzero(std::data(key_bytes), std::size(key_bytes));
 
     return exit_status;
 }

@@ -18,6 +18,7 @@
 
 #include "fd-utils.h"
 #include "mmap_sigbus_guard.hpp"
+#include "page-utils.hpp"
 #include "quote_shell_always.hpp"
 #include "unique_fd.hpp"
 

@@ -53,40 +53,6 @@ get_file_size(const int fd)
     return statbuf.st_size;
 }
 
-/// Get the system page size (in bytes)
-/**
-* \c sysconf cannot fail for \c _SC_PAGESIZE, so there is no error check.
-*/
-static inline size_t
-get_page_size(void)
-{
-    return (size_t)sysconf(_SC_PAGESIZE);
-}
-
-/// Round \a n up to a multiple of \a m
-/**
-* \pre \a m > 0
-*/
-static inline size_t
-roundm_up(size_t n, size_t m)
-{
-    return (n + m - 1) / m * m;
-}
-
-/// Get the whole-page size of the mapping that holds \a num_bytes
-/**
-* \c mmap rejects a length of 0, so a zero request gets one page.
-*
-* \return the page size if \a num_bytes is 0
-*/
-static inline size_t
-get_mapping_size(const size_t num_bytes)
-{
-    const size_t page_size = get_page_size();
-
-    return num_bytes == 0 ? page_size : roundm_up(num_bytes, page_size);
-}
-
 /// Acquires a blocking OFD read (shared) lock on an entire file.
 /**
 * Applies an \c F_RDLCK over the whole file (offset 0, length 0) using

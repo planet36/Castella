@@ -9,25 +9,25 @@
 
 #pragma once
 
-#include <stddef.h>
+#include <cstddef>
 #include <unistd.h>
 
 /// Get the system page size (in bytes)
 /**
 * \c sysconf cannot fail for \c _SC_PAGESIZE, so there is no error check.
 */
-static inline size_t
-get_page_size(void)
+inline std::size_t
+get_page_size() noexcept
 {
-    return (size_t)sysconf(_SC_PAGESIZE);
+    return static_cast<std::size_t>(::sysconf(_SC_PAGESIZE));
 }
 
 /// Round \a n up to a multiple of \a m
 /**
 * \pre \a m > 0
 */
-static inline size_t
-roundm_up(size_t n, size_t m)
+constexpr std::size_t
+roundm_up(std::size_t n, std::size_t m) noexcept
 {
     return (n + m - 1) / m * m;
 }
@@ -38,10 +38,10 @@ roundm_up(size_t n, size_t m)
 *
 * \return the page size if \a num_bytes is 0
 */
-static inline size_t
-get_mapping_size(const size_t num_bytes)
+inline std::size_t
+get_mapping_size(std::size_t num_bytes) noexcept
 {
-    const size_t page_size = get_page_size();
+    const std::size_t page_size = get_page_size();
 
     return num_bytes == 0 ? page_size : roundm_up(num_bytes, page_size);
 }

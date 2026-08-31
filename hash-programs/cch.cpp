@@ -288,10 +288,10 @@ void process_options(int argc, char* argv[])
 
 /// Hash the contents of the file at \a path and return the digest
 /**
-* The construction, hash, and finalization shared by the normal and --check
-* modes.  The digest-relevant parameters are explicit, because a --tag check
-* line carries its own values.  The rest come from the globals, namely
-* \c num_threads and \c use_mmap (through \c process_file).
+* Both the normal mode and --check mode build the tree here, absorb the file,
+* and finalize the digest.  The digest-relevant parameters are explicit,
+* because a --tag check line carries its own values.  The rest come from the
+* globals, namely \c num_threads and \c use_mmap (through \c process_file).
 *
 * \exception std::system_error on I/O error
 * \exception std::invalid_argument if a parameter is invalid
@@ -319,7 +319,7 @@ format_tag_params(const int chunk_size_bytes, const int rate)
     return std::format("chunk-size={},mix-rate={}", chunk_size_bytes, rate);
 }
 
-/// One parsed line of a checkfile: the expected digest and what produced it
+/// One parsed line of a checkfile
 struct check_line final
 {
     std::string path;
@@ -377,9 +377,9 @@ parse_tagged_line(std::string_view s, check_line& out)
 
 /// Parse an untagged line (digest, two spaces, FILE)
 /**
-* The digest-relevant options are taken from the command line.  The FILE
-* is shell-quoted (what this program emits); a bare FILE spanning the rest
-* of the line is also accepted.
+* The digest-relevant options are taken from the command line.  The FILE is
+* shell-quoted, which is what this program emits.  A bare FILE spanning the
+* rest of the line is also accepted.
 */
 [[nodiscard]] bool
 parse_untagged_line(std::string_view s, check_line& out)
@@ -423,7 +423,12 @@ parse_untagged_line(std::string_view s, check_line& out)
     return true;
 }
 
-/// Verify one checkfile line: parse, recompute the digest, print the result
+/// Parse one checkfile line, recompute its digest, and update \a totals
+/**
+* A mismatch or an unreadable file always prints.  A match prints unless
+* --quiet was given.  A malformed line prints nothing, and \c run_check_files
+* reports the count of those instead.
+*/
 void
 verify_check_line(const std::string_view line, check_totals& totals)
 {

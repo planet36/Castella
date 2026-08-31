@@ -39,15 +39,15 @@ inline constexpr std::string_view program_version = "2026-08-29";
 
 inline constexpr std::string_view function_name = "Castella";
 
-/// The function name of keyed (--key-file) hashing; domain-separates MACs
-/// from unkeyed digests
+/// The function name of keyed (--key-file) hashing
+/** The distinct name domain-separates MACs from unkeyed digests. */
 inline constexpr std::string_view mac_function_name = "Castella-MAC";
 
 /// The absolute maximum key size (in bytes)
 /**
-* The key must also fit in one tree chunk together with its bytepad framing
-* (see \c compute_file_digest).  At the minimum chunk size that limit is 1014
-* bytes, far beyond any real key.
+* A second limit applies as well.  The key and the two length prefixes before
+* it must fit in one tree chunk (see \c compute_file_digest).  At the minimum
+* chunk size that limit is 1014 bytes, far beyond any real key.
 */
 inline constexpr int key_size_max = 4096;
 
@@ -57,7 +57,8 @@ inline constexpr int default_input_suffix = 1;
 // The minimum claimed round counts (SPEC.md "Margin rationale").  Capacity
 // C <= 6 needs R >= 6.  C = 8, which covers digests of 49 to 64 bytes, needs
 // R >= 8.  When --rounds is not given, get_necessary_num_rounds derives the
-// default from the digest size, so the out-of-box instances are all claimed.
+// default from the digest size.  Every instance this program produces without
+// --rounds is therefore one the security claim covers.
 inline constexpr int num_rounds_claimed_small = 6;
 inline constexpr int num_rounds_claimed_large = 8;
 static_assert(num_rounds_claimed_small >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
@@ -84,10 +85,10 @@ inline constexpr int default_num_threads = 0;
 // {{{ options
 auto input_suffix = default_input_suffix;
 
-// Unset until --rounds is parsed.  While it is unset, each use site derives
-// the round count from its own digest size (see resolve_num_rounds).  That
-// lets a --check run follow each checkfile line's digest length rather than
-// the command line's --size.
+// Unset until --rounds is parsed.  While it is unset, each caller derives the
+// round count from the digest size it is about to produce (see
+// resolve_num_rounds).  That lets a --check run follow each checkfile line's
+// digest length rather than the command line's --size.
 std::optional<int> num_rounds_given;
 
 auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
@@ -116,13 +117,13 @@ using key_buffer = locked_bytes;
 /// The secret key bytes read from --key-file, or empty when unkeyed
 /**
 * This has static storage duration, so it is deallocated when the program
-* exits normally or through exit().  A DEBUG build that aborts on a failed
-* assertion skips that, and it is also the build that still writes cores.
+* exits normally or through exit().  An aborting assertion skips that
+* deallocation, and only a DEBUG build both asserts and still writes cores.
 *
-* Copies of the key elsewhere are neither zeroized nor locked.  The I/O layer
-* makes one while reading the key file, and hashing makes another in the
-* tree's chunk buffer.  In a release build, disabling core dumps covers every
-* copy, and the lock on this buffer covers only this one.
+* The key also reaches two other buffers.  The stream buffer in
+* \c read_key_file is neither zeroized nor locked, and the tree's chunk buffer
+* is zeroized but not locked.  Only this buffer is locked, and in a release
+* build disabling core dumps is what covers the other two.
 */
 key_buffer key_bytes;
 // }}}
@@ -160,8 +161,11 @@ get_necessary_num_rounds(const int digest_size_bytes) noexcept
                : num_rounds_claimed_large;
 }
 
-/// Get the explicit number of rounds (if --rounds was given), else use
-/// \a digest_size_bytes to get the minimum claimed round count
+/// The number of rounds for a digest of \a digest_size_bytes bytes
+/**
+* An explicit --rounds wins.  Without it the result is the minimum claimed
+* round count for that digest size.
+*/
 [[nodiscard]] static inline int
 resolve_num_rounds(const int digest_size_bytes) noexcept
 {
@@ -424,9 +428,9 @@ void process_options(int argc, char* argv[])
 
 /// The maximum key size (in bytes) for the given chunk size
 /**
-* The key and its bytepad framing must fit in one tree chunk (see
-* \c compute_file_digest).  The framing is left_encode(chunk size) and
-* left_encode(key size), at most 5 bytes each.
+* The key and the two length prefixes before it must fit in one tree chunk
+* (see \c compute_file_digest).  Those prefixes are left_encode(chunk size)
+* and left_encode(key size), at most 5 bytes each.
 */
 [[nodiscard]] constexpr int
 max_key_size_bytes(const int chunk_size_bytes) noexcept
@@ -438,13 +442,13 @@ max_key_size_bytes(const int chunk_size_bytes) noexcept
 
 /// Read the key from the file at \a path, or exit with an error
 /**
-* The key is the file's exact bytes.  This never seeks, so pipes and process
-* substitution work.  One example is --key-file=<(pass show x).
+* The key is the file's exact bytes.  This never seeks, so a pipe or a process
+* substitution works as well as a regular file.
 *
 * The loop takes one byte at a time from the stream's buffer, so the check
 * against \a max_size_bytes catches an oversized file on the first byte past
-* the limit.  Filling that stream buffer is what reads the file, so the key
-* also passes through unlocked heap on the way in.
+* the limit.  Reading the file fills that stream buffer, which leaves a copy
+* of the key in unlocked heap.
 */
 [[nodiscard]] key_buffer
 read_key_file(const std::string& path, const int max_size_bytes)
@@ -456,8 +460,8 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
     key_buffer key;
     // Reserving the whole permitted size keeps the key in one locked page.  It
-    // also means push_back never reallocates, so no allocation failure can
-    // escape this try block.
+    // also means push_back never reallocates.  The reserve is then the only
+    // allocation the key buffer makes, and this try block catches its failure.
     try
     {
         key.reserve(to_unsigned(max_size_bytes));
@@ -497,20 +501,22 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
 /// Hash the contents of the file at \a path and return the digest
 /**
-* The construction, hash, and squeeze shared by the normal and --check modes.
-* The digest-relevant parameters are explicit, because a --tag check line
-* carries its own values.  The rest come from the globals, namely
-* \c num_threads and \c use_mmap (through \c process_file).
+* Both the normal mode and --check mode build the tree here, absorb the file,
+* and squeeze the digest.  The digest-relevant parameters are explicit,
+* because a --tag check line carries its own values.  The rest come from the
+* globals, namely \c num_threads and \c use_mmap (through \c process_file).
 *
-* When \a key is nonempty, the KMAC structure (SP 800-185 Section 4) is
-* followed at tree scale:
+* When \a key is nonempty, this applies the KMAC structure (SP 800-185
+* Section 4) to the tree.
 *
 *     newX = bytepad(encode_string(K), CHUNK_SIZE) || X || right_encode(L)
 *
 * with the function name \c mac_function_name instead of \c function_name.
-* The bytepad width is the tree chunk size, where KMAC uses the rate.  The key
-* block is therefore exactly chunk 0, absorbed directly by the now keyed final
-* node, and FILE's bytes keep their chunk alignment.
+*
+* KMAC pads the key block out to the rate, and this pads it out to the tree
+* chunk size.  The key block is therefore exactly chunk 0, which the final
+* node absorbs directly.  FILE's bytes begin at chunk 1, so they keep their
+* chunk alignment.
 *
 * The trailing right_encode(L) makes MACs of different output sizes unrelated.
 * An unkeyed digest of a smaller size is a truncation, and a MAC must not be.
@@ -539,16 +545,18 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
 
     if (keyed)
     {
-        // bytepad(encode_string(K), CHUNK_SIZE): left_encode(CHUNK_SIZE) ||
-        // left_encode(len(K)) || K || zeros to a whole chunk.
+        // bytepad(encode_string(K), CHUNK_SIZE) expands to
+        // left_encode(CHUNK_SIZE) || left_encode(len(K)) || K, followed by
+        // enough zero bytes to fill the chunk.
         const auto encoded_w = left_encode(to_unsigned(chunk_size_bytes));
         const auto encoded_key_len = left_encode(std::size(key));
 
         const auto framing_size =
             std::size(encoded_w) + std::size(encoded_key_len) + std::size(key);
 
-        // Normal mode bounds the key size at startup, but a --check --tag
-        // line may carry a smaller chunk size than the check command line.
+        // Without --check, main bounds the key size at startup against the
+        // command line's chunk size.  A --tag check line may carry a smaller
+        // chunk size than that, so the fit is rechecked here.
         if (framing_size > to_unsigned(chunk_size_bytes))
             throw std::invalid_argument(
                 "the key does not fit in one chunk of the given chunk size");
@@ -557,6 +565,8 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
         (void)hash_obj.add(encoded_key_len.span());
         (void)hash_obj.add(key);
 
+        // The zero fill is what bytepad specifies.  It ends the key block
+        // exactly on the chunk 0 boundary.
         const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
         (void)hash_obj.add(zeros);
     }
@@ -581,7 +591,7 @@ format_tag_params(const int chunk_size_bytes, const std::string_view custom,
                        quote_shell_always(custom), rounds, suffix);
 }
 
-/// One parsed line of a checkfile: the expected digest and what produced it
+/// One parsed line of a checkfile
 struct check_line final
 {
     std::string path;
@@ -691,9 +701,9 @@ parse_untagged_line(std::string_view s, check_line& out)
         out.path = s;
     }
 
-    // An untagged line does not carry its rounds.  When --rounds is not on the
-    // check command line, derive it from this line's own digest length.  The
-    // command line's --size is irrelevant in --check mode.
+    // An untagged line does not carry its rounds.  When --rounds was not
+    // given, derive it from this line's own digest length.  The command
+    // line's --size is irrelevant in --check mode.
     out.rounds = resolve_num_rounds(static_cast<int>(std::ssize(out.expected_digest)));
     out.suffix = input_suffix;
     out.custom = customization_str;
@@ -702,7 +712,12 @@ parse_untagged_line(std::string_view s, check_line& out)
     return true;
 }
 
-/// Verify one checkfile line: parse, recompute the digest, print the result
+/// Parse one checkfile line, recompute its digest, and update \a totals
+/**
+* A mismatch or an unreadable file always prints.  A match prints unless
+* --quiet was given.  A malformed line prints nothing, and \c run_check_files
+* reports the count of those instead.
+*/
 void
 verify_check_line(const std::string_view line, check_totals& totals)
 {
@@ -790,7 +805,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         return exit_status;
     }
 
-    // Fixed for every path in this run (the output size does not vary here).
+    // Every path in this run gets the same digest size.  The round count is
+    // therefore resolved once here, instead of once per path.
     const int num_rounds = resolve_num_rounds(num_bytes_to_squeeze);
 
     for (const auto& path : paths)

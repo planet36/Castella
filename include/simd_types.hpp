@@ -13,8 +13,6 @@
 #include <bit>
 #include <cstddef>
 
-// The integer length encodings and the round-constant serialization use the
-// native byte order.
 static_assert(std::endian::native == std::endian::little, "little-endian host required");
 
 #if defined(__x86_64__) && defined(__SSE2__)

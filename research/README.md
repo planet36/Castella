@@ -4,7 +4,7 @@
 
 | name | purpose |
 | ---- | ------- |
-| castella-print-info.cpp | Print info about the Castella round constants and duplex params |
+| castella-print-info.cpp | Print the Castella compile-time parameters and the object sizes of the duplex, cch, and tree-mode classes |
 | simd\_transpose-verify.cpp | Verify that every 128-bit `simd_transpose` overload matches a naive transpose (nonzero exit on any failure) |
 | aes\_enc\_0-aes\_num\_rounds.cpp | Find the minimum `aes_num_rounds` for `aes_enc_0` to achieve full bit diffusion |
 | aes\_enc-aes\_num\_rounds.cpp | Find the minimum `aes_num_rounds` for `aes_enc` to achieve full bit diffusion |

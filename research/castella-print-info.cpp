@@ -1,7 +1,12 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+#include "castella-duplex-tree.hpp"
+#include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
+#include "cch-tree.hpp"
+#include "cch-x2.hpp"
+#include "cch.hpp"
 
 #include <print>
 
@@ -43,6 +48,28 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::println("Castella::Duplex::R_MAX = {}", Castella::Duplex::R_MAX);
 
     std::println("Castella::Duplex::get_state_size_bytes() = {}", Castella::Duplex::get_state_size_bytes());
+
+#if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
+    std::println("sizeof(Castella::DuplexX2) = {}", sizeof(Castella::DuplexX2));
+#else
+    std::println("Castella::DuplexX2 skipped: requires x86-64 with VAES and AVX2");
+#endif
+    std::println("sizeof(Castella::DuplexTree) = {}", sizeof(Castella::DuplexTree));
+    std::println("sizeof(Castella::DuplexTreeNodePolicy) = {}", sizeof(Castella::DuplexTreeNodePolicy));
+
+    std::println("sizeof(compress_castella_hash<>) = {}", sizeof(compress_castella_hash<>));
+
+    std::println("compress_castella_hash<>::MIX_RATE_MIN = {}", compress_castella_hash<>::MIX_RATE_MIN               );
+    std::println("compress_castella_hash<>::MIX_RATE_MAX = {}", compress_castella_hash<>::MIX_RATE_MAX               );
+    std::println("compress_castella_hash<>::DEFAULT_MIX_RATE = {}", compress_castella_hash<>::DEFAULT_MIX_RATE           );
+    std::println("compress_castella_hash<>::PERIODIC_MIX_NUM_ROUNDS = {}", compress_castella_hash<>::PERIODIC_MIX_NUM_ROUNDS    );
+    std::println("compress_castella_hash<>::FINAL_MIX_NUM_ROUNDS = {}", compress_castella_hash<>::FINAL_MIX_NUM_ROUNDS       );
+    std::println("compress_castella_hash<>::get_state_size_bytes() = {}", compress_castella_hash<>::get_state_size_bytes()     );
+    std::println("compress_castella_hash<>::get_max_digest_size_bytes() = {}", compress_castella_hash<>::get_max_digest_size_bytes());
+
+    std::println("sizeof(compress_castella_hash_x2<>) = {}", sizeof(compress_castella_hash_x2<>));
+    std::println("sizeof(compress_castella_tree) = {}", sizeof(compress_castella_tree));
+    std::println("sizeof(compress_castella_tree_node_policy) = {}", sizeof(compress_castella_tree_node_policy));
 
     return 0;
 }

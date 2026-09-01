@@ -10,6 +10,12 @@ echo
 echo "________________________________________________________________________________"
 echo
 
+echo "# Verify that every 128-bit simd_transpose overload matches a naive transpose"
+echo
+./simd_transpose-verify || exit
+echo "________________________________________________________________________________"
+echo
+
 echo "# Find the minimum aes_num_rounds for aes_enc_0 to achieve full bit diffusion"
 echo
 ./aes_enc_0-aes_num_rounds -n 300000 || exit

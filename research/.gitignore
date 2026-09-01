@@ -25,4 +25,5 @@ results/
 simd_compress-two-state-benchmark
 simd_compress_aes_enc-num_rounds
 simd_compress_aes_enc-num_rounds-benchmark
+simd_transpose-verify
 squeeze_bytes-benchmark

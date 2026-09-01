@@ -5,6 +5,7 @@
 | name | purpose |
 | ---- | ------- |
 | castella-print-info.cpp | Print info about the Castella round constants and duplex params |
+| simd\_transpose-verify.cpp | Verify that every 128-bit `simd_transpose` overload matches a naive transpose (nonzero exit on any failure) |
 | aes\_enc\_0-aes\_num\_rounds.cpp | Find the minimum `aes_num_rounds` for `aes_enc_0` to achieve full bit diffusion |
 | aes\_enc-aes\_num\_rounds.cpp | Find the minimum `aes_num_rounds` for `aes_enc` to achieve full bit diffusion |
 | permute\_inv-verify.cpp | Verify that `Castella::permute_inv` is the inverse of `Castella::permute` |

@@ -463,12 +463,6 @@ private:
 
         const auto num_bytes_to_add = available_space;
 
-        std::byte* input_bytes = get_input_bytes_();
-        std::byte* dst = &input_bytes[cur_input_byte_idx_];
-
-        // Zeroize the available space in the input buffer.
-        (void)std::memset(dst, 0, num_bytes_to_add);
-
         // The set bits must not overlap.
         constexpr std::byte first_padding_byte_pattern{0b0000'0001};
         constexpr std::byte last_padding_byte_pattern{0b1000'0000};
@@ -476,18 +470,21 @@ private:
                           std::byte{0},
                       "set bits must not overlap");
 
-        input_bytes[cur_input_byte_idx_] = first_padding_byte_pattern;
-
         const auto last_input_byte_idx = get_rate_size_bytes() - 1;
 
-        // {{{
-        /*
-        * Bitwise OR is used in case the first padding byte pattern was assigned
-        * to the last byte of the input buffer (i.e. cur_input_byte_idx_ ==
-        * last_input_byte_idx).
-        */
-        // }}}
-        input_bytes[last_input_byte_idx] |= last_padding_byte_pattern;
+        {
+            std::byte* input_bytes = get_input_bytes_();
+
+            std::byte* dst = &input_bytes[cur_input_byte_idx_];
+
+            // Zeroize the available space in the input buffer.
+            (void)std::memset(dst, 0, num_bytes_to_add);
+
+            input_bytes[cur_input_byte_idx_] = first_padding_byte_pattern;
+
+            // Bitwise OR in case both padding bytes share the last byte.
+            input_bytes[last_input_byte_idx] |= last_padding_byte_pattern;
+        }
 
         cur_input_byte_idx_ += num_bytes_to_add;
 

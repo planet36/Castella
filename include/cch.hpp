@@ -397,6 +397,10 @@ private:
     // }}}
     void final_digest_into_(const std::span<std::byte> dst)
     {
+#if defined(DEBUG)
+        assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));
+#endif
+
         if (!has_been_finalized_)
         {
             add_padding_bytes_();
@@ -406,7 +410,6 @@ private:
 
 #if defined(DEBUG)
         assert(input_bytes_.is_empty());
-        assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));
 #endif
 
         // Guard the memcpy.  On an empty dst, std::data(dst) may be null, and

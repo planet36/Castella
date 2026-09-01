@@ -17,7 +17,7 @@ has to *refresh* the figures.
 It was extracted from
 [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md), which is where it grew
 up and no longer belongs — a standing procedure is not part of a plan, and this one is now
-longer than the plan's argument. It was that file's § 10; the number has since been reused
+longer than the plan's argument.  It was that file's § 10; the number has since been reused
 there for the closed-by-decision register, so it is not a pointer to follow.
 
 It was written from a full re-derivation on 2026-08-01/02 that took ~13 hours of machine
@@ -36,20 +36,20 @@ between 2026-08-04 and 2026-08-08. §7's are from the runs recorded in VERIFYING
 with the sub-minute ones re-measured on 2026-08-09.
 
 **Budgets here span seconds to six hours** — §2's `-t 21600` cells and §3's four-hour shell
-probes are the long end, and nothing about this file is uniformly cheap. The two solvers
-also spend `-t` differently. In `permute-min-active-sboxes.py` it is the limit **per round
-count**, so solve one cell at a time with `--min-rounds R -r R` when the budget matters. In
+probes are the long end, and nothing about this file is uniformly cheap.  The two solvers
+also spend `-t` differently.  In `permute-min-active-sboxes.py` it is the limit **per round
+count**, so solve one cell at a time with `--min-rounds R -r R` when the budget matters.  In
 `permute-trail-search.py` there is no `--min-rounds` and `-t` is the limit per solver
 **call** — stage A, stage B and each `--cluster` check get one apiece — so wall time is a
 multiple of it, and `--cluster-time-limit` bounds the enumeration separately.
 
-**Two standing rules for anything here that solves.** Launch it under
+**Two standing rules for anything here that solves.**  Launch it under
 `nice -n 19` — the benchmarks are the exception, never the solvers — and keep at most 8
-solver processes running at once, trail search and MILP sharing that one budget. `nice`
-does not substitute for the cap. Shed load by killing, never by `SIGSTOP`, because z3's
+solver processes running at once, trail search and MILP sharing that one budget.  `nice`
+does not substitute for the cap.  Shed load by killing, never by `SIGSTOP`, because z3's
 `-t` is wall-clock and a stopped process keeps burning it.
 `research/permute-trail-ceilings.bash` already follows both, and additionally caps
-concurrency by memory: `-M` is **per process**, so a batch needs N × M inside RAM. The 8 is
+concurrency by memory: `-M` is **per process**, so a batch needs N × M inside RAM.  The 8 is
 a ceiling, not a target — memory binds lower for the long shell probes, where that script
 holds the batch to four on a 15 GiB machine.
 
@@ -58,10 +58,10 @@ holds the batch to four on a 15 GiB machine.
 The list has grown well past the five programs this runbook was originally written around,
 and a figure whose program is missing here is a figure nobody knows how to re-derive.
 
-**One class is missing on purpose.** README.md's *performance* findings — Duplex
+**One class is missing on purpose.**  README.md's *performance* findings — Duplex
 throughput, the folded permute, the interleaved cch pair — come from the compiled
 `*-benchmark.cpp` and `*-verify.cpp` programs, driven by `run-benchmarks.bash` and
-`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`). They are
+`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`).  They are
 out of scope here for a reason that changes how they must be run: they measure speed rather
 than support a security claim, so what they need is an otherwise idle machine and the core
 pinning `run-benchmarks.bash` does, not a solver budget — which is also why the `nice -n 19`
@@ -120,47 +120,47 @@ free -h                                                       # -M is per proces
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25 — all `optimal`, 6 s (2026-08-09, under the HiGHS default; the 25 s this row used to read is the CBC figure) |
 
 (Everything above except the last row and the two compiled ones runs on the system
-`python3`. The trail-search rows
+`python3`.  The trail-search rows
 need z3, Arch `python-z3-solver`; `permute-division-property.py` needs it too.
 `trail-model-crossvalidate.py` and `permute-invariant-subspaces.py` do not: they take the
-layer machinery from `permute_model.py`, which is pure standard library. `permute-multiplicity-verify.py` needs only the standard library
-and `spec-conformance.py`. The two `./`-prefixed rows are compiled: `make -C research` first,
+layer machinery from `permute_model.py`, which is pure standard library.  `permute-multiplicity-verify.py` needs only the standard library
+and `spec-conformance.py`.  The two `./`-prefixed rows are compiled: `make -C research` first,
 which links google-benchmark into every binary in that directory, so the probes need it
 installed even though they benchmark nothing.)
 
-`<pulp>` is `~/.venvs/pulp/bin/python3`. **The venv is unavoidable for the MILP script**, and
+`<pulp>` is `~/.venvs/pulp/bin/python3`.  **The venv is unavoidable for the MILP script**, and
 the reason is PuLP rather than the solver: PuLP has no Arch package and pip refuses to
-install into the system Python. HiGHS does have one — `highs` plus `python-highspy` — so on
+install into the system Python.  HiGHS does have one — `highs` plus `python-highspy` — so on
 Arch either route works for the solver half, but the venv is still needed for PuLP:
 
 ```bash
 python3 -m venv ~/.venvs/pulp && ~/.venvs/pulp/bin/pip install pulp highspy
 ```
 
-**Install `highspy` one way or the other** — it is not optional in practice; see §2. Note
+**Install `highspy` one way or the other** — it is not optional in practice; see §2.  Note
 that the pip wheel vendors its own `libhighs.so.1` inside the package, whereas the Arch
 `python-highspy` links against the system one and so also needs `highs` installed.
 
 ## 2. MILP: minimum active S-boxes
 
-**Read the `status` column on every row.** Only `optimal` is a lower bound and hence a
-security bound; `NOT proven` is an incumbent, which bounds the minimum from *above*. Four
+**Read the `status` column on every row.**  Only `optimal` is a lower bound and hence a
+security bound; `NOT proven` is an incumbent, which bounds the minimum from *above*.  Four
 figures recorded from incumbents (A(16,3) = 133, A(16,4) = 225, A(16,5) = 243, A(16,6) =
-290) have been refuted this way. Re-verification is **one-directional**: a re-run *below*
+290) have been refuted this way.  Re-verification is **one-directional**: a re-run *below*
 the recorded value refutes it, one *above* proves nothing.
 
-**Use HiGHS, not CBC.** This is the single largest lever in this runbook and it was found
-late. CBC never proved N=16 above r=3, at any limit up to 90 minutes, and §6 argued from
-its decaying dual bound that nothing would. HiGHS proves r=3 in **16 s** against CBC's 72
+**Use HiGHS, not CBC.**  This is the single largest lever in this runbook and it was found
+late.  CBC never proved N=16 above r=3, at any limit up to 90 minutes, and §6 argued from
+its decaying dual bound that nothing would.  HiGHS proves r=3 in **16 s** against CBC's 72
 min — single-threaded, with a 0% gap, not needing the `gapAbs` trick at all — and then
-closes r=4, r=5 and r=6 outright. The commands below are HiGHS timings; the script picks it
+closes r=4, r=5 and r=6 outright.  The commands below are HiGHS timings; the script picks it
 automatically when `highspy` is importable, and `--solver cbc` forces the old behavior.
 **Before spending an hour on a larger `-t`, spend five minutes on a different solver.**
 
 Mechanics: each round count is solved independently, so a single table cell can be
 recomputed on its own with `--min-rounds R -r R`; `--threads` defaults to all cores, though
 HiGHS runs this model on one whatever it is given; and output is line-buffered, so a long
-run redirected to a file can be watched with `tail -f`. What the `status` column and the
+run redirected to a file can be watched with `tail -f`.  What the `status` column and the
 `DP bound` mean is [README.md](README.md#interpreting-the-results)'s, not repeated here.
 
 ```bash
@@ -350,14 +350,14 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 
 `-A` is the question being asked, not a tuning knob: at r = 3 the search solves `-A 129`
 in 0.7 s but times out on `-A 120` after 900 s; at r = 4 `-A 165` takes 34 s and `-A 150`
-times out. These probes establish "≤ X" well and "> X" not at all — which is exactly why
+times out.  These probes establish "≤ X" well and "> X" not at all — which is exactly why
 the r = 4 bisection (§5 item 5) returned nothing usable, and why five smaller targets at
-r = 5 (item 2) did not unstick that round count. **`-A` is only a lever where the true
+r = 5 (item 2) did not unstick that round count.  **`-A` is only a lever where the true
 minimum is within reach of the search; it is not a difficulty dial.**
 
 The z3 runs are single-threaded, so on 8 cores several `-A` values can be probed in
 parallel — which is how items 2 and 5 were run, five and four at a time, each under
-`-M 1200`, with total resident memory staying near 2 GB. Read results **from the output
+`-M 1200`, with total resident memory staying near 2 GB.  Read results **from the output
 files**, not from a runner's progress reporting: a probe that has printed nothing may still
 be inside its stage-A budget.
 
@@ -368,29 +368,29 @@ python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 63994
 ```
 
 ~150 programs/s, linear in `-n`; memory grows with the run and reached 1.5 GB at 400 k, so
-what bounds a sweep here is the 40 minutes rather than the 15 GiB. This covers what
+what bounds a sweep here is the 40 minutes rather than the 15 GiB.  This covers what
 KAT.txt structurally cannot (split adds, both
 `*_encoded` entry points, explicit padding, successive squeezes).
 
 ## 5. The queued additions — all run as of 2026-08-02
 
-Items 1–6 have now been executed; each entry records what it returned. Only item 7 remains
-unrun, and deliberately so. Ordered as originally queued, by what would most change the
+Items 1–6 have now been executed; each entry records what it returned.  Only item 7 remains
+unrun, and deliberately so.  Ordered as originally queued, by what would most change the
 documentation:
 
 1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 and r=4 on 2026-08-02; it changed the
-   r=3 bounds and settled r=4 the other way.** At r=3 the dual bound reached 126.630 at
+   r=3 bounds and settled r=4 the other way.**  At r=3 the dual bound reached 126.630 at
    55 min and 127.554 at 90 min — a 1% gap — which led to **r=3 being closed outright**:
    the objective is a sum of binary variables and so integral, meaning the incumbent is
-   optimal as soon as the dual bound passes incumbent − 1. Passing `gapAbs=0.99` lets CBC
+   optimal as soon as the dual bound passes incumbent − 1.  Passing `gapAbs=0.99` lets CBC
    stop there, and it proved **A(3) = 129** in 72 minutes having failed in 90 without it.
-   The script now always passes it. At r=4, 90 minutes reached only 93.883, a 76% gap and
+   The script now always passes it.  At r=4, 90 minutes reached only 93.883, a 76% gap and
    *weaker* than the 138 superadditivity gives for free, so the solver contributes nothing
    at that round count.
 
-   **Where a solve is out of reach, neither remaining source dominates.** Superadditivity
+   **Where a solve is out of reach, neither remaining source dominates.**  Superadditivity
    strengthens as r grows (it composes an increasingly good A(3) with A(1)); CBC weakens,
-   since each round adds layers to a relaxation already struggling. Record both and take
+   since each round adds layers to a relaxation already struggling.  Record both and take
    the max — and note the script reports only its own instance's bound, so at r=4 it
    prints `A in [94, 165]` while the documented floor is the larger 138.
 
@@ -401,130 +401,130 @@ documentation:
    step when a cut round lands), so two consecutive samples predict nothing — read the
    endpoint, not the trend.
 2. ~~`permute-trail-search.py -r 5` with a smaller `-A`~~ — **done 2026-08-02; the
-   hypothesis is refuted.** Five targets straddling the window (`-A` 180, 195, 210, 225,
+   hypothesis is refuted.**  Five targets straddling the window (`-A` 180, 195, 210, 225,
    240, against a superadditive floor of 174 and an incumbent of 243) were run in parallel
-   at `-t 900`. All five gave up in stage A at exactly 900 s, indistinguishably from 243.
+   at `-t 900`.  All five gave up in stage A at exactly 900 s, indistinguishably from 243.
    So the wall does not move with the cardinality's value, and `--encoding` cannot be the
    variable either, since it only affects stage B.
 
-   **But the same search at narrower states works, which localizes the obstacle.** At
+   **But the same search at narrower states works, which localizes the obstacle.**  At
    `-N 2` and `-N 4`, both at *proven* targets (101 and 114), stage A returns in 0.3 s and
    0.6 s and the run brackets those permutations at **[606, 705]** and **[684, 791]** — the
-   first bracketed r = 5 results at any width, and both with sound floors. Five rounds is
-   not intrinsically beyond stage A; 16 blocks is. (N = 16 is bracketed too as of
+   first bracketed r = 5 results at any width, and both with sound floors.  Five rounds is
+   not intrinsically beyond stage A; 16 blocks is.  (N = 16 is bracketed too as of
    2026-08-04, at **[1404, 1602]** — but by importing the MILP's pattern via
    `--dump-pattern` / `--pattern-file`, not by stage A ever finding one; r = 6, 7 and 8
    followed on 2026-08-05 by the same route, at **[1620, 1856]**, **[2124, 2447]** and
-   **[2340, 2699]**. Those four ceilings read 1633, 1887, 2473 and 2725 as first found;
+   **[2340, 2699]**.  Those four ceilings read 1633, 1887, 2473 and 2725 as first found;
    a weight-shell descent over each winning trail took 30, 30, 25 and 20 bits off them
    on 2026-08-06, and enumerating the shell each descent stalled in took a further 1, 1,
    1 and 6 on 2026-08-07 — all of it changing neither the pattern nor the seed.) The `PbEq` constraint spans 3 840
-   booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose. Read with
+   booleans at N = 16 against 480 at N = 2 (measured), all coupled by the transpose.  Read with
    r = 4 — where stage A clears the same constraint three times, then stalls on a fourth —
    this is one continuous difficulty in width and depth, not a cliff at r = 5.
 3. ~~Minimization at r = 3 and r = 4~~ — **done 2026-08-02; null, and it inverts the
-   flag advice.** Both returned `unknown: canceled` after 1200 s, leaving 903 and 1154
-   standing. That extends "minimization never completes" from r = 2 to three round counts.
+   flag advice.**  Both returned `unknown: canceled` after 1200 s, leaving 903 and 1154
+   standing.  That extends "minimization never completes" from r = 2 to three round counts.
    The useful finding is the cost comparison: given ~20 min each on the same r = 3
    instance, minimizing pattern 1 moved the ceiling **0 bits** while item 4's sweep moved
-   it **12**. Finding a trail in a fresh pattern is satisfiability; minimizing within one
-   is refutation over that whole pattern. **Spend a ceiling budget on the shell descent
+   it **12**.  Finding a trail in a fresh pattern is satisfiability; minimizing within one
+   is refutation over that whole pattern.  **Spend a ceiling budget on the shell descent
    first, then on `--patterns`** — this item read "spend it on `--patterns`" until
    2026-08-06, when descending one trail's weight shell moved every round count from
    r = 3 to r = 8 by 17 to 30 bits, against the 5 bits r = 3's 5.5-hour nine-seed
-   `--patterns 32` sweep had bought. Minimization stays refuted either way; what changed
-   is which of the two surviving levers to reach for. They vary different axes — a sweep
+   `--patterns 32` sweep had bought.  Minimization stays refuted either way; what changed
+   is which of the two surviving levers to reach for.  They vary different axes — a sweep
    changes *which* differential is examined, the shell asks for a lighter characteristic
    inside the one already in hand — so run the sweep first and descend its winner.
-4. ~~`--patterns 8` at r = 3 and r = 4~~ — **done 2026-08-02; both ceilings improved.** At
+4. ~~`--patterns 8` at r = 3 and r = 4~~ — **done 2026-08-02; both ceilings improved.**  At
    r = 3 all 8 patterns are realizable (903, 903, 901, 895, **891**, 902, 901, 897; 19 min,
    865 MB), so realizability is not a quirk of the first pattern, and the ceiling drops
-   903 → **891**. At r = 4 only **3 of 8** patterns were reachable — stage A could not
+   903 → **891**.  At r = 4 only **3 of 8** patterns were reachable — stage A could not
    produce a fourth distinct 165-box pattern in 600 s after 50 s, 45 s and 16 s for the
-   first three — giving 1154, **1153**, 1153 and a ceiling of **1153**. `--patterns N` is
+   first three — giving 1154, **1153**, 1153 and a ceiling of **1153**.  `--patterns N` is
    an upper request, not a promise.
 5. ~~A bisection between A = 129 and A = 165 at r = 4~~ — **done 2026-08-02; null.**
-   `-A` 140, 150, 155 and 160 all timed out in stage A at 900 s. This narrows nothing:
+   `-A` 140, 150, 155 and 160 all timed out in stage A at 900 s.  This narrows nothing:
    a stage-A timeout is `unknown`, not UNSAT, so it cannot push a floor up, and
-   `A(4) ≤ 165` stands. The only readable signal is where the cliff sits — 165 returns a
+   `A(4) ≤ 165` stands.  The only readable signal is where the cliff sits — 165 returns a
    pattern in 50 s and everything from 160 down returns nothing in 900 s.
 6. ~~`-N 16 -a 3 --min-rounds 6 -r 6`~~ — **done 2026-08-02; first a bracket, then a
-   solve.** Under CBC: 55 min, 606 MB, incumbent **290**, dual bound **13**, `NOT proven`. The dual bound is worthless at this depth (a 96% gap,
+   solve.**  Under CBC: 55 min, 606 MB, incumbent **290**, dual bound **13**, `NOT proven`.  The dual bound is worthless at this depth (a 96% gap,
    against 76% at r = 4 and 1% at r = 3 — the decay is monotone), but the incumbent caps
    A(6) from above and superadditivity supplies `A(6) ≥ A(3) + A(3) = 258`, so
-   **A(6) ∈ [258, 290]**, DP ≤ 2^−1548. That is the *narrowest* relative bracket above
+   **A(6) ∈ [258, 290]**, DP ≤ 2^−1548.  That is the *narrowest* relative bracket above
    r = 3 (12%, against 20% at r = 4 and 40% at r = 5) precisely because it composes the
    solved A(3) with itself instead of padding with A(1).
 
-   One caution the run exposes: incumbent quality is not monotone in difficulty. This
+   One caution the run exposes: incumbent quality is not monotone in difficulty.  This
    machine's r = 5 run reached only 293 while this strictly harder r = 6 run reached 290.
 
    **Superseded hours later by HiGHS**, which proved `A(6) = 270` in 1585 s — refuting the
-   290 incumbent and making the bracket moot. The CBC figures are kept above because the
+   290 incumbent and making the bracket moot.  The CBC figures are kept above because the
    contrast is the lesson: a 96% duality gap was read as the problem being hard, and it was
-   the solver. See §2.
+   the solver.  See §2.
 7. **`hash-programs/plot-results.py`** — excluded from the 2026-08 re-derivation because it
    is a viewer, not a measurement, and requires first generating CSVs with the
-   `benchmark.*.bash` scripts. No documented number depends on it.
+   `benchmark.*.bash` scripts.  No documented number depends on it.
 
 ## 6. Resource notes
 
 * **Memory was not the constraint on the runs in §1–§5, and is one on the shell
-  probes in §3.** Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB
+  probes in §3.**  Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB
   (the fuzzer) and no solver run exceeded 892 MB — that one an r = 4 `rows` probe on the
   since-withdrawn 225-box pattern, not a command in this file — against the 7.7 GiB the
-  machine had then. Two things have changed since. The 6.38 GiB figure recorded elsewhere
+  machine had then.  Two things have changed since.  The 6.38 GiB figure recorded elsewhere
   came from the `witness` encoding, which `rows` (now the default) replaces at ~1/7th the
   memory — but
   `rows` bounds the *encoding*, not the run: a single `check()` accumulates learned clauses
   for its whole `-t`, so **`-M` is the only thing that caps a long probe**, and the
   multi-hour shell probes added in 2026-08-06/08 reach ~2 GB each where the searches quoted
-  in §3 peaked at 99–865 MB. Since `-M` is per process, a parallel batch needs N × M inside
+  in §3 peaked at 99–865 MB.  Since `-M` is per process, a parallel batch needs N × M inside
   RAM; eight at `-M 2500` left 1.8 GiB of 15 free, and r = 5 wants `-M 4000` because it is
-  memory-bound at 2500. So the original conclusion still holds for everything above §3's
+  memory-bound at 2500.  So the original conclusion still holds for everything above §3's
   shell block — more RAM buys *parallelism* (z3 is single-threaded, so 7 of 8 cores idle
   during every trail search) and deeper fuzz sweeps, not reach — but it must not be read as
   "budget nothing for memory": below that, the process count is what RAM decides, and the
   ceiling recipes were sized against it.
-* **Longer time limits: measure the gap, do not guess.** The incumbent is a poor guide.
+* **Longer time limits: measure the gap, do not guess.**  The incumbent is a poor guide.
   At N=16 r=4 it was unchanged between 1800 s and 3300 s, and at N=8 r=4 between 600 s and
   3300 s, which reads as exhaustion — but the incumbent is the *primal* side and proving
-  is a dual-side question. The `-v` run at r=3 made the difference concrete: its incumbent
+  is a dual-side question.  The `-v` run at r=3 made the difference concrete: its incumbent
   was likewise flat at 129 from 15 min onward, while its dual bound climbed 12.6 → 71.4 →
-  93.1 → 103.5 → 110.3 → 126.6. Same-looking run, opposite situation.
-* **The endgame is much slower than the approach.** That same r=3 dual bound advanced at
+  93.1 → 103.5 → 110.3 → 126.6.  Same-looking run, opposite situation.
+* **The endgame is much slower than the approach.**  That same r=3 dual bound advanced at
   ~3.45 per 5 min through 55 min, then only 0.92 over the next 35 — a ~26× collapse that
-  left a 90-minute run 1.45 units short of closing. A linear extrapolation through the
+  left a 90-minute run 1.45 units short of closing.  A linear extrapolation through the
   last mile of a duality gap will be optimistic; budget accordingly, or accept the dual
   bound as the deliverable rather than the closed gap.
-* **But before any of that, change solver.** Both bullets above are careful reasoning about
+* **But before any of that, change solver.**  Both bullets above are careful reasoning about
   how to spend time on CBC, and both were overtaken by a five-minute `pip install highspy`:
-  HiGHS closes that same r=3 instance in 16 s, and r=4, r=5 and r=6 besides. The reasoning
+  HiGHS closes that same r=3 instance in 16 s, and r=4, r=5 and r=6 besides.  The reasoning
   is still correct — it just applies to whichever solver is genuinely the best available,
-  and CBC was not. Treat "the dual bound has stalled" as ambiguous between *this problem is
-  hard* and *this solver is weak*, and settle that cheaply before budgeting hours. No cell
+  and CBC was not.  Treat "the dual bound has stalled" as ambiguous between *this problem is
+  hard* and *this solver is weak*, and settle that cheaply before budgeting hours.  No cell
   at N=16, a=3 is open any more: r=7 and r=8 looked stalled under HiGHS at a 2 h limit,
   reporting gaps of 9% and 28%, and both closed proven-optimal when given 6 h — 354 at
-  7257 s and 390 at 14050 s. That is the reasoning above applied once more, and it lands on
-  the same warning §2 draws from it: a duality gap is not a progress bar. Above r=8
+  7257 s and 390 at 14050 s.  That is the reasoning above applied once more, and it lands on
+  the same warning §2 draws from it: a duality gap is not a progress bar.  Above r=8
   nothing has been attempted, so superadditivity remains the only source there.
 
 ## 7. Diffusion, structural, algebraic and statistical evidence
 
 §1–§6 cover the trail line — the MILP floors and the bit-level ceilings — because
-that is what the 2026-08-01/02 re-derivation was about. It is not the whole evidence
+that is what the 2026-08-01/02 re-derivation was about.  It is not the whole evidence
 base, and the rest of it is not optional to re-derive: **the diffusion floor is one of the
 two inputs to every `R*`, and the 3-round inside-out zero-sum is what the `+ 3` margin term
 is anchored to** ([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3
 step 3), so a refresh that skips this subsection leaves the shipped round counts resting on
-figures nobody re-checked. The cheap members are already in §1;
+figures nobody re-checked.  The cheap members are already in §1;
 this is the rest, with the budgets they want.
 
 Read the results *there*, not here: [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md)
 §§ 3, 10, 11, 12, 15 hold the expected outputs, the figures that must reproduce exactly, and
 the interpretation rules — in particular that for the division property **UNSAT ("balanced")
 proves a distinguisher while SAT proves nothing at all**, so every "not balanced" reads as
-"not provable by this model". This subsection is only the procedure and the clock.
+"not provable by this model".  This subsection is only the procedure and the clock.
 
 ```bash
 cd research && make    # links google-benchmark into every binary here
@@ -563,20 +563,20 @@ python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 
 Four traps in that set, all of which have already cost time once:
 
-* **`--validate --inverse` gates at 2 rounds, not 3, and that is correct.** `inv_aes_round`
+* **`--validate --inverse` gates at 2 rounds, not 3, and that is correct.**  `inv_aes_round`
   ends on an S-box where `aes_round` ends on a linear layer, and a division property
   crosses a linear layer untouched but never survives an S-box. "Fixing" the constant back
   to 3 makes the gate fail.
 * **`--inside-out` reports no zero-sum at `2 1` even though one exists**, because a `block`
   cube's backward half spreads over all 16 blocks and the sparse pruning collapses it to
-  one byte — balance over 2^8 being far harder to prove than over 2^128. The reach comes
-  from `permute-multiplicity-verify.py`, not from the model. The `0 1` run above is the
+  one byte — balance over 2^8 being far harder to prove than over 2^128.  The reach comes
+  from `permute-multiplicity-verify.py`, not from the model.  The `0 1` run above is the
   regression test for the bug that produced the retracted 4-round figure: the two halves
   must be propagated over *one* middle-state cube, transposed for the backward half.
-* **`-r 2 -c block --count` is slow per block, not stuck.** Per-block cost ranges ~115 s to
+* **`-r 2 -c block --count` is slow per block, not stuck.**  Per-block cost ranges ~115 s to
   ~700 s depending on which of round 1's output bytes feeds round 2; the ~6× spread is
   structural and measures the same busy or idle.
-* **`--reduced 3` is worth its 35 minutes precisely because it should change nothing.** It
+* **`--reduced 3` is worth its 35 minutes precisely because it should change nothing.**  It
   is the control on the reduced-width reach table, and the four S-box controls inside the
   script are what make the whole argument capable of failing — one of them (254 odd
   preimage counts) must *break* the zero-sum, and if it ever passes, the failure is in the
@@ -584,7 +584,7 @@ Four traps in that set, all of which have already cost time once:
 
 ## 8. Where a refreshed figure has to land
 
-Producing the number is half the job. **Every figure this file re-derives is published in
+Producing the number is half the job.  **Every figure this file re-derives is published in
 more than one document, so fixing one copy is not fixing the figure** — grep the value
 across all of these before calling it refreshed, and sweep the prose around each hit, which
 states the conclusion the figure was supporting:
@@ -599,9 +599,9 @@ states the conclusion the figure was supporting:
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
 | [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy — instructions that get acted on, so a stale value here is worse than a stale sentence |
 
-Two of those bite in particular. A changed ceiling or floor moves the brackets **and** the
+Two of those bite in particular.  A changed ceiling or floor moves the brackets **and** the
 bar a challenge has to clear, so CHALLENGES.md is a correctness target rather than a
-narrative one — an unreachable target published there is worse than a stale sentence. And a
+narrative one — an unreachable target published there is worse than a stale sentence.  And a
 figure whose *status label* changes (`optimal` ⇄ incumbent) has to change label everywhere,
 because only `optimal` is a security bound; four figures have already been refuted for
 having been recorded from timed-out incumbents.
@@ -609,6 +609,6 @@ having been recorded from timed-out incumbents.
 **This table is the only list of these targets**, and keeping it that way is deliberate:
 [ADVERSARIAL-REVIEW-PLAN.md](../ADVERSARIAL-REVIEW-PLAN.md) § 7 keeps the same requirement
 as a standing audit item but defers to this table rather than restating it, having once
-carried its own copy that fell a document behind. What § 7 does own is the throughput
+carried its own copy that fell a document behind.  What § 7 does own is the throughput
 figures (`README.md`, `CLAUDE.md`, `research/README.md`), which §0 excludes from this file.
 Add a new carrier here, not there.

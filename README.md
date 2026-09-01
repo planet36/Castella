@@ -181,7 +181,7 @@ Don't take my word for it: these comparisons come from [hash-programs/benchmark.
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 
-Not yet — it hasn't been scrutinized by others, and until it has been, the honest answer stays no.  What exists now is a precise target for that scrutiny: [SPEC.md states a falsifiable security claim](SPEC.md#security-claims-and-non-claims) with its supporting evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage challenges.  Although I myself can't break it. [^Schneier]
+Not yet — it hasn't been scrutinized by others, and until it has been, the honest answer stays no.  What exists now is a precise target for that scrutiny: [SPEC.md states a falsifiable security claim](SPEC.md#security-claims-and-non-claims) with its supporting evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage challenges.  Although I myself can't break it.  [^Schneier]
 
 ### Don't roll your own crypto.
 

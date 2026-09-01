@@ -12,10 +12,8 @@ source ./benchmark-common.bash
 # Those are the external sequential tools and the --num-threads=1 rows.  The
 # multithreaded rows stay unpinned.
 
-# How to get openssl digest algorithms
-# XXX: some of the algorithms give this error: Error setting digest
-#openssl dgst --list | sed -e '1d' -e 's|[[:blank:]]*$||' -e 's| \+|\n|g' | command grep -v -x -E -- '-(md4|mdc2|whirlpool)'
-
+# To get the openssl digest algorithms, process by hand the output of
+# `openssl list -digest-algorithms` ("Provided").
 
 # Takes about 10:30
 CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
@@ -57,29 +55,32 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}uu-cksum --tag --algorithm blake3                ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --tag --algorithm shake128 --length 256 ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --tag --algorithm shake256 --length 512 ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -blake2b512          ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -blake2s256          ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -md5                 ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -md5-sha1            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -ripemd              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -ripemd160           ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -rmd160              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha1                ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha224              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha256              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha3-224            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha3-256            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha3-384            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha3-512            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha384              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha512              ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha512-224          ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sha512-256          ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -shake128 -xoflen 32 ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -shake256 -xoflen 64 ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -sm3                 ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -ssl3-md5            ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -ssl3-sha1           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -BLAKE2B-512          ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -BLAKE2S-256          ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-224           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-256           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-384           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-512           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-KMAC-128      ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -KECCAK-KMAC-256      ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -MD5                  ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -MD5-SHA1             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -RIPEMD-160           ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA-1                ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-224             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-256             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-256/192         ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-384             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-512             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-512/224         ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA2-512/256         ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA3-224             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA3-256             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA3-384             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHA3-512             ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHAKE-128 -xoflen 32 ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SHAKE-256 -xoflen 64 ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -SM3                  ${CASTELLA_TMP}/test.txt" \
 "${PIN}./castella --tag --num-threads=1 ${CASTELLA_TMP}/test.txt" \
 "./castella --tag --rounds=3 --size=32 ${CASTELLA_TMP}/test.txt" \
 "./castella --tag --rounds=3 --size=48 ${CASTELLA_TMP}/test.txt" \

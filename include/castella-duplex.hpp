@@ -503,6 +503,10 @@ private:
     // }}}
     void squeeze_into_(const std::span<std::byte> dst) noexcept
     {
+#if defined(DEBUG)
+        assert(std::cmp_less_equal(std::size(dst), get_rate_size_bytes()));
+#endif
+
         // Add the input suffix and apply the padding rule before every
         // squeeze, even if dst is empty.
         add_(as_byte_span(INPUT_SUFFIX));
@@ -510,7 +514,6 @@ private:
 
 #if defined(DEBUG)
         assert(cur_input_byte_idx_ == 0); // input buf is empty
-        assert(std::cmp_less_equal(std::size(dst), get_rate_size_bytes()));
 #endif
 
         // Guard the memcpy.  On a mute squeeze, such as squeeze_bytes(0), dst

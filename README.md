@@ -134,6 +134,8 @@ These figures are machine-dependent; reproduce them with [hash-programs/benchmar
   * [C++23](https://en.cppreference.com/cpp/23) features are used
   * clang++ is not supported
 * An x86-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
+  * x86-64 is the only tested platform
+  * ARM64 is supported in principle, and no ARM64 build has been checked against [tests/KAT.txt](tests/KAT.txt)
 
 ## Building
 

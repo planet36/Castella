@@ -20,41 +20,41 @@ CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
 time hyperfine --shell=none --time-unit millisecond --warmup=5 \
     --export-csv "$CSV" \
     --ignore-failure \
-"${PIN}cksum --tag --algorithm sysv              ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm bsd               ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm crc               ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm crc32b            ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm md5               ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha1              ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha2 --length 224 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha2 --length 256 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha2 --length 384 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha2 --length 512 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha3 --length 224 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha3 --length 256 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha3 --length 384 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sha3 --length 512 ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm blake2b           ${CASTELLA_TMP}/test.txt" \
-"${PIN}cksum --tag --algorithm sm3               ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sysv                  ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm bsd                   ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm crc                   ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm crc32b                ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm md5                   ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha1                  ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha2 --length 224     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha2 --length 256     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha2 --length 384     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha2 --length 512     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha3 --length 224     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha3 --length 256     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha3 --length 384     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sha3 --length 512     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm blake2b               ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm sm3                   ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm blake3                ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm shake128 --length 256 ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --tag --algorithm shake256 --length 512 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sysv              ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm bsd               ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm crc               ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm crc32b            ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm md5               ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha1              ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha2 --length 224 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha2 --length 256 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha2 --length 384 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha2 --length 512 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha3 --length 224 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha3 --length 256 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha3 --length 384 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sha3 --length 512 ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm blake2b           ${CASTELLA_TMP}/test.txt" \
+"${PIN}cksum --algorithm sm3               ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sysv                  ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm bsd                   ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm crc                   ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm crc32b                ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm md5                   ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha1                  ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha2 --length 224     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha2 --length 256     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha2 --length 384     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha2 --length 512     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha3 --length 224     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha3 --length 256     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha3 --length 384     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sha3 --length 512     ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm blake2b               ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sm3                   ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm blake3                ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm shake128 --length 256 ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm shake256 --length 512 ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2B-512          ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2S-256          ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-224           ${CASTELLA_TMP}/test.txt" \
@@ -81,17 +81,17 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}openssl dgst -SHAKE-128 -xoflen 32 ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -SHAKE-256 -xoflen 64 ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -SM3                  ${CASTELLA_TMP}/test.txt" \
-"${PIN}./castella --tag --num-threads=1 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag --rounds=3 --size=32 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag --rounds=3 --size=48 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag --rounds=3 --size=64 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag            --size=32 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag            --size=48 ${CASTELLA_TMP}/test.txt" \
-"./castella --tag            --size=64 ${CASTELLA_TMP}/test.txt" \
-"${PIN}./cch --tag --num-threads=1      ${CASTELLA_TMP}/test.txt" \
-"./cch --tag                 ${CASTELLA_TMP}/test.txt" \
-"./cch --tag --mix-rate=2048 ${CASTELLA_TMP}/test.txt" \
-"./cch --tag --mix-rate=0    ${CASTELLA_TMP}/test.txt" \
+"${PIN}./castella --num-threads=1 ${CASTELLA_TMP}/test.txt" \
+"./castella --rounds=3 --size=32 ${CASTELLA_TMP}/test.txt" \
+"./castella --rounds=3 --size=48 ${CASTELLA_TMP}/test.txt" \
+"./castella --rounds=3 --size=64 ${CASTELLA_TMP}/test.txt" \
+"./castella            --size=32 ${CASTELLA_TMP}/test.txt" \
+"./castella            --size=48 ${CASTELLA_TMP}/test.txt" \
+"./castella            --size=64 ${CASTELLA_TMP}/test.txt" \
+"${PIN}./cch --num-threads=1      ${CASTELLA_TMP}/test.txt" \
+"./cch                 ${CASTELLA_TMP}/test.txt" \
+"./cch --mix-rate=2048 ${CASTELLA_TMP}/test.txt" \
+"./cch --mix-rate=0    ${CASTELLA_TMP}/test.txt" \
 "b3sum --tag                 ${CASTELLA_TMP}/test.txt" \
 "${PIN}b3sum --tag --no-mmap       ${CASTELLA_TMP}/test.txt" \
 "${PIN}b3sum --tag --num-threads=1 ${CASTELLA_TMP}/test.txt" \

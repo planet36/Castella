@@ -195,6 +195,8 @@ private:
         assert(available_space > 0);
 #endif
 
+        const auto num_bytes_to_add = available_space;
+
         // The set bits must not overlap.
         constexpr std::byte first_padding_byte_pattern{0b0000'0001};
         constexpr std::byte last_padding_byte_pattern{0b1000'0000};
@@ -209,7 +211,7 @@ private:
             std::byte* dst = &input_bytes[cur_input_byte_idx_];
 
             // Zeroize the available space in the input buffer.
-            (void)std::memset(dst, 0, static_cast<size_t>(available_space));
+            (void)std::memset(dst, 0, num_bytes_to_add);
 
             input_bytes[cur_input_byte_idx_] = first_padding_byte_pattern;
 
@@ -217,7 +219,7 @@ private:
             input_bytes[last_input_byte_idx] |= last_padding_byte_pattern;
         }
 
-        cur_input_byte_idx_ += available_space;
+        cur_input_byte_idx_ += num_bytes_to_add;
 
         absorb_();
     }

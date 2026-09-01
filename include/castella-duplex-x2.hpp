@@ -79,26 +79,26 @@ private:
     * Sized for the largest possible rate, so there is no per-object
     * allocation, as in \c Duplex.  Only the first \c R blocks are used.
     */
-    arr_blocks<Duplex::R_MAX> input_blocks_a_{};
+    decltype(Duplex::input_blocks_) input_blocks_a_{};
 
     /// \copydoc input_blocks_a_
-    arr_blocks<Duplex::R_MAX> input_blocks_b_{};
+    decltype(Duplex::input_blocks_) input_blocks_b_{};
 
     /// The current index of both input buffers
-    int32_t cur_input_byte_idx_ = 0;
+    decltype(Duplex::cur_input_byte_idx_) cur_input_byte_idx_ = 0;
 
 public:
     /// \copydoc Duplex::C
-    const int8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::C) C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// \copydoc Duplex::R
-    const int8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::R) R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// \copydoc Duplex::NUM_ROUNDS
-    const int8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::NUM_ROUNDS) NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// \copydoc Duplex::INPUT_SUFFIX
-    const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::INPUT_SUFFIX) INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
     /// \copydoc Duplex::check_constraints_

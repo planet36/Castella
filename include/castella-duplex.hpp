@@ -122,6 +122,8 @@ namespace Castella
 // }}}
 struct alignas(block_t) Duplex final
 {
+    friend struct DuplexX2;
+
     /// The size (in blocks) of the state
     // {{{
     /**

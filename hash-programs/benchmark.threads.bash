@@ -9,7 +9,7 @@
 test -x castella || exit
 test -x cch || exit
 
-# shellcheck source=benchmark-common.bash
+# shellcheck disable=SC1091
 source ./benchmark-common.bash
 
 # Powers of 2 up to nproc, then nproc itself, so the hardware ceiling is

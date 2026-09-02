@@ -4,7 +4,7 @@
 
 test -x castella || exit
 
-# shellcheck source=benchmark-common.bash
+# shellcheck disable=SC1091
 source ./benchmark-common.bash
 
 # Vary --size.  Maintain --rounds because, if not given, it varies based on --size.

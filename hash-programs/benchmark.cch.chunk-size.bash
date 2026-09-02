@@ -4,7 +4,7 @@
 
 test -x cch || exit
 
-# shellcheck source=benchmark-common.bash
+# shellcheck disable=SC1091
 source ./benchmark-common.bash
 
 # 2**10 = 1024

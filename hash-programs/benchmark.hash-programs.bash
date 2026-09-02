@@ -5,7 +5,7 @@
 test -x castella || exit
 test -x cch || exit
 
-# shellcheck source=benchmark-common.bash
+# shellcheck disable=SC1091
 source ./benchmark-common.bash
 
 # The single-threaded rows are prefixed with ${PIN} to reduce scheduler noise.

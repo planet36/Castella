@@ -168,14 +168,14 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 /// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
 /**
-* In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its
-* AES round key.
+* The VAES implementation of \c aes_enc_arr.  It does the same work as
+* \c aes_enc_arr_generic, two elements at a time.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_arr(simd_arr_t<N>& arr,
-            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_arr_paircast(simd_arr_t<N>& arr,
+                     const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -256,17 +256,13 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 * In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its
 * AES round key.
 *
-* This is the fallback for targets without VAES.  The overload above does the
-* same thing two elements at a time.
-*
-* It cannot say \c \\copydoc.  The two differ only by a \c requires clause,
-* which doxygen does not use to tell overloads apart, so naming the other one
-* there resolves back to this one.
+* This is the portable implementation of \c aes_enc_arr, and the only one
+* on targets without VAES.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_arr(simd_arr_t<N>& arr,
-            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_arr_generic(simd_arr_t<N>& arr,
+                    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -279,17 +275,43 @@ aes_enc_arr(simd_arr_t<N>& arr,
     }
 }
 
+/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/**
+* This is a wrapper.  It calls \c aes_enc_arr_paircast on x86-64 with VAES
+* when \a N is positive and even, and \c aes_enc_arr_generic everywhere
+* else.  The two are bit-identical, so the choice never affects a digest.
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
+static void
+aes_enc_arr(simd_arr_t<N>& arr,
+            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+{
+#if defined(__x86_64__) && defined(__VAES__)
+    if constexpr ((N > 0) && ((N % 2) == 0))
+    {
+        aes_enc_arr_paircast<aes_num_rounds>(arr, aes_round_keys);
+    }
+    else
+    {
+        aes_enc_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+    }
+#else
+    aes_enc_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+#endif
+}
+
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
 /**
-* The AES round keys are applied in reverse order of \c aes_enc_arr.
+* The VAES implementation of \c aes_enc_inv_arr.  It does the same work as
+* \c aes_enc_inv_arr_generic, two elements at a time.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_inv_arr(simd_arr_t<N>& arr,
-                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_inv_arr_paircast(simd_arr_t<N>& arr,
+                         const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -313,14 +335,15 @@ aes_enc_inv_arr(simd_arr_t<N>& arr,
 
 /// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
 /**
-* The AES round keys are applied in reverse order of \c aes_enc_arr.  This is
-* the fallback for targets without VAES.  See the note on the corresponding
-* \c aes_enc_arr overload for why it does not use \c \\copydoc.
+* The AES round keys are applied in reverse order of \c aes_enc_arr.
+*
+* This is the portable implementation of \c aes_enc_inv_arr, and the only
+* one on targets without VAES.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_inv_arr(simd_arr_t<N>& arr,
-                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_inv_arr_generic(simd_arr_t<N>& arr,
+                        const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -331,4 +354,30 @@ aes_enc_inv_arr(simd_arr_t<N>& arr,
             arr[i] = aes_enc_inv(arr[i], aes_round_keys[aes_r][i]);
         }
     }
+}
+
+/// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/**
+* This is a wrapper.  It calls \c aes_enc_inv_arr_paircast on x86-64 with
+* VAES when \a N is positive and even, and \c aes_enc_inv_arr_generic
+* everywhere else.  The two are bit-identical, so the choice never affects
+* \c permute_inv, their only caller.
+*/
+template <size_t aes_num_rounds, size_t N, size_t M>
+static void
+aes_enc_inv_arr(simd_arr_t<N>& arr,
+                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+{
+#if defined(__x86_64__) && defined(__VAES__)
+    if constexpr ((N > 0) && ((N % 2) == 0))
+    {
+        aes_enc_inv_arr_paircast<aes_num_rounds>(arr, aes_round_keys);
+    }
+    else
+    {
+        aes_enc_inv_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+    }
+#else
+    aes_enc_inv_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+#endif
 }

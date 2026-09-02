@@ -15,13 +15,11 @@
 *
 * Contenders (all on a 16-block state):
 *
-*   - generic<16>: per-uint8x16_t loop.  Under VAES the header's generic
-*     \c aes_enc_arr is shadowed for even N by the constrained pair-cast
-*     overload with the identical signature, so \c aes_enc_arr_generic below
-*     is a verbatim copy of that path (the second, unconstrained overload in
-*     aes_enc.hpp; keep them in sync).
-*   - vaes_cast<16>: the header overload selected in real use -- adjacent
-*     __m128i pairs cast to __m256i, 256-bit round-key loads.
+*   - generic<16>: \c aes_enc_arr_generic, the per-uint8x16_t loop that a
+*     target without VAES runs.
+*   - vaes_cast<16>: \c aes_enc_arr_paircast, what \c aes_enc_arr dispatches
+*     to in real use -- adjacent __m128i pairs cast to __m256i, 256-bit
+*     round-key loads.
 *   - x2_broadcast<16>: the lane-paired overload used by permute_x2 -- two
 *     independent 16-block states, one per 128-bit lane, the same 128-bit
 *     round key broadcast to both lanes.
@@ -61,23 +59,6 @@
 /// The state size (blocks); \c Castella::Duplex uses 16
 constexpr size_t N_BLOCKS = 16;
 
-/// Verbatim copy of the generic (non-VAES) \c aes_enc_arr in aes_enc.hpp (keep in sync)
-template <size_t aes_num_rounds, size_t N, size_t M>
-static void
-aes_enc_arr_generic(simd_arr_t<N>& arr,
-                    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
-{
-    static_assert(M >= N);
-
-    for (int i = 0; i < std::ssize(arr); ++i)
-    {
-        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
-        {
-            arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
-        }
-    }
-}
-
 void
 BM_generic(benchmark::State& BM_state)
 {
@@ -116,7 +97,7 @@ BM_vaes_cast(benchmark::State& BM_state)
     {
         // This code gets timed
 
-        aes_enc_arr(arr, keys);
+        aes_enc_arr_paircast(arr, keys);
     }
 
     BM_state.SetBytesProcessed(BM_state.iterations() *
@@ -217,7 +198,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         auto result_generic = state_a;
         auto result_vaes = state_a;
         aes_enc_arr_generic(result_generic, keys);
-        aes_enc_arr(result_vaes, keys);
+        aes_enc_arr_paircast(result_vaes, keys);
         assert(simd_arr_equal(result_generic, result_vaes));
 
         // Each lane of the broadcast x2 overload must match its

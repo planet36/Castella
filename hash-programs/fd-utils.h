@@ -25,8 +25,8 @@ extern "C" {
 * This succeeds on regular files and block devices, and fails on pipes,
 * sockets, and other non-seekable descriptors.
 *
-* \param fd  Open file descriptor to test.
-* \return    \c true if \a fd is seekable, \c false otherwise.
+* \param fd Open file descriptor to test.
+* \return \c true if \a fd is seekable, \c false otherwise.
 */
 static inline bool
 is_seekable(const int fd)
@@ -38,9 +38,9 @@ is_seekable(const int fd)
 /**
 * Retrieves file metadata via \c fstat(2) and extracts \c st_size.
 *
-* \param fd  Open file descriptor.
-* \return    File size in bytes on success, or \c -1 if \c fstat(2) fails
-*            (with \c errno set by \c fstat).
+* \param fd Open file descriptor.
+* \return File size in bytes on success, or \c -1 if \c fstat(2) fails (with
+*         \c errno set by \c fstat).
 */
 static inline off_t
 get_file_size(const int fd)
@@ -69,9 +69,8 @@ get_file_size(const int fd)
 * Multiple readers may hold the lock simultaneously.  The call blocks only if
 * another open file description holds a write lock.
 *
-* \param fd  Open file descriptor to lock.  Must be open for reading.
-* \return    \c 0 on success, \c -1 on error (with \c errno set by
-*            \c fcntl(2)).
+* \param fd Open file descriptor to lock.  Must be open for reading.
+* \return \c 0 on success, \c -1 on error (with \c errno set by \c fcntl(2)).
 *
 * \note OFD locks (\c F_OFD_SETLKW) require Linux 3.15 or later.
 * \sa acq_write_lock_fd(), rel_lock_fd()
@@ -118,9 +117,8 @@ acq_read_lock_fd(int fd)
 * The call blocks until all read and write locks held by other open file
 * descriptions are released.  Only one writer may hold the lock at a time.
 *
-* \param fd  Open file descriptor to lock.  Must be open for writing.
-* \return    \c 0 on success, \c -1 on error (with \c errno set by
-*            \c fcntl(2)).
+* \param fd Open file descriptor to lock.  Must be open for writing.
+* \return \c 0 on success, \c -1 on error (with \c errno set by \c fcntl(2)).
 *
 * \note OFD locks (\c F_OFD_SETLKW) require Linux 3.15 or later.
 * \sa acq_read_lock_fd(), rel_lock_fd()
@@ -157,9 +155,8 @@ acq_write_lock_fd(int fd)
 * \c F_OFD_SETLK, unconditionally releasing any read or write OFD lock
 * held by the current open file description.
 *
-* \param fd  Open file descriptor whose lock should be released.
-* \return    \c 0 on success, \c -1 on error (with \c errno set by
-*            \c fcntl(2)).
+* \param fd Open file descriptor whose lock should be released.
+* \return \c 0 on success, \c -1 on error (with \c errno set by \c fcntl(2)).
 *
 * \note OFD locks (\c F_OFD_SETLKW) require Linux 3.15 or later.
 * \sa acq_read_lock_fd(), acq_write_lock_fd()
@@ -199,9 +196,10 @@ rel_lock_fd(int fd)
 * On failure of either call, \c errno is set to the returned error code and
 * the function returns immediately without issuing the remaining hint.
 *
-* \param fd  Open file descriptor to advise on.
-* \return    \c true if either \c posix_fadvise call failed (with \c errno set
-*            to the error), \c false if both hints were accepted.
+* \param fd Open file descriptor to advise on.
+* \return \c true if either \c posix_fadvise call failed (with \c errno set to
+*         the error), \c false if both hints were accepted.
+*
 * \sa https://man7.org/linux/man-pages/man2/posix_fadvise.2.html
 */
 static inline bool
@@ -240,11 +238,11 @@ fadvise_sequential_noreuse(const int fd)
 * On failure of either call, \c errno is set to the returned error code and
 * the function returns immediately without issuing the remaining hint.
 *
-* \param mmap_addr  Base address of the memory-mapped region.
-* \param mmap_size  Length of the region in bytes.
-* \return           \c true if either \c posix_madvise call failed (with
-*                   \c errno set to the error), \c false if both hints were
-*                   accepted.
+* \param mmap_addr Base address of the memory-mapped region.
+* \param mmap_size Length of the region in bytes.
+* \return \c true if either \c posix_madvise call failed (with \c errno set to
+*         the error), \c false if both hints were accepted.
+*
 * \sa https://man7.org/linux/man-pages/man3/posix_madvise.3.html
 */
 static inline bool

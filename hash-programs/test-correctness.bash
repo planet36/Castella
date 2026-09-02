@@ -195,16 +195,6 @@ function first_field
     done
 }
 
-# Create the input data files.  The size of each file is in its name.
-#     0 B  : only padding is absorbed
-#   100 B  : smaller than one 256-byte chunk
-#     1 KiB: too small to trigger a mix at the default mix rate
-#    64 KiB: exactly 256 chunks (the default mix rate boundary)
-#   100 KB : large enough to be memory-mapped; not a multiple of the cch
-#            compression block size (256), the default tree chunk size of
-#            both programs (65536), the read block size (32768), or the
-#            page size (4096)
-#     1 MiB: a multiple of all of the above
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 # A private directory per run, so concurrent runs cannot delete each other's
@@ -215,6 +205,16 @@ CASTELLA_TMP=$(mktemp --directory) || exit
 # interrupted ones.  (An EXIT trap preserves the script's exit status.)
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
+# Create the input data files.  The size of each file is in its name.
+#     0 B  : only padding is absorbed
+#   100 B  : smaller than one 256-byte chunk
+#     1 KiB: too small to trigger a mix at the default mix rate
+#    64 KiB: exactly 256 chunks (the default mix rate boundary)
+#   100 KB : large enough to be memory-mapped; not a multiple of the cch
+#            compression block size (256), the default tree chunk size of
+#            both programs (65536), the read block size (32768), or the
+#            page size (4096)
+#     1 MiB: a multiple of all of the above
 yes "$LINE" | head --bytes 0     > "${CASTELLA_TMP}/test-0B.txt"    || exit
 yes "$LINE" | head --bytes 100   > "${CASTELLA_TMP}/test-100B.txt"  || exit
 yes "$LINE" | head --bytes 1K    > "${CASTELLA_TMP}/test-1KiB.txt"  || exit

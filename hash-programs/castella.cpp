@@ -164,9 +164,8 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes) noexcept
 [[nodiscard]] static inline int
 get_necessary_num_rounds(const int digest_size_bytes) noexcept
 {
-    return num_digest_bytes_to_capacity_blocks(digest_size_bytes) <= 6
-               ? num_rounds_claimed_small
-               : num_rounds_claimed_large;
+    const int C = num_digest_bytes_to_capacity_blocks(digest_size_bytes);
+    return C <= 6 ? num_rounds_claimed_small : num_rounds_claimed_large;
 }
 
 /// The number of rounds for a digest of \a digest_size_bytes bytes

@@ -603,10 +603,10 @@ struct check_line final
 {
     std::string path;
     std::vector<std::byte> expected_digest;
-    int rounds = 0;
-    int suffix = 0;
     std::string custom;
     int chunk_size_bytes = 0;
+    int rounds = 0;
+    int suffix = 0;
 };
 
 /// Whether \a digest has a size this program could have produced
@@ -708,13 +708,13 @@ parse_untagged_line(std::string_view s, check_line& out)
         out.path = s;
     }
 
+    out.custom = customization_str;
+    out.chunk_size_bytes = chunk_size;
     // An untagged line does not carry its rounds.  When --rounds was not
     // given, derive it from this line's own digest length.  The command
     // line's --size is irrelevant in --check mode.
     out.rounds = resolve_num_rounds(static_cast<int>(std::ssize(out.expected_digest)));
     out.suffix = input_suffix;
-    out.custom = customization_str;
-    out.chunk_size_bytes = chunk_size;
 
     return true;
 }

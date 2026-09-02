@@ -163,7 +163,7 @@ consume_shell_quoted(std::string_view& s, std::string& out)
         out.append(rest.substr(0, pos));
         rest.remove_prefix(pos + 1);
 
-        if (consume_prefix(rest, "\\''")) // an embedded single quote
+        if (consume_prefix(rest, R"(\'')")) // backslash, single quote, single quote
         {
             out += SINGLE_QUOTE;
         }

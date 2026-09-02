@@ -269,7 +269,7 @@ private:
     }
 
     /// Absorb the input buffer into the state and perhaps apply the permutation function
-    void absorb_()
+    void absorb_() noexcept
     {
 #if defined(DEBUG)
         assert(input_bytes_.is_full());
@@ -370,7 +370,7 @@ private:
     * Padding bytes are always added before the state is finalized.
     * They are sequential values from \c 0 to \c get_state_size_bytes()-1.
     */
-    void add_padding_bytes_()
+    void add_padding_bytes_() noexcept
     {
 #if defined(DEBUG)
         assert(!input_bytes_.is_full());
@@ -395,7 +395,7 @@ private:
     * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
     */
     // }}}
-    void final_digest_into_(const std::span<std::byte> dst)
+    void final_digest_into_(const std::span<std::byte> dst) noexcept
     {
 #if defined(DEBUG)
         assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));

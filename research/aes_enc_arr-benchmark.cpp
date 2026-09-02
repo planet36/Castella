@@ -41,6 +41,7 @@
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 #include "aes_enc.hpp"
+#include "castella-duplex.hpp"
 #include "castella-permute.hpp"
 #include "pack_states.hpp"
 #include "parse_int.hpp"
@@ -56,8 +57,7 @@
 #include <thread>
 #include <utility>
 
-/// The state size (blocks); \c Castella::Duplex uses 16
-constexpr size_t N_BLOCKS = 16;
+constexpr size_t N_BLOCKS = Castella::Duplex::B;
 
 void
 BM_generic(benchmark::State& BM_state)

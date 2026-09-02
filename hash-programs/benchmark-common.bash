@@ -1,11 +1,6 @@
 # SPDX-FileCopyrightText: Steven Ward
 # SPDX-License-Identifier: MPL-2.0
 
-# Common setup sourced by the benchmark.*.bash scripts (after their
-# `test -x` checks).  Not meant to be run directly.
-
-# shellcheck shell=bash
-# The variables below are used by the sourcing scripts.
 # shellcheck disable=SC2034
 
 SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
@@ -14,7 +9,6 @@ SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
 
 export LC_ALL=C
 
-# Setup
 FILE_SIZE=${FILE_SIZE:-500M}
 
 # A private directory per run, so concurrent runs cannot clobber each other's

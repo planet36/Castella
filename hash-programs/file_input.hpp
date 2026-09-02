@@ -5,13 +5,6 @@
 /**
 * \file
 * \author Steven Ward
-*
-* What each program does with the bytes lives in that program, next to where
-* it constructs its hash object.  That covers which tree it builds, and how
-* the tree spreads the work.  This header holds the parts that are the same
-* for any hash object: opening and locking the file, choosing between a
-* read() loop and a memory mapping, and releasing the mapping on every path
-* out.
 */
 
 #pragma once

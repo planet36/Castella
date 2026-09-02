@@ -43,7 +43,6 @@ inline constexpr std::string_view program_version = "2026-08-29";
 inline constexpr std::string_view function_name = "Castella";
 
 /// The function name of keyed (--key-file) hashing
-/** The distinct name domain-separates MACs from unkeyed digests. */
 inline constexpr std::string_view mac_function_name = "Castella-MAC";
 
 /// The absolute maximum key size (in bytes)
@@ -759,8 +758,6 @@ verify_check_line(const std::string_view line, check_totals& totals)
         return;
     }
 
-    // Compare in constant time.  --custom may be a secret key, and then the
-    // comparison must not be a timing oracle for the expected digest.
     if (equal_constant_time(digest_bytes, parsed.expected_digest))
     {
         ++totals.num_matched;
@@ -849,9 +846,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
         }
-        // DuplexTree allocates, and it rethrows worker-thread exceptions out
-        // of add() and squeeze_bytes(), so std::bad_alloc is reachable here.
-        // Report it and continue with the remaining files.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

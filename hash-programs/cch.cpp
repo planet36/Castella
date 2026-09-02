@@ -532,11 +532,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             warnx("%s", ex.what());
             exit_status = EXIT_FAILURE;
         }
-        // The tree hash object allocates per-batch CV arrays, a buffer of up
-        // to --chunk-size, and worker node objects.  It also rethrows
-        // worker-thread exceptions out of add() and final_digest_bytes(), so
-        // std::bad_alloc is reachable here.  Report it and continue with the
-        // remaining files.
         catch (const std::exception& ex)
         {
             (void)std::fflush(stdout);

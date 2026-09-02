@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /// SIGBUS guard for the memory-mapped file-read path
-// {{{
 /**
 * \file
 * \author Steven Ward
@@ -23,7 +22,6 @@
 * \c add() call.  It installs the handler once, publishes the region, and
 * unpublishes it on scope exit, including on an exception.
 */
-// }}}
 
 #pragma once
 

@@ -103,11 +103,11 @@ static_assert(B_MAX == 16, "value is fixed by SPEC.md");
 *
 * A [round][block][AES round] nesting would be possible if creation and
 * consumption were both reshaped, but it would pessimize the key loads.
-* \c aes_enc_arr applies one AES round to two adjacent blocks per 256-bit
-* instruction, so each key fetch wants adjacent blocks' keys for the SAME AES
-* round to be contiguous.  Block must be the fastest-varying index.  With AES
-* round innermost, adjacent blocks' keys would sit \c AES_NUM_ROUNDS blocks
-* apart, splitting every 256-bit key load in two.
+* \c aes_enc_arr_paircast applies one AES round to two adjacent blocks per
+* 256-bit instruction, so each key fetch wants adjacent blocks' keys for the
+* SAME AES round to be contiguous.  Block must be the fastest-varying index.
+* With AES round innermost, adjacent blocks' keys would sit \c AES_NUM_ROUNDS
+* blocks apart, splitting every 256-bit key load in two.
 *
 * The nesting is also frozen now.  The LFSR assigns the constants' values in
 * generation order, and cch's \c create_init_state_ continues the same stream,

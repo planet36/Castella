@@ -135,8 +135,8 @@ key_buffer key_bytes;
 * \pre \a D_bytes >= \c min_num_bytes_to_squeeze
 * \pre \a D_bytes <= \c max_num_bytes_to_squeeze
 */
-int
-num_digest_bytes_to_capacity_blocks(const int D_bytes)
+[[nodiscard]] static inline int
+num_digest_bytes_to_capacity_blocks(const int D_bytes) noexcept
 {
     int C = 2 * D_bytes; // bytes
 

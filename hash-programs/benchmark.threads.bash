@@ -34,6 +34,7 @@ do
         "./${PROGRAM} --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
     printf 'Exported results: %q\n' "$CSV"
+    echo
 
     # --no-mmap: a single thread reads the file into a buffer
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.no-mmap.${DATETIME}.csv"
@@ -43,6 +44,7 @@ do
         "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
     printf 'Exported results: %q\n' "$CSV"
+    echo
 
     # Piped stdin: a shell is needed for the pipe (no --shell=none), so the
     # measured time includes the cat+pipe cost
@@ -53,4 +55,5 @@ do
         "cat ${CASTELLA_TMP}/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
 
     printf 'Exported results: %q\n' "$CSV"
+    echo
 done

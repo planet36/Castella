@@ -9,8 +9,7 @@ test -x cch || exit
 source ./benchmark-common.bash
 
 # The single-threaded rows are prefixed with ${PIN} to reduce scheduler noise.
-# Those are the external sequential tools and the --num-threads=1 rows.  The
-# multithreaded rows stay unpinned.
+# The multithreaded rows stay unpinned.
 
 # To get the openssl digest algorithms, process by hand the output of
 # `openssl list -digest-algorithms` ("Provided").

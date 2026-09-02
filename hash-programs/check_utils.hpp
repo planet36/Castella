@@ -158,7 +158,7 @@ consume_shell_quoted(std::string_view& s, std::string& out)
         const auto pos = rest.find(SINGLE_QUOTE);
 
         if (pos == std::string_view::npos)
-            return false; // unterminated quote
+            return false; // unterminated single quote
 
         out.append(rest.substr(0, pos));
         rest.remove_prefix(pos + 1);

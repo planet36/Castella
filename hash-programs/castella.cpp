@@ -112,15 +112,14 @@ bool quiet = false;
 /// The --key-file path, or empty when unkeyed
 std::string key_file_path;
 
-/// A buffer of key bytes
-/** The allocator zeroizes the storage on deallocation. */
+/// A type of buffer of key bytes
 using key_buffer = locked_bytes;
 
 /// The secret key bytes read from --key-file, or empty when unkeyed
 /**
 * This has static storage duration, so it is deallocated when the program
 * exits normally or through exit().  An aborting assertion skips that
-* deallocation, and only a DEBUG build both asserts and still writes cores.
+* deallocation, and only a DEBUG build can assert and write core dumps.
 *
 * The key also reaches two other buffers.  The stream buffer in
 * \c read_key_file is neither zeroized nor locked, and the tree's chunk buffer
@@ -158,8 +157,8 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes) noexcept
     return C;
 }
 
-/// The minimum claimed round count for a digest of \a digest_size_bytes bytes
-/** \see SPEC.md's "Margin rationale" (and \c num_rounds_claimed_small) for details. */
+/// Get the number of rounds for a digest of \a digest_size_bytes bytes
+/// necessary to satisfy the security claim
 [[nodiscard]] static inline int
 get_necessary_num_rounds(const int digest_size_bytes) noexcept
 {
@@ -167,10 +166,10 @@ get_necessary_num_rounds(const int digest_size_bytes) noexcept
     return C <= 6 ? num_rounds_claimed_small : num_rounds_claimed_large;
 }
 
-/// The number of rounds for a digest of \a digest_size_bytes bytes
+/// Get the number of rounds for a digest of \a digest_size_bytes bytes
 /**
-* An explicit --rounds wins.  Without it the result is the minimum claimed
-* round count for that digest size.
+* If --rounds was not given, return the necessary number of rounds for the
+* given digest size.
 */
 [[nodiscard]] static inline int
 resolve_num_rounds(const int digest_size_bytes) noexcept
@@ -432,7 +431,7 @@ void process_options(int argc, char* argv[])
         errx(EXIT_FAILURE, "the --quiet option is only meaningful with --check");
 }
 
-/// The maximum key size (in bytes) for the given chunk size
+/// Get the maximum key size (in bytes) for the given chunk size
 /**
 * The key and the two length prefixes before it must fit in one tree chunk
 * (see \c compute_file_digest).  Those prefixes are left_encode(chunk size)
@@ -802,8 +801,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (check_mode)
     {
-        // The paths are checkfiles (lines of digests to verify), not files
-        // to hash.
+        // The paths are checkfiles (containing lines of digests to verify),
+        // not files to hash.
         exit_status = run_check_files(paths, verify_check_line);
 
         return exit_status;

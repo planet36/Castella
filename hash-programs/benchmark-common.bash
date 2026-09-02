@@ -16,8 +16,7 @@ FILE_SIZE=${FILE_SIZE:-500M}
 # which is what README.md's cache-hot comparisons measure.
 CASTELLA_TMP=$(mktemp --directory) || exit
 
-# Remove the generated input file at the end of every run, including an
-# interrupted one.
+# Remove the generated input files at the end of every run.
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > "${CASTELLA_TMP}/test.txt" || exit

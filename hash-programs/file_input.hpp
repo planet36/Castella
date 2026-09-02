@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Feeding a file's contents to a hash object, shared by the hash programs
+/// Common utilities for feeding a file's contents to a hash object
 /**
 * \file
 * \author Steven Ward

@@ -8,7 +8,7 @@
 *
 * A file memory-mapped for hashing can be truncated by another process after
 * its size was sampled, a TOCTOU that no advisory lock prevents.  Touching a
-* page past the new end of file then raises SIGBUS.  Without a handler the
+* page past the new end of file then raises SIGBUS.  Without a handler, the
 * process dies with "Bus error (core dumped)" instead of the graceful error
 * every other I/O failure gets.
 *

@@ -17,7 +17,7 @@ PASS=0
 FAIL=0
 
 # The number of assertions this script is expected to make.
-# Without it a deleted assertion still reports "0 failed" and exits 0,
+# Without it, a deleted assertion still reports "0 failed" and exits 0,
 # so the script could not report success on the assertions that did run.
 # Update this when assertions are added or removed.
 declare -r EXPECTED_ASSERTIONS=138
@@ -181,9 +181,7 @@ function assert_eq_cmd_exit_status
 }
 
 # Print the first whitespace-separated field of each input line
-#
-# Doing it in the shell spawns no process, an order of magnitude cheaper than
-# `cut` across the ~100 call sites here.
+# Using shell builtins is faster than invoking `cut` or `awk`.
 function first_field
 {
     local INPUT_LINE
@@ -227,8 +225,7 @@ set -o pipefail
 
 # Verify command output with known output
 #
-# `first_field` reads the untagged digest format, so the assertions below pass
-# --untagged rather than rely on the default format.
+# Pass --untagged so we can use `first_field` to effortlessly read the digest.
 
 CUSTOM='hash'
 ROUNDS=3
@@ -861,7 +858,7 @@ assert_neq_cmd_cmd \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field | head -c 32'
 
 # A keyed digest verifies only with the same key.  --check with the right key
-# succeeds.  With the wrong key or no key it must FAIL, because the key is
+# succeeds.  With the wrong key, or no key, it must FAIL, because the key is
 # never in the digest line.
 
 assert_eq_cmd_str \

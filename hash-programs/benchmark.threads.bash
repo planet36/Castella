@@ -4,7 +4,7 @@
 
 # Sweep --num-threads in each I/O mode (mmap, --no-mmap, piped stdin) for
 # castella and cch.  These sweeps measure how the run time responds to threads
-# in each mode.  Observations from past runs are recorded in README.md.
+# in each mode.
 
 test -x castella || exit
 test -x cch || exit
@@ -26,7 +26,7 @@ THREAD_COUNTS=${THREAD_COUNTS:-$DEFAULT_THREAD_COUNTS}
 
 for PROGRAM in castella cch
 do
-    # Default I/O mode: the file is memory-mapped
+    # Default I/O mode (use mmap)
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.mmap.${DATETIME}.csv"
     hyperfine --shell=none --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
@@ -36,7 +36,7 @@ do
     printf 'Exported results: %q\n' "$CSV"
     echo
 
-    # --no-mmap: a single thread reads the file into a buffer
+    # --no-mmap
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.no-mmap.${DATETIME}.csv"
     hyperfine --shell=none --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
@@ -46,8 +46,8 @@ do
     printf 'Exported results: %q\n' "$CSV"
     echo
 
-    # Piped stdin: a shell is needed for the pipe (no --shell=none), so the
-    # measured time includes the cat+pipe cost
+    # Piped stdin
+    # A shell is needed for the pipe.
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.stdin.${DATETIME}.csv"
     hyperfine --shell='/usr/bin/sh' --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \

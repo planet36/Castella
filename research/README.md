@@ -112,14 +112,14 @@ A full `bash run-benchmarks.bash` (pinned, default 5 repetitions, on the committ
 
 ## Findings: the AES stage in isolation (2026-08-12)
 
-`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Because the header's generic (non-VAES) overload is shadowed under VAES by the constrained same-signature overload, the benchmark carries a verbatim copy of it (`aes_enc_arr_generic` — keep in sync).  Medians of 5 repetitions, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
+`aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` overloads of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Medians of 5 repetitions, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
 
-| variant | header overload | ns/call | per byte |
+| variant | header function | ns/call | per byte |
 |---------|-----------------|--------:|---------:|
-| generic\<16\> | copy of the non-VAES fallback | 5.02 | 47.6 GiB/s |
-| vaes\_cast\<16\> | VAES pair-cast (selected in real use) | 2.73 | 87.6 GiB/s |
-| x2\_broadcast\<16\> | lane-paired, key broadcast to both lanes (`permute_x2`) | 6.91 (2 states) | 69.3 GiB/s |
-| folded\<8x2\> | 256-bit keys, folded state (register-resident `permute`) | 2.70 | 88.6 GiB/s |
+| generic\<16\> | `aes_enc_arr_generic`, the non-VAES fallback | 5.02 | 47.6 GiB/s |
+| vaes\_cast\<16\> | `aes_enc_arr_paircast`, what `aes_enc_arr` selects in real use | 2.73 | 87.6 GiB/s |
+| x2\_broadcast\<16\> | lane-paired `aes_enc_arr` overload, key broadcast to both lanes (`permute_x2`) | 6.91 (2 states) | 69.3 GiB/s |
+| folded\<8x2\> | 256-bit-key `aes_enc_arr` overload, folded state (register-resident `permute`) | 2.70 | 88.6 GiB/s |
 
 Interpretation:
 

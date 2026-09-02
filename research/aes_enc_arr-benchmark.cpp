@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Benchmark the aes_enc_arr overloads of aes_enc.hpp
+/// Benchmark the aes_enc_arr functions of aes_enc.hpp
 /**
 * \file
 * \author Steven Ward
@@ -20,10 +20,10 @@
 *   - vaes_cast<16>: \c aes_enc_arr_paircast, what \c aes_enc_arr dispatches
 *     to in real use -- adjacent __m128i pairs cast to __m256i, 256-bit
 *     round-key loads.
-*   - x2_broadcast<16>: the lane-paired overload used by permute_x2 -- two
+*   - x2_broadcast<16>: \c aes_enc_arr_x2, used by permute_x2 -- two
 *     independent 16-block states, one per 128-bit lane, the same 128-bit
 *     round key broadcast to both lanes.
-*   - folded<8x2>: the 256-bit-key overload used by the register-resident
+*   - folded<8x2>: \c aes_enc_arr_folded, used by the register-resident
 *     Castella::permute -- one 16-block state folded into 8 elements
 *     (element j = blocks j and j+8), round keys from
 *     \c Castella::round_constants_folded.
@@ -121,7 +121,7 @@ BM_x2_broadcast(benchmark::State& BM_state)
     {
         // This code gets timed
 
-        aes_enc_arr(arr, keys);
+        aes_enc_arr_x2(arr, keys);
     }
 
     BM_state.SetBytesProcessed(BM_state.iterations() *
@@ -145,7 +145,7 @@ BM_folded(benchmark::State& BM_state)
     {
         // This code gets timed
 
-        aes_enc_arr(arr, keys);
+        aes_enc_arr_folded(arr, keys);
     }
 
     BM_state.SetBytesProcessed(BM_state.iterations() *
@@ -204,9 +204,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // Each lane of the broadcast x2 overload must match its
         // independently transformed state.
         auto result_b = state_b;
-        aes_enc_arr(result_b, keys);
+        aes_enc_arr_paircast(result_b, keys);
         auto state_x2 = pack_states(state_a, state_b);
-        aes_enc_arr(state_x2, keys);
+        aes_enc_arr_x2(state_x2, keys);
         Castella::arr_blocks<N> lane_a{};
         Castella::arr_blocks<N> lane_b{};
         unpack_states(state_x2, lane_a, lane_b);
@@ -220,7 +220,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             state_folded[j] = _mm256_set_m128i(state_a[j + N / 2], state_a[j]);
         }
-        aes_enc_arr(state_folded, keys_folded);
+        aes_enc_arr_folded(state_folded, keys_folded);
         Castella::arr_blocks<N> unfolded{};
         for (size_t j = 0; j < N / 2; ++j)
         {

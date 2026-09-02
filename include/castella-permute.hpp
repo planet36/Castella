@@ -311,7 +311,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants_folded<N>}.last(num_rounds))
     {
-        aes_enc_arr<AES_NUM_ROUNDS>(state_folded, rc);
+        aes_enc_arr_folded<AES_NUM_ROUNDS>(state_folded, rc);
         simd_transpose_folded(state_folded);
     }
 
@@ -376,7 +376,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 *
 * Equivalent to calling \c permute on each state separately.  The VAES
 * instructions apply an independent AES round per 128-bit lane, with both
-* lanes using the same round constants (see the lane-paired \c aes_enc_arr).
+* lanes using the same round constants (see \c aes_enc_arr_x2).
 * The AVX2 unpack instructions of the lane-paired \c simd_transpose are
 * lane-local, so the two states never mix.
 *
@@ -399,7 +399,7 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants}.last(num_rounds))
     {
-        aes_enc_arr<AES_NUM_ROUNDS>(state_x2, rc);
+        aes_enc_arr_x2<AES_NUM_ROUNDS>(state_x2, rc);
         simd_transpose(state_x2);
     }
 }

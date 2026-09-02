@@ -206,8 +206,8 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_arr(simd_arr_x2_t<N>& arr,
-            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
+               const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -224,7 +224,7 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 /// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr with 256-bit round keys
 /**
 * Each element's key here is a full 256-bit value, so the two lanes of an
-* element may use different 128-bit round keys.  The overload above instead
+* element may use different 128-bit round keys.  \c aes_enc_arr_x2 instead
 * broadcasts one 128-bit key to both lanes.
 *
 * This is what the register-resident single-state \c Castella::permute needs.
@@ -233,8 +233,8 @@ aes_enc_arr(simd_arr_x2_t<N>& arr,
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_arr(simd_arr_x2_t<N>& arr,
-            const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_arr_folded(simd_arr_x2_t<N>& arr,
+                   const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 

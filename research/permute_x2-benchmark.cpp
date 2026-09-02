@@ -14,10 +14,10 @@
 *     representation.  Packing is done once, outside the timed loop, as leaf
 *     batching would, since a paired leaf stays packed for its whole chunk.
 *
-* The AES rounds already use VAES in both variants, because adjacent blocks
-* of one state pair into ymm registers in \c aes_enc_arr.  Any speedup here
-* comes from the transpose, where one lane-local AVX2 unpack network serves
-* both states, halving the shuffle work per state.
+* The AES rounds already use VAES in both variants, because
+* \c aes_enc_arr_folded and \c aes_enc_arr_x2 both hold two blocks in one ymm
+* register.  Any speedup here comes from the transpose, where one lane-local
+* AVX2 unpack network serves both states, halving the shuffle work per state.
 */
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)

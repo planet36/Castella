@@ -47,7 +47,7 @@ do
     # Piped stdin: a shell is needed for the pipe (no --shell=none), so the
     # measured time includes the cat+pipe cost
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.stdin.${DATETIME}.csv"
-    hyperfine --time-unit millisecond --warmup=5 \
+    hyperfine --shell='/usr/bin/sh' --time-unit millisecond --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "cat ${CASTELLA_TMP}/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit

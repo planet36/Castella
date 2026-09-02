@@ -15,6 +15,9 @@
 #include "to_unsigned.hpp"
 
 #include <algorithm>
+#if defined(DEBUG)
+#include <cassert>
+#endif
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -138,6 +141,11 @@ key_buffer key_bytes;
 [[nodiscard]] static inline int
 num_digest_bytes_to_capacity_blocks(const int D_bytes) noexcept
 {
+#if defined(DEBUG)
+    assert(D_bytes >= min_num_bytes_to_squeeze);
+    assert(D_bytes <= max_num_bytes_to_squeeze);
+#endif
+
     int C = 2 * D_bytes; // bytes
 
     constexpr auto block_size = static_cast<int>(sizeof(Castella::block_t));

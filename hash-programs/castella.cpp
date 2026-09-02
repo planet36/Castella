@@ -440,7 +440,7 @@ void process_options(int argc, char* argv[])
 * and left_encode(key size), at most 5 bytes each.
 */
 [[nodiscard]] constexpr int
-max_key_size_bytes(const int chunk_size_bytes) noexcept
+get_max_key_size_bytes(const int chunk_size_bytes) noexcept
 {
     // 10 = the two left_encode fields above at their 5-byte maximum
     // (1 length byte + up to 4 value bytes each)
@@ -788,7 +788,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (!key_file_path.empty())
     {
-        key_bytes = read_key_file(key_file_path, max_key_size_bytes(chunk_size));
+        key_bytes = read_key_file(key_file_path, get_max_key_size_bytes(chunk_size));
     }
 
     std::vector<std::string> paths;

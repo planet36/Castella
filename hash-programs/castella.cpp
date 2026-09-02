@@ -559,12 +559,12 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
         const auto encoded_key_len = left_encode(std::size(key));
 
         const auto framing_size =
-            std::size(encoded_w) + std::size(encoded_key_len) + std::size(key);
+            std::ssize(encoded_w) + std::ssize(encoded_key_len) + std::ssize(key);
 
         // Without --check, main bounds the key size at startup against the
         // command line's chunk size.  A --tag check line may carry a smaller
         // chunk size than that, so the fit is rechecked here.
-        if (framing_size > to_unsigned(chunk_size_bytes))
+        if (framing_size > chunk_size_bytes)
             throw std::invalid_argument(
                 "the key does not fit in one chunk of the given chunk size");
 
@@ -574,7 +574,7 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
 
         // The zero fill is what bytepad specifies.  It ends the key block
         // exactly on the chunk 0 boundary.
-        const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
+        const std::vector<std::byte> zeros(chunk_size_bytes - framing_size);
         (void)hash_obj.add(zeros);
     }
 

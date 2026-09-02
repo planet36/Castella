@@ -840,7 +840,7 @@ assert_eq_cmd_str \
 # A keyed digest differs from the unkeyed digest, and differs per key.
 
 assert_neq_cmd_cmd \
-    './castella --untagged                               ${CASTELLA_TMP}/test-100KB.txt | first_field' \
+    './castella --untagged                                          ${CASTELLA_TMP}/test-100KB.txt | first_field' \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
 assert_neq_cmd_cmd \

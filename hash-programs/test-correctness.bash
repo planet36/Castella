@@ -369,13 +369,17 @@ assert_neq_cmd_cmd \
 # suffices.  test-100KB.txt below covers the partial-trailing-chunk read
 # path.
 
-assert_eq_cmd_cmd \
-    "./castella --untagged --custom='hash'           --rounds=3  --suffix=0   ${CASTELLA_TMP}/test-1MiB.txt | first_field" \
-    "./castella --untagged --custom='hash' --no-mmap --rounds=3  --suffix=0   ${CASTELLA_TMP}/test-1MiB.txt | first_field"
+CUSTOM='hash'
 
 assert_eq_cmd_cmd \
-    "./castella --untagged --custom='¡Ay, caramba!'           --rounds=16 --suffix=105 ${CASTELLA_TMP}/test-1MiB.txt | first_field" \
-    "./castella --untagged --custom='¡Ay, caramba!' --no-mmap --rounds=16 --suffix=105 ${CASTELLA_TMP}/test-1MiB.txt | first_field"
+    "./castella --untagged --custom='$CUSTOM'           --rounds=3  --suffix=0   ${CASTELLA_TMP}/test-1MiB.txt | first_field" \
+    "./castella --untagged --custom='$CUSTOM' --no-mmap --rounds=3  --suffix=0   ${CASTELLA_TMP}/test-1MiB.txt | first_field"
+
+CUSTOM='¡Ay, caramba!'
+
+assert_eq_cmd_cmd \
+    "./castella --untagged --custom='$CUSTOM'           --rounds=16 --suffix=105 ${CASTELLA_TMP}/test-1MiB.txt | first_field" \
+    "./castella --untagged --custom='$CUSTOM' --no-mmap --rounds=16 --suffix=105 ${CASTELLA_TMP}/test-1MiB.txt | first_field"
 
 assert_eq_cmd_cmd \
     './cch --untagged           ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
@@ -646,8 +650,10 @@ assert_eq_cmd_str \
 # must be repeated at check time.  (--size is inferred from the digest
 # length, so it is not repeated.)
 
+CUSTOM='¡Ay, caramba!'
+
 assert_eq_cmd_str \
-    "./castella --untagged --custom='¡Ay, caramba!' --rounds=16 --size=48 --suffix=105 ${CASTELLA_TMP}/test-100KB.txt | ./castella --check --custom='¡Ay, caramba!' --rounds=16 --suffix=105 -" \
+    "./castella --untagged --custom='$CUSTOM' --rounds=16 --size=48 --suffix=105 ${CASTELLA_TMP}/test-100KB.txt | ./castella --check --custom='$CUSTOM' --rounds=16 --suffix=105 -" \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
 assert_eq_cmd_str \
@@ -658,7 +664,7 @@ assert_eq_cmd_str \
 # command line needs none of them.
 
 assert_eq_cmd_str \
-    "./castella --tag --custom='¡Ay, caramba!' --rounds=16 --size=48 --suffix=105 ${CASTELLA_TMP}/test-100KB.txt | ./castella --check -" \
+    "./castella --tag --custom='$CUSTOM' --rounds=16 --size=48 --suffix=105 ${CASTELLA_TMP}/test-100KB.txt | ./castella --check -" \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
 assert_eq_cmd_str \

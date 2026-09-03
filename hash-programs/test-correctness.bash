@@ -197,8 +197,7 @@ function first_field
 # inputs.  mktemp honors $TMPDIR and creates the directory 0700.
 CASTELLA_TMP=$(mktemp --directory) || exit
 
-# Remove the created files at the end of every run, including failed or
-# interrupted ones.  (An EXIT trap preserves the script's exit status.)
+# Remove the generated input files at the end of every run.
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
 LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'

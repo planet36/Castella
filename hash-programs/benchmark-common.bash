@@ -11,8 +11,8 @@ SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
 
 FILE_SIZE=${FILE_SIZE:-500M}
 
-# A private directory per run.  On a tmpfs /tmp the input stays RAM-resident,
-# which is what README.md's cache-hot comparisons measure.
+# A private directory per run, so concurrent runs cannot delete each other's
+# inputs.  mktemp honors $TMPDIR and creates the directory 0700.
 CASTELLA_TMP=$(mktemp --directory) || exit
 
 # Remove the generated input files at the end of every run.

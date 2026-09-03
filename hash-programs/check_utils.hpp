@@ -206,22 +206,28 @@ struct check_totals final
 
 /// The --check main loop, reading each checkfile and verifying its lines
 /**
-* Empty lines and lines starting with '#' are skipped.  Every other line is
-* handed to \a verify_line, which parses it, recomputes the digest, prints
-* the per-file OK/FAILED result, and updates the totals.  After all
-* checkfiles, the cksum-style summary warnings are printed to stderr.
+* Empty lines and lines starting with '#' are skipped.  Every other line goes
+* to \a parse_line.  A line it rejects is counted as malformed and nothing
+* else happens to it.  A line it accepts goes to \a verify_line, which
+* recomputes the digest, prints the per-file OK/FAILED result, and updates the
+* totals.  After all checkfiles, the cksum-style summary warnings are printed
+* to stderr.
 *
 * \param checkfile_paths the files containing the lines to verify, where "-"
 *        means standard input
-* \param verify_line callable as <code>verify_line(std::string_view line,
-*        check_totals& totals)</code>
+* \param parse_line callable as <code>parse_line(std::string_view line)</code>,
+*        returning an optional holding the parsed line, empty when the line is
+*        malformed
+* \param verify_line callable as <code>verify_line(const parsed& line,
+*        check_totals& totals)</code>, taking what \a parse_line returned
 * \return the program exit status, which is \c EXIT_SUCCESS only if every
 *         checkfile was readable, every listed file matched, and at least one
 *         properly formatted line was found in each checkfile
 */
-template <typename VerifyLine>
+template <typename ParseLine, typename VerifyLine>
 [[nodiscard]] int
-run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine verify_line)
+run_check_files(const std::vector<std::string>& checkfile_paths,
+                ParseLine parse_line, VerifyLine verify_line)
 {
     check_totals totals;
     bool any_checkfile_failed = false;
@@ -247,8 +253,8 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
         // "castella --tag FILE | castella --check -".
         std::istream& input = (path == "-") ? std::cin : file;
 
-        const auto num_malformed_before = totals.num_malformed;
-        int64_t num_valid_lines = 0;
+        bool found_valid_line = false;
+        int64_t num_malformed_this_file = 0;
 
         std::string line;
         while (std::getline(input, line))
@@ -256,23 +262,29 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
             if (std::empty(line) || line.starts_with('#'))
                 continue;
 
-            const auto num_malformed_before_line = totals.num_malformed;
+            auto parsed = parse_line(std::string_view{line});
 
-            verify_line(std::string_view{line}, totals);
-
-            if (totals.num_malformed == num_malformed_before_line)
-                ++num_valid_lines;
+            if (parsed)
+            {
+                verify_line(*parsed, totals);
+                found_valid_line = true;
+            }
+            else
+            {
+                ++totals.num_malformed;
+                ++num_malformed_this_file;
+            }
         }
 
-        if (num_valid_lines == 0)
+        if (!found_valid_line)
         {
             warnx("%s: no properly formatted checksum lines found", path.c_str());
             any_checkfile_failed = true;
         }
-        else if (totals.num_malformed > num_malformed_before)
+        else if (num_malformed_this_file > 0)
         {
             warnx("WARNING: %" PRId64 " line(s) improperly formatted",
-                  totals.num_malformed - num_malformed_before);
+                  num_malformed_this_file);
         }
     }
 

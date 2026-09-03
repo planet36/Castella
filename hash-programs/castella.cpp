@@ -713,28 +713,35 @@ parse_untagged_line(std::string_view s, check_line& out)
     return true;
 }
 
-/// Parse one checkfile line, recompute its digest, and update \a totals
+/// Parse one checkfile line, in either format
 /**
-* A mismatch or an unreadable file always prints.  A match prints unless
-* --quiet was given.  A malformed line prints nothing, and \c run_check_files
-* reports the count of those instead.
+* \param line the line to parse
+* \return the parsed line, or \c std::nullopt if it is malformed
 */
-void
-verify_check_line(const std::string_view line, check_totals& totals)
+[[nodiscard]] std::optional<check_line>
+parse_check_line(const std::string_view line)
 {
     check_line parsed;
 
-    if (!parse_tagged_line(line, parsed))
-    {
-        parsed = {}; // a failed tag parse may have partially filled it
+    if (parse_tagged_line(line, parsed))
+        return parsed;
 
-        if (!parse_untagged_line(line, parsed))
-        {
-            ++totals.num_malformed;
-            return;
-        }
-    }
+    parsed = {}; // a failed tag parse may have partially filled it
 
+    if (parse_untagged_line(line, parsed))
+        return parsed;
+
+    return std::nullopt;
+}
+
+/// Recompute the digest of an already-parsed line and update \a totals
+/**
+* A mismatch or an unreadable file always prints.  A match prints unless
+* --quiet was given.
+*/
+void
+verify_check_line(const check_line& parsed, check_totals& totals)
+{
     std::vector<std::byte> digest_bytes;
 
     try
@@ -799,7 +806,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         // The paths are checkfiles (containing lines of digests to verify),
         // not files to hash.
-        exit_status = run_check_files(paths, verify_check_line);
+        exit_status = run_check_files(paths, parse_check_line, verify_check_line);
 
         return exit_status;
     }

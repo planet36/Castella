@@ -117,18 +117,15 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
             throw SYSERR_PATH(path);
         }
 
-        // The whole mapping is added in one call, which lets a tree hash
-        // object take its one-shot batch path.  Its worker threads then hash
-        // the file's chunks in place, without copying.
-        //
-        // add() can throw on a mutex failure, an allocation failure, or a
-        // worker thread's exception propagating out of the tree.  The mapping
-        // is released on that path too, before the exception propagates.
-        //
-        // The scoped_region guard turns a concurrent truncation (SIGBUS on a
-        // worker) into a clean error, and unpublishes the region on scope
-        // exit.  add() joins all workers before returning, so no thread
-        // touches the mapping afterwards.
+        /*
+        * The whole mapping is added in one call, which lets a tree hash object
+        * take its one-shot batch path and hash the chunks in place.  The
+        * mapping is released even when add() throws.
+        *
+        * The scoped_region guard turns a concurrent truncation into a clean
+        * error.  add() joins all workers before returning, so no thread
+        * touches the mapping afterwards.
+        */
         try
         {
             const mmap_sigbus::scoped_region guard{

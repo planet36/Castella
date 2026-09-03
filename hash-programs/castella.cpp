@@ -57,9 +57,7 @@ inline constexpr int default_input_suffix = 1;
 
 // The minimum claimed round counts (SPEC.md "Margin rationale").  Capacity
 // C <= 6 needs R >= 6.  C = 8, which covers digests of 49 to 64 bytes, needs
-// R >= 8.  When --rounds is not given, get_necessary_num_rounds derives the
-// default from the digest size.  Every instance this program produces without
-// --rounds is therefore one the security claim covers.
+// R >= 8.
 inline constexpr int num_rounds_claimed_small = 6;
 inline constexpr int num_rounds_claimed_large = 8;
 static_assert(num_rounds_claimed_small >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
@@ -85,10 +83,9 @@ inline constexpr int default_num_threads = 0;
 // {{{ options
 auto input_suffix = default_input_suffix;
 
-// Unset until --rounds is parsed.  While it is unset, each caller derives the
-// round count from the digest size it is about to produce (see
-// resolve_num_rounds).  That lets a --check run follow each checkfile line's
-// digest length rather than the command line's --size.
+// Unset until --rounds is parsed.  While unset, the round count is derived
+// from the digest size being produced, so a --check run follows each
+// checkfile line's digest length rather than the command line's --size.
 std::optional<int> num_rounds_given;
 
 auto num_bytes_to_squeeze = default_num_bytes_to_squeeze;
@@ -119,10 +116,9 @@ using key_buffer = locked_bytes;
 * exits normally or through exit().  An aborting assertion skips that
 * deallocation, and only a DEBUG build can assert and write core dumps.
 *
-* The key also reaches two other buffers.  The stream buffer in
-* \c read_key_file is neither zeroized nor locked, and the tree's chunk buffer
-* is zeroized but not locked.  Only this buffer is locked, and in a release
-* build disabling core dumps is what covers the other two.
+* The key also reaches \c read_key_file's stream buffer, which is neither
+* zeroized nor locked, and the tree's chunk buffer, which is zeroized but not
+* locked.  Disabling core dumps is what covers those two in a release build.
 */
 key_buffer key_bytes;
 // }}}

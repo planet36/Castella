@@ -613,38 +613,38 @@ is_valid_digest_size(const std::vector<std::byte>& digest) noexcept
 
 /// Parse a --tag-format line (which carries its own digest-relevant options)
 [[nodiscard]] bool
-parse_tagged_line(std::string_view s, check_line_fields& out)
+parse_tagged_line(std::string_view s, check_line_fields& cl_fields)
 {
     if (!consume_prefix(s, "castella (chunk-size="))
         return false;
 
     if (!consume_int(s, Castella::DuplexTree::CHUNK_SIZE_MIN,
-                     Castella::DuplexTree::CHUNK_SIZE_MAX, out.chunk_size_bytes))
+                     Castella::DuplexTree::CHUNK_SIZE_MAX, cl_fields.chunk_size_bytes))
         return false;
 
     if (!consume_prefix(s, ",custom="))
         return false;
 
-    if (!consume_shell_quoted(s, out.custom))
+    if (!consume_shell_quoted(s, cl_fields.custom))
         return false;
 
     if (!consume_prefix(s, ",rounds="))
         return false;
 
     if (!consume_int(s, Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
-                     Castella::NUM_ROUNDS_MAX, out.rounds))
+                     Castella::NUM_ROUNDS_MAX, cl_fields.rounds))
         return false;
 
     if (!consume_prefix(s, ",suffix="))
         return false;
 
-    if (!consume_int(s, 0, 255, out.suffix))
+    if (!consume_int(s, 0, 255, cl_fields.suffix))
         return false;
 
     if (!consume_prefix(s, ") "))
         return false;
 
-    if (!consume_shell_quoted(s, out.path))
+    if (!consume_shell_quoted(s, cl_fields.path))
         return false;
 
     if (!consume_prefix(s, " = "))
@@ -655,9 +655,9 @@ parse_tagged_line(std::string_view s, check_line_fields& out)
     if (!digest.has_value())
         return false;
 
-    out.expected_digest = *std::move(digest);
+    cl_fields.expected_digest = *std::move(digest);
 
-    return is_valid_digest_size(out.expected_digest);
+    return is_valid_digest_size(cl_fields.expected_digest);
 }
 
 /// Parse an untagged line (digest, two spaces, FILE)
@@ -667,7 +667,7 @@ parse_tagged_line(std::string_view s, check_line_fields& out)
 * rest of the line is also accepted.
 */
 [[nodiscard]] bool
-parse_untagged_line(std::string_view s, check_line_fields& out)
+parse_untagged_line(std::string_view s, check_line_fields& cl_fields)
 {
     const auto space_pos = s.find(' ');
 
@@ -679,9 +679,9 @@ parse_untagged_line(std::string_view s, check_line_fields& out)
     if (!digest.has_value())
         return false;
 
-    out.expected_digest = *std::move(digest);
+    cl_fields.expected_digest = *std::move(digest);
 
-    if (!is_valid_digest_size(out.expected_digest))
+    if (!is_valid_digest_size(cl_fields.expected_digest))
         return false;
 
     s.remove_prefix(space_pos);
@@ -691,7 +691,7 @@ parse_untagged_line(std::string_view s, check_line_fields& out)
 
     if (s.starts_with('\''))
     {
-        if (!consume_shell_quoted(s, out.path) || !std::empty(s))
+        if (!consume_shell_quoted(s, cl_fields.path) || !std::empty(s))
             return false;
     }
     else
@@ -699,16 +699,16 @@ parse_untagged_line(std::string_view s, check_line_fields& out)
         if (std::empty(s))
             return false;
 
-        out.path = s;
+        cl_fields.path = s;
     }
 
-    out.custom = customization_str;
-    out.chunk_size_bytes = chunk_size;
+    cl_fields.custom = customization_str;
+    cl_fields.chunk_size_bytes = chunk_size;
     // An untagged line does not carry its rounds.  When --rounds was not
     // given, derive it from this line's own digest length.  The command
     // line's --size is irrelevant in --check mode.
-    out.rounds = resolve_num_rounds(static_cast<int>(std::ssize(out.expected_digest)));
-    out.suffix = input_suffix;
+    cl_fields.rounds = resolve_num_rounds(static_cast<int>(std::ssize(cl_fields.expected_digest)));
+    cl_fields.suffix = input_suffix;
 
     return true;
 }
@@ -721,15 +721,15 @@ parse_untagged_line(std::string_view s, check_line_fields& out)
 [[nodiscard]] std::optional<check_line_fields>
 parse_check_line(const std::string_view line)
 {
-    check_line_fields fields;
+    check_line_fields cl_fields;
 
-    if (parse_tagged_line(line, fields))
-        return fields;
+    if (parse_tagged_line(line, cl_fields))
+        return cl_fields;
 
-    fields = {}; // a failed tag parse may have partially filled it
+    cl_fields = {}; // a failed tag parse may have partially filled it
 
-    if (parse_untagged_line(line, fields))
-        return fields;
+    if (parse_untagged_line(line, cl_fields))
+        return cl_fields;
 
     return std::nullopt;
 }
@@ -740,37 +740,37 @@ parse_check_line(const std::string_view line)
 * --quiet was given.
 */
 void
-verify_check_line(const check_line_fields& fields, check_totals& totals)
+verify_check_line(const check_line_fields& cl_fields, check_totals& totals)
 {
     std::vector<std::byte> digest_bytes;
 
     try
     {
-        digest_bytes = compute_file_digest(fields.path,
-                                           static_cast<int>(std::ssize(fields.expected_digest)),
-                                           fields.rounds, fields.suffix, fields.custom,
-                                           fields.chunk_size_bytes, key_bytes);
+        digest_bytes = compute_file_digest(cl_fields.path,
+                                           static_cast<int>(std::ssize(cl_fields.expected_digest)),
+                                           cl_fields.rounds, cl_fields.suffix, cl_fields.custom,
+                                           cl_fields.chunk_size_bytes, key_bytes);
     }
     catch (const std::exception& ex)
     {
         (void)std::fflush(stdout);
         warnx("%s", ex.what());
-        std::println("{}: FAILED open or read", quote_shell_always(fields.path));
+        std::println("{}: FAILED open or read", quote_shell_always(cl_fields.path));
         ++totals.num_unreadable;
         return;
     }
 
-    if (equal_constant_time(digest_bytes, fields.expected_digest))
+    if (equal_constant_time(digest_bytes, cl_fields.expected_digest))
     {
         ++totals.num_matched;
 
         if (!quiet)
-            std::println("{}: OK", quote_shell_always(fields.path));
+            std::println("{}: OK", quote_shell_always(cl_fields.path));
     }
     else
     {
         ++totals.num_mismatched;
-        std::println("{}: FAILED", quote_shell_always(fields.path));
+        std::println("{}: FAILED", quote_shell_always(cl_fields.path));
     }
 }
 

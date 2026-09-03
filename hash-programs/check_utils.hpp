@@ -219,7 +219,7 @@ struct check_totals final
 *        returning an optional holding the line's fields, empty when the line
 *        is malformed
 * \param verify_line callable taking what \a parse_line returned, as
-*        <code>verify_line(const fields&, check_totals& totals)</code>
+*        <code>verify_line(const auto& cl_fields, check_totals& totals)</code>
 * \return the program exit status, which is \c EXIT_SUCCESS only if every
 *         checkfile was readable, every listed file matched, and at least one
 *         properly formatted line was found in each checkfile
@@ -262,11 +262,11 @@ run_check_files(const std::vector<std::string>& checkfile_paths,
             if (std::empty(line) || line.starts_with('#'))
                 continue;
 
-            auto fields = parse_line(std::string_view{line});
+            auto cl_fields = parse_line(std::string_view{line});
 
-            if (fields)
+            if (cl_fields)
             {
-                verify_line(*fields, totals);
+                verify_line(*cl_fields, totals);
                 found_valid_line = true;
             }
             else

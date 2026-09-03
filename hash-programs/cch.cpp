@@ -37,8 +37,7 @@ static_assert(default_digest_size_bytes <= max_digest_size_bytes);
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 
-// The chunk size is part of the digest format.  Different chunk sizes give
-// different digests.
+// Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = compress_castella_tree::DEFAULT_CHUNK_SIZE;
 
 // 0 requests one worker thread per available hardware thread.

@@ -75,8 +75,7 @@ static_assert(default_num_bytes_to_squeeze <= max_num_bytes_to_squeeze);
 
 inline constexpr std::string_view default_customization_str = "hash";
 
-// The chunk size is part of the digest format.  Different chunk sizes give
-// different digests.
+// Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = Castella::DuplexTree::DEFAULT_CHUNK_SIZE;
 
 // 0 requests one worker thread per available hardware thread.

@@ -461,8 +461,8 @@ public:
 
     /// The size (in bytes) of a leaf chaining value
     /**
-    * Chosen by the node policy (see \c tree_node_policy).  It is part of the
-    * digest format, bound by the role prefix.
+    * Chosen by the node policy (see \c tree_node_policy).  It is
+    * digest-relevant.  The role prefix binds it.
     */
     const int32_t CV_LEN; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
@@ -1666,8 +1666,8 @@ private:
     /**
     * \param policy the node policy; owns everything needed to construct
     *        this tree's nodes (see \c tree_node_policy)
-    * \param chunk_size_bytes the size (in bytes) of a full chunk; part of
-    *        the digest format (different chunk sizes give different digests)
+    * \param chunk_size_bytes the size (in bytes) of a full chunk;
+    *        digest-relevant (different chunk sizes give different digests)
     * \param num_threads the number of worker threads to use; 0 means one
     *        per hardware thread; NEVER affects the digest
     * \exception std::invalid_argument if any parameter is invalid

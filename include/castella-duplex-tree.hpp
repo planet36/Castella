@@ -138,8 +138,8 @@ public:
     * \param input_suffix the byte to append to the input buffer before squeezing
     * \param function_name a string for algorithm domain separation
     * \param customization_str a string for user-defined domain separation
-    * \param chunk_size_bytes the size (in bytes) of a full chunk; part of
-    *        the digest format (different chunk sizes give different digests)
+    * \param chunk_size_bytes the size (in bytes) of a full chunk;
+    *        digest-relevant (different chunk sizes give different digests)
     * \param num_threads the number of worker threads to use, where 0 means
     *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid

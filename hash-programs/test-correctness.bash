@@ -518,7 +518,7 @@ do
 done
 
 # Verify that different "--chunk-size" values give distinct results.
-# The chunk size, unlike the thread count, is part of the digest format.
+# The thread count, unlike the chunk size, never changes a digest.
 
 assert_neq_cmd_cmd \
     './castella --untagged --chunk-size=16384 ${CASTELLA_TMP}/test-1MiB.txt | first_field' \

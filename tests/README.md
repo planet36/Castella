@@ -60,7 +60,7 @@ See [tests.cpp](tests.cpp).
 * Test that the default number of bytes to squeeze is `tree.get_capacity_size_bytes() / 2`
 * Test that the digest does not depend on the granularity of the `add()` calls
 * Test that input lengths at the chunk boundaries produce pairwise-distinct digests
-* Test that the chunk size is part of the digest format
+* Test that the chunk size is digest-relevant
 * Test that the number of threads NEVER affects the digest
 * Test that `DuplexTree` and `Duplex` digests are unrelated for the same parameters and input
 * Test that successive squeezes are distinct, and that `add()` after finalization throws

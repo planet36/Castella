@@ -109,7 +109,7 @@ The tree mode turns any byte-stream **node hash** into a parallelizable hash.  I
 
 | parameter | constraint | meaning |
 |-----------|------------|---------|
-| `CHUNK_SIZE` | `1024 ≤ CHUNK_SIZE ≤ 2^30` | bytes per chunk; **part of the digest format** |
+| `CHUNK_SIZE` | `1024 ≤ CHUNK_SIZE ≤ 2^30` | bytes per chunk; **digest-relevant** |
 | `CV_LEN` | fixed by the instantiation | bytes per chaining value |
 
 The input is split into chunks of `CHUNK_SIZE` bytes at fixed offsets; only the last chunk may be shorter (an empty input is an empty chunk 0).  Every node first absorbs a **role prefix**:

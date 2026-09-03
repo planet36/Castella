@@ -319,8 +319,8 @@ format_tag_params(const int chunk_size_bytes, const int rate)
     return std::format("chunk-size={},mix-rate={}", chunk_size_bytes, rate);
 }
 
-/// One parsed line of a checkfile
-struct check_line final
+/// The fields parsed from one checkfile line
+struct check_line_fields final
 {
     std::string path;
     std::vector<std::byte> expected_digest;
@@ -338,7 +338,7 @@ is_valid_digest_size(const std::vector<std::byte>& digest) noexcept
 
 /// Parse a --tag-format line (which carries its own digest-relevant options)
 [[nodiscard]] bool
-parse_tagged_line(std::string_view s, check_line& out)
+parse_tagged_line(std::string_view s, check_line_fields& out)
 {
     if (!consume_prefix(s, "cch (chunk-size="))
         return false;
@@ -382,7 +382,7 @@ parse_tagged_line(std::string_view s, check_line& out)
 * rest of the line is also accepted.
 */
 [[nodiscard]] bool
-parse_untagged_line(std::string_view s, check_line& out)
+parse_untagged_line(std::string_view s, check_line_fields& out)
 {
     const auto space_pos = s.find(' ');
 
@@ -426,20 +426,20 @@ parse_untagged_line(std::string_view s, check_line& out)
 /// Parse one checkfile line, in either format
 /**
 * \param line the line to parse
-* \return the parsed line, or \c std::nullopt if it is malformed
+* \return the fields, or \c std::nullopt if the line is malformed
 */
-[[nodiscard]] std::optional<check_line>
+[[nodiscard]] std::optional<check_line_fields>
 parse_check_line(const std::string_view line)
 {
-    check_line parsed;
+    check_line_fields fields;
 
-    if (parse_tagged_line(line, parsed))
-        return parsed;
+    if (parse_tagged_line(line, fields))
+        return fields;
 
-    parsed = {}; // a failed tag parse may have partially filled it
+    fields = {}; // a failed tag parse may have partially filled it
 
-    if (parse_untagged_line(line, parsed))
-        return parsed;
+    if (parse_untagged_line(line, fields))
+        return fields;
 
     return std::nullopt;
 }
@@ -450,36 +450,36 @@ parse_check_line(const std::string_view line)
 * --quiet was given.
 */
 void
-verify_check_line(const check_line& parsed, check_totals& totals)
+verify_check_line(const check_line_fields& fields, check_totals& totals)
 {
     std::vector<std::byte> digest_bytes;
 
     try
     {
-        digest_bytes = compute_file_digest(parsed.path,
-                                           static_cast<int>(std::ssize(parsed.expected_digest)),
-                                           parsed.mix_rate, parsed.chunk_size_bytes);
+        digest_bytes = compute_file_digest(fields.path,
+                                           static_cast<int>(std::ssize(fields.expected_digest)),
+                                           fields.mix_rate, fields.chunk_size_bytes);
     }
     catch (const std::exception& ex)
     {
         (void)std::fflush(stdout);
         warnx("%s", ex.what());
-        std::println("{}: FAILED open or read", quote_shell_always(parsed.path));
+        std::println("{}: FAILED open or read", quote_shell_always(fields.path));
         ++totals.num_unreadable;
         return;
     }
 
-    if (equal_constant_time(digest_bytes, parsed.expected_digest))
+    if (equal_constant_time(digest_bytes, fields.expected_digest))
     {
         ++totals.num_matched;
 
         if (!quiet)
-            std::println("{}: OK", quote_shell_always(parsed.path));
+            std::println("{}: OK", quote_shell_always(fields.path));
     }
     else
     {
         ++totals.num_mismatched;
-        std::println("{}: FAILED", quote_shell_always(parsed.path));
+        std::println("{}: FAILED", quote_shell_always(fields.path));
     }
 }
 

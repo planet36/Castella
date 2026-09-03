@@ -150,6 +150,11 @@ consume_shell_quoted(std::string_view& s, std::string& out)
 
     std::string_view rest = s;
 
+    // Scan to the next single quote, which either closes the string or opens
+    // the '\'' escape.  The three characters after it decide which.  Work on
+    // rest, a scratch copy, so s is left untouched unless the whole quoted
+    // string parses.
+
     if (!consume_prefix(rest, "'"))
         return false;
 
@@ -185,9 +190,10 @@ struct check_totals final
 
     /// Whether every listed file was read and matched
     /**
-    * Improperly formatted lines only warn, and alone they do not fail the
-    * run, matching the md5sum convention.  The exception is a checkfile with
-    * no valid line at all, which the checkfile loop reports separately.
+    * Improperly formatted lines only warn.  On their own they do not fail the
+    * run, which is the md5sum convention these programs follow deliberately.
+    * The exception is a checkfile with no valid line at all, which the
+    * checkfile loop reports separately.
     */
     [[nodiscard]] bool all_ok() const noexcept
     {
@@ -234,6 +240,9 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
             }
         }
 
+        // "-" reads the checkfile from standard input.  That is how a digest
+        // is verified without a temporary file, as in
+        // "castella --tag FILE | castella --check -".
         std::istream& input = (path == "-") ? std::cin : file;
 
         const auto num_malformed_before = totals.num_malformed;

@@ -212,7 +212,8 @@ trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 #            compression block size (256), the default tree chunk size of
 #            both programs (65536), the read block size (32768), or the
 #            page size (4096)
-#     1 MiB: a multiple of all of the above
+#     1 MiB: a multiple of the compression block, chunk, read block, and page
+#            sizes listed above
 yes "$LINE" | head --bytes 0     > "${CASTELLA_TMP}/test-0B.txt"    || exit
 yes "$LINE" | head --bytes 100   > "${CASTELLA_TMP}/test-100B.txt"  || exit
 yes "$LINE" | head --bytes 1K    > "${CASTELLA_TMP}/test-1KiB.txt"  || exit
@@ -284,8 +285,9 @@ assert_eq_cmd_str \
     3bfc271b111cc49f0ef7f1670a8a82e059fd9a59605048fed5dccad9625ef65f0f93a062d3d289825f1b7a472f3693e22a32d96452965e8add103afae3cdfd11
 
 # Verify known output for input sizes that exercise boundary conditions.
-# 1 MiB is a multiple of every internal block size, so it cannot detect
-# regressions in padding, partial-chunk, or short-read handling.
+# 1 MiB is a multiple of the compression block, chunk, read block, and page
+# sizes, so it cannot detect regressions in padding, partial-chunk, or
+# short-read handling.
 
 CUSTOM='hash'
 ROUNDS=3
@@ -383,7 +385,8 @@ assert_eq_cmd_cmd \
     './cch --untagged --no-mmap ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
 # Verify "--no-mmap" produces the same output for an input size that is large
-# enough to be memory-mapped and is not a multiple of any internal block size.
+# enough to be memory-mapped and is not a multiple of the compression block,
+# chunk, read block, or page size.
 # Inputs smaller than the read block size never take the mmap path.
 
 assert_eq_cmd_cmd \
@@ -416,8 +419,9 @@ assert_eq_cmd_cmd \
     './cch --untagged ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
 # Verify that an absent FILE reads standard input, exactly as an explicit '-'
-# does.  These compare the whole line rather than the digest alone, because the
-# name printed for standard input is '-' either way.
+# does.  These assertions compare whole output lines instead of piping through
+# first_field.  That is safe here, because both forms print the same name for
+# standard input, which is '-'.
 
 assert_eq_cmd_cmd \
     './castella --untagged < ${CASTELLA_TMP}/test-100KB.txt' \
@@ -858,8 +862,9 @@ assert_neq_cmd_cmd \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field | head -c 32'
 
 # A keyed digest verifies only with the same key.  --check with the right key
-# succeeds.  With the wrong key, or no key, it must FAIL, because the key is
-# never in the digest line.
+# succeeds.  With the wrong key, or no key, it must FAIL.  A tag line carries
+# the digest-relevant options but never the key, so --check cannot recover the
+# key from the checkfile and has to be given it on the command line.
 
 assert_eq_cmd_str \
     './castella --tag --key-file=${CASTELLA_TMP}/test-key1.bin ${CASTELLA_TMP}/test-100KB.txt | ./castella --check --key-file=${CASTELLA_TMP}/test-key1.bin -' \

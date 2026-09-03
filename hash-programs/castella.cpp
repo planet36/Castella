@@ -47,9 +47,8 @@ inline constexpr std::string_view mac_function_name = "Castella-MAC";
 
 /// The absolute maximum key size (in bytes)
 /**
-* A second limit applies as well.  The key and the two length prefixes before
-* it must fit in one tree chunk (see \c compute_file_digest).  At the minimum
-* chunk size that limit is 1014 bytes, far beyond any real key.
+* This is a flat cap.  A smaller limit applies at small chunk sizes, and
+* \c get_max_key_size_bytes is what returns the effective one.
 */
 inline constexpr int key_size_max = 4096;
 
@@ -436,6 +435,8 @@ void process_options(int argc, char* argv[])
 * The key and the two length prefixes before it must fit in one tree chunk
 * (see \c compute_file_digest).  Those prefixes are left_encode(chunk size)
 * and left_encode(key size), at most 5 bytes each.
+*
+* At the minimum chunk size this returns 1014 bytes, far beyond any real key.
 */
 [[nodiscard]] constexpr int
 get_max_key_size_bytes(const int chunk_size_bytes) noexcept

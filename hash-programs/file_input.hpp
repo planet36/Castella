@@ -60,7 +60,7 @@ process_file_read_fd(int fd, auto& hash_obj)
 
 /// Hash the contents of the file at \a path into \a hash_obj
 /**
-* \param path the file path; "-" means stdin
+* \param path the file path, where "-" means standard input
 * \param hash_obj the hash object to absorb the file contents into
 * \param use_mmap whether to memory-map the file rather than read() it
 * \exception std::system_error on I/O error

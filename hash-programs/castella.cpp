@@ -518,9 +518,9 @@ read_key_file(const std::string& path, const int max_size_bytes)
 *
 * with the function name \c mac_function_name instead of \c function_name.
 *
-* KMAC pads the key block out to the rate, and this pads it out to the tree
-* chunk size.  The key block is therefore exactly chunk 0, which the final
-* node absorbs directly.  FILE's bytes begin at chunk 1, so they keep their
+* KMAC pads the key block to the rate.  This pads it to the tree chunk size
+* instead.  The key block is therefore exactly chunk 0, which the final node
+* absorbs directly.  FILE's bytes begin at chunk 1, so they keep their
 * chunk alignment.
 *
 * The trailing right_encode(L) makes MACs of different output sizes unrelated.

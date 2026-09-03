@@ -7,10 +7,12 @@
 * \author Steven Ward
 *
 * The program-specific parts of a check mode live in each program.  Those are
-* recognizing its own line formats and recomputing a digest.  This header holds
-* the format-neutral parts: hex parsing, constant-time digest comparison, the
-* consume-style line parsing primitives, and the checkfile-driving loop with
-* its cksum-style accounting and exit status.
+* recognizing its own line formats and recomputing a digest.
+*
+* This header holds the format-neutral parts: hex parsing, constant-time
+* digest comparison, and the consume-style line parsing primitives.  It also
+* holds the checkfile-driving loop, with its cksum-style accounting and exit
+* status.
 */
 
 #pragma once
@@ -32,7 +34,7 @@
 
 /// Parse a hexadecimal string (of even length) as bytes
 /**
-* \param s the hexadecimal string; both letter cases are accepted
+* \param s the hexadecimal string, in either letter case
 * \return the bytes, or \c std::nullopt if \a s is empty, has odd length,
 *         or contains a non-hexadecimal character
 */
@@ -138,7 +140,7 @@ consume_int(std::string_view& s, const int min, const int max, int& value) noexc
 * in which every embedded single quote is encoded as <code>'\''</code>
 * (close, escaped quote, reopen).
 *
-* \param s the input; on success, the quoted string is removed from its front
+* \param s the input, with the quoted string removed from its front on success
 * \param out the decoded string is appended to it
 * \retval true a complete quoted string was consumed
 * \retval false \a s is unchanged (though \a out may have been appended to)
@@ -202,7 +204,7 @@ struct check_totals final
     }
 };
 
-/// Read the checkfiles and verify each of their lines; the --check main loop
+/// The --check main loop, reading each checkfile and verifying its lines
 /**
 * Empty lines and lines starting with '#' are skipped.  Every other line is
 * handed to \a verify_line, which parses it, recomputes the digest, prints

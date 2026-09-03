@@ -90,16 +90,17 @@ check_hex(const std::string_view result,
 * The step comments below use the SP 800-185 step numbering.
 *
 * Each block of \a X is hashed to a fixed-length chaining value (CV) by an
-* independent leaf duplex -- a pure function of (parameters, block bytes) --
-* so the leaves could run on any thread in any order; only the order in which
-* the CVs are absorbed below matters.  This example transcribes the SP
-* 800-185 structure sequentially, for clarity.  For an actual multicore tree
-* hash, use \c Castella::DuplexTree, which differs in structure (chunk 0 is
-* absorbed directly by the final node, every node absorbs a role prefix, and
-* leaves bind their chunk index).
+* independent leaf duplex, a pure function of the parameters and the block
+* bytes.  The leaves could therefore run on any thread in any order.  Only the
+* order in which the CVs are absorbed below matters.
+*
+* This example transcribes the SP 800-185 structure sequentially, for clarity.
+* For an actual multicore tree hash, use \c Castella::DuplexTree, which
+* differs in structure (chunk 0 is absorbed directly by the final node, every
+* node absorbs a role prefix, and leaves bind their chunk index).
 *
 * \param X the input data
-* \param B the block size (in bytes); the last block may be shorter
+* \param B the block size (in bytes), where the last block may be shorter
 * \param num_bytes_to_squeeze the requested output length (in bytes)
 * \param capacity_blocks the capacity (in blocks) of every node
 * \param function_name the function name string (N) of the final node

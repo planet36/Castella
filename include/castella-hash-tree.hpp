@@ -469,7 +469,7 @@ public:
     /// The maximum number of worker threads to use
     // {{{
     /**
-    * Resolved at construction, where 0 requests one thread per hardware
+    * Resolved at construction, where 0 means one thread per hardware
     * thread.  It controls only how many cores may compute leaf CVs
     * concurrently.
     */

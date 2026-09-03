@@ -78,7 +78,7 @@ inline constexpr std::string_view default_customization_str = "hash";
 // Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = Castella::DuplexTree::DEFAULT_CHUNK_SIZE;
 
-// 0 requests one worker thread per available hardware thread.
+// 0 means one worker thread per available hardware thread.
 inline constexpr int default_num_threads = 0;
 // }}}
 

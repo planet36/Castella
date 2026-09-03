@@ -40,7 +40,7 @@ inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RA
 // Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = compress_castella_tree::DEFAULT_CHUNK_SIZE;
 
-// 0 requests one worker thread per available hardware thread.
+// 0 means one worker thread per available hardware thread.
 inline constexpr int default_num_threads = 0;
 // }}}
 

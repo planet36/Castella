@@ -224,10 +224,9 @@ struct verification_totals final
 *         checkfile was readable, every listed file matched, and at least one
 *         properly formatted line was found in each checkfile
 */
-template <typename ParseLine, typename VerifyLine>
 [[nodiscard]] int
 run_check_files(const std::vector<std::string>& checkfile_paths,
-                ParseLine parse_line, VerifyLine verify_line)
+                const auto& parse_line, const auto& verify_line)
 {
     verification_totals totals;
     bool any_checkfile_failed = false;

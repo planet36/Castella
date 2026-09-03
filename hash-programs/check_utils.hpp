@@ -10,7 +10,7 @@
 * recognizing its own line formats and recomputing a digest.  This header holds
 * the format-neutral parts: hex parsing, constant-time digest comparison, the
 * consume-style line parsing primitives, and the checkfile-driving loop with
-* its md5sum-style accounting and exit status.
+* its cksum-style accounting and exit status.
 */
 
 #pragma once
@@ -180,7 +180,7 @@ consume_shell_quoted(std::string_view& s, std::string& out)
     }
 }
 
-/// The md5sum-style accounting of one --check run
+/// The cksum-style accounting of one --check run
 struct check_totals final
 {
     int64_t num_matched = 0;
@@ -191,7 +191,7 @@ struct check_totals final
     /// Whether every listed file was read and matched
     /**
     * Improperly formatted lines only warn.  On their own they do not fail the
-    * run, which is the md5sum convention these programs follow deliberately.
+    * run, which is the cksum convention these programs follow deliberately.
     * The exception is a checkfile with no valid line at all, which the
     * checkfile loop reports separately.
     */
@@ -207,7 +207,7 @@ struct check_totals final
 * Empty lines and lines starting with '#' are skipped.  Every other line is
 * handed to \a verify_line, which parses it, recomputes the digest, prints
 * the per-file OK/FAILED result, and updates the totals.  After all
-* checkfiles, the md5sum-style summary warnings are printed to stderr.
+* checkfiles, the cksum-style summary warnings are printed to stderr.
 *
 * \param checkfile_paths the files containing the lines to verify, where "-"
 *        means standard input

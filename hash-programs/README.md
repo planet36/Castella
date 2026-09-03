@@ -22,7 +22,7 @@ With `--untagged`, each line is instead the reversed style, without the digest t
 
     digest  'FILE'
 
-Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A tag line carries its own parameters; an untagged line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time, and the accounting, warnings, and exit status follow the `md5sum --check` conventions.
+Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppress the per-file `OK` lines): each FILE argument is then a checkfile of previously produced lines, in either format.  A tag line carries its own parameters; an untagged line takes them from the check command line, so non-default digest-relevant options must be repeated.  Digest comparison is constant time, and the accounting, warnings, and exit status follow the `cksum --check` conventions.
 
 `castella` additionally computes keyed hashes (MACs) with `--key-file=FILE` (the key is the file's exact bytes, so it never appears on the command line or in `/proc`).  The KMAC structure (SP 800-185 Section 4) is followed at tree scale: `bytepad(encode_string(K), CHUNK_SIZE)` is absorbed as chunk 0 (the key block goes straight into the — now keyed — final node, and the input's chunk alignment is preserved), the function name becomes `Castella-MAC`, and the right-encoded output size is absorbed last, so MACs of different sizes are unrelated rather than truncations.  `--check` verifies MACs when given the same `--key-file`; digest lines never contain the key.
 

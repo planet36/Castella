@@ -183,7 +183,7 @@ consume_shell_quoted(std::string_view& s, std::string& out)
 }
 
 /// The cksum-style accounting of one --check run
-struct check_totals final
+struct verification_totals final
 {
     int64_t num_matched = 0;
     int64_t num_mismatched = 0;
@@ -219,7 +219,7 @@ struct check_totals final
 *        returning an optional holding the line's fields, empty when the line
 *        is malformed
 * \param verify_line callable taking what \a parse_line returned, as
-*        <code>verify_line(const auto& cl_fields, check_totals& totals)</code>
+*        <code>verify_line(const auto& cl_fields, verification_totals& totals)</code>
 * \return the program exit status, which is \c EXIT_SUCCESS only if every
 *         checkfile was readable, every listed file matched, and at least one
 *         properly formatted line was found in each checkfile
@@ -229,7 +229,7 @@ template <typename ParseLine, typename VerifyLine>
 run_check_files(const std::vector<std::string>& checkfile_paths,
                 ParseLine parse_line, VerifyLine verify_line)
 {
-    check_totals totals;
+    verification_totals totals;
     bool any_checkfile_failed = false;
 
     for (const auto& path : checkfile_paths)

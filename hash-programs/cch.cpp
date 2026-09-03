@@ -450,7 +450,7 @@ parse_check_line(const std::string_view line)
 * --quiet was given.
 */
 void
-verify_check_line(const check_line_fields& cl_fields, check_totals& totals)
+verify_check_line(const check_line_fields& cl_fields, verification_totals& totals)
 {
     std::vector<std::byte> digest_bytes;
 

@@ -7,11 +7,11 @@
 * \author Steven Ward
 *
 * Verify the digests in a machine-readable KAT file against the current
-* implementation (the committed KAT.txt pins the digest formats):
+* implementation (the committed KAT.txt pins the digests):
 *
 *     kat [FILE]        (default FILE: KAT.txt)
 *
-* Or regenerate the file -- ONLY when a digest format deliberately changes:
+* Or regenerate the file -- ONLY when the digests deliberately change:
 *
 *     kat --generate > KAT.txt
 *

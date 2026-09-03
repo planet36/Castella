@@ -736,8 +736,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         {
             // Verify that the output matches the expected result.  This pins
-            // the tree digest format, so the parallel implementation must
-            // reproduce this digest exactly.
+            // the tree digest, so the parallel implementation must reproduce
+            // it exactly.
             const auto digest_bytes = tree_digest(X_sp);
 
             const std::string expected_result =

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions.  The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in `castella-duplex.hpp`.  `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` — keep spec, KAT file, and conformance script in agreement whenever a digest format changes — and regenerate the published challenge digests and targets in `CHALLENGES.md`, which are digests of specific instances and become unreachable targets otherwise.
+Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions.  The core algorithm is in `castella-permute.hpp`; the primary class is `Castella::Duplex` in `castella-duplex.hpp`.  `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, cch); `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt` — keep spec, KAT file, and conformance script in agreement whenever the digests change — and regenerate the published challenge digests and targets in `CHALLENGES.md`, which are digests of specific instances and become unreachable targets otherwise.
 
 ## Build Commands
 
@@ -100,7 +100,7 @@ The two instantiations (thin wrappers: a policy, a constructor, digest methods):
 - **`include/`** — The header-only library and its shared helpers; the sole `-I` root (`config.mk`), so every subproject includes these by bare filename (which is why headers can move within `include/` without touching most `#include` lines).
   - *Not here*: headers used only by the hash programs live in `hash-programs/` — `check_utils.hpp`, `fd-utils.h`, `file_input.hpp` (opening a file and feeding it to any hash object, by `read()` loop or mmap; what each program does with the bytes stays in that program), `fnv.hpp`, `mmap_sigbus_guard.hpp` (a SIGBUS guard that turns a concurrent truncation of an mmap'd file into a clean error instead of a crash), `unique_fd.hpp`.
 - **`examples/`** — Usage demonstrations that are also a real test suite; see `examples/CLAUDE.md`, which loads when working there.
-- **`tests/`** — The test programs.  `tests/README.md` describes each one; `KAT.txt` is regenerated only on a deliberate format change.
+- **`tests/`** — The test programs.  `tests/README.md` describes each one; `KAT.txt` is regenerated only when the digests deliberately change.
 - **`research/`** — Standalone programs, and the evidence behind the design parameters and the security claims.
   - *Dependencies*: the solver-backed tools need what `make` does not install (a virtual environment for PuLP; z3).
   - *Documents*: `research/README.md` holds the program inventory and every result table; `VERIFYING-CLAIMS.md` maps each `SPEC.md` security claim to the evidence supporting it and to the output that evidence must produce; `RE-DERIVATION-RUNBOOK.md` holds the commands behind both, is the standing procedure for re-deriving those figures, and names the documents a refreshed figure has to be swept into.

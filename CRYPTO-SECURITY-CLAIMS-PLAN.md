@@ -287,7 +287,7 @@ The honest procedure:
 
    **One property of the trigger is worth stating rather than discovering later: it bounds
    reach, not data complexity.**  A 4-round distinguisher needing 2^256 data would oblige
-   the same format break as a practical one, even though the flat claim already concedes
+   the same digest change as a practical one, even though the flat claim already concedes
    `P` is not a random permutation.  That is deliberate conservatism — the anchor is meant
    to track what is *structurally* known about `P` — but a future revision that wants to
    qualify it by data complexity should do so explicitly and say why, not by quietly

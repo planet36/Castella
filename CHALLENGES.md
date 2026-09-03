@@ -55,7 +55,7 @@ Notes for analysts:
 
   and then squeezing the digest size.  The first three fields are the final node's role prefix; the last is the number of leaf CVs, which the tree absorbs even when there are none — leaving it out is the easy way to fail to reproduce a target.  (`spec-conformance.py`'s `Duplex` and `tree_digest` implement exactly this.)  For longer messages, the tree-collision reduction in SPEC.md means any solution is a node (duplex) collision anyway.
 * An independent implementation to check against is [research/spec-conformance.py](research/spec-conformance.py) (pure Python, written from the spec).
-* Every digest and target in this file is pinned to the current digest format, and the setup check in each section is what detects a change: if one fails against a clean build of this repository, either the build is broken or the format has moved, and in both cases nothing here is a valid target until it passes again.  A deliberate format change voids every value below and they are regenerated with it — the same sweep that regenerates [tests/KAT.txt](tests/KAT.txt), which pins the same formats.
+* Every digest and target in this file is pinned to the current digests, and the setup check in each section is what detects a change: if one fails against a clean build of this repository, either the build is broken or the digests have moved, and in both cases nothing here is a valid target until it passes again.  A deliberate change that moves the digests voids every value below and they are regenerated with it — the same sweep that regenerates [tests/KAT.txt](tests/KAT.txt), which pins the same digests.
 
 ## Warm-up instances
 

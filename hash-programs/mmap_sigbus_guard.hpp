@@ -75,7 +75,7 @@ handler(int sig, siginfo_t* info, void* /*ucontext*/)
 inline void
 install_once()
 {
-    static const bool installed = []
+    [[maybe_unused]] static const bool installed = []
     {
         struct sigaction sa{};
         sa.sa_sigaction = handler;
@@ -84,7 +84,6 @@ install_once()
         (void)::sigaction(SIGBUS, &sa, nullptr);
         return true;
     }();
-    (void)installed;
 }
 
 /// Publish an mmap region for the SIGBUS handler for the duration of a scope

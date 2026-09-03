@@ -193,8 +193,6 @@ function first_field
     done
 }
 
-LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-
 # A private directory per run, so concurrent runs cannot delete each other's
 # inputs.  mktemp honors $TMPDIR and creates the directory 0700.
 CASTELLA_TMP=$(mktemp --directory) || exit
@@ -202,6 +200,8 @@ CASTELLA_TMP=$(mktemp --directory) || exit
 # Remove the created files at the end of every run, including failed or
 # interrupted ones.  (An EXIT trap preserves the script's exit status.)
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
+
+LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 # Create the input data files.  The size of each file is in its name.
 #     0 B  : only padding is absorbed

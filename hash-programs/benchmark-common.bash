@@ -18,7 +18,9 @@ CASTELLA_TMP=$(mktemp --directory) || exit
 # Remove the generated input files at the end of every run.
 trap 'rm --recursive --force --one-file-system -- "${CASTELLA_TMP:?}"' EXIT
 
-yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes "$FILE_SIZE" > "${CASTELLA_TMP}/test.txt" || exit
+LINE='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+yes "$LINE" | head --bytes "$FILE_SIZE" > "${CASTELLA_TMP}/test.txt" || exit
 
 OUTPUT_DIR=results
 DATETIME=$(date -u +'%Y%m%dT%H%M%S')

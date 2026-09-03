@@ -7,20 +7,19 @@
 * \author Steven Ward
 *
 * A file memory-mapped for hashing can be truncated by another process after
-* its size was sampled, a TOCTOU that no advisory lock prevents.  Touching a
-* page past the new end of file then raises SIGBUS.  Without a handler, the
-* process dies with "Bus error (core dumped)" instead of the graceful error
-* every other I/O failure gets.
+* its size was sampled.  Touching a page past the new end of file then raises
+* SIGBUS.  \c file_input.hpp takes an OFD read lock first, but that lock is
+* advisory and \c ftruncate() does not ask for one.
 *
-* A truncated file has no meaningful digest, so the handler reports the path
-* and \c _exit()s async-signal-safely rather than resuming.  Only one mapping
-* is active at a time, because files are hashed sequentially, so a single
-* published region suffices.  An unrelated SIGBUS is re-raised with the default
-* disposition, which preserves normal crash semantics.
+* Without a handler the process dies on the signal, naming neither the file
+* nor the cause.  A truncated file has no meaningful digest, so the handler
+* reports the path and \c _exit()s async-signal-safely.  An unrelated SIGBUS
+* is re-raised with the default disposition.
 *
 * While a mapping is being hashed, keep a \c scoped_region alive over the
 * \c add() call.  It installs the handler once, publishes the region, and
-* unpublishes it on scope exit, including on an exception.
+* unpublishes it on scope exit, including on an exception.  Only one mapping
+* is active at a time, so a single published region suffices.
 */
 
 #pragma once

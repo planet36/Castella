@@ -20,7 +20,7 @@ FAIL=0
 # Without it, a deleted assertion still reports "0 failed" and exits 0,
 # so the script could not report success on the assertions that did run.
 # Update this when assertions are added or removed.
-declare -r EXPECTED_ASSERTIONS=138
+declare -r EXPECTED_ASSERTIONS=140
 
 function assert_eq_cmd_str
 {
@@ -811,6 +811,20 @@ assert_eq_cmd_str_status \
 assert_eq_cmd_str_status \
     './cch --untagged ${CASTELLA_TMP}/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./cch --check - 2>/dev/null' \
     "'${CASTELLA_TMP}/test-0B.txt': FAILED" \
+    1
+
+# A mismatch is reported as a mismatch, not as a malformed checkfile.  The
+# warning naming the count goes to standard error, which these isolate.
+# Standard output carries the FAILED line, which the assertions above pin.
+
+assert_eq_cmd_str_status \
+    './castella --tag ${CASTELLA_TMP}/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./castella --check - 2>&1 >/dev/null' \
+    'castella: WARNING: 1 computed checksum(s) did NOT match' \
+    1
+
+assert_eq_cmd_str_status \
+    './cch --tag ${CASTELLA_TMP}/test-100B.txt | sed "s|test-100B.txt|test-0B.txt|" | ./cch --check - 2>&1 >/dev/null' \
+    'cch: WARNING: 1 computed checksum(s) did NOT match' \
     1
 
 # A checkfile without a single properly formatted line must fail.

@@ -26,7 +26,6 @@
 #endif
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <mutex>
 #include <span>
 #include <stdexcept>
@@ -412,13 +411,9 @@ private:
         assert(input_bytes_.is_empty());
 #endif
 
-        // Guard the memcpy.  On an empty dst, std::data(dst) may be null, and
-        // memcpy(null, ..., 0) is undefined behavior, because its pointer
-        // arguments are declared never-null.
-        if (!std::empty(dst))
-        {
-            (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
-        }
+        const auto src = as_byte_span(state_).first(std::size(dst));
+
+        (void)std::ranges::copy(src, std::begin(dst));
     }
 
 public:

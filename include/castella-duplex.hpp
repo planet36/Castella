@@ -516,14 +516,9 @@ private:
         assert(cur_input_byte_idx_ == 0); // input buf is empty
 #endif
 
-        // Guard the memcpy.  On a mute squeeze, such as squeeze_bytes(0), dst
-        // is empty and std::data(dst) may be null.  memcpy(null, ..., 0) is
-        // undefined behavior, because its pointer arguments are declared
-        // never-null.
-        if (!std::empty(dst))
-        {
-            (void)std::memcpy(std::data(dst), std::data(state_), std::size(dst));
-        }
+        const auto src = as_byte_span(state_).first(std::size(dst));
+
+        (void)std::ranges::copy(src, std::begin(dst));
     }
 
     /// Add \a src to the input buffer

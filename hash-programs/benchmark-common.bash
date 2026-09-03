@@ -3,11 +3,11 @@
 
 # shellcheck disable=SC2034
 
+export LC_ALL=C
+
 SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
 
 [[ "${BASH_ARGV0}" == "${BASH_SOURCE[0]}" ]] && { printf '%q: this file must be sourced within bash\n' "$SCRIPT_NAME" 1>&2; exit 1; }
-
-export LC_ALL=C
 
 FILE_SIZE=${FILE_SIZE:-500M}
 

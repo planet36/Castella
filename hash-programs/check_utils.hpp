@@ -224,7 +224,7 @@ template <typename VerifyLine>
 run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine verify_line)
 {
     check_totals totals;
-    bool every_checkfile_ok = true;
+    bool any_checkfile_failed = false;
 
     for (const auto& path : checkfile_paths)
     {
@@ -237,7 +237,7 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
             if (!file.is_open())
             {
                 warnx("%s: could not open checkfile", path.c_str());
-                every_checkfile_ok = false;
+                any_checkfile_failed = true;
                 continue;
             }
         }
@@ -267,7 +267,7 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
         if (num_valid_lines == 0)
         {
             warnx("%s: no properly formatted checksum lines found", path.c_str());
-            every_checkfile_ok = false;
+            any_checkfile_failed = true;
         }
         else if (totals.num_malformed > num_malformed_before)
         {
@@ -288,5 +288,5 @@ run_check_files(const std::vector<std::string>& checkfile_paths, VerifyLine veri
               totals.num_mismatched);
     }
 
-    return (every_checkfile_ok && totals.all_ok()) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return (!any_checkfile_failed && totals.all_ok()) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

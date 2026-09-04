@@ -350,8 +350,8 @@ assert perf claims from reading code (per repo's own accuracy rule).
       from user input.
 - [ ] **Header hygiene / include audit** (repo checklist item): each header includes what it
       uses, nothing unused, `#pragma once` present.
-- [ ] **Naming / comment accuracy.**  Comments that drift from code (the repo values concise,
-      accurate comments); any "load-bearing" phrasing to trim.
+- [ ] **Naming / comment accuracy.**  Comments that drift from code, and any prose that
+      violates `COMMENT-STYLE.md`.
 
 ---
 

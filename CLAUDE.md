@@ -122,6 +122,7 @@ Each of these owns something this file only summarizes; go to the owner before q
 | `research/VERIFYING-CLAIMS.md` | claim → evidence → command, with the expected output and how to read it |
 | `research/RE-DERIVATION-RUNBOOK.md` | the standing procedure for re-deriving those figures, with budgets |
 | `hash-programs/README.md` | every performance figure, and the commands that reproduce it |
+| `COMMENT-STYLE.md` | the prose rules for code comments, doc blocks, and commit messages |
 
 The three `research/` documents divide one subject three ways, and the split is what keeps a changed budget from having to be swept: **the runbook owns the commands** — every invocation, `-t`/`-M` budget, measured timing and concurrency rule for the solver-backed tools; **README owns the record** — models, result tables, interpretation rules and the lessons, citing the runbook rather than repeating a recipe; **VERIFYING-CLAIMS owns the ledger** — claim → evidence → expected output, keeping a command inline only when it is cheap (seconds to minutes) and citing a runbook section for anything that solves.  Put a new command in the runbook, not beside the result it produced.
 
@@ -160,11 +161,7 @@ Verify all technical claims empirically (compile/run/test) before asserting them
 
 ## Code Style / Comments
 
-Write one idea per sentence.  The habit to avoid is packing several ideas into one sentence and welding them together with a colon, a semicolon, or a dash.  Semicolons are rare, colons introduce a real list rather than an explanation, and dashes come in pairs.  A detail paragraph runs to about five lines.
-
-Keep code comments concise.  Prefer brief, accurate wording over verbose explanations.  Do not restate what the declaration already says.  Avoid "load-bearing" phrasing and avoid over-compressing accuracy away.
-
-Use `\copydoc` only when the target documents the same parameters under the same names.  It copies the `\param` and `\exception` lines along with the text, so an overload whose parameters are named differently draws "too many @param commands" from doxygen, and a block with its own `\exception` lines ends up carrying each one twice.  Use `\copybrief` plus a specific paragraph in those cases.
+`COMMENT-STYLE.md` holds the prose rules for code comments, doc blocks, and commit messages.  Read it before writing any of the three.
 
 ## Build / Makefile
 

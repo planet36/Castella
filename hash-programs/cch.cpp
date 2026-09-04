@@ -85,7 +85,7 @@ print_usage()
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
-    std::println("OPTIONS");
+    std::println("Options:");
     std::println("");
 
     std::println("  -V, --version");
@@ -150,7 +150,7 @@ print_usage()
     std::println("        (ignored with --check)");
     std::println("");
 
-    std::println("CCH ALGORITHM DESCRIPTION");
+    std::println("*CCH Algorithm Description*");
     std::println("");
 
     std::println("FILE is hashed as a chunked tree: each chunk is hashed to a chaining value by an independent CCH node, and a final CCH node hashes the chaining values, so multiple CPU cores can share the work.");

@@ -193,7 +193,7 @@ print_usage()
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
-    std::println("OPTIONS");
+    std::println("Options:");
     std::println("");
 
     std::println("  -V, --version");

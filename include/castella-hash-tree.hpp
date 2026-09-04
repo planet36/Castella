@@ -789,6 +789,9 @@ private:
     }
 
     /// The ring slot for monotonic position \a pos
+    /**
+    * \pre the pool has started, and \a pos is in [\c ring_head_, \c ring_tail_]
+    */
     [[nodiscard]] Slot& ring_slot_(const int64_t pos) noexcept
     {
         return ring_[pos % ring_capacity_()];

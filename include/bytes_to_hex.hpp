@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Convert a span of bytes to a hexadecimal string
+/// Convert between bytes and a hexadecimal string
 /**
 * \file
 * \author Steven Ward
@@ -17,7 +17,7 @@
 #include <span>
 #include <string>
 
-/// Convert a nibble to a character
+/// Convert a nibble value to a hexadecimal character
 /**
 * \param x the nibble value to convert
 * \return the lowercase hexadecimal character representing \a x
@@ -31,6 +31,24 @@ nibble_char(const uint8_t x) noexcept
 #endif
 
     return static_cast<char>(x + (x < 10 ? '0' : -10 + 'a'));
+}
+
+/// Convert a hexadecimal character to a nibble value
+/**
+* \param c the hexadecimal character to convert
+* \return the nibble value of \a c
+* \retval -1 if \a c is not a hexadecimal character
+*/
+[[nodiscard]] static constexpr int
+nibble_val(const char c) noexcept
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    return -1;
 }
 
 /// Convert a span of bytes to a hexadecimal string

@@ -328,13 +328,13 @@ private:
                     simd_compress_aes_enc_r3_arr(
                         state, reinterpret_cast<const block_t*>(std::data(src)));
 
-                    src = src.subspan(get_state_size_bytes());
-
                     if (should_mix_state_(absorbs_since_mix))
                     {
                         // Periodically mix the state.
                         Castella::permute(state, PERIODIC_MIX_NUM_ROUNDS);
                     }
+
+                    src = src.subspan(get_state_size_bytes());
                 } while (std::size(src) >= get_state_size_bytes());
 
                 state_ = state;

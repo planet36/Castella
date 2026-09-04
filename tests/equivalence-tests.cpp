@@ -100,10 +100,10 @@ test_one_input(const std::string_view name, const auto& make_tree,
     // exactly the property under test.
     for (const int max_piece_len : {300, 3 * chunk_size + 1})
     {
+        std::uniform_int_distribution<int> piece_len_dist(1, max_piece_len);
+
         for (const int num_threads : {1, 4})
         {
-            std::uniform_int_distribution<int> piece_len_dist(1, max_piece_len);
-
             auto tree = make_tree(num_threads);
 
             std::ptrdiff_t offset = 0;

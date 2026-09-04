@@ -88,66 +88,73 @@ print_usage()
     std::println("Options:");
     std::println("");
 
+
     std::println("  -V, --version");
-    std::println("        Print the version information, then exit.");
+    std::println("                        Print the version information, then exit.");
 
     std::println("  -h, --help");
-    std::println("        Print this message, then exit.");
+    std::println("                        Print this message, then exit.");
 
     std::println("  -c, --check");
-    std::println("        Read digest lines from each FILE (or standard input) and verify them.");
-    std::println("        Both output formats are accepted.  A tag line carries the");
-    std::println("        digest-relevant options itself.  An untagged line needs the same");
-    std::println("        --chunk-size and --mix-rate that produced it.  The output size is");
-    std::println("        inferred from the digest length.");
-    std::println("        Empty lines and lines starting with '#' are ignored.");
-    std::println("        (A FILE whose name contains a newline cannot be verified.)");
+    std::println("                        Read digest lines from each FILE (or standard input) and");
+    std::println("                        verify them.  Both output formats are accepted.  A tag");
+    std::println("                        line carries the digest-relevant options itself.  An");
+    std::println("                        untagged line needs the same --chunk-size and --mix-rate");
+    std::println("                        that produced it.  The output size is inferred from the");
+    std::println("                        digest length.  Empty lines and lines starting with '#'");
+    std::println("                        are ignored.");
+    std::println("                        (A FILE whose name contains a newline cannot be");
+    std::println("                        verified.)");
 
     std::println("  --chunk-size=BYTES");
-    std::println("        Specify the size of a tree chunk.");
-    std::println("        Different chunk sizes produce different digests.");
-    std::println("        (default={}) (minimum={}) (maximum={})", default_chunk_size,
+    std::println("                        Specify the size of a tree chunk.  Different chunk sizes");
+    std::println("                        produce different digests.");
+    std::println("                        (default={}) (minimum={}) (maximum={})", default_chunk_size,
                  compress_castella_tree::CHUNK_SIZE_MIN,
                  compress_castella_tree::CHUNK_SIZE_MAX);
 
     std::println("  --mix-rate=RATE");
-    std::println("        Specify the number of absorptions (full-block inputs) per state mix.");
-    std::println("        Valid range: [{}, {}].", compress_castella_hash<>::MIX_RATE_MIN,
+    std::println("                        Specify the number of absorptions (full-block inputs)");
+    std::println("                        per state mix.  Valid range: [{}, {}].  Use 0 to",
+                 compress_castella_hash<>::MIX_RATE_MIN,
                  compress_castella_hash<>::MIX_RATE_MAX);
-    std::println("        Use 0 to disable periodic mixing.");
-    std::println("        (default={})", default_mix_rate);
+    std::println("                        disable periodic mixing.");
+    std::println("                        (default={})", default_mix_rate);
 
     std::println("  --no-mmap");
-    std::println("        Do not use memory mapping to read FILE.");
+    std::println("                        Do not use memory mapping to read FILE.");
 
     std::println("  --num-threads=NUM");
-    std::println("        Specify the maximum number of worker threads that hash chunks.");
-    std::println("        0 means one thread per available hardware thread.");
-    std::println("        The digest does not depend on the number of threads.");
-    std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
+    std::println("                        Specify the maximum number of worker threads that hash");
+    std::println("                        chunks.  0 means one thread per available hardware");
+    std::println("                        thread.  The digest does not depend on the number of");
+    std::println("                        threads.");
+    std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
                  compress_castella_tree::NUM_THREADS_MAX);
 
     std::println("  --quiet");
-    std::println("        Do not print OK for each successfully verified file.");
-    std::println("        (only meaningful with --check)");
+    std::println("                        Do not print OK for each successfully verified file.");
+    std::println("                        (only meaningful with --check)");
 
     std::println("  --size=SIZE");
-    std::println("        Specify the output size (in bytes).");
-    std::println("        Typical values are: 32, 48, or 64.");
-    std::println("        (default={}) (minimum={}) (maximum={})",
+    std::println("                        Specify the output size (in bytes).  Typical values are:");
+    std::println("                        32, 48, or 64.");
+    std::println("                        (default={}) (minimum={}) (maximum={})",
                  default_digest_size_bytes, min_digest_size_bytes, max_digest_size_bytes);
 
     std::println("  --tag");
-    std::println("        Print each digest in a self-describing format that embeds the");
-    std::println("        digest-relevant options, so --check can verify it without them:");
-    std::println("            cch (chunk-size=C,mix-rate=R) 'FILE' = digest");
-    std::println("        (default)");
-    std::println("        (ignored with --check)");
+    std::println("                        Print each digest in a self-describing format that");
+    std::println("                        embeds the digest-relevant options, so --check can");
+    std::println("                        verify it without them:");
+    std::println("                            cch (chunk-size=C,mix-rate=R) 'FILE' = digest");
+    std::println("                        (default)");
+    std::println("                        (ignored with --check)");
 
     std::println("  --untagged");
-    std::println("        Print each digest in the reversed style, without the digest type:");
-    std::println("            digest  'FILE'");
-    std::println("        (ignored with --check)");
+    std::println("                        Print each digest in the reversed style, without the");
+    std::println("                        digest type:");
+    std::println("                            digest  'FILE'");
+    std::println("                        (ignored with --check)");
     std::println("");
 
     std::println("*CCH Algorithm Description*");

@@ -197,87 +197,97 @@ print_usage()
     std::println("");
 
     std::println("  -V, --version");
-    std::println("        Print the version information, then exit.");
+    std::println("                        Print the version information, then exit.");
 
     std::println("  -h, --help");
-    std::println("        Print this message, then exit.");
+    std::println("                        Print this message, then exit.");
 
     std::println("  -c, --check");
-    std::println("        Read digest lines from each FILE (or standard input) and verify them.");
-    std::println("        Both output formats are accepted.  A tag line carries the");
-    std::println("        digest-relevant options itself.  An untagged line needs the same");
-    std::println("        --chunk-size, --custom, --rounds, and --suffix that produced it.");
-    std::println("        The output size is inferred from the digest length.");
-    std::println("        Keyed digests verify only with the same --key-file.");
-    std::println("        Empty lines and lines starting with '#' are ignored.");
-    std::println("        (A FILE whose name contains a newline cannot be verified.)");
+    std::println("                        Read digest lines from each FILE (or standard input) and");
+    std::println("                        verify them.  Both output formats are accepted.  A tag");
+    std::println("                        line carries the digest-relevant options itself.  An");
+    std::println("                        untagged line needs the same --chunk-size, --custom,");
+    std::println("                        --rounds, and --suffix that produced it.  The output");
+    std::println("                        size is inferred from the digest length.  Keyed digests");
+    std::println("                        verify only with the same --key-file.  Empty lines and");
+    std::println("                        lines starting with '#' are ignored.");
+    std::println("                        (A FILE whose name contains a newline cannot be");
+    std::println("                        verified.)");
 
     std::println("  --chunk-size=BYTES");
-    std::println("        Specify the size of a tree chunk.");
-    std::println("        Different chunk sizes produce different digests.");
-    std::println("        (default={}) (minimum={}) (maximum={})", default_chunk_size,
+    std::println("                        Specify the size of a tree chunk.  Different chunk sizes");
+    std::println("                        produce different digests.");
+    std::println("                        (default={}) (minimum={}) (maximum={})", default_chunk_size,
                  Castella::DuplexTree::CHUNK_SIZE_MIN,
                  Castella::DuplexTree::CHUNK_SIZE_MAX);
 
     std::println("  --custom=STRING");
-    std::println("        Specify the customization string of the Castella DuplexTree object.");
-    std::println("        (default={})", quote_shell_always(default_customization_str));
+    std::println("                        Specify the customization string of the Castella");
+    std::println("                        DuplexTree object.");
+    std::println("                        (default={})", quote_shell_always(default_customization_str));
 
     std::println("  --key-file=FILE");
-    std::println("        Compute a keyed hash (a MAC).  The key is the exact bytes of FILE.");
-    std::println("        It is at least 1 byte, and at most the smaller of {} bytes and the", key_size_max);
-    std::println("        chunk size minus 10.  The KMAC structure is followed at tree scale.");
-    std::println("        The function name becomes {}, the key is bytepadded to one", quote_shell_always(mac_function_name));
-    std::println("        tree chunk and absorbed ahead of FILE, and the right-encoded output");
-    std::println("        size is absorbed last, so MACs of different sizes are unrelated.");
-    std::println("        The key never appears in the output.  See --check.");
+    std::println("                        Compute a keyed hash (a MAC).  The key is the exact");
+    std::println("                        bytes of FILE.  It is at least 1 byte, and at most the");
+    std::println("                        smaller of {} bytes and the chunk size minus 10.  The", key_size_max);
+    std::println("                        KMAC structure is followed at tree scale.  The function");
+    std::println("                        name becomes {}, the key is bytepadded to", quote_shell_always(mac_function_name));
+    std::println("                        one tree chunk and absorbed ahead of FILE, and the");
+    std::println("                        right-encoded output size is absorbed last, so MACs of");
+    std::println("                        different sizes are unrelated.  The key never appears in");
+    std::println("                        the output.  See --check.");
 
     std::println("  --no-mmap");
-    std::println("        Do not use memory mapping to read FILE.");
+    std::println("                        Do not use memory mapping to read FILE.");
 
     std::println("  --num-threads=NUM");
-    std::println("        Specify the maximum number of worker threads that hash chunks.");
-    std::println("        0 means one thread per available hardware thread.");
-    std::println("        The digest does not depend on the number of threads.");
-    std::println("        (default={}) (minimum=0) (maximum={})", default_num_threads,
+    std::println("                        Specify the maximum number of worker threads that hash");
+    std::println("                        chunks.  0 means one thread per available hardware");
+    std::println("                        thread.  The digest does not depend on the number of");
+    std::println("                        threads.");
+    std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
                  Castella::DuplexTree::NUM_THREADS_MAX);
 
     std::println("  --quiet");
-    std::println("        Do not print OK for each successfully verified file.");
-    std::println("        (only meaningful with --check)");
+    std::println("                        Do not print OK for each successfully verified file.");
+    std::println("                        (only meaningful with --check)");
 
     std::println("  --rounds=NUM_ROUNDS");
-    std::println("        Specify the number of rounds in the Castella permutation function.");
-    std::println("        The security claim (SPEC.md) covers only rounds >= 6, or >= 8 when");
-    std::println("        SIZE > 48.  Fewer rounds are reduced-round targets (CHALLENGES.md).");
-    std::println("        When omitted, the default tracks the claim.  It is {} rounds for",
+    std::println("                        Specify the number of rounds in the Castella permutation");
+    std::println("                        function.  The security claim (SPEC.md) covers only");
+    std::println("                        rounds >= 6, or >= 8 when SIZE > 48.  Fewer rounds are");
+    std::println("                        reduced-round targets (CHALLENGES.md).  When omitted,");
+    std::println("                        the default tracks the claim.  It is {} rounds for SIZE",
                  num_rounds_claimed_small);
-    std::println("        SIZE <= 48, and {} for SIZE > 48.", num_rounds_claimed_large);
-    std::println("        (minimum={}) (maximum={})",
+    std::println("                        <= 48, and {} for SIZE > 48.", num_rounds_claimed_large);
+    std::println("                        (minimum={}) (maximum={})",
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
-    std::println("        Specify the output size (in bytes).");
-    std::println("        Typical values are: 32, 48, or 64.");
-    std::println("        (default={}) (minimum={}) (maximum={})",
+    std::println("                        Specify the output size (in bytes).  Typical values are:");
+    std::println("                        32, 48, or 64.");
+    std::println("                        (default={}) (minimum={}) (maximum={})",
                  default_num_bytes_to_squeeze, min_num_bytes_to_squeeze,
                  max_num_bytes_to_squeeze);
 
     std::println("  --suffix=BYTE");
-    std::println("        Specify the suffix byte (as an integer) appended to the input buffer before squeezing.");
-    std::println("        (default={}) (minimum=0) (maximum=255)", default_input_suffix);
+    std::println("                        Specify the suffix byte (as an integer) appended to the");
+    std::println("                        input buffer before squeezing.");
+    std::println("                        (default={}) (minimum=0) (maximum=255)", default_input_suffix);
 
     std::println("  --tag");
-    std::println("        Print each digest in a self-describing format that embeds the");
-    std::println("        digest-relevant options, so --check can verify it without them:");
-    std::println("            castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
-    std::println("        (default)");
-    std::println("        (ignored with --check)");
+    std::println("                        Print each digest in a self-describing format that");
+    std::println("                        embeds the digest-relevant options, so --check can");
+    std::println("                        verify it without them:");
+    std::println("                            castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
+    std::println("                        (default)");
+    std::println("                        (ignored with --check)");
 
     std::println("  --untagged");
-    std::println("        Print each digest in the reversed style, without the digest type:");
-    std::println("            digest  'FILE'");
-    std::println("        (ignored with --check)");
+    std::println("                        Print each digest in the reversed style, without the");
+    std::println("                        digest type:");
+    std::println("                            digest  'FILE'");
+    std::println("                        (ignored with --check)");
     std::println("");
 
     std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");

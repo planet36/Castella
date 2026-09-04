@@ -192,8 +192,17 @@ print_usage()
     std::println("  > digest  'FILE'");
     std::println("");
 
+    std::println("*See Also*");
+    std::println("");
+
+    std::println("castella(1), sha256sum(1), cksum(1)");
+    std::println("");
+
     std::println("https://github.com/planet36/Castella");
     std::println("https://en.wikipedia.org/wiki/One-way_compression_function");
+    std::println("");
+
+    std::println("Report bugs to <https://github.com/planet36/Castella/issues>.");
 }
 
 /// Process the command line options.

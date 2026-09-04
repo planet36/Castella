@@ -8,7 +8,7 @@ Castella is a collection of header-only C++ libraries and programs built around 
 
 ## Build Commands
 
-A top-level Makefile recurses into the subdirectories; each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests`, `examples`, `hash-programs`, `research`) add `test`, so one directory can be worked on in isolation (`make -C tests test`).  `http-prng-service` has no tests and so no `test` target.
+A top-level Makefile recurses into the subdirectories; each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests`, `examples`, `hash-programs`, `research`) add `test`, so one directory can be worked on in isolation (`make -C tests test`).  `http-prng-service` has no tests and so no `test` target.  `hash-programs` alone adds `man`, which regenerates `castella.1` and `cch.1` with help2man; the top-level Makefile does not recurse into it, so run it as `make -C hash-programs man`.
 
 ```bash
 # Build examples, hash-programs, and tests (any root *.cpp scratch files too)

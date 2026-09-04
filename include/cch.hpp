@@ -210,8 +210,8 @@ private:
         }
     }
 
-    /// Zeroize the state, input buffer, and data members
-    void zeroize_()
+    /// Zeroize the state, input buffer, and other data members
+    void zeroize_() noexcept
     {
         explicit_bzero(std::data(state_), sizeof(state_));
         input_bytes_.clear();

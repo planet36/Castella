@@ -12,7 +12,6 @@
 #include "locked_allocator.hpp"
 #include "parse_int.hpp"
 #include "quote_shell_always.hpp"
-#include "to_unsigned.hpp"
 
 #include <algorithm>
 #if defined(DEBUG)
@@ -465,7 +464,7 @@ read_key_file(const std::string& path, const int max_size_bytes)
     // allocation the key buffer makes, and this try block catches its failure.
     try
     {
-        key.reserve(to_unsigned(max_size_bytes));
+        key.reserve(max_size_bytes);
     }
     catch (const std::exception& ex)
     {
@@ -549,7 +548,7 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
         // bytepad(encode_string(K), CHUNK_SIZE) expands to
         // left_encode(CHUNK_SIZE) || left_encode(len(K)) || K, followed by
         // enough zero bytes to fill the chunk.
-        const auto encoded_w = left_encode(to_unsigned(chunk_size_bytes));
+        const auto encoded_w = left_encode(chunk_size_bytes);
         const auto encoded_key_len = left_encode(std::size(key));
 
         const auto framing_size =
@@ -577,7 +576,7 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
     if (keyed)
     {
         // right_encode(L), as in KMAC
-        (void)hash_obj.add(right_encode(to_unsigned(digest_size_bytes)).span());
+        (void)hash_obj.add(right_encode(digest_size_bytes).span());
     }
 
     return hash_obj.squeeze_bytes(digest_size_bytes);

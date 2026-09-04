@@ -42,10 +42,15 @@ static_assert(std::endian::native == std::endian::little, "little-endian host re
 * \param x the integer to encode
 * \return a \c fixed_vector holding the significant bytes of \a x in
 *         little-endian order, with their count before them
+* \pre \a x ≥ 0
 */
 [[nodiscard]] static auto
-left_encode(const std::unsigned_integral auto x) noexcept
+left_encode(const std::integral auto x) noexcept
 {
+#if defined(DEBUG)
+    assert(x >= 0);
+#endif
+
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
     const auto w = static_cast<uint8_t>(byte_width(x));
@@ -79,10 +84,15 @@ left_encode(const std::unsigned_integral auto x) noexcept
 * \param x the integer to encode
 * \return a \c fixed_vector holding the significant bytes of \a x in
 *         little-endian order, with their count after them
+* \pre \a x ≥ 0
 */
 [[nodiscard]] static auto
-right_encode(const std::unsigned_integral auto x) noexcept
+right_encode(const std::integral auto x) noexcept
 {
+#if defined(DEBUG)
+    assert(x >= 0);
+#endif
+
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
     const auto w = static_cast<uint8_t>(byte_width(x));

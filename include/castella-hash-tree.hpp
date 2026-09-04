@@ -18,7 +18,6 @@
 #include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "narrow_cast.hpp"
-#include "to_unsigned.hpp"
 
 #include <algorithm>
 #if defined(DEBUG)
@@ -514,15 +513,21 @@ private:
         return static_cast<int32_t>(num_threads);
     }
 
-    /// Absorb the left-encoding of the unsigned integer \a x into \a node
+    /// Absorb the left-encoding of the integer \a x into \a node
     /**
     * The byte width of \a x followed by its low bytes in native byte order,
     * the left_encode of SP 800-185.  It is the same byte stream
     * \c Duplex::add_left_encoded absorbs, produced here so that node classes
     * need no encoding members of their own.
+    *
+    * \pre \a x ≥ 0
     */
-    static void absorb_left_encoded_(node_type& node, const std::unsigned_integral auto x)
+    static void absorb_left_encoded_(node_type& node, const std::integral auto x)
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -536,14 +541,20 @@ private:
         node.add(as_byte_span(x).first(w));
     }
 
-    /// Absorb the right-encoding of the unsigned integer \a x into \a node
+    /// Absorb the right-encoding of the integer \a x into \a node
     /**
     * The low bytes of \a x in native byte order followed by its byte width,
     * the right_encode of SP 800-185.  It is parseable from the end of the
     * stream.
+    *
+    * \pre \a x ≥ 0
     */
-    static void absorb_right_encoded_(node_type& node, const std::unsigned_integral auto x)
+    static void absorb_right_encoded_(node_type& node, const std::integral auto x)
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -570,8 +581,8 @@ private:
     {
         // The role is a fixed-width framing byte, deliberately not left-encoded.
         node.add(as_byte_span(role));
-        absorb_left_encoded_(node, to_unsigned(CHUNK_SIZE));
-        absorb_left_encoded_(node, to_unsigned(CV_LEN));
+        absorb_left_encoded_(node, CHUNK_SIZE);
+        absorb_left_encoded_(node, CV_LEN);
     }
 
     /// Hash one chunk to its chaining value, written into \a cv_dst
@@ -603,7 +614,7 @@ private:
         auto leaf = policy_.make_node();
 
         absorb_role_prefix_(leaf, ROLE_LEAF);
-        absorb_left_encoded_(leaf, to_unsigned(chunk_index));
+        absorb_left_encoded_(leaf, chunk_index);
 
         leaf.add(chunk);
 
@@ -621,10 +632,16 @@ private:
     * reference to \c NodePolicy::node_x2_type is checked only if this is
     * called.  A policy without \c HAS_PAIRED_LEAF never calls it, and has no
     * such type to name.
+    *
+    * \pre \a x ≥ 0
     */
     static void absorb_left_encoded_x2_(std::same_as<typename NodePolicy::node_x2_type> auto& pair,
-                                        const std::unsigned_integral auto x)
+                                        const std::integral auto x)
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -675,8 +692,8 @@ private:
         assert(std::ssize(cv_dst_b) == CV_LEN);
 #endif
 
-        const auto index_a = to_unsigned(chunk_index);
-        const auto index_b = to_unsigned(chunk_index + 1);
+        const auto index_a = chunk_index;
+        const auto index_b = chunk_index + 1;
 
         const auto w = static_cast<uint8_t>(byte_width(index_a));
 
@@ -693,8 +710,8 @@ private:
 
         // The role prefix, identical in both lanes.  See absorb_role_prefix_.
         pair.add(as_byte_span(ROLE_LEAF), as_byte_span(ROLE_LEAF));
-        absorb_left_encoded_x2_(pair, to_unsigned(CHUNK_SIZE));
-        absorb_left_encoded_x2_(pair, to_unsigned(CV_LEN));
+        absorb_left_encoded_x2_(pair, CHUNK_SIZE);
+        absorb_left_encoded_x2_(pair, CV_LEN);
 
         // The chunk indices, of equal width as checked above.
         pair.add(as_byte_span(w), as_byte_span(w));
@@ -715,7 +732,7 @@ private:
     [[nodiscard]] std::vector<std::byte>
     compute_leaf_cv_(const std::span<const std::byte> chunk, const int64_t chunk_index) const
     {
-        std::vector<std::byte> cv(to_unsigned(CV_LEN));
+        std::vector<std::byte> cv(CV_LEN);
         hash_leaf_into_(chunk, chunk_index, cv);
         return cv;
     }
@@ -774,7 +791,7 @@ private:
     /// The ring slot for monotonic position \a pos
     [[nodiscard]] Slot& ring_slot_(const int64_t pos) noexcept
     {
-        return ring_[to_unsigned(pos % ring_capacity_())];
+        return ring_[pos % ring_capacity_()];
     }
 
     [[nodiscard]] bool pool_is_active_() const noexcept
@@ -795,14 +812,14 @@ private:
         // allocation-free.  Giving each chunk buffer CHUNK_SIZE capacity up
         // front preserves the constructor's no-reallocation invariant for
         // chunk_buf_, which swaps with these buffers.
-        ring_ = std::vector<Slot>(to_unsigned(ring_capacity_()));
+        ring_ = std::vector<Slot>(ring_capacity_());
         for (auto& slot : ring_)
         {
             slot.chunk.reserve(static_cast<size_t>(CHUNK_SIZE));
-            slot.cv.resize(to_unsigned(CV_LEN));
+            slot.cv.resize(CV_LEN);
         }
 
-        pool_workers_.reserve(to_unsigned(NUM_THREADS));
+        pool_workers_.reserve(NUM_THREADS);
 
         for (int32_t t = 0; t < NUM_THREADS; ++t)
         {
@@ -1284,8 +1301,8 @@ private:
 
         for (; pos + 1 < num_chunks; pos += 2)
         {
-            const std::span chunk_a{src + to_unsigned(pos) * chunk_size, chunk_size};
-            const std::span chunk_b{src + to_unsigned(pos + 1) * chunk_size, chunk_size};
+            const std::span chunk_a{src + pos * chunk_size, chunk_size};
+            const std::span chunk_b{src + (pos + 1) * chunk_size, chunk_size};
 
             hash_leaf_pair_into_(chunk_a, chunk_b, first_chunk_index + pos, cv_a, cv_b);
 
@@ -1294,7 +1311,7 @@ private:
 
         if (pos < num_chunks)
         {
-            const std::span chunk{src + to_unsigned(pos) * chunk_size, chunk_size};
+            const std::span chunk{src + pos * chunk_size, chunk_size};
 
             hash_leaf_into_(chunk, first_chunk_index + pos, cv_a);
 
@@ -1389,22 +1406,22 @@ private:
             // workers, and hashes them inline otherwise.
             for (int64_t pos = 0; pos < num_chunks; ++pos)
             {
-                flush_chunk_(std::span{src + to_unsigned(pos) * chunk_size, chunk_size});
+                flush_chunk_(std::span{src + pos * chunk_size, chunk_size});
             }
             return;
         }
 
         // One flat allocation holds every CV of the batch, in leaf order.
         // Worker w writes only its own disjoint slice.
-        std::vector<std::byte> cvs(to_unsigned(num_leaves) * cv_len);
+        std::vector<std::byte> cvs(num_leaves * cv_len);
 
         // One slot per worker.  A worker that throws parks its exception
         // here for the calling thread to rethrow after the join.
-        std::vector<std::exception_ptr> worker_exceptions(to_unsigned(num_workers));
+        std::vector<std::exception_ptr> worker_exceptions(num_workers);
 
         {
             std::vector<std::jthread> workers;
-            workers.reserve(to_unsigned(num_workers));
+            workers.reserve(num_workers);
 
             // Static partition of the leaves [0, num_leaves) into contiguous
             // ranges.  The first (num_leaves % num_workers) workers take one
@@ -1440,15 +1457,15 @@ private:
                                 {
                                     const int64_t pos = first_leaf_pos + k;
                                     const std::span chunk_a{
-                                        src + to_unsigned(pos) * chunk_size, chunk_size};
+                                        src + pos * chunk_size, chunk_size};
                                     const std::span chunk_b{
-                                        src + to_unsigned(pos + 1) * chunk_size,
+                                        src + (pos + 1) * chunk_size,
                                         chunk_size};
 
                                     hash_leaf_pair_into_(
                                         chunk_a, chunk_b, first_chunk_index + pos,
-                                        std::span{&cvs[to_unsigned(k) * cv_len], cv_len},
-                                        std::span{&cvs[to_unsigned(k + 1) * cv_len],
+                                        std::span{&cvs[k * cv_len], cv_len},
+                                        std::span{&cvs[(k + 1) * cv_len],
                                                   cv_len});
                                 }
                             }
@@ -1459,19 +1476,19 @@ private:
                                 // of the batch
                                 const int64_t pos = first_leaf_pos + k;
                                 const std::span chunk{
-                                    src + to_unsigned(pos) * chunk_size, chunk_size};
+                                    src + pos * chunk_size, chunk_size};
 
                                 // Write the CV straight into its slice of
                                 // the flat cvs array, with no per-leaf CV
                                 // vector to allocate, copy, and free.
                                 hash_leaf_into_(
                                     chunk, first_chunk_index + pos,
-                                    std::span{&cvs[to_unsigned(k) * cv_len], cv_len});
+                                    std::span{&cvs[k * cv_len], cv_len});
                             }
                         }
                         catch (...)
                         {
-                            worker_exceptions[to_unsigned(w)] = std::current_exception();
+                            worker_exceptions[w] = std::current_exception();
                         }
                     });
 
@@ -1570,7 +1587,7 @@ private:
 
                 flush_bulk_chunks_(std::data(src), num_bulk);
 
-                src = src.subspan(to_unsigned(num_bulk) * chunk_size);
+                src = src.subspan(num_bulk * chunk_size);
             }
 
             // Buffer what remains of this call (or top up a partial chunk).
@@ -1647,7 +1664,7 @@ protected:
         stop_pool_();
 
         // Every chunk after chunk 0 contributed one CV.
-        const auto num_cvs = to_unsigned(num_chunks_flushed_ - 1);
+        const auto num_cvs = num_chunks_flushed_ - 1;
         absorb_right_encoded_(final_node_, num_cvs);
 
         has_been_finalized_ = true;

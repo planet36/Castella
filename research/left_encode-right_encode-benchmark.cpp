@@ -21,8 +21,11 @@
 // NOTE: These functions make a copy of the input data.
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-left_encode_1(const std::unsigned_integral auto x)
+left_encode_1(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -40,8 +43,11 @@ left_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-left_encode_2(std::unsigned_integral auto x)
+left_encode_2(std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -62,8 +68,11 @@ left_encode_2(std::unsigned_integral auto x)
 
 #if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-left_encode_3(const std::unsigned_integral auto x)
+left_encode_3(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -79,8 +88,11 @@ left_encode_3(const std::unsigned_integral auto x)
 #endif
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static auto
-left_encode_4(std::unsigned_integral auto x) noexcept
+left_encode_4(std::integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
@@ -99,8 +111,11 @@ left_encode_4(std::unsigned_integral auto x) noexcept
 }
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-right_encode_1(const std::unsigned_integral auto x)
+right_encode_1(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -118,8 +133,11 @@ right_encode_1(const std::unsigned_integral auto x)
 }
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-right_encode_2(std::unsigned_integral auto x)
+right_encode_2(std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -140,8 +158,11 @@ right_encode_2(std::unsigned_integral auto x)
 
 #if defined(__cpp_lib_ranges_concat)
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static std::vector<std::byte>
-right_encode_3(const std::unsigned_integral auto x)
+right_encode_3(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
@@ -158,8 +179,11 @@ right_encode_3(const std::unsigned_integral auto x)
 #endif
 
 /// Unambiguously encode the integer into a byte string
+/**
+* \pre \a x ≥ 0
+*/
 [[nodiscard]] static auto
-right_encode_4(std::unsigned_integral auto x) noexcept
+right_encode_4(std::integral auto x) noexcept
 {
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
@@ -177,10 +201,10 @@ right_encode_4(std::unsigned_integral auto x) noexcept
     return result;
 }
 
-template <std::unsigned_integral T>
+template <std::integral T>
 using func_vec_bytes_t = std::vector<std::byte> (&)(const T);
 
-template <std::unsigned_integral T>
+template <std::integral T>
 void
 BM_lr_encode_vec(benchmark::State& BM_state, func_vec_bytes_t<T>& fn)
 {
@@ -197,10 +221,10 @@ BM_lr_encode_vec(benchmark::State& BM_state, func_vec_bytes_t<T>& fn)
     }
 }
 
-template <std::unsigned_integral T>
+template <std::integral T>
 using func_fvec_bytes_t = fixed_vector<std::byte, 1 + sizeof(T)> (&)(const T);
 
-template <std::unsigned_integral T>
+template <std::integral T>
 void
 BM_lr_encode_fvec(benchmark::State& BM_state, func_fvec_bytes_t<T>& fn)
 {

@@ -20,7 +20,6 @@
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "narrow_cast.hpp"
-#include "to_unsigned.hpp"
 
 #include <algorithm>
 #include <array>
@@ -261,8 +260,8 @@ private:
                               std::data(src_b), num_bytes_to_add);
 
             cur_input_byte_idx_ += num_bytes_to_add;
-            src_a = src_a.subspan(to_unsigned(num_bytes_to_add));
-            src_b = src_b.subspan(to_unsigned(num_bytes_to_add));
+            src_a = src_a.subspan(num_bytes_to_add);
+            src_b = src_b.subspan(num_bytes_to_add);
 
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ <= get_rate_size_bytes());
@@ -284,9 +283,15 @@ private:
     * Both lanes absorb the identical byte stream that \c Duplex::left_encode_
     * absorbs.  Only the construction-time bytes use this, and they are the
     * same in both lanes.
+    *
+    * \pre \a x ≥ 0
     */
-    void left_encode_(const std::unsigned_integral auto x) noexcept
+    void left_encode_(const std::integral auto x) noexcept
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -319,9 +324,9 @@ private:
     void init_(const std::string_view function_name,
                const std::string_view customization_str) noexcept
     {
-        left_encode_(to_unsigned(get_state_size_bytes()));
-        left_encode_(to_unsigned(get_rate_size_bytes()));
-        left_encode_(to_unsigned(NUM_ROUNDS));
+        left_encode_(get_state_size_bytes());
+        left_encode_(get_rate_size_bytes());
+        left_encode_(NUM_ROUNDS);
         left_encode_bytes_(function_name);
         left_encode_bytes_(customization_str);
         apply_padding_rule_();

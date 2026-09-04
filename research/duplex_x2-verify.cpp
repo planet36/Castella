@@ -24,7 +24,6 @@
 #include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
-#include "to_unsigned.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -89,8 +88,8 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
         const auto expected_a = duplex_a.squeeze_bytes(n);
         const auto expected_b = duplex_b.squeeze_bytes(n);
 
-        std::vector<std::byte> actual_a(to_unsigned(n));
-        std::vector<std::byte> actual_b(to_unsigned(n));
+        std::vector<std::byte> actual_a(n);
+        std::vector<std::byte> actual_b(n);
         duplex_x2.squeeze_pair_to(actual_a, actual_b);
 
         assert(expected_a == actual_a);

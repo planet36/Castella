@@ -57,7 +57,6 @@
 #include "castella-duplex.hpp"
 #include "cch-tree.hpp"
 #include "encode.hpp"
-#include "to_unsigned.hpp"
 
 #include <array>
 #include <bit>
@@ -230,26 +229,26 @@ mac_digest(const int capacity_blocks, const int num_rounds, const int input_suff
     const auto key = make_key(keylen);
 
     // bytepad(encode_string(K), chunk)
-    const auto encoded_w = left_encode(to_unsigned(chunk_size_bytes));
+    const auto encoded_w = left_encode(chunk_size_bytes);
     const auto encoded_key_len = left_encode(std::size(key));
 
     const auto framing_size =
-        std::size(encoded_w) + std::size(encoded_key_len) + std::size(key);
+        std::ssize(encoded_w) + std::ssize(encoded_key_len) + std::ssize(key);
 
-    if (framing_size > to_unsigned(chunk_size_bytes))
+    if (framing_size > chunk_size_bytes)
         throw std::invalid_argument("kat: the framed key does not fit in one chunk");
 
     (void)tree.add(encoded_w.span());
     (void)tree.add(encoded_key_len.span());
     (void)tree.add(key);
-    const std::vector<std::byte> zeros(to_unsigned(chunk_size_bytes) - framing_size);
+    const std::vector<std::byte> zeros(chunk_size_bytes - framing_size);
     (void)tree.add(zeros);
 
     const auto msg = make_msg(msglen);
     (void)tree.add(msg);
 
     // right_encode(L), so MACs of different output sizes are unrelated
-    (void)tree.add(right_encode(to_unsigned(out)).span());
+    (void)tree.add(right_encode(out).span());
 
     return tree.squeeze_bytes(out);
 }

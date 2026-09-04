@@ -531,7 +531,7 @@ public:
 
         n = std::clamp(n, 0, get_max_digest_size_bytes());
 
-        std::vector<std::byte> result(to_unsigned(n));
+        std::vector<std::byte> result(n);
 
         final_digest_into_(result);
 

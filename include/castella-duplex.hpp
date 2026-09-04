@@ -35,7 +35,6 @@
 #include "castella-permute.hpp"
 #include "in_range.hpp"
 #include "narrow_cast.hpp"
-#include "to_unsigned.hpp"
 
 #include <algorithm>
 #if defined(DEBUG)
@@ -549,7 +548,7 @@ private:
             (void)std::memcpy(dst, std::data(src), num_bytes_to_add);
 
             cur_input_byte_idx_ += num_bytes_to_add;
-            src = src.subspan(to_unsigned(num_bytes_to_add));
+            src = src.subspan(num_bytes_to_add);
 
 #if defined(DEBUG)
             assert(cur_input_byte_idx_ <= get_rate_size_bytes());
@@ -579,10 +578,16 @@ private:
     * unambiguously parsed from the beginning of the string by inserting the
     * length of the byte string before the byte string representation of 𝑥.
     * </blockquote>
+    *
+    * \pre \a x ≥ 0
     */
     // }}}
-    void left_encode_(const std::unsigned_integral auto x) noexcept
+    void left_encode_(const std::integral auto x) noexcept
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -609,10 +614,16 @@ private:
     * unambiguously parsed from the end of the string by inserting the length of
     * the byte string after the byte string representation of 𝑥.
     * </blockquote>
+    *
+    * \pre \a x ≥ 0
     */
     // }}}
-    void right_encode_(const std::unsigned_integral auto x) noexcept
+    void right_encode_(const std::integral auto x) noexcept
     {
+#if defined(DEBUG)
+        assert(x >= 0);
+#endif
+
         const auto w = static_cast<uint8_t>(byte_width(x));
 
         static_assert(sizeof(w) == 1, "size of byte width must be 1");
@@ -744,12 +755,12 @@ private:
         */
         // }}}
 
-        left_encode_(to_unsigned(get_state_size_bytes()));
-        left_encode_(to_unsigned(get_rate_size_bytes())); // cSHAKE does this.
+        left_encode_(get_state_size_bytes());
+        left_encode_(get_rate_size_bytes()); // cSHAKE does this.
         // NUM_ROUNDS changes the permutation, so absorbing it isn't strictly
         // necessary for domain separation.  It's done as cheap insurance
         // against any relation between reduced-round and full-round instances.
-        left_encode_(to_unsigned(NUM_ROUNDS));
+        left_encode_(NUM_ROUNDS);
         left_encode_bytes_(function_name);
         left_encode_bytes_(customization_str);
         // cSHAKE pads the input buffer with zeros (in the bytepad function)
@@ -986,7 +997,7 @@ public:
         return add_right_encoded(as_byte_span(s));
     }
 
-    /// Consume the left-encoding of the unsigned integer \a x
+    /// Consume the left-encoding of the integer \a x
     // {{{
     /**
     * Absorbs the byte width of \a x followed by its low bytes (the
@@ -995,10 +1006,11 @@ public:
     *
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
+    * \pre \a x ≥ 0
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Duplex& add_left_encoded(const std::unsigned_integral auto x)
+    Duplex& add_left_encoded(const std::integral auto x)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1007,7 +1019,7 @@ public:
         return *this;
     }
 
-    /// Consume the right-encoding of the unsigned integer \a x
+    /// Consume the right-encoding of the integer \a x
     // {{{
     /**
     * Absorbs the low bytes of \a x followed by its byte width (the
@@ -1016,10 +1028,11 @@ public:
     *
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
+    * \pre \a x ≥ 0
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
     // }}}
-    Duplex& add_right_encoded(const std::unsigned_integral auto x)
+    Duplex& add_right_encoded(const std::integral auto x)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1116,7 +1129,7 @@ public:
 
         n = std::clamp(n, 0, get_rate_size_bytes());
 
-        std::vector<std::byte> result(to_unsigned(n));
+        std::vector<std::byte> result(n);
 
         squeeze_into_(result);
 

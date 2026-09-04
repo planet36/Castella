@@ -317,7 +317,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 
     for (size_t j = 0; j < N / 2; ++j)
     {
-        state[j] = _mm256_castsi256_si128(state_folded[j]);
+        state[j] = _mm256_extracti128_si256(state_folded[j], 0);
         state[j + N / 2] = _mm256_extracti128_si256(state_folded[j], 1);
     }
 }

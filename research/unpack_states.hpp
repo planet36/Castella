@@ -24,7 +24,7 @@ unpack_states(const Castella::arr_blocks_x2<N>& state_x2,
 {
     for (size_t i = 0; i < N; ++i)
     {
-        state_a[i] = _mm256_castsi256_si128(state_x2[i]);
+        state_a[i] = _mm256_extracti128_si256(state_x2[i], 0);
         state_b[i] = _mm256_extracti128_si256(state_x2[i], 1);
     }
 }

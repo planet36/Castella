@@ -224,7 +224,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         Castella::arr_blocks<N> unfolded{};
         for (size_t j = 0; j < N / 2; ++j)
         {
-            unfolded[j] = _mm256_castsi256_si128(state_folded[j]);
+            unfolded[j] = _mm256_extracti128_si256(state_folded[j], 0);
             unfolded[j + N / 2] = _mm256_extracti128_si256(state_folded[j], 1);
         }
         assert(simd_arr_equal(unfolded, result_vaes));

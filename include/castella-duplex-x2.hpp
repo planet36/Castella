@@ -448,7 +448,7 @@ public:
         while (num_bytes_remaining >= sizeof(block_t))
         {
             _mm_storeu_si128(reinterpret_cast<__m128i*>(out_a),
-                             _mm256_castsi256_si128(state_x2_[i]));
+                             _mm256_extracti128_si256(state_x2_[i], 0));
             _mm_storeu_si128(reinterpret_cast<__m128i*>(out_b),
                              _mm256_extracti128_si256(state_x2_[i], 1));
 
@@ -463,7 +463,7 @@ public:
             alignas(block_t) std::array<std::byte, sizeof(block_t)> tmp{};
 
             _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),
-                            _mm256_castsi256_si128(state_x2_[i]));
+                            _mm256_extracti128_si256(state_x2_[i], 0));
             (void)std::memcpy(out_a, std::data(tmp), num_bytes_remaining);
 
             _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),

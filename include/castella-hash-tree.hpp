@@ -10,6 +10,7 @@
 * \sa https://keccak.team/files/Sakura.pdf
 * \sa https://github.com/BLAKE3-team/BLAKE3-specs/blob/master/blake3.pdf
 * \sa https://csrc.nist.gov/pubs/sp/800/185/final
+* \sa https://www.cryptologie.net/posts/kangarootwelve/
 */
 // }}}
 

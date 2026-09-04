@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-/// Broadcast \a x to all 16 <code>uint8_t</code> elements of a \c uint8x16_t
+/// Broadcast \a x to all 16 \c uint8_t elements of a \c uint8x16_t
 [[nodiscard]] static inline uint8x16_t
 broadcast_u8(const uint8_t x) noexcept
 {
@@ -24,7 +24,7 @@ broadcast_u8(const uint8_t x) noexcept
 #endif
 }
 
-/// Broadcast \a x to all 8 <code>uint16_t</code> elements of a \c uint8x16_t
+/// Broadcast \a x to all 8 \c uint16_t elements of a \c uint8x16_t
 [[nodiscard]] static inline uint8x16_t
 broadcast_u16(const uint16_t x) noexcept
 {
@@ -35,7 +35,7 @@ broadcast_u16(const uint16_t x) noexcept
 #endif
 }
 
-/// Broadcast \a x to all 4 <code>uint32_t</code> elements of a \c uint8x16_t
+/// Broadcast \a x to all 4 \c uint32_t elements of a \c uint8x16_t
 [[nodiscard]] static inline uint8x16_t
 broadcast_u32(const uint32_t x) noexcept
 {
@@ -46,7 +46,7 @@ broadcast_u32(const uint32_t x) noexcept
 #endif
 }
 
-/// Broadcast \a x to all 2 <code>uint64_t</code> elements of a \c uint8x16_t
+/// Broadcast \a x to all 2 \c uint64_t elements of a \c uint8x16_t
 [[nodiscard]] static inline uint8x16_t
 broadcast_u64(const uint64_t x) noexcept
 {

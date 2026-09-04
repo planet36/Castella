@@ -173,7 +173,7 @@ private:
     /// The input buffer
     /**
     * Sized for the largest possible rate, so there is no per-object
-    * allocation, the same as \c DuplexX2.  Only the first \c R blocks are used.
+    * allocation (just like \c DuplexX2).  Only the first \c R blocks are used.
     */
     arr_blocks<R_MAX> input_blocks_{};
 

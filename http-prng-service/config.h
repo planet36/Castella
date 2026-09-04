@@ -27,6 +27,9 @@ inline constexpr int capacity_blocks = 6;
 */
 inline constexpr int num_rounds = 8;
 
+/**
+* \pre must be representable in \c uint8_t
+*/
 inline constexpr int input_suffix = 1;
 
 inline constexpr std::string_view customization_str = "HTTP PRNG service";

@@ -156,8 +156,6 @@ public:
         if (!has_been_finalized_)
             finalize_();
 
-        // (The final node locks its own mutex, which is distinct from
-        // mtx_, so this cannot deadlock.)
         return final_node_.final_digest_bytes(n);
     }
 

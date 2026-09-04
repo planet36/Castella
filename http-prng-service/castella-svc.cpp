@@ -76,7 +76,7 @@ std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initializatio
 */
 std::remove_const_t<decltype(max_consec_bytes_sqzd)> consec_bytes_sqzd = 0;
 
-/// Released once entropy has been added to the \c duplex_obj
+/// Released once entropy has been added to \c duplex_obj
 /**
 * Entropy must be added before any connections are accepted.
 */
@@ -407,10 +407,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         errx(EXIT_FAILURE, "svr.bind_to_port(\"%s\", %d) failed", host.c_str(), port);
     }
 
-    // Block until entropy was added to the duplex_obj.
+    // Block until entropy was added to duplex_obj.
     // (getentropy failure exits the process, so this cannot hang.)
     first_entropy_added.wait();
-    // Now ready to accept connections.
+    // Now svr is ready to accept connections.
 
     // Run the server on a separate thread.
     std::jthread server_thread(

@@ -450,10 +450,6 @@ public:
 
     ~compress_castella_hash()
     {
-        // This is not a correctness guarantee.  Destroying an object while a
-        // member call is in flight is already a caller error.  The lock costs
-        // nothing uncontended and makes zeroize_() run after such a call
-        // rather than underneath it.
         std::scoped_lock lock{mtx_};
 
         zeroize_();
@@ -473,8 +469,6 @@ public:
     {
         std::scoped_lock lock{mtx_};
 
-        // The finalized check is unconditional.  Even an empty span throws,
-        // and so does one with null data, which agrees with add("").
         if (has_been_finalized_)
         {
             throw std::logic_error("compress_castella_hash.add: state is finalized");

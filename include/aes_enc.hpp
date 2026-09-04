@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// AES-based primitives used by Castella
+/// AES-based primitives
 /**
 * \file
 * \author Steven Ward
@@ -226,10 +226,6 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
 * Each element's key here is a full 256-bit value, so the two lanes of an
 * element may use different 128-bit round keys.  \c aes_enc_arr_x2 instead
 * broadcasts one 128-bit key to both lanes.
-*
-* This is what the register-resident single-state \c Castella::permute needs.
-* Its folded N-block state pairs blocks \c i and \c i+N/2 in one element, and
-* the round constants are folded to match.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
@@ -279,7 +275,7 @@ aes_enc_arr_generic(simd_arr_t<N>& arr,
 /**
 * This is a wrapper.  It calls \c aes_enc_arr_paircast on x86-64 with VAES
 * when \a N is positive and even, and \c aes_enc_arr_generic everywhere
-* else.  The two are bit-identical, so the choice never affects a digest.
+* else.  The two are bit-identical.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
@@ -360,8 +356,7 @@ aes_enc_inv_arr_generic(simd_arr_t<N>& arr,
 /**
 * This is a wrapper.  It calls \c aes_enc_inv_arr_paircast on x86-64 with
 * VAES when \a N is positive and even, and \c aes_enc_inv_arr_generic
-* everywhere else.  The two are bit-identical, so the choice never affects
-* \c permute_inv, their only caller.
+* everywhere else.  The two are bit-identical.
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void

@@ -48,6 +48,13 @@ lfsr_step_full(lfsr128_state_t lfsr) noexcept
 }
 
 /// Create a \c lfsr128_state_t from the given bytes
+/**
+* The size check throws, but no caller can catch it.  A \c consteval function
+* is evaluated only at compile time, so a violated precondition is a compile
+* error.
+*
+* \pre \c std::size(src) == \c sizeof(lfsr128_state_t)
+*/
 [[nodiscard]] static consteval lfsr128_state_t
 lfsr_from_bytes16(const std::string_view src)
 {

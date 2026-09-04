@@ -50,8 +50,6 @@ public:
     using block_t = Castella::block_t;
     using state_t = Castella::arr_blocks<N>;
 
-    /// The interleaved-pair class (cch-x2.hpp) drives two nodes' absorb
-    /// machinery in one loop, so it reaches the private members.
     friend struct compress_castella_hash_x2<N>;
 
     static constexpr int MIX_RATE_MIN = 1;
@@ -173,7 +171,6 @@ private:
     {
         if (mix_rate_ == 0)
         {
-            // Periodic mixing is disabled.
             return;
         }
 
@@ -234,7 +231,7 @@ private:
     [[nodiscard]] bool
     should_mix_state_(decltype(absorbs_since_mix_)& absorbs_since_mix) const noexcept
     {
-        if (mix_rate_ <= 0) // Periodic mixing is disabled.
+        if (mix_rate_ <= 0)
             return false;
 
         if (++absorbs_since_mix < mix_rate_)
@@ -580,8 +577,5 @@ public:
     }
 
     /// Get the mix rate (i.e. the number of absorptions before the state is mixed).
-    /**
-    * 0 means periodic mixing is disabled.
-    */
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };

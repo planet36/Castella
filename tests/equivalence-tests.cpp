@@ -65,10 +65,9 @@ constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 * \param input the input bytes
 * \param rng the seeded generator (for the random split points)
 */
-template <typename MakeTree, typename GetDigest>
 void
-test_one_input(const std::string_view name, const MakeTree& make_tree,
-               const GetDigest& get_digest, const std::span<const std::byte> input,
+test_one_input(const std::string_view name, const auto& make_tree,
+               const auto& get_digest, const std::span<const std::byte> input,
                std::uniform_random_bit_generator auto& rng)
 {
     // The single-threaded one-shot digest is the reference.

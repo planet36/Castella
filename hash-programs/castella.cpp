@@ -278,16 +278,41 @@ print_usage()
     std::println("  --tag");
     std::println("                        Print each digest in a self-describing format that");
     std::println("                        embeds the digest-relevant options, so --check can");
-    std::println("                        verify it without them:");
-    std::println("                            castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
+    std::println("                        verify it without them.  See the examples below.");
     std::println("                        (default)");
     std::println("                        (ignored with --check)");
 
     std::println("  --untagged");
     std::println("                        Print each digest in the reversed style, without the");
-    std::println("                        digest type:");
-    std::println("                            digest  'FILE'");
+    std::println("                        digest type.  See the examples below.");
     std::println("                        (ignored with --check)");
+    std::println("");
+
+    std::println("Examples:");
+    std::println("");
+
+    std::println("  $ castella -- file1 file2");
+    std::println("  $ castella --untagged -- file1 file2 > SUMS");
+    std::println("  $ castella --check -- SUMS");
+    std::println("  $ cat file | castella");
+    std::println("");
+
+    std::println("The tagged format is:");
+    std::println("");
+
+    std::println("  > castella (PARAMS) 'FILE' = digest");
+    std::println("");
+
+    std::println("where PARAMS is:");
+    std::println("");
+
+    std::println("  > chunk-size=C,custom=S,rounds=R,suffix=B");
+    std::println("");
+
+    std::println("The untagged format is:");
+    std::println("");
+
+    std::println("  > digest  'FILE'");
     std::println("");
 
     std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");

@@ -193,6 +193,14 @@ print_usage()
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
+    std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");
+    std::println("");
+
+    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
+    std::println("Memory-mapped files parallelize best.  Piped input is also multithreaded,");
+    std::println("but the reading thread limits its throughput.");
+    std::println("");
+
     std::println("Options:");
     std::println("");
 
@@ -313,14 +321,6 @@ print_usage()
     std::println("");
 
     std::println("  > digest  'FILE'");
-    std::println("");
-
-    std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");
-    std::println("");
-
-    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize best.  Piped input is also multithreaded,");
-    std::println("but the reading thread limits its throughput.");
     std::println("");
 
     std::println("https://github.com/planet36/Castella");

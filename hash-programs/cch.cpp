@@ -155,6 +155,22 @@ print_usage()
     std::println("                        (ignored with --check)");
     std::println("");
 
+    std::println("*CCH Algorithm Description*");
+    std::println("");
+
+    std::println("FILE is hashed as a chunked tree: each chunk is hashed to a chaining value by an independent CCH node, and a final CCH node hashes the chaining values, so multiple CPU cores can share the work.");
+    std::println("Memory-mapped files parallelize; piped input is hashed on the calling thread (a CCH node outruns handing chunks to other cores).");
+    std::println("");
+
+    std::println("Within each node:");
+    std::println("The internal state is initialized with distinct per-lane constants.");
+    std::println("The mix rate is folded into it, so different RATE values produce distinct digests.");
+    std::println("Input data is absorbed into the state by a one-way compression function.");
+    std::println("The Castella permutation function mixes the state every RATE absorptions, which diffuses it fully.");
+    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed by the compression function.");
+    std::println("The Castella permutation function is then applied to the state to produce the digest.");
+    std::println("");
+
     std::println("Examples:");
     std::println("");
 
@@ -174,22 +190,6 @@ print_usage()
     std::println("");
 
     std::println("  > digest  'FILE'");
-    std::println("");
-
-    std::println("*CCH Algorithm Description*");
-    std::println("");
-
-    std::println("FILE is hashed as a chunked tree: each chunk is hashed to a chaining value by an independent CCH node, and a final CCH node hashes the chaining values, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize; piped input is hashed on the calling thread (a CCH node outruns handing chunks to other cores).");
-    std::println("");
-
-    std::println("Within each node:");
-    std::println("The internal state is initialized with distinct per-lane constants.");
-    std::println("The mix rate is folded into it, so different RATE values produce distinct digests.");
-    std::println("Input data is absorbed into the state by a one-way compression function.");
-    std::println("The Castella permutation function mixes the state every RATE absorptions, which diffuses it fully.");
-    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed by the compression function.");
-    std::println("The Castella permutation function is then applied to the state to produce the digest.");
     std::println("");
 
     std::println("https://github.com/planet36/Castella");

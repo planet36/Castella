@@ -27,6 +27,11 @@
 *     pad                          apply_padding_rule()
 *     squeeze <n>                  squeeze_bytes(n), writes "out <hex>"
 *
+* A field written as <hex> holds an arbitrary byte string, encoded two
+* hexadecimal characters per byte.  Such a string may contain whitespace or be
+* empty, and a whitespace-delimited line contains neither, so the bytes never
+* appear literally.
+*
 * Blank lines and lines beginning with '#' are ignored.
 */
 
@@ -83,6 +88,9 @@ hex_nibble(const char c)
 * \return the decoded bytes
 * \exception std::invalid_argument if \a hex has an odd length or holds a
 *            character that is not a hexadecimal digit
+*
+* The result is a \c std::string so that it passes straight to the \c Duplex
+* members that take a \c std::string_view.
 */
 [[nodiscard]] static std::string
 hex_to_bytes(const std::string_view hex)
@@ -220,6 +228,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             else if (op == "addlei")
             {
+                // The field is unsigned because the encoding is defined
+                // only for a nonnegative value.
                 duplex->add_left_encoded(read_field<uint64_t>(iss, "uint"));
             }
             else if (op == "addrei")

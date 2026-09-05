@@ -35,6 +35,8 @@
 * \retval std::errc::result_out_of_range the value is not representable in
 *         \c T or is not in <code>[min, max]</code>
 * \return the parsed value, or one of the above error values
+* \pre \a base is \c 0, or in the interval <code>[2, 36]</code> that
+*      \c std::from_chars accepts
 * \note Unlike \c std::stoi, this rejects leading whitespace, a leading
 *       \c '+', and trailing non-digit characters.
 */
@@ -63,7 +65,6 @@ parse_int(std::string_view s,
     }
 
 #if defined(DEBUG)
-    // std::from_chars supports integer bases from 2 through 36.
     assert((base >= 2) && (base <= 36));
 #endif
 

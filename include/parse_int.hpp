@@ -14,11 +14,11 @@
 #endif
 #include <charconv>
 #include <concepts>
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
 #include <expected>
+#include <format>
 #include <limits>
+#include <stdexcept>
 #include <string_view>
 #include <system_error>
 
@@ -83,48 +83,47 @@ parse_int(std::string_view s,
     return value;
 }
 
-/// Parse \a optarg as an int in <code>[min, max]</code>, or exit with an error.
+/// Parse \a optarg as an int in <code>[min, max]</code>.
 /**
 * \param optarg the option argument to parse
 * \param min the minimum allowed value (inclusive)
 * \param max the maximum allowed value (inclusive)
-* \param option_name the option name, used in the error message
+* \param option_name the option name, named by the exception message
 * \return the parsed value
-* \note On a null, malformed, or out-of-range value this prints a diagnostic
-*       and exits via \c errx.  It does not return.
+* \exception std::invalid_argument \a optarg is null, or is not entirely an
+*            integer
+* \exception std::out_of_range the value is not in <code>[min, max]</code>
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const int min, const int max, const char* option_name)
 {
     if (optarg == nullptr)
-    {
-        (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "null argument: %s", option_name);
-    }
+        throw std::invalid_argument{std::format("null argument: {}", option_name)};
 
     const auto value = parse_int<int>(optarg, min, max);
 
     if (!value.has_value())
     {
-        (void)std::fflush(stdout);
-
         if (value.error() == std::errc::result_out_of_range)
-            errx(EXIT_FAILURE, "out of range: %s: \"%s\"", option_name, optarg);
-        else
-            errx(EXIT_FAILURE, "invalid argument: %s: \"%s\"", option_name, optarg);
+            throw std::out_of_range{
+                std::format("out of range: {}: \"{}\"", option_name, optarg)};
+
+        throw std::invalid_argument{
+            std::format("invalid argument: {}: \"{}\"", option_name, optarg)};
     }
 
     return *value;
 }
 
-/// Parse \a optarg as an int, or exit with an error.
+/// Parse \a optarg as an int.
 /**
 * \param optarg the option argument to parse
-* \param option_name the option name, used in the error message
+* \param option_name the option name, named by the exception message
 * \return the parsed value
 * \note The parsed value is bounded only by the range of \c int.
-* \note On a null, malformed, or out-of-range value this prints a diagnostic
-*       and exits via \c errx.  It does not return.
+* \exception std::invalid_argument \a optarg is null, or is not entirely an
+*            integer
+* \exception std::out_of_range the value is not representable in \c int
 */
 [[nodiscard]] inline int
 parse_option_int(const char* optarg, const char* option_name)
@@ -133,15 +132,15 @@ parse_option_int(const char* optarg, const char* option_name)
                             std::numeric_limits<int>::max(), option_name);
 }
 
-/// Parse the environment variable \a name as an int in <code>[min, max]</code>, or exit with an error.
+/// Parse the environment variable \a name as an int in <code>[min, max]</code>.
 /**
 * \param name the name of the environment variable
 * \param min the minimum allowed value (inclusive)
 * \param max the maximum allowed value (inclusive)
 * \param default_value the value returned if the variable is not set
 * \return the parsed value, or \a default_value if the variable is not set
-* \note On a malformed or out-of-range value this prints a diagnostic and
-*       exits via \c errx.  It does not return.
+* \exception std::invalid_argument the value is not entirely an integer
+* \exception std::out_of_range the value is not in <code>[min, max]</code>
 */
 [[nodiscard]] inline int
 parse_env_int(const char* name, const int min, const int max, const int default_value)

@@ -13,6 +13,9 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <err.h>
+#include <exception>
 #include <ranges>
 #include <thread>
 #include <type_traits>
@@ -260,7 +263,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     const auto max_threads = std::max(min_threads, hw_threads);
 
     // NUM_THREADS=0 means max_threads
-    auto num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);
+    int num_threads = min_threads;
+
+    try
+    {
+        num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);
+    }
+    catch (const std::exception& ex)
+    {
+        (void)std::fflush(stdout);
+        errx(EXIT_FAILURE, "%s", ex.what());
+    }
 
     if (num_threads == 0)
         num_threads = max_threads;

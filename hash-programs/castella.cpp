@@ -344,6 +344,7 @@ print_usage()
 */
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
 void process_options(int argc, char* argv[])
+try
 {
     using namespace std::literals;
 
@@ -467,6 +468,11 @@ void process_options(int argc, char* argv[])
 
     if (quiet && !check_mode)
         errx(EXIT_FAILURE, "the --quiet option is only meaningful with --check");
+}
+catch (const std::exception& ex)
+{
+    (void)std::fflush(stdout);
+    errx(EXIT_FAILURE, "%s", ex.what());
 }
 
 /// Get the maximum key size (in bytes) for the given chunk size

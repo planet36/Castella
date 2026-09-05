@@ -190,6 +190,7 @@ print_usage()
 /// Process the command line options
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
 void process_options(int argc, char* argv[])
+try
 {
     // Try to read SPDLOG_LEVEL before getopt.
     // https://github.com/gabime/spdlog?tab=readme-ov-file#load-log-levels-from-the-env-variable-or-argv
@@ -223,6 +224,11 @@ void process_options(int argc, char* argv[])
             std::exit(EXIT_FAILURE);
         }
     }
+}
+catch (const std::exception& ex)
+{
+    (void)std::fflush(stdout);
+    errx(EXIT_FAILURE, "%s", ex.what());
 }
 
 void

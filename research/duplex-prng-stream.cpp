@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
+#include <exception>
 #include <unistd.h>
 #include <vector>
 
@@ -35,6 +36,7 @@ int num_rounds = 6;
 /// Process the command line options
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
 void process_options(int argc, char* argv[])
+try
 {
     const char* short_options = "+C:r:";
     int c = 0;
@@ -57,6 +59,11 @@ void process_options(int argc, char* argv[])
             std::exit(EXIT_FAILURE);
         }
     }
+}
+catch (const std::exception& ex)
+{
+    (void)std::fflush(stdout);
+    errx(EXIT_FAILURE, "%s", ex.what());
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)

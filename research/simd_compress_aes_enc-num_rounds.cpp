@@ -14,7 +14,10 @@
 #include "simd_popcount.hpp"
 
 #include <cassert>
+#include <cstdio>
 #include <cstdlib>
+#include <err.h>
+#include <exception>
 #include <print>
 #include <unistd.h>
 
@@ -130,6 +133,7 @@ int num_samples = 100; // number of random samples to test
 /// Process the command line options
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
 void process_options(int argc, char* argv[])
+try
 {
     const char* short_options = "+n:";
     int c = 0;
@@ -150,6 +154,11 @@ void process_options(int argc, char* argv[])
     {
         num_samples = 1;
     }
+}
+catch (const std::exception& ex)
+{
+    (void)std::fflush(stdout);
+    errx(EXIT_FAILURE, "%s", ex.what());
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)

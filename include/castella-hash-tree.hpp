@@ -39,6 +39,14 @@
 #include <utility>
 #include <vector>
 
+/*
+* The HashTree class and the tree_node_policy concept are in the Castella
+* namespace to keep their (rather generic) names out of the global namespace.
+*
+* They do not depend on any Castella code.  HashTree is written entirely
+* against the tree_node_policy concept, so it works with any node hash class
+* that satisfies it.
+*/
 namespace Castella
 {
 

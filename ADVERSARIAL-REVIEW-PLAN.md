@@ -423,9 +423,9 @@ assert perf claims from reading code (per repo's own accuracy rule).
   - **`-DDEBUG`-only assertions** — preconditions silently unchecked in release builds.
   - **VAES/AVX2-gated fast paths** — digest is identical, but is the guard documented so a
     non-VAES build isn't mistaken for a different algorithm?
-  - **KAT files are frozen** (the pinned tree KAT digest value
-    `1204a8d4385f3a3f5b7d079a1e6fb95df84bdc62dd3d6cbf862b28d6081729a4`, asserted in
-    `tests/tests.cpp` and referenced in `CLAUDE.md`, "must never change" — this is a digest,
+  - **Published digests are frozen** (`tests/KAT.txt`, and separately the tree digest
+    `1204a8d4385f3a3f5b7d079a1e6fb95df84bdc62dd3d6cbf862b28d6081729a4` pinned in
+    `tests/tests.cpp` and quoted in `CLAUDE.md`, "must never change" — this is a digest,
     not a commit hash) — is the contract that a digest change is a breaking change stated
     where a contributor will see it?
   - **`httplib.h`** — committed in-tree (an external dependency the maintainer updates

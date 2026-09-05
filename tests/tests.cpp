@@ -234,8 +234,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr int good_num_rounds = 6;
         constexpr int good_capacity_blocks = 4;
 
-        // The capture is required.  Passing the string_views by value odr-uses
-        // them, which clang rejects without one even though they are constexpr.
         const auto expect_invalid = [&](const int capacity_blocks, const int num_rounds)
         {
             try
@@ -388,10 +386,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // 256-byte run.  That gives non-constant, non-repeating data, so a bug
         // that misplaces a byte offset actually perturbs the digest.
         //
-        // FROZEN.  This exact size and fill feed the pinned tree KAT,
-        // 1204a8d4..., asserted near the end of this block.  A change to either
-        // one changes that digest, which must never change.  It would also
-        // require regenerating tests/KAT.txt and research/spec-conformance.py.
+        // FROZEN.  This exact size and fill produce the pinned tree digest
+        // 1204a8d4..., asserted near the end of this block.  Changing either
+        // one changes that digest, which must never change.  It is quoted in
+        // CLAUDE.md and ADVERSARIAL-REVIEW-PLAN.md too.
         std::vector<std::byte> X(3 * chunk_size + 41);
         for (int i = 0; i < std::ssize(X); ++i)
         {

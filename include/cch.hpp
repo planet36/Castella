@@ -517,6 +517,7 @@ public:
     * This adds padding bytes and prevents future updates to the state.
     * \param n the number of digest bytes to return
     * \return the first \a n bytes of the state after finalization
+    * \exception std::bad_alloc if the output vector cannot be allocated
     * \exception std::system_error if the mutex cannot be locked
     * \note \a n is clamped to the interval <code>[0, get_max_digest_size_bytes()]</code>.
     *

@@ -128,6 +128,8 @@ public:
     * \param num_threads the number of worker threads to use, where 0 means
     *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid
+    * \exception std::range_error if \a mix_rate does not fit the
+    *            \c compress_castella_hash member it initializes
     */
     explicit compress_castella_tree(const int mix_rate = node_type::DEFAULT_MIX_RATE,
                                     const int chunk_size_bytes = DEFAULT_CHUNK_SIZE,
@@ -144,6 +146,7 @@ public:
     *
     * \param n the number of digest bytes to return
     * \return the first \a n bytes of the finalized final node's state
+    * \exception std::bad_alloc if the output vector cannot be allocated
     * \exception std::system_error if the mutex cannot be locked
     * \note \a n is clamped to the interval <code>[0, get_max_digest_size_bytes()]</code>.
     *

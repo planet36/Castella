@@ -143,6 +143,9 @@ public:
     * \param num_threads the number of worker threads to use, where 0 means
     *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid
+    * \exception std::range_error if \a capacity_blocks, \a num_rounds, or
+    *            \a input_suffix does not fit the \c Duplex member it
+    *            initializes
     */
     // }}}
     explicit DuplexTree(const int capacity_blocks,

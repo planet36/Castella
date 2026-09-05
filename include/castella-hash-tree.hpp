@@ -1692,6 +1692,9 @@ private:
     * \param num_threads the number of worker threads to use; 0 means one
     *        per hardware thread; NEVER affects the digest
     * \exception std::invalid_argument if any parameter is invalid
+    * \note The final node is constructed before \a chunk_size_bytes and
+    *       \a num_threads are checked, so whatever the node constructor
+    *       throws is reported ahead of those checks.
     */
     // }}}
     explicit HashTree(NodePolicy policy, const int chunk_size_bytes, const int num_threads) :

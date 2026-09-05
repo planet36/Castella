@@ -52,6 +52,10 @@ inline constexpr std::string_view default_host = "localhost";
 inline constexpr int default_port = 8080;
 const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
 
+// {{{ options
+auto port = default_port;
+// }}}
+
 /// The Castella service's duplex object
 /**
 * It cannot be a plain global, because the constructor validates its
@@ -183,6 +187,44 @@ print_usage()
 #undef nl
 }
 
+/// Process the command line options
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
+void process_options(int argc, char* argv[])
+{
+    // Try to read SPDLOG_LEVEL before getopt.
+    // https://github.com/gabime/spdlog?tab=readme-ov-file#load-log-levels-from-the-env-variable-or-argv
+    spdlog::cfg::load_env_levels();
+
+    const char* short_options = "+Vhl:p:";
+    int c = 0;
+    while ((c = getopt(argc, argv, short_options)) != -1)
+    {
+        switch (c)
+        {
+        case 'V':
+            print_version();
+            std::exit(EXIT_SUCCESS);
+            break;
+
+        case 'h':
+            print_usage();
+            std::exit(EXIT_SUCCESS);
+            break;
+
+        case 'l':
+            spdlog::set_level(spdlog::level::from_str(optarg));
+            break;
+
+        case 'p':
+            port = parse_option_int(optarg, "-p");
+            break;
+
+        default:
+            std::exit(EXIT_FAILURE);
+        }
+    }
+}
+
 void
 periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessary-value-param)
 {
@@ -282,43 +324,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     disable_core_dumps();
 #endif
 
+    process_options(argc, argv);
+
     std::string host{default_host};
-    auto port = default_port;
-
-    // Try to read SPDLOG_LEVEL before getopt.
-    // https://github.com/gabime/spdlog?tab=readme-ov-file#load-log-levels-from-the-env-variable-or-argv
-    spdlog::cfg::load_env_levels();
-
-    {
-        const char* short_options = "+Vhl:p:";
-        int c = 0;
-        while ((c = getopt(argc, argv, short_options)) != -1)
-        {
-            switch (c)
-            {
-            case 'V':
-                print_version();
-                std::exit(EXIT_SUCCESS);
-                break;
-
-            case 'h':
-                print_usage();
-                std::exit(EXIT_SUCCESS);
-                break;
-
-            case 'l':
-                spdlog::set_level(spdlog::level::from_str(optarg));
-                break;
-
-            case 'p':
-                port = parse_option_int(optarg, "-p");
-                break;
-
-            default:
-                std::exit(EXIT_FAILURE);
-            }
-        }
-    }
 
     for (int i = optind; i < argc; ++i)
     {

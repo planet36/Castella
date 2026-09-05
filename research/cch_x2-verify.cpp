@@ -80,25 +80,26 @@ test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_piece
     return 2;
 }
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+// {{{ options
+int num_samples = 100; // number of random samples to test
+// }}}
+
+/// Process the command line options
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
+void process_options(int argc, char* argv[])
 {
-    int num_samples = 100; // number of random samples to test
-
+    const char* short_options = "+n:";
+    int c = 0;
+    while ((c = getopt(argc, argv, short_options)) != -1)
     {
-        const char* short_options = "+n:";
-        int c = 0;
-        while ((c = getopt(argc, argv, short_options)) != -1)
+        switch (c) // NOLINT(hicpp-multiway-paths-covered)
         {
-            switch (c) // NOLINT(hicpp-multiway-paths-covered)
-            {
-            case 'n':
-                num_samples = parse_option_int(optarg, "-n");
-                break;
+        case 'n':
+            num_samples = parse_option_int(optarg, "-n");
+            break;
 
-            default:
-                std::exit(EXIT_FAILURE);
-            }
+        default:
+            std::exit(EXIT_FAILURE);
         }
     }
 
@@ -106,6 +107,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         num_samples = 1;
     }
+}
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
+    process_options(argc, argv);
 
     // 0 disables periodic mixing, and small rates mix within a few chunks.
     constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,

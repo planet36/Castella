@@ -252,36 +252,35 @@ calculate_metrics_avalanche_matrix(const int num_samples,
     std::println("");
 }
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+// {{{ options
+// A cell count runs 0..n, so |z| cannot exceed sqrt(n).  Under ideal
+// diffusion the largest of the 2048^2 cells sits near 5.5, so a smaller n
+// makes max|z| report that ceiling instead of the data.  At n=20 every
+// round gives exactly sqrt(20).  100 leaves about 2x headroom.
+int num_samples = 100;
+bool save_images = false;
+// }}}
+
+/// Process the command line options
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
+void process_options(int argc, char* argv[])
 {
-    using namespace std::literals;
-
-    // A cell count runs 0..n, so |z| cannot exceed sqrt(n).  Under ideal
-    // diffusion the largest of the 2048^2 cells sits near 5.5, so a smaller n
-    // makes max|z| report that ceiling instead of the data.  At n=20 every
-    // round gives exactly sqrt(20).  100 leaves about 2x headroom.
-    int num_samples = 100;
-    bool save_images = false;
-
+    const char* short_options = "+in:";
+    int c = 0;
+    while ((c = getopt(argc, argv, short_options)) != -1)
     {
-        const char* short_options = "+in:";
-        int c = 0;
-        while ((c = getopt(argc, argv, short_options)) != -1)
+        switch (c) // NOLINT(hicpp-multiway-paths-covered)
         {
-            switch (c) // NOLINT(hicpp-multiway-paths-covered)
-            {
-            case 'i':
-                save_images = true;
-                break;
+        case 'i':
+            save_images = true;
+            break;
 
-            case 'n':
-                num_samples = parse_option_int(optarg, "-n");
-                break;
+        case 'n':
+            num_samples = parse_option_int(optarg, "-n");
+            break;
 
-            default:
-                std::exit(EXIT_FAILURE);
-            }
+        default:
+            std::exit(EXIT_FAILURE);
         }
     }
 
@@ -289,6 +288,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         num_samples = 1;
     }
+}
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
+    using namespace std::literals;
+
+    process_options(argc, argv);
 
     std::string timestamp;
 

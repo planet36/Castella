@@ -27,35 +27,42 @@
 #include <unistd.h>
 #include <vector>
 
+// {{{ options
+int capacity_blocks = 4;
+int num_rounds = 6;
+// }}}
+
+/// Process the command line options
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
+void process_options(int argc, char* argv[])
+{
+    const char* short_options = "+C:r:";
+    int c = 0;
+    while ((c = getopt(argc, argv, short_options)) != -1)
+    {
+        switch (c) // NOLINT(hicpp-multiway-paths-covered)
+        {
+        case 'C':
+            capacity_blocks = parse_option_int(optarg, Castella::Duplex::C_MIN,
+                                               Castella::Duplex::C_MAX, "-C");
+            break;
+
+        case 'r':
+            num_rounds = parse_option_int(optarg,
+                                          Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
+                                          Castella::NUM_ROUNDS_MAX, "-r");
+            break;
+
+        default:
+            std::exit(EXIT_FAILURE);
+        }
+    }
+}
+
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    int capacity_blocks = 4;
-    int num_rounds = 6;
-
-    {
-        const char* short_options = "+C:r:";
-        int c = 0;
-        while ((c = getopt(argc, argv, short_options)) != -1)
-        {
-            switch (c) // NOLINT(hicpp-multiway-paths-covered)
-            {
-            case 'C':
-                capacity_blocks = parse_option_int(optarg, Castella::Duplex::C_MIN,
-                                                   Castella::Duplex::C_MAX, "-C");
-                break;
-
-            case 'r':
-                num_rounds = parse_option_int(optarg,
-                                              Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
-                                              Castella::NUM_ROUNDS_MAX, "-r");
-                break;
-
-            default:
-                std::exit(EXIT_FAILURE);
-            }
-        }
-    }
+    process_options(argc, argv);
 
     Castella::Duplex duplex{capacity_blocks, num_rounds};
 

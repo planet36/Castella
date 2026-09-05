@@ -99,27 +99,26 @@ calculate_metrics_aes_enc(const int num_samples, const int aes_num_rounds)
             );
 }
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+// {{{ options
+int num_samples = 100; // number of random samples to test
+// }}}
+
+/// Process the command line options
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
+void process_options(int argc, char* argv[])
 {
-    using namespace std::literals;
-
-    int num_samples = 100; // number of random samples to test
-
+    const char* short_options = "+n:";
+    int c = 0;
+    while ((c = getopt(argc, argv, short_options)) != -1)
     {
-        const char* short_options = "+n:";
-        int c = 0;
-        while ((c = getopt(argc, argv, short_options)) != -1)
+        switch (c) // NOLINT(hicpp-multiway-paths-covered)
         {
-            switch (c) // NOLINT(hicpp-multiway-paths-covered)
-            {
-            case 'n':
-                num_samples = parse_option_int(optarg, "-n");
-                break;
+        case 'n':
+            num_samples = parse_option_int(optarg, "-n");
+            break;
 
-            default:
-                std::exit(EXIT_FAILURE);
-            }
+        default:
+            std::exit(EXIT_FAILURE);
         }
     }
 
@@ -127,6 +126,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         num_samples = 1;
     }
+}
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+{
+    using namespace std::literals;
+
+    process_options(argc, argv);
 
     std::println("## num_samples: {}", num_samples);
     std::println("");

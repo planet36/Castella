@@ -35,13 +35,13 @@
 /// Parse a hexadecimal string (of even length) as bytes
 /**
 * \param s the hexadecimal string, in either letter case
-* \return the bytes, or \c std::nullopt if \a s is empty, has odd length,
-*         or contains a non-hexadecimal character
+* \return the bytes, or \c std::nullopt if \a s has odd length or contains
+*         a non-hexadecimal character
 */
 [[nodiscard]] inline std::optional<std::vector<std::byte>>
 hex_to_bytes(const std::string_view s)
 {
-    if (std::empty(s) || (std::size(s) % 2) != 0)
+    if ((std::size(s) % 2) != 0)
         return std::nullopt;
 
     const auto nibble_val = [](const char c) -> int {

@@ -163,7 +163,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // Every input length is verified once per tree configuration.  That means
     // DuplexTree, then compress_castella_tree at each mix rate.  The count is
     // pinned so that a deleted length or configuration cannot pass quietly.
-    constexpr int EXPECTED_VERIFICATIONS = 76;
+    constexpr int EXPECTED_VERIFICATIONS = 96;
     int num_verified = 0;
 
     std::vector<int> lens = {
@@ -173,13 +173,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         chunk_size - 1,
         chunk_size,
         chunk_size + 1,
+        2 * chunk_size - 1,
         2 * chunk_size,
         2 * chunk_size + 1,
         4 * chunk_size - 1,
+        4 * chunk_size,
         4 * chunk_size + 1,
         8 * chunk_size + 3,
         256 * chunk_size - 1,
         256 * chunk_size,
+        256 * chunk_size + 1,
+        257 * chunk_size - 1,
+        257 * chunk_size,
         257 * chunk_size + 1,
         258 * chunk_size + 5,
     };

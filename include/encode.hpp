@@ -41,7 +41,7 @@ static_assert(std::endian::native == std::endian::little, "little-endian host re
 *
 * \param x the integer to encode
 * \return a \c fixed_vector holding the significant bytes of \a x in
-*         little-endian order, with their count before them
+*         little-endian order, preceded by the byte width of \a x
 * \pre \a x ≥ 0
 */
 [[nodiscard]] static auto
@@ -83,7 +83,7 @@ left_encode(const std::integral auto x) noexcept
 *
 * \param x the integer to encode
 * \return a \c fixed_vector holding the significant bytes of \a x in
-*         little-endian order, with their count after them
+*         little-endian order, followed by the byte width of \a x
 * \pre \a x ≥ 0
 */
 [[nodiscard]] static auto

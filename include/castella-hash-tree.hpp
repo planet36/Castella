@@ -1690,12 +1690,12 @@ private:
     /// ctor (only a derived tree constructs the base)
     // {{{
     /**
-    * \param policy the node policy; owns everything needed to construct
+    * \param policy the node policy, which owns everything needed to construct
     *        this tree's nodes (see \c tree_node_policy)
-    * \param chunk_size_bytes the size (in bytes) of a full chunk;
-    *        digest-relevant (different chunk sizes give different digests)
-    * \param num_threads the number of worker threads to use; 0 means one
-    *        per hardware thread; NEVER affects the digest
+    * \param chunk_size_bytes the size (in bytes) of a full chunk, which is
+    *        digest-relevant since different chunk sizes give different digests
+    * \param num_threads the number of worker threads to use, where 0 means
+    *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid
     * \note The final node is constructed before \a chunk_size_bytes and
     *       \a num_threads are checked, so whatever the node constructor

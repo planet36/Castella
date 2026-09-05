@@ -100,28 +100,20 @@ public:
 
 private:
     /// Create the initial state
-    // {{{
     /**
     * The lanes start at distinct nonzero constants so that lanes fed equal
     * input blocks do not evolve identically.  From an all-zero state, input
-    * whose 16-byte blocks repeat with a period dividing the chunk size (e.g.
-    * all-zero pages) would keep every lane identical until the first mix,
-    * collapsing absorption to a single lane.
-    *
-    * The constants continue the LFSR stream that produced
-    * \c Castella::round_constants, so they differ from every round constant.
-    * All states within one LFSR period are distinct.
+    * whose 16-byte blocks repeat (all-zero pages, say) would keep every lane
+    * identical until the first mix, collapsing absorption to a single lane.
     */
-    // }}}
     [[nodiscard]] static consteval state_t
     create_init_state_() noexcept
     {
-        // Continue the LFSR stream where Castella::round_constants left off,
-        // so this state's initial lanes are distinct from every round
-        // constant.  This presumes round_constants' round -> aes_round ->
-        // block nesting order (see create_round_constants()).  Reshaping that
-        // order requires updating this to match, or cch's digests change
-        // silently.  KAT.txt catches it, the compiler does not.
+        // Continuing the stream past the last round constant makes these
+        // lanes distinct from every one of them.  Reaching it depends on
+        // round_constants' round -> aes_round -> block nesting, so reshaping
+        // that order silently changes cch's digests.  KAT.txt catches it, the
+        // compiler does not.
         constexpr auto last_rc = Castella::round_constants.back().back().back();
         auto lfsr = std::bit_cast<lfsr128_state_t>(last_rc);
 
@@ -185,7 +177,7 @@ private:
         }
     }
 
-    /// Fold the mix rate into the initial state
+    /// Bind the mix rate into the initial state
     // {{{
     /**
     * The mix rate affects the state only when a mix is performed.  Without
@@ -221,8 +213,8 @@ private:
     /// Count one absorption and decide whether the state should be mixed
     /**
     * If periodic mixing is enabled, advances \a absorbs_since_mix, resetting
-    * it when it reaches the mix rate.
-    * This is not a pure predicate.  Call this exactly once per absorption.
+    * it when it reaches the mix rate.  Because it advances that counter, call
+    * it exactly once per absorption.
     *
     * \param absorbs_since_mix a reference to the mix-schedule counter (the
     *        member, or a local staging copy of it)
@@ -381,13 +373,15 @@ private:
         absorb_();
     }
 
-    /// Finalize (on the first call) and copy the digest prefix into \a dst (no locking)
+    /// Finalize the state (if it's not already) and copy the digest prefix
+    /// into \a dst
     // {{{
     /**
     * The shared core of \c final_digest_bytes and \c final_digest_to.  It adds
     * the padding bytes, applies the finalizing permutation once, then copies
     * the first \c std::size(dst) bytes of the state into \a dst.
     *
+    * \pre the caller holds \c mtx_
     * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
     */
     // }}}

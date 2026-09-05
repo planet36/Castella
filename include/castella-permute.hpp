@@ -101,13 +101,9 @@ static_assert(B_MAX == 16, "value is fixed by SPEC.md");
 * \c round_constants_t[aes_r][i] is used as the AES round key for state block
 * \c i in AES round \c aes_r.  The round constants are not secret.
 *
-* A [round][block][AES round] nesting would be possible if creation and
-* consumption were both reshaped, but it would pessimize the key loads.
-* \c aes_enc_arr_paircast applies one AES round to two adjacent blocks per
-* 256-bit instruction, so each key fetch wants adjacent blocks' keys for the
-* SAME AES round to be contiguous.  Block must be the fastest-varying index.
-* With AES round innermost, adjacent blocks' keys would sit \c AES_NUM_ROUNDS
-* blocks apart, splitting every 256-bit key load in two.
+* Block is the fastest-varying index because \c aes_enc_arr_paircast fetches
+* two adjacent blocks' keys for the same AES round in one 256-bit load.  Any
+* other nesting splits every such load in two.
 *
 * The nesting is also frozen now.  The LFSR assigns the constants' values in
 * generation order, and cch's \c create_init_state_ continues the same stream,
@@ -273,7 +269,7 @@ permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
-/// The Castella permutation function, folded (register-resident) path
+/// The Castella permutation function, folded path
 /**
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
@@ -282,10 +278,9 @@ permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 * \pre \a num_rounds ≤ \c NUM_ROUNDS_MAX
 *
 * Bit-identical to \c permute_generic, which describes the round structure
-* along with \c permute.  The state is held in \c N/2 ymm registers for all
-* rounds instead of bouncing through memory between the AES rounds' 256-bit
-* accesses and the transpose's 128-bit accesses.  A 256-bit load spanning two
-* 128-bit stores defeats store-to-load forwarding.
+* along with \c permute.  Holding the state in \c N/2 ymm registers avoids the
+* generic path's store-forwarding stalls, where a 256-bit AES load spans two
+* 128-bit transpose stores.
 */
 template <size_t N>
 static void
@@ -300,8 +295,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 
     // Fold the state into N/2 ymm registers, with element j holding
     // [block j | block j+N/2].  simd_transpose_folded preserves that layout,
-    // so the whole permutation runs register-resident.  The state touches
-    // memory only here and at the unfold below.
+    // so the state touches memory only here and at the unfold below.
     simd_arr_x2_t<N / 2> state_folded;
 
     for (size_t j = 0; j < N / 2; ++j)
@@ -376,14 +370,12 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 *
 * Equivalent to calling \c permute on each state separately.  The VAES
 * instructions apply an independent AES round per 128-bit lane, with both
-* lanes using the same round constants (see \c aes_enc_arr_x2).
-* The AVX2 unpack instructions of the lane-paired \c simd_transpose are
-* lane-local, so the two states never mix.
+* lanes using the same round constants (see \c aes_enc_arr_x2).  The AVX2
+* unpacks in the lane-paired \c simd_transpose never cross the 128-bit lane
+* boundary, so the two states never mix.
 *
-* The point is throughput.  One transpose network serves both states, and two
-* chunks' worth of permutation work is in flight on one core (see
-* \c Castella::DuplexTree leaf batching, which uses the 16-block geometry of
-* \c Castella::Duplex).
+* One transpose network then serves both states, which puts two chunks' worth
+* of permutation work on one core (see \c Castella::DuplexTree leaf batching).
 */
 // }}}
 template <size_t N>

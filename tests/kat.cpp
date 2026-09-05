@@ -46,7 +46,7 @@
 * all-zero state (\c init=zero) or <code>s[i] = i mod 256</code>
 * (\c init=counter).  Their digest= is that raw output, not a digest.
 *
-* Without them an LFSR or transpose fault first shows up as a wrong duplex
+* Without them, an LFSR or transpose fault first shows up as a wrong duplex
 * digest, with the whole specification in between.
 */
 

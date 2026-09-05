@@ -26,18 +26,13 @@ struct compress_castella_tree_node_policy final
 {
     using node_type = compress_castella_hash<>;
 
-    /// Whether streamed chunks go through the worker pool
-    /**
-    * A cch node hashes a streamed chunk faster than the chunk can be shipped
-    * to a pool worker, and the pool measured slower than hashing inline.  So
-    * streamed chunks are hashed inline, and only the one-shot batch path
-    * parallelizes.
-    */
+    /// Shipping a chunk to a pool worker costs more time than a cch node
+    /// takes to hash it, so hashing streamed chunks inline beats using the pool
     static constexpr bool USE_STREAMING_POOL = false;
 
     const int mix_rate;
 
-    /// Construct a fresh node
+    /// Construct a node
     [[nodiscard]] node_type make_node() const
     {
         return node_type{mix_rate};
@@ -45,9 +40,8 @@ struct compress_castella_tree_node_policy final
 
     /// The chaining value length, which is the maximum digest size
     /**
-    * That is 64 bytes.  The 512-bit maximum digest targets 256-bit collision
-    * resistance, and 64 bytes is twice that, so the tree's internal collision
-    * resistance never undercuts the nodes'.
+    * That is 64 bytes, which gives the tree at least the 256-bit collision
+    * resistance that the 512-bit maximum digest targets.
     */
     [[nodiscard]] static int cv_len(const node_type&) noexcept
     {
@@ -64,25 +58,20 @@ struct compress_castella_tree_node_policy final
 
     /// The interleaved node-pair type
     /**
-    * This enables paired leaf hashing.  It opts the tree into leaf pairing
-    * (see \c HashTree's \c HAS_PAIRED_LEAF), so adjacent full leaf chunks are
-    * hashed two at a time on one thread by interleaving the two nodes'
-    * compression chains in one bulk loop.  See \c compress_castella_hash_x2
-    * for why that pays.  The measured speedup is recorded in
-    * research/README.md.
+    * Opts the tree into leaf pairing (see \c HashTree's \c HAS_PAIRED_LEAF),
+    * so adjacent full leaf chunks are hashed two at a time on one thread by
+    * interleaving the two nodes' compression chains in one bulk loop.  This is
+    * execution-level only and NEVER affects the digest.
     *
     * The VAES flags guard this even though the pair class itself is portable,
-    * because the win exists only under VAES codegen.  256-bit aesenc gives
-    * one state just 8 independent 3-deep chains, leaving latency to fill.
-    * 128-bit codegen already runs 16 chains per state, and there the pair is
-    * a wash at best and a real loss at worst in the compute-bound regimes
-    * (see the non-VAES findings in research/README.md).
-    *
-    * This is execution-level only and NEVER affects the digest.
+    * because the win exists only under VAES codegen.  256-bit aesenc gives one
+    * state just 8 independent 3-deep chains, leaving latency to fill.  128-bit
+    * codegen already runs 16 chains per state, where the pair is a wash at best
+    * and a loss at worst (see the non-VAES findings in research/README.md).
     */
     using node_x2_type = compress_castella_hash_x2<>;
 
-    /// Construct a fresh interleaved node pair (same mix rate as \c make_node)
+    /// Construct an interleaved node pair (same mix rate as \c make_node)
     [[nodiscard]] node_x2_type make_node_x2() const
     {
         return node_x2_type{mix_rate};
@@ -121,10 +110,13 @@ private:
 public:
     /// ctor
     /**
-    * \param mix_rate forwarded to every node's \c compress_castella_hash
-    *        constructor (see \c compress_castella_hash for its meaning)
-    * \param chunk_size_bytes the size (in bytes) of a full chunk;
-    *        digest-relevant (different chunk sizes give different digests)
+    * The first parameter is forwarded to every node's \c compress_castella_hash
+    * constructor.
+    *
+    * \param mix_rate the number of absorptions between periodic mixes, where 0
+    *        disables mixing
+    * \param chunk_size_bytes the size (in bytes) of a full chunk, which is
+    *        digest-relevant since different chunk sizes give different digests
     * \param num_threads the number of worker threads to use, where 0 means
     *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid

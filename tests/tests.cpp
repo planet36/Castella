@@ -28,14 +28,9 @@
 
 /// The number of runtime checks \c main is expected to make
 /**
-* Without this the program cannot report success on the checks that did run.
-* Every check that remains genuinely passes, so deleting one leaves the
-* program at exit 0.
-*
-* Update it deliberately when tests are added or removed.
-*
-* The VAES-only DuplexX2 block contributes 5 of these, so the expected total
-* depends on the target.
+* Deleting a check would otherwise leave the program at exit 0, since every
+* check that remains still passes.  The VAES-only \c DuplexX2 block
+* contributes 5, so the total depends on the target.
 */
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 constexpr int EXPECTED_CHECKS = 73;
@@ -253,11 +248,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             return false;
         };
 
-        // Each value isolates one check, which is possible here and not for
-        // Duplex above.  DuplexX2 validates C directly, and its R checks run
-        // only under DEBUG, after the C checks.  The out-of-range capacities
-        // are even, so that removing a C range check cannot be masked by the
-        // "C is odd" check.
+        // Each value below isolates one check.  The two out-of-range capacities
+        // are even, so removing a C range check cannot be masked by the "C is
+        // odd" check catching them anyway.
         static_assert(((Castella::Duplex::C_MIN + 1) % 2) != 0); // odd
         static_assert(((Castella::Duplex::C_MIN - 2) % 2) == 0);
         static_assert(((Castella::Duplex::C_MAX + 2) % 2) == 0);
@@ -376,15 +369,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // The minimum chunk size keeps the multi-chunk tests quick.
         constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 
-        // Deterministic input data spanning several chunks, being 3 full ones
-        // and a 41-byte partial trailing chunk against the 1024-byte test
-        // chunk size above.  The odd trailing byte count exercises the
-        // partial-chunk path.
-        //
-        // The fill is an affine byte generator.  An odd multiplier is coprime
-        // to 256, so it has full period and every byte value appears once per
-        // 256-byte run.  That gives non-constant, non-repeating data, so a bug
-        // that misplaces a byte offset actually perturbs the digest.
+        // Three full chunks and a 41-byte partial one, so the partial-chunk
+        // path runs.  The affine fill has full period because the multiplier
+        // is odd, so a misplaced byte offset actually perturbs the digest.
         //
         // FROZEN.  This exact size and fill produce the pinned tree digest
         // 1204a8d4..., asserted near the end of this block.  Changing either
@@ -618,22 +605,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test the parallel bulk path against the sequential reference.
-            // The input is large enough, at 64 full chunks and a partial one,
-            // that a one-shot add() with several threads statically partitions
-            // the leaves across workers.  With num_threads=1 the identical
-            // input takes the sequential chunk-by-chunk path.
-            //
-            // 64 full chunks is comfortably above the batch path's
-            // arm-the-workers threshold of 2 * MIN_LEAF_CHUNKS_PER_WORKER, so
-            // 2, 4, and auto threads each get a real share of leaves.  The
-            // 17-byte tail adds a partial chunk.
-            //
-            // The size is deliberate, driving path selection and the partial
-            // tail.  The fill coefficients are arbitrary, since any odd
-            // multiplier gives full-period, non-degenerate data.  Unlike X, no
-            // KAT depends on Y.  It is only ever checked against its own
-            // single-threaded digest.
+            // The parallel bulk path against the sequential reference.  64 full
+            // chunks is well past the batch path's threshold of
+            // 2 * MIN_LEAF_CHUNKS_PER_WORKER, so 2, 4, and auto threads each
+            // get a real share of leaves, and the 17-byte tail adds a partial
+            // chunk.  Unlike X, no KAT depends on Y.
             std::vector<std::byte> Y(64 * chunk_size + 17);
             for (int i = 0; i < std::ssize(Y); ++i)
             {
@@ -650,12 +626,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             CHECK(tree_digest(Y_sp, 4) == expected);
             CHECK(tree_digest(Y_sp, 0) == expected); // 0 = auto
 
-            // Piecewise adds, where the piece sizes are relative to the
-            // 1024-byte test chunk size and NOT to DEFAULT_CHUNK_SIZE.
-            // 1000-byte pieces are too small for the batch path and flow
-            // through the streaming pipeline.  33000-byte pieces produce
-            // roughly 32-chunk batches for the transient-worker path.  Both
-            // must reproduce the one-shot digest.
+            // Piecewise adds, with sizes relative to the 1024-byte test chunk
+            // size and NOT to DEFAULT_CHUNK_SIZE.  1000-byte pieces flow
+            // through the streaming pipeline, 33000-byte ones through the
+            // transient-worker path, and both must reproduce the one-shot
+            // digest.
             for (const int piece_size : {1000, 33'000})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
@@ -671,18 +646,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test the streaming pipeline.  Input fed in pieces no larger than
-            // a chunk never qualifies for the batch path, so with several
-            // threads the leaves are hashed by the persistent worker pool, in
-            // whatever order the workers finish.  The digest must still equal
-            // the inline sequential reference.
-            //
-            // 48 full chunks is well past the pool-start threshold, giving the
-            // persistent pool real work.  The 5-byte tail adds a partial chunk.
-            // As with Y, the size drives path selection and the fill
-            // coefficients are arbitrary, since an odd multiplier gives full
-            // period.  No KAT depends on Z.  It is only checked against its own
-            // inline digest.
+            // The streaming pipeline.  Pieces no larger than a chunk never
+            // qualify for the batch path, so with several threads the
+            // persistent pool hashes the leaves in whatever order the workers
+            // finish, and the digest must still match the inline reference.
+            // 48 full chunks is well past the pool-start threshold, and the
+            // 5-byte tail adds a partial chunk.
             std::vector<std::byte> Z(48 * chunk_size + 5);
             for (int i = 0; i < std::ssize(Z); ++i)
             {

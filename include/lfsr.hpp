@@ -61,14 +61,10 @@ lfsr_from_bytes16(const std::string_view src)
     if (std::size(src) != sizeof(lfsr128_state_t))
         throw std::invalid_argument("src size != lfsr size");
 
-    // The intermediate copy to dst cannot be skipped.
-    // std::bit_cast requires a trivially copyable source object of exactly
-    // sizeof(lfsr128_state_t) bytes, and no such object is available directly:
-    // - The string literal is a const char[17] (trailing NUL), so its size
-    //   does not match.
-    // - src is a pointer + length object.  Casting it would reinterpret
-    //   the pointer's bits, not the characters.
-    // - There is no constexpr memcpy.
+    // std::bit_cast needs a trivially copyable object of exactly
+    // sizeof(lfsr128_state_t) bytes, and neither the string literal (a
+    // const char[17]) nor src (a pointer and a length) is one.  The copy is a
+    // loop because there is no constexpr memcpy.
     std::array<uint8_t, sizeof(lfsr128_state_t)> dst{};
     for (int i = 0; i < std::ssize(dst); ++i)
     {

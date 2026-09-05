@@ -433,11 +433,10 @@ public:
         assert(cur_input_byte_idx_ == 0); // input bufs are empty
 #endif
 
-        // De-interleave the outer state into the two destinations.  Element
-        // i of state_x2_ holds duplex A's block i in its low lane and duplex
-        // B's block i in its high lane, so each lane's bytes are a block
-        // apart.  A partial trailing block goes through a bounce buffer,
-        // since a 128-bit store cannot write fewer than sizeof(block_t)
+        // De-interleave the outer state into the two destinations.  Element i
+        // of state_x2_ holds duplex A's block i in its low lane and duplex B's
+        // in its high lane.  A partial trailing block goes through a scratch
+        // block, since a 128-bit store cannot write fewer than sizeof(block_t)
         // bytes.
 
         size_t num_bytes_remaining = std::size(dst_a);

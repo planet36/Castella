@@ -77,9 +77,9 @@ test_one_input(const std::string_view name, const auto& make_tree,
         return get_digest(tree);
     }();
 
-    // One-shot adds at other thread counts exercise the batch path.  Each
-    // count gives a different static partition of the leaves.  A count of 0
-    // means one thread per hardware thread.
+    // The reference above used one thread.  Every other count takes the batch
+    // path with a different static partition of the leaves, and 0 means one
+    // thread per hardware thread.
     for (const int num_threads : {0, 2, 3, 8})
     {
         auto tree = make_tree(num_threads);
@@ -93,11 +93,10 @@ test_one_input(const std::string_view name, const auto& make_tree,
         }
     }
 
-    // Randomly split adds.  Sub-chunk pieces exercise the buffering, and for
-    // DuplexTree with several threads they exercise the streaming pipeline.
-    // Multi-chunk pieces exercise the mixed small-batch handoff.  Chunk
-    // boundaries fall wherever the random split points put them, which is
-    // exactly the property under test.
+    // Randomly split adds.  Sub-chunk pieces go through the buffering, and
+    // through the streaming pipeline too for DuplexTree with several threads.
+    // Multi-chunk pieces take the mixed small-batch handoff.  The digest must
+    // not depend on where the split points fall.
     for (const int max_piece_len : {300, 3 * chunk_size + 1})
     {
         std::uniform_int_distribution<int> piece_len_dist(1, max_piece_len);

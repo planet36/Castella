@@ -28,16 +28,16 @@ namespace Castella
 
 /// The \c HashTree node policy for \c Duplex (see \c DuplexTree)
 /**
-* Owns copies of the \c Duplex construction parameters.  Leaf nodes are
-* constructed later, one per chunk, long after the DuplexTree constructor's
-* \c std::string_view arguments may have dangled.
+* The parameters are copies.  A leaf is built once per chunk, long after the
+* \c DuplexTree constructor's \c std::string_view arguments may have gone
+* away.
 */
 struct DuplexTreeNodePolicy final
 {
     using node_type = Duplex;
 
-    /// Shipping a chunk to a pool worker costs less than a Duplex node takes
-    /// to hash it, so the streaming pipeline pays off.
+    /// Shipping a chunk to a pool worker costs less time than a \c Duplex node
+    /// takes to hash it, so streaming through the pool beats hashing inline
     static constexpr bool USE_STREAMING_POOL = true;
 
     const int capacity_blocks;
@@ -46,7 +46,7 @@ struct DuplexTreeNodePolicy final
     std::string function_name;
     std::string customization_str;
 
-    /// Construct a fresh node
+    /// Construct a node
     [[nodiscard]] node_type make_node() const
     {
         return node_type{capacity_blocks, num_rounds, input_suffix, function_name,
@@ -54,14 +54,11 @@ struct DuplexTreeNodePolicy final
     }
 
     /// The chaining value length, which is the capacity size in bytes
-    // {{{
     /**
-    * The capacity size is twice the default digest size, so the tree's
-    * internal collision resistance never undercuts the capacity of the nodes.
-    * It is never larger than the rate, because C <= B/2 implies
-    * C*16 <= (B-C)*16, so one squeeze produces a whole CV.
+    * The capacity is twice the default digest size, so a CV this long gives
+    * the tree at least the collision resistance of its nodes.  It also fits in
+    * one squeeze, because C <= B/2 makes the capacity no larger than the rate.
     */
-    // }}}
     [[nodiscard]] static int cv_len(const node_type& node) noexcept
     {
         return node.get_capacity_size_bytes();
@@ -81,17 +78,14 @@ struct DuplexTreeNodePolicy final
 
     /// The lockstep node-pair type enabling lane-paired leaf hashing
     /**
-    * Opts the tree into VAES leaf batching (see \c HashTree's
-    * \c HAS_PAIRED_LEAF).  Adjacent full leaf chunks are hashed two at a time
-    * on one thread, one \c Duplex per 128-bit lane.  This is execution-level
-    * only and NEVER affects the digest.
+    * Opts the tree into leaf pairing (see \c HashTree's \c HAS_PAIRED_LEAF),
+    * so adjacent full leaf chunks are hashed two at a time on one thread, one
+    * \c Duplex per 128-bit lane.  This is execution-level only and NEVER
+    * affects the digest.
     */
     using node_x2_type = DuplexX2;
 
-    /// Construct a fresh lockstep node pair
-    /**
-    * Both duplexes get the same parameters \c make_node gives a single node.
-    */
+    /// Construct a lockstep node pair
     [[nodiscard]] node_x2_type make_node_x2() const
     {
         return node_x2_type{capacity_blocks, num_rounds, input_suffix, function_name,
@@ -131,15 +125,15 @@ public:
     // {{{
     /**
     * The first five parameters are forwarded to every node's \c Duplex
-    * constructor.  See \c Duplex::Duplex for their meaning and constraints.
+    * constructor.
     *
     * \param capacity_blocks the size (in blocks) of the capacity
     * \param num_rounds the number of rounds to perform in the permutation
     * \param input_suffix the byte to append to the input buffer before squeezing
     * \param function_name a string for algorithm domain separation
     * \param customization_str a string for user-defined domain separation
-    * \param chunk_size_bytes the size (in bytes) of a full chunk;
-    *        digest-relevant (different chunk sizes give different digests)
+    * \param chunk_size_bytes the size (in bytes) of a full chunk, which is
+    *        digest-relevant since different chunk sizes give different digests
     * \param num_threads the number of worker threads to use, where 0 means
     *        one per hardware thread
     * \exception std::invalid_argument if any parameter is invalid
@@ -185,9 +179,8 @@ public:
         if (!has_been_finalized_)
             finalize_();
 
-        // Duplex::squeeze_bytes absorbs INPUT_SUFFIX and applies the padding
-        // rule itself.  It locks the final node's own mutex, which is distinct
-        // from mtx_, so this cannot deadlock.
+        // The final node has its own mutex, distinct from mtx_, so locking
+        // it here cannot deadlock.
         return final_node_.squeeze_bytes(n);
     }
 
@@ -195,7 +188,7 @@ public:
     /// `std::vector<std::byte>`
     /**
     * The number of bytes returned is equal to half the capacity.
-    * See \c squeeze_bytes(int) for what the first call finalizes.
+    * See \c squeeze_bytes(int) for what the first squeeze finalizes.
     *
     * \exception std::bad_alloc if the output vector cannot be allocated
     * \exception std::system_error if the mutex cannot be locked
@@ -205,19 +198,19 @@ public:
         return squeeze_bytes(final_node_.get_capacity_size_bytes() / 2);
     }
 
-    /// Get the size (in bytes) of a node's state.
+    /// Get the size (in bytes) of a node's state
     [[nodiscard]] constexpr static int get_state_size_bytes() noexcept
     {
         return Duplex::get_state_size_bytes();
     }
 
-    /// Get the size (in bytes) of the capacity portion of a node's state.
+    /// Get the size (in bytes) of the capacity portion of a node's state
     [[nodiscard]] int get_capacity_size_bytes() const noexcept
     {
         return final_node_.get_capacity_size_bytes();
     }
 
-    /// Get the size (in bytes) of the rate (input buffer) portion of a node's state.
+    /// Get the size (in bytes) of the rate (input buffer) portion of a node's state
     [[nodiscard]] int get_rate_size_bytes() const noexcept
     {
         return final_node_.get_rate_size_bytes();

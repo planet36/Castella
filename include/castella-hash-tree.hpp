@@ -444,6 +444,11 @@ private:
     std::condition_variable done_cv_;
 
     /// Tells workers to exit, guarded by \c pool_mtx_
+    /**
+    * The padding after this member is deliberate.  Moving it up to close the
+    * hole would put a flag that every worker reads on each wake-up onto the
+    * cache line that the calling thread writes on every \c add().
+    */
     bool pool_stop_ = false;
 
     /// The persistent worker threads, empty until \c start_pool_()

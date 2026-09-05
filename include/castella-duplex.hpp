@@ -1144,7 +1144,6 @@ public:
     * a vector.
     *
     * \param dst the destination buffer
-    * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note The size of \a dst is clamped to \c get_rate_size_bytes(), as \a n
     *       is in \c squeeze_bytes(int); anything past that is left untouched.
@@ -1152,7 +1151,7 @@ public:
     *       before squeezing, even if \a dst is empty.
     */
     // }}}
-    Duplex& squeeze_to(std::span<std::byte> dst)
+    void squeeze_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};
 
@@ -1162,8 +1161,6 @@ public:
         }
 
         squeeze_into_(dst);
-
-        return *this;
     }
 
     /// Squeeze bytes from the outer state, and return them as a

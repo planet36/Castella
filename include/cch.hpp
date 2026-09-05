@@ -543,14 +543,13 @@ public:
     * caller-provided buffer instead of allocating a vector.
     *
     * \param dst the destination buffer
-    * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note The size of \a dst is clamped to \c get_max_digest_size_bytes(), as
     *       \a n is in \c final_digest_bytes(int).  Anything past that is left
     *       untouched.
     */
     // }}}
-    compress_castella_hash& final_digest_to(std::span<std::byte> dst)
+    void final_digest_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};
 
@@ -560,8 +559,6 @@ public:
         }
 
         final_digest_into_(dst);
-
-        return *this;
     }
 
     /// Get the size (in bytes) of the state.

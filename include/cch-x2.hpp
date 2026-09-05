@@ -232,7 +232,7 @@ public:
     void final_digest_pair_to(const std::span<std::byte> dst_a,
                               const std::span<std::byte> dst_b)
     {
-        (void)node_a_.final_digest_to(dst_a);
-        (void)node_b_.final_digest_to(dst_b);
+        node_a_.final_digest_to(dst_a);
+        node_b_.final_digest_to(dst_b);
     }
 };

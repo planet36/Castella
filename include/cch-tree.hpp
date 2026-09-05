@@ -57,7 +57,7 @@ struct compress_castella_tree_node_policy final
     /// Write the node's final digest into \a cv_dst
     static void extract_cv(node_type& node, const std::span<std::byte> cv_dst)
     {
-        (void)node.final_digest_to(cv_dst);
+        node.final_digest_to(cv_dst);
     }
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)

@@ -74,7 +74,7 @@ struct DuplexTreeNodePolicy final
     */
     static void extract_cv(node_type& node, const std::span<std::byte> cv_dst)
     {
-        (void)node.squeeze_to(cv_dst);
+        node.squeeze_to(cv_dst);
     }
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)

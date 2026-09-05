@@ -10,6 +10,8 @@ The default `HOST` keeps it on the loopback interface.  Bind it elsewhere only i
 
 The service does not begin accepting requests until it has absorbed entropy from `getentropy(3)`, so a client is never served from the initial state — which is derived only from the public constants in [config.h](config.h).
 
+A release build calls [`disable_core_dumps()`](../include/disable_core_dumps.h) at the top of `main`, before any duplex state exists, so a crash writes no core file containing that state, and reading it out through `ptrace` or `/proc/PID/mem` takes root.  A `BUILD=debug` build skips the call, which keeps the service attachable under a debugger.
+
 ## Dependencies
 
 [spdlog](https://github.com/gabime/spdlog) (header-only use) must be installed.

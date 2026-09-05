@@ -26,6 +26,8 @@ Both programs also verify digests with `-c`/`--check` (plus `--quiet` to suppres
 
 `castella` additionally computes keyed hashes (MACs) with `--key-file=FILE` (the key is the file's exact bytes, so it never appears on the command line or in `/proc`).  The KMAC structure (SP 800-185 Section 4) is followed at tree scale: `bytepad(encode_string(K), CHUNK_SIZE)` is absorbed as chunk 0 (the key block goes straight into the — now keyed — final node, and the input's chunk alignment is preserved), the function name becomes `Castella-MAC`, and the right-encoded output size is absorbed last, so MACs of different sizes are unrelated rather than truncations.  `--check` verifies MACs when given the same `--key-file`; digest lines never contain the key.
 
+The key bytes are held in `mlock`ed memory that is wiped on deallocation ([locked_allocator.hpp](locked_allocator.hpp)), and a release build calls [`disable_core_dumps()`](../include/disable_core_dumps.h) at the top of `main`, so the key is not swapped out, not written to a core file, and not readable through `ptrace` or `/proc/PID/mem` without root.  A `BUILD=debug` build skips the core-dump call, which keeps the program attachable under a debugger.
+
 Run `--help` for full option descriptions.  `make man` (in this directory; the top-level `Makefile` does not recurse into that target) generates `castella.1` and `cch.1` from that output with [help2man](https://www.gnu.org/software/help2man/).  The pages are build products, untracked like the binaries, and no other target needs help2man.
 
 ## Test script

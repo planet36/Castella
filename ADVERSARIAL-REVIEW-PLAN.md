@@ -127,6 +127,11 @@ Define the adversary before hunting.  Five surfaces, five adversaries — four o
   integer/length handling of the `n`-bytes query parameter, and memory-safety of request
   handling.  DoS / body caps / timeouts are worth *noting* for local robustness but are
   low-priority given the local-only intent.
+- **State exposure to a local reader:** recovery of the live duplex state from a core dump,
+  a `ptrace` attach, or a read of `/proc/PID/mem`.  A release build calls
+  `disable_core_dumps()` ([include/disable_core_dumps.h](include/disable_core_dumps.h)) at
+  the top of `main`, before any state exists, so the job is to audit that mitigation rather
+  than rebuild it.
 
 ### 1d.  Untrusted-input parsers (CLI)
 - **Adversary:** supplies a malicious `--check` file, crafted `--tag` line, filenames, or

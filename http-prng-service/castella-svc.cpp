@@ -11,6 +11,7 @@
 #include "bytes_to_hex.hpp"
 #include "castella-duplex.hpp"
 #include "config.h"
+#include "disable_core_dumps.h"
 #include "httplib.h"
 #include "parse_int.hpp"
 #include "quote_shell_always.hpp"
@@ -39,7 +40,6 @@
 // POSIX strsignal -- not in <cstring>
 #include <string.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 #include <string_view>
-#include <sys/resource.h>
 #include <thread>
 #include <type_traits>
 #include <unistd.h>
@@ -278,10 +278,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     using namespace std::literals;
 
-    // Do not create core dump files.
-    if (constexpr rlimit rlim{.rlim_cur = 0, .rlim_max = 0};
-        setrlimit(RLIMIT_CORE, &rlim) == -1)
-        err(EXIT_FAILURE, "setrlimit(RLIMIT_CORE)");
+#if !defined(DEBUG)
+    disable_core_dumps();
+#endif
 
     std::string host{default_host};
     auto port = default_port;

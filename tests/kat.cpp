@@ -319,8 +319,8 @@ print_duplex_kat(const int capacity_blocks, const int num_rounds, const int inpu
                  encode_bytes_to_hex(as_byte_span(kat_function_name)),
                  encode_bytes_to_hex(as_byte_span(kat_customization_str)), msglen, out,
                  encode_bytes_to_hex(duplex_digest(capacity_blocks, num_rounds, input_suffix,
-                                            kat_function_name, kat_customization_str,
-                                            msglen, out)));
+                                                   kat_function_name, kat_customization_str,
+                                                   msglen, out)));
 }
 
 void
@@ -333,8 +333,8 @@ print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_
                  encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
                  msglen, out,
                  encode_bytes_to_hex(tree_digest(capacity_blocks, num_rounds, input_suffix,
-                                          kat_function_name, kat_customization_str,
-                                          chunk_size_bytes, msglen, out)));
+                                                 kat_function_name, kat_customization_str,
+                                                 chunk_size_bytes, msglen, out)));
 }
 
 void
@@ -347,8 +347,8 @@ print_mac_kat(const int capacity_blocks, const int num_rounds, const int input_s
                  encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
                  keylen, msglen, out,
                  encode_bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
-                                         kat_mac_function_name, kat_customization_str,
-                                         chunk_size_bytes, keylen, msglen, out)));
+                                                kat_mac_function_name, kat_customization_str,
+                                                chunk_size_bytes, keylen, msglen, out)));
 }
 
 void

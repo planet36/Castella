@@ -407,7 +407,7 @@ parse_tagged_line(std::string_view s, check_line_fields& cl_fields)
     if (!consume_prefix(s, " = "))
         return false;
 
-    auto digest = hex_to_bytes(s);
+    auto digest = decode_hex_to_bytes(s);
 
     if (!digest.has_value())
         return false;
@@ -431,7 +431,7 @@ parse_untagged_line(std::string_view s, check_line_fields& cl_fields)
     if (space_pos == std::string_view::npos)
         return false;
 
-    auto digest = hex_to_bytes(s.substr(0, space_pos));
+    auto digest = decode_hex_to_bytes(s.substr(0, space_pos));
 
     if (!digest.has_value())
         return false;

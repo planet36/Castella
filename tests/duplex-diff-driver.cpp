@@ -93,7 +93,7 @@ hex_nibble(const char c)
 * members that take a \c std::string_view.
 */
 [[nodiscard]] static std::string
-hex_to_bytes(const std::string_view s)
+decode_hex_to_bytes(const std::string_view s)
 {
     if (s == "-")
         return {};
@@ -198,9 +198,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 const auto num_rounds = read_field<int>(iss, "rounds");
                 const auto input_suffix = read_field<int>(iss, "suffix");
                 const auto function_name =
-                    hex_to_bytes(read_field<std::string>(iss, "N"));
+                    decode_hex_to_bytes(read_field<std::string>(iss, "N"));
                 const auto customization_str =
-                    hex_to_bytes(read_field<std::string>(iss, "S"));
+                    decode_hex_to_bytes(read_field<std::string>(iss, "S"));
 
                 duplex = std::make_unique<Castella::Duplex>(
                     capacity_blocks, num_rounds, input_suffix, function_name,
@@ -213,17 +213,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             if (op == "add")
             {
-                const auto data = hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
                 duplex->add(as_byte_span(data));
             }
             else if (op == "addle")
             {
-                const auto data = hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
                 duplex->add_left_encoded(as_byte_span(data));
             }
             else if (op == "addre")
             {
-                const auto data = hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
                 duplex->add_right_encoded(as_byte_span(data));
             }
             else if (op == "addlei")

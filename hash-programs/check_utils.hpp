@@ -39,7 +39,7 @@
 *         a non-hexadecimal character
 */
 [[nodiscard]] inline std::optional<std::vector<std::byte>>
-hex_to_bytes(const std::string_view s)
+decode_hex_to_bytes(const std::string_view s)
 {
     if ((std::size(s) % 2) != 0)
         return std::nullopt;

@@ -568,7 +568,7 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
     if (std::empty(*value))
         return std::string{};
 
-    const auto bytes = hex_to_bytes(*value);
+    const auto bytes = decode_hex_to_bytes(*value);
 
     if (!bytes.has_value())
         return std::nullopt;
@@ -747,7 +747,7 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
             const auto digest_hex = find_field(fields, "digest");
 
             if (digest_hex.has_value())
-                expected = hex_to_bytes(*digest_hex);
+                expected = decode_hex_to_bytes(*digest_hex);
         }
 
         if (!expected.has_value())

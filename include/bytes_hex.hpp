@@ -24,7 +24,7 @@
 * \pre \a x is in the interval <code>[0, 15]</code>
 */
 [[nodiscard]] static constexpr char
-nibble_char(const uint8_t x) noexcept
+encode_nibble_to_hex(const uint8_t x) noexcept
 {
 #if defined(DEBUG)
     assert(x <= 15);
@@ -69,8 +69,8 @@ encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
         const auto val = std::to_integer<uint8_t>(b);
         const uint8_t hi = val >> 4;
         const uint8_t lo = val & 0x0F;
-        result[i++] = nibble_char(hi);
-        result[i++] = nibble_char(lo);
+        result[i++] = encode_nibble_to_hex(hi);
+        result[i++] = encode_nibble_to_hex(lo);
     }
 
     return result;

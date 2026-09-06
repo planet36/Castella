@@ -57,7 +57,7 @@
 
 /// Convert a hexadecimal character to its nibble value
 /**
-* The inverse of \c nibble_char in bytes_hex.hpp, which maps a nibble to a
+* The inverse of \c encode_nibble_to_hex in bytes_hex.hpp, which maps a nibble to a
 * lowercase hexadecimal character.  This direction additionally accepts
 * uppercase, and validates rather than assuming a precondition.
 *

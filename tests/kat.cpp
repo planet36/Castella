@@ -290,7 +290,7 @@ print_rc_kat(const int r, const int aes_r, const int i)
     const auto rc = round_constant_bytes(r, aes_r, i);
 
     std::println("rc r={} aes_r={} i={} out={} digest={}", r, aes_r, i,
-                 std::size(rc), bytes_to_hex(rc));
+                 std::size(rc), encode_bytes_to_hex(rc));
 }
 
 void
@@ -300,14 +300,14 @@ print_permute_kat(const bool counter_init, const int num_rounds)
 
     std::println("permute init={} rounds={} out={} digest={}",
                  counter_init ? "counter" : "zero", num_rounds, std::size(state),
-                 bytes_to_hex(state));
+                 encode_bytes_to_hex(state));
 }
 
 void
 print_cch_kat(const int mix_rate, const int msglen, const int out)
 {
     std::println("cch mix={} msglen={} out={} digest={}", mix_rate, msglen, out,
-                 bytes_to_hex(cch_digest(mix_rate, msglen, out)));
+                 encode_bytes_to_hex(cch_digest(mix_rate, msglen, out)));
 }
 
 void
@@ -316,9 +316,9 @@ print_duplex_kat(const int capacity_blocks, const int num_rounds, const int inpu
 {
     std::println("duplex C={} rounds={} suffix={} fn={} custom={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
-                 bytes_to_hex(as_byte_span(kat_function_name)),
-                 bytes_to_hex(as_byte_span(kat_customization_str)), msglen, out,
-                 bytes_to_hex(duplex_digest(capacity_blocks, num_rounds, input_suffix,
+                 encode_bytes_to_hex(as_byte_span(kat_function_name)),
+                 encode_bytes_to_hex(as_byte_span(kat_customization_str)), msglen, out,
+                 encode_bytes_to_hex(duplex_digest(capacity_blocks, num_rounds, input_suffix,
                                             kat_function_name, kat_customization_str,
                                             msglen, out)));
 }
@@ -329,10 +329,10 @@ print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_
 {
     std::println("tree C={} rounds={} suffix={} fn={} custom={} chunk={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
-                 bytes_to_hex(as_byte_span(kat_function_name)),
-                 bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
+                 encode_bytes_to_hex(as_byte_span(kat_function_name)),
+                 encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
                  msglen, out,
-                 bytes_to_hex(tree_digest(capacity_blocks, num_rounds, input_suffix,
+                 encode_bytes_to_hex(tree_digest(capacity_blocks, num_rounds, input_suffix,
                                           kat_function_name, kat_customization_str,
                                           chunk_size_bytes, msglen, out)));
 }
@@ -343,10 +343,10 @@ print_mac_kat(const int capacity_blocks, const int num_rounds, const int input_s
 {
     std::println("mac C={} rounds={} suffix={} fn={} custom={} chunk={} keylen={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
-                 bytes_to_hex(as_byte_span(kat_mac_function_name)),
-                 bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
+                 encode_bytes_to_hex(as_byte_span(kat_mac_function_name)),
+                 encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
                  keylen, msglen, out,
-                 bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
+                 encode_bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
                                          kat_mac_function_name, kat_customization_str,
                                          chunk_size_bytes, keylen, msglen, out)));
 }
@@ -357,7 +357,7 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 {
     std::println("cchtree mix={} chunk={} msglen={} out={} digest={}", mix_rate,
                  chunk_size_bytes, msglen, out,
-                 bytes_to_hex(cchtree_digest(mix_rate, chunk_size_bytes, msglen, out)));
+                 encode_bytes_to_hex(cchtree_digest(mix_rate, chunk_size_bytes, msglen, out)));
 }
 
 /// Print the whole KAT file to standard output
@@ -797,8 +797,8 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         {
             ++num_failed;
             std::println(stderr, "FAILED: {}: line {}:", path, lineno);
-            std::println(stderr, "    expected digest = {}", bytes_to_hex(*expected));
-            std::println(stderr, "    actual digest   = {}", bytes_to_hex(*actual));
+            std::println(stderr, "    expected digest = {}", encode_bytes_to_hex(*expected));
+            std::println(stderr, "    actual digest   = {}", encode_bytes_to_hex(*actual));
         }
     }
 

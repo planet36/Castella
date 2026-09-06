@@ -79,7 +79,7 @@ hex_nibble(const char c)
 
 /// Decode a hexadecimal script field into the bytes it represents
 /**
-* The inverse of \c bytes_to_hex in bytes_hex.hpp: two hexadecimal
+* The inverse of \c encode_bytes_to_hex in bytes_hex.hpp: two hexadecimal
 * characters of \a s become one byte of the result.  The script spells the
 * empty byte string as "-", because a zero-length field cannot be read from a
 * whitespace-delimited line.
@@ -244,7 +244,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             {
                 const auto n = read_field<int>(iss, "n");
                 const auto digest = duplex->squeeze_bytes(n);
-                std::println("out {}", bytes_to_hex(digest));
+                std::println("out {}", encode_bytes_to_hex(digest));
             }
             else
             {

@@ -262,7 +262,7 @@ periodic_add_entropy_func(std::stop_token token) // NOLINT(performance-unnecessa
         if (spdlog::should_log(spdlog::level::level_enum::trace))
         {
             // XXX: This prints the entropy data.
-            spdlog::trace("periodic add entropy: [{}] ({})", bytes_to_hex(entropy_buf),
+            spdlog::trace("periodic add entropy: [{}] ({})", encode_bytes_to_hex(entropy_buf),
                           sizeof(entropy_buf));
         }
         else
@@ -407,8 +407,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             // XXX: This prints the body data of requests & responses.
             spdlog::trace("[{}] ({}) -> [{}] ({})",
-                bytes_to_hex(as_byte_span(req.body)), std::size(req.body),
-                bytes_to_hex(as_byte_span(res.body)), std::size(res.body));
+                encode_bytes_to_hex(as_byte_span(req.body)), std::size(req.body),
+                encode_bytes_to_hex(as_byte_span(res.body)), std::size(res.body));
         });
 
     spdlog::info("Attempting to bind to http://{}:{} ...", host, port);

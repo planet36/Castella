@@ -119,7 +119,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const std::string expected_result =
                 "36b206cca313f3832d6c29f1ca035ab36716de380cd79fd6c7ed21d3d25cc5a7";
-            const std::string result = bytes_to_hex(digest_bytes);
+            const std::string result = encode_bytes_to_hex(digest_bytes);
 
             std::println("{} {}: {}", quote_shell_always(function_name),
                          quote_shell_always(customization_str), result);
@@ -709,7 +709,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             const std::string expected_result =
                 "1204a8d4385f3a3f5b7d079a1e6fb95df84bdc62dd3d6cbf862b28d6081729a4";
-            const std::string result = bytes_to_hex(digest_bytes);
+            const std::string result = encode_bytes_to_hex(digest_bytes);
 
             std::println("{} {}: {}", quote_shell_always(function_name),
                          quote_shell_always("tree test"), result);

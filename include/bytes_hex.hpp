@@ -57,7 +57,7 @@ nibble_val(const char c) noexcept
 * \return a lowercase hexadecimal string representing \a byte_sp
 */
 [[nodiscard]] static std::string
-bytes_to_hex(const std::span<const std::byte> byte_sp)
+encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
 {
     const size_t result_len = std::size(byte_sp) * 2;
 

@@ -186,7 +186,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "ef83cf105019f40e3488d7aa27bd1ec169d708110c7203469a2dc2b5798e57d0";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -231,7 +231,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "eb94e5bee0045830ec31e349afde43575144966bfe3165151ca176a1ab3c2f85";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -263,7 +263,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "4c5ab6e88a31c415ca2359aba8c272f585458ec2f87a619947da3a154ca75a27413c0d218783ff6e5a9152858068e4f8d8e0fd3d4c24cfe96613b7894f9fadca";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -318,7 +318,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "baaf868ed40c24973760b76e5c81b82829c00b8dc144ecc883fc1fe480e6e088";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -354,7 +354,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "4c0bc34babda732c2790f6404ce8c7c8b11a5c2ed67332b62df9d36fe3797830b7c2c3e3d4f4f4f493115affbe2be763bd0fbc0e37efe17bd51d3a35ab4326ec";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -390,7 +390,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "d48f7e52253ded617c616ecb9a03da3f2af347136d911267af1aca0728d75982";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -426,7 +426,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "b0a5b58fb2a65f1d81d672acb8a4ea82619b193a22ab7a879110c023a26eec34b807d9b2c219e4d20ed5bea85fe8d1ca06675e1d1819aedd0f998476b41acaab";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -485,10 +485,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "7637a9012cb4ae31f3debfd26623f6a978614922943da6baa4a6b94f5ee0f37b";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "7410b89abfaf8132f472b9c2234772e1cce9a5517cc335af9e815649e748f1cc";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -540,10 +540,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "32fd46839331528c6430146e634ab43dfbc9f7b2edbe0b30f8bee51600a44ad2b0030d5ca5c536899de56677ab170ff0aa0d7752a98a7e049079160c8d8c3fa2";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "1efec402c1c731c0c5b5f20b13e31c9b1f1d7821f21ee37e639c45f5f0878723207422ae6b53e7596c2aae08d6a1d7e77fc0929eea538593de62ad4b99477629";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -595,10 +595,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "60b67ea3bd85a720ff98743b8d0d0e7f01bac01adcf330aa46f6760aa1a23345";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "97e8a11435d72cbcd3b8da5891381c068587a09cbfbfbeb20cae71a73cde6404";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -650,10 +650,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "4bd71ef88cd71b31303180e870a61e9c539e09cd8c3eda3d9c1eeffbf992c8c5fbf56f58c67fab36b22fbf207495d271e56649e0aa8a6d1cb99fcdab8d9d5b92";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "b9d603a92229969b6ff77272462904350620bc52ad21248319fb7a55089bd99a5d6ee3b7268168a6d4670508a163a6695a03499129ca3893f09ca09ea0f0e0c9";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -711,10 +711,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "42e7c70ae6486c4d081281f769428bfa6b69abe4d33f9d362c8478edc28e2d06";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "9a0861e8898437b042f3953b60ae5c170e9e62364ce4350ef9224f6d18aaa517";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -761,10 +761,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "376ad47dcdf4a3af34853f4273ad4457fc54a5b681dc2e974e599afa41388a3318856b3479d08b75978fa4b6a03ae1296af487eb46c309868835af334299fe83";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "0ff85c6bddabb064933e4f642190829f0a9a236e882723d3d28f64c1b81950f627413d4217a55af9b8e16a90cec399d48cbd8df7c70f96c16b17b773b6a711fe";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -810,10 +810,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "136cd27d8a09852be1a166966cafeeb6d3aa20475c7264a86bc8d989e1667030";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "136cd27d8a09852be1a166966cafeeb6";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);
@@ -861,10 +861,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const std::string expected_result =
             "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082eeecc629c4e2422928d3ed01b825d62989a8a0792d4f0476e9712a7c72039c5341";
-        const std::string result = bytes_to_hex(digest_bytes);
+        const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
             "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082ee";
-        const std::string result_2 = bytes_to_hex(digest_bytes_2);
+        const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
                      quote_shell_always(customization_str), result);

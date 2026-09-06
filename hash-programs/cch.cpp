@@ -561,11 +561,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             if (tag_output)
             {
                 std::println("cch ({}) {} = {}", format_tag_params(chunk_size, mix_rate),
-                             quote_shell_always(path), bytes_to_hex(digest_bytes));
+                             quote_shell_always(path), encode_bytes_to_hex(digest_bytes));
             }
             else
             {
-                std::println("{}  {}", bytes_to_hex(digest_bytes), quote_shell_always(path));
+                std::println("{}  {}", encode_bytes_to_hex(digest_bytes), quote_shell_always(path));
             }
         }
         catch (const std::invalid_argument& ex)

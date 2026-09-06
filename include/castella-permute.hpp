@@ -161,7 +161,6 @@ create_round_constants() noexcept
 }
 
 /// The Castella round constants
-// {{{
 /**
 * ## _MakingOfKeccak.pdf_
 *
@@ -185,7 +184,6 @@ create_round_constants() noexcept
 * linear feedback shift register.
 * </blockquote>
 */
-// }}}
 inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>();
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
@@ -319,7 +317,6 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 #endif
 
 /// The Castella permutation function
-// {{{
 /**
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
@@ -345,7 +342,6 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 * every supported \a N, and \c permute_generic everywhere else.  The two are
 * bit-identical, so the choice never affects a digest.
 */
-// }}}
 template <size_t N>
 static void
 permute(arr_blocks<N>& state, const int num_rounds) noexcept
@@ -360,7 +356,6 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 /// The Castella permutation function applied to two independent states in lockstep
-// {{{
 /**
 * \param state_x2 the lane-paired state to permute (see \c arr_blocks_x2)
 * \param num_rounds the number of rounds to perform
@@ -377,7 +372,6 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 * One transpose network then serves both states, which puts two chunks' worth
 * of permutation work on one core (see \c Castella::DuplexTree leaf batching).
 */
-// }}}
 template <size_t N>
 static void
 permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
@@ -399,7 +393,6 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 #endif
 
 /// The inverse Castella permutation function
-// {{{
 /**
 * \param state the state to permute
 * \param num_rounds the number of rounds to perform
@@ -416,7 +409,6 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 *
 * Like \c permute, the \e last \a num_rounds round constants are used.
 */
-// }}}
 template <size_t N>
 static void
 permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept

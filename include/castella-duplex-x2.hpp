@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /// Two Castella duplexes advanced in lockstep (one per 128-bit lane)
-// {{{
 /**
 * \file
 * \author Steven Ward
 * \sa castella-duplex.hpp
 */
-// }}}
 
 #pragma once
 
@@ -42,7 +40,6 @@ namespace Castella
 {
 
 /// Two independent \c Duplex instances with the same parameters, advanced in lockstep
-// {{{
 /**
 * The throughput building block of VAES leaf batching (see
 * \c Castella::HashTree).  Both duplexes share one lane-paired state
@@ -66,7 +63,6 @@ namespace Castella
 * only the members leaf hashing needs, which are \c add and
 * \c squeeze_pair_to.
 */
-// }}}
 struct alignas(block_x2_t) DuplexX2 final
 {
 private:

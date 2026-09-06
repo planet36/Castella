@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /// Castella duplex tree-hash class
-// {{{
 /**
 * \file
 * \author Steven Ward
 * \sa https://keccak.team/files/KangarooTwelve.pdf
 * \sa https://keccak.team/files/Sakura.pdf
 */
-// }}}
 
 #pragma once
 
@@ -103,7 +101,6 @@ struct DuplexTreeNodePolicy final
 };
 
 /// A tree-hashing wrapper around \c Castella::Duplex
-// {{{
 /**
 * A KangarooTwelve-style two-level tree hash built from \c Duplex nodes so
 * that hashing can use more than one CPU core.  See \c Castella::HashTree for
@@ -114,7 +111,6 @@ struct DuplexTreeNodePolicy final
 * input produces unrelated digests.  That is by design, since the tree's role
 * prefix separates the domains.
 */
-// }}}
 struct DuplexTree final : public HashTree<DuplexTreeNodePolicy, DuplexTree>
 {
 private:
@@ -122,7 +118,6 @@ private:
 
 public:
     /// ctor
-    // {{{
     /**
     * The first five parameters are forwarded to every node's \c Duplex
     * constructor.
@@ -141,7 +136,6 @@ public:
     *            \a input_suffix does not fit the \c Duplex member it
     *            initializes
     */
-    // }}}
     explicit DuplexTree(const int capacity_blocks,
                         const int num_rounds,
                         const int input_suffix = 0,
@@ -159,7 +153,6 @@ public:
 
     /// Squeeze bytes from the final node, and return them as a
     /// `std::vector<std::byte>`
-    // {{{
     /**
     * The first call finalizes the tree, absorbing the trailing chunk and the
     * chunk count.  After that, no more input may be added.  Successive calls
@@ -171,7 +164,6 @@ public:
     * \exception std::system_error if the mutex cannot be locked
     * \note \a n is clamped to the interval <code>[0, get_rate_size_bytes()]</code>.
     */
-    // }}}
     [[nodiscard]] std::vector<std::byte> squeeze_bytes(const int n)
     {
         std::scoped_lock lock{mtx_};

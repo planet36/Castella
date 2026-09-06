@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /// Castella duplex class
-// {{{
 /**
 * \file
 * \author Steven Ward
@@ -26,7 +25,6 @@
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_2002.pdf
 * \sa https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_Errata_2014.pdf
 */
-// }}}
 
 #pragma once
 
@@ -56,7 +54,6 @@ namespace Castella
 {
 
 /// A customizable duplex/sponge construction based on the Castella permutation
-// {{{
 /**
 * ## _CSF-0.1.pdf_
 *
@@ -118,38 +115,31 @@ namespace Castella
 * bytes) as inputs.
 * </blockquote>
 */
-// }}}
 struct alignas(block_t) Duplex final
 {
     friend struct DuplexX2;
 
     /// The size (in blocks) of the state
-    // {{{
     /**
     * If \c B was 8 (the preceding power-of-two), the maximum \c R would be 6.
     * This would cause unsatisfactory performance.
     */
-    // }}}
     static constexpr int B = 16;
     static_assert((B % 2) == 0, "must be even");
     static_assert(B == 16, "B must be 16 to accommodate the 16x16 byte matrix transpose");
 
     /// The minimum size (in blocks) of the capacity
-    // {{{
     /**
     * This constraint is to ensure good security.
     */
-    // }}}
     static constexpr int C_MIN = 2;
     static_assert((C_MIN % 2) == 0, "must be even");
     static_assert(C_MIN >= 2); // (D = C/2) ∧ (D ≥ 1) ∴ C_MIN ≥ 2
 
     /// The maximum size (in blocks) of the capacity
-    // {{{
     /**
     * This constraint is to ensure good performance.
     */
-    // }}}
     static constexpr int C_MAX = B / 2;
     static_assert((C_MAX % 2) == 0, "must be even");
     static_assert(C_MAX < B);
@@ -183,7 +173,6 @@ private:
 
 public:
     /// The size (in blocks) of the capacity
-    // {{{
     /**
     * ## _SpongePRNG.pdf_
     *
@@ -194,12 +183,10 @@ public:
     * construction.
     * </blockquote>
     */
-    // }}}
     const int8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
     static_assert(in_range<decltype(C)>(C_MAX));
 
     /// The size (in blocks) of the input buffer
-    // {{{
     /**
     * R == B - C
     *
@@ -219,12 +206,10 @@ public:
     * making it twice as fast as the 512-bit SHA-3 candidate.
     * </blockquote>
     */
-    // }}}
     const int8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
     static_assert(in_range<decltype(R)>(R_MAX));
 
     /// The number of rounds to perform in the Castella permutation function
-    // {{{
     /**
     * ## _Yes, this is Keccak!_
     * https://keccak.team/2013/yes_this_is_keccak.html
@@ -240,12 +225,10 @@ public:
     * capacity.
     * </blockquote>
     */
-    // }}}
     const int8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
     static_assert(in_range<decltype(NUM_ROUNDS)>(NUM_ROUNDS_MAX));
 
     /// The byte to append to the input buffer before squeezing
-    // {{{
     /**
     * ## _NIST.FIPS.202.pdf_
     *
@@ -326,17 +309,14 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
     * \sa https://en.wikipedia.org/wiki/Domain_separation
     */
-    // }}}
     const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS
-    // {{{
     /**
     * \exception std::invalid_argument if any of \c C, \c R, or \c NUM_ROUNDS are
     * invalid
     */
-    // }}}
     void check_constraints_() const
     {
         if (C < C_MIN)
@@ -376,7 +356,6 @@ private:
     }
 
     /// Absorb the input buffer into the outer state and apply the permutation function
-    // {{{
     /**
     * ## _CSF-0.1.pdf_
     *
@@ -391,7 +370,6 @@ private:
     * are processed, the sponge construction switches to the squeezing phase.
     * </blockquote>
     */
-    // }}}
     void absorb_() noexcept
     {
 #if defined(DEBUG)
@@ -417,7 +395,6 @@ private:
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer
-    // {{{
     /**
     * ## _CSF-0.1.pdf_
     *
@@ -447,7 +424,6 @@ private:
     * capacity values.
     * </blockquote>
     */
-    // }}}
     void apply_padding_rule_() noexcept
     {
 #if defined(DEBUG)
@@ -491,7 +467,6 @@ private:
     }
 
     /// Finish a squeeze and copy the outer state into \a dst (no locking)
-    // {{{
     /**
     * The shared core of \c squeeze_bytes and \c squeeze_to.  It adds the input
     * suffix, applies the padding rule, then copies the first
@@ -499,7 +474,6 @@ private:
     *
     * \pre \c std::size(dst) <= \c get_rate_size_bytes()
     */
-    // }}}
     void squeeze_into_(const std::span<std::byte> dst) noexcept
     {
 #if defined(DEBUG)
@@ -566,7 +540,6 @@ private:
     }
 
     /// Unambiguously encode the integer into the input buffer
-    // {{{
     /**
     * ## _NIST.SP.800-185.pdf_
     *
@@ -581,7 +554,6 @@ private:
     *
     * \pre \a x ≥ 0
     */
-    // }}}
     void left_encode_(const std::integral auto x) noexcept
     {
 #if defined(DEBUG)
@@ -602,7 +574,6 @@ private:
     }
 
     /// Unambiguously encode the integer into the input buffer
-    // {{{
     /**
     * ## _NIST.SP.800-185.pdf_
     *
@@ -617,7 +588,6 @@ private:
     *
     * \pre \a x ≥ 0
     */
-    // }}}
     void right_encode_(const std::integral auto x) noexcept
     {
 #if defined(DEBUG)
@@ -638,7 +608,6 @@ private:
     }
 
     /// Unambiguously encode the byte string into the input buffer
-    // {{{
     /**
     * ## _NIST.SP.800-185.pdf_
     *
@@ -653,7 +622,6 @@ private:
     * 1.  Return left_encode(len(𝑆)) || 𝑆.
     * </blockquote>
     */
-    // }}}
     void left_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
         left_encode_(std::size(src));
@@ -668,7 +636,6 @@ private:
     }
 
     /// Unambiguously encode the byte string into the input buffer
-    // {{{
     /**
     * The right_encode counterpart of \c left_encode_bytes_().  The byte string
     * 𝑆 is followed by its right-encoded length, so it may be parsed
@@ -677,7 +644,6 @@ private:
     *
     * Return 𝑆 || right_encode(len(𝑆)).
     */
-    // }}}
     void right_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
         add_(src);
@@ -685,7 +651,6 @@ private:
     }
 
     /// Initialize the state
-    // {{{
     /**
     * \pre \c zeroize_() has been called immediately prior to this invocation.
     *
@@ -720,11 +685,9 @@ private:
     * computation (the key fingerprint) if different values of 𝑆 are used.
     * </blockquote>
     */
-    // }}}
     void init_(const std::string_view function_name,
                const std::string_view customization_str) noexcept
     {
-        // {{{
         /*
         * ## _NIST.SP.800-185.pdf_
         *
@@ -753,7 +716,6 @@ private:
         * bytepad(encode_string(𝑁) || encode_string(𝑆), 136)
         * </blockquote>
         */
-        // }}}
 
         left_encode_(get_state_size_bytes());
         left_encode_(get_rate_size_bytes()); // cSHAKE does this.
@@ -770,7 +732,6 @@ private:
 
 public:
     /// ctor
-    // {{{
     /**
     * ## _NIST.SP.800-185.pdf_
     *
@@ -806,7 +767,6 @@ public:
     *            wildly out-of-range value reports this rather than the above
     * \pre \a capacity_blocks is even
     */
-    // }}}
     explicit Duplex(const int capacity_blocks,
                     const int num_rounds,
                     const int input_suffix = 0,
@@ -838,14 +798,12 @@ public:
     }
 
     /// Consume the input data
-    // {{{
     /**
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     Duplex& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
@@ -890,7 +848,6 @@ public:
     }
 
     /// Consume the left-encoded size of the input data, then its contents
-    // {{{
     /**
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
@@ -899,7 +856,6 @@ public:
     * \note An empty span absorbs left_encode(0), whether or not its data is
     *       null.
     */
-    // }}}
     Duplex& add_left_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
@@ -944,7 +900,6 @@ public:
     }
 
     /// Consume the input data, then its right-encoded size
-    // {{{
     /**
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
@@ -953,7 +908,6 @@ public:
     * \note An empty span absorbs right_encode(0), whether or not its data is
     *       null.
     */
-    // }}}
     Duplex& add_right_encoded(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
@@ -998,7 +952,6 @@ public:
     }
 
     /// Consume the left-encoding of the integer \a x
-    // {{{
     /**
     * Absorbs the byte width of \a x followed by its low bytes (the
     * left_encode of SP 800-185), parseable from the beginning of the
@@ -1009,7 +962,6 @@ public:
     * \pre \a x ≥ 0
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     Duplex& add_left_encoded(const std::integral auto x)
     {
         std::scoped_lock lock{mtx_};
@@ -1020,7 +972,6 @@ public:
     }
 
     /// Consume the right-encoding of the integer \a x
-    // {{{
     /**
     * Absorbs the low bytes of \a x followed by its byte width (the
     * right_encode of SP 800-185), parseable from the end of the stream.
@@ -1031,7 +982,6 @@ public:
     * \pre \a x ≥ 0
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     Duplex& add_right_encoded(const std::integral auto x)
     {
         std::scoped_lock lock{mtx_};
@@ -1042,13 +992,11 @@ public:
     }
 
     /// Apply the "pad10*1" padding rule to the input buffer
-    // {{{
     /**
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     Duplex& apply_padding_rule()
     {
         std::scoped_lock lock{mtx_};
@@ -1060,7 +1008,6 @@ public:
 
     /// Squeeze bytes from the outer state, and return them as a
     /// `std::vector<std::byte>`
-    // {{{
     /**
     * \param n the number of bytes to squeeze from the outer state
     * \exception std::bad_alloc if the output vector cannot be allocated
@@ -1122,7 +1069,6 @@ public:
     * function is defined in Algorithm 4.
     * </blockquote>
     */
-    // }}}
     [[nodiscard]] std::vector<std::byte> squeeze_bytes(int n)
     {
         std::scoped_lock lock{mtx_};
@@ -1137,7 +1083,6 @@ public:
     }
 
     /// Squeeze bytes from the outer state into \a dst
-    // {{{
     /**
     * Like \c squeeze_bytes(int) but writes the first \c std::size(dst) bytes
     * of the outer state into the caller-provided buffer instead of allocating
@@ -1150,7 +1095,6 @@ public:
     * \note Like \c squeeze_bytes, the input suffix and padding are added
     *       before squeezing, even if \a dst is empty.
     */
-    // }}}
     void squeeze_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};
@@ -1165,7 +1109,6 @@ public:
 
     /// Squeeze bytes from the outer state, and return them as a
     /// `std::vector<std::byte>`
-    // {{{
     /**
     * The number of bytes returned is equal to half the capacity.
     * See \c squeeze_bytes(int) for what a squeeze does and when.
@@ -1173,7 +1116,6 @@ public:
     * \exception std::bad_alloc if the output vector cannot be allocated
     * \exception std::system_error if the mutex cannot be locked
     */
-    // }}}
     [[nodiscard]] std::vector<std::byte> squeeze_bytes()
     {
         return squeeze_bytes(get_capacity_size_bytes() / 2);

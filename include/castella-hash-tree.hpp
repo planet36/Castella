@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /// Generic two-level tree-hash layer over a node hash class
-// {{{
 /**
 * \file
 * \author Steven Ward
@@ -12,7 +11,6 @@
 * \sa https://csrc.nist.gov/pubs/sp/800/185/final
 * \sa https://www.cryptologie.net/posts/kangarootwelve/
 */
-// }}}
 
 #pragma once
 
@@ -51,7 +49,6 @@ namespace Castella
 {
 
 /// The interface a node-hash policy must provide to \c HashTree
-// {{{
 /**
 * A policy owns the parameters of one tree's nodes.  It provides three
 * members:
@@ -84,7 +81,6 @@ namespace Castella
 * encodings itself (see \c absorb_left_encoded_()), so the node needs no
 * encoding members.
 */
-// }}}
 template <typename P>
 concept tree_node_policy =
     requires(const P p, P::node_type& node, const std::span<std::byte> cv_dst,
@@ -97,7 +93,6 @@ concept tree_node_policy =
     };
 
 /// A tree-hashing layer over a node hash class
-// {{{
 /**
 * ## Why a tree?
 *
@@ -207,7 +202,6 @@ concept tree_node_policy =
 * \c final_node_ (see \c Castella::DuplexTree and
 * \c compress_castella_tree).
 */
-// }}}
 template <tree_node_policy NodePolicy, typename Derived>
 struct HashTree
 {
@@ -215,27 +209,22 @@ struct HashTree
     using node_type = NodePolicy::node_type;
 
     /// The minimum chunk size (in bytes)
-    // {{{
     /**
     * A chunk far smaller than this is all fixed overhead.  Each leaf pays its
     * node's init and finalization costs on top of its absorb work, and each
     * chunk costs the final node one CV absorption.
     */
-    // }}}
     static constexpr int CHUNK_SIZE_MIN = 1024;
 
     /// The maximum chunk size (in bytes)
-    // {{{
     /**
     * A chunk is buffered contiguously in memory before it is hashed, and it
     * is also the unit of parallelism.  An over-large chunk both bloats the
     * buffer and starves the thread pool.
     */
-    // }}}
     static constexpr int CHUNK_SIZE_MAX = 1 << 30;
 
     /// The default chunk size (in bytes)
-    // {{{
     /**
     * Chosen empirically, by benchmark.castella.chunk-size.bash and
     * benchmark.cch.chunk-size.bash.  Throughput climbs until the per-leaf
@@ -248,7 +237,6 @@ struct HashTree
     * of a few hundred KiB still parallelize there.  A derived tree may shadow
     * this with a default suited to its node.
     */
-    // }}}
     static constexpr int DEFAULT_CHUNK_SIZE = 65'536;
 
     static_assert(CHUNK_SIZE_MIN <= DEFAULT_CHUNK_SIZE);
@@ -262,7 +250,6 @@ struct HashTree
 
 private:
     /// The minimum number of leaf chunks each worker thread must have
-    // {{{
     /**
     * A rough break-even heuristic.  Spawning and joining a thread costs on
     * the order of tens of microseconds, and hashing one default-size leaf
@@ -271,11 +258,9 @@ private:
     * A batch too small to give at least 2 workers this many chunks each is
     * hashed on the calling thread instead.
     */
-    // }}}
     static constexpr int MIN_LEAF_CHUNKS_PER_WORKER = 8;
 
     /// The number of chunks that must be seen before the worker pool starts
-    // {{{
     /**
     * Spinning up the pool costs NUM_THREADS thread spawns, roughly a hundred
     * microseconds, which a short stream can never earn back.  A stream's
@@ -284,7 +269,6 @@ private:
     * many chunks have gone by, which is evidence that the stream is long
     * enough to care about.
     */
-    // }}}
     static constexpr int MIN_CHUNKS_BEFORE_POOL_START = 4;
 
     /// Role byte for the final node (the root of the tree)
@@ -294,7 +278,6 @@ private:
     static constexpr uint8_t ROLE_LEAF = 0x01;
 
     /// Whether the node policy also supports lane-paired leaf hashing
-    // {{{
     /**
     * Detected, not required.  A policy opts in by additionally providing a
     * \c node_x2_type that advances two same-parameter nodes in lockstep (see
@@ -306,7 +289,6 @@ private:
     * A paired leaf computes bit-identical CVs, which is the lockstep
     * contract.  research/duplex_x2-verify.cpp verifies it for \c DuplexX2.
     */
-    // }}}
     static constexpr bool HAS_PAIRED_LEAF =
         requires(const NodePolicy p, NodePolicy::node_x2_type& pair,
                  const std::span<std::byte> cv_dst, const std::span<const std::byte> data) {
@@ -325,7 +307,6 @@ private:
 
 protected:
     /// The final node (root); constructed eagerly
-    // {{{
     /**
     * Eager construction validates the node parameters in the tree constructor
     * rather than at the first flush, because the node's constructor throws on
@@ -334,7 +315,6 @@ protected:
     * It is protected so the derived tree's digest method can read the
     * finalized final node, under \c mtx_.
     */
-    // }}}
     node_type final_node_;
 
     std::mutex mtx_;
@@ -370,7 +350,6 @@ private:
     // ---- Streaming-pipeline state (see "Parallelism" in the class doc) ----
 
     /// One slot of the pipeline ring: one chunk, hashed in place to its CV
-    // {{{
     /**
     * The slot *owns* its chunk bytes, swapped with \c chunk_buf_ when
     * possible and copied from the caller's buffer otherwise.  The caller's
@@ -390,7 +369,6 @@ private:
     * thread owns the slot accesses its contents without locking, because the
     * mutex acquire/release pairs order the accesses.
     */
-    // }}}
     struct Slot final
     {
         /// The plaintext chunk to hash, zeroized by the worker after hashing
@@ -480,13 +458,11 @@ public:
     const int32_t CV_LEN; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
     /// The maximum number of worker threads to use
-    // {{{
     /**
     * Resolved at construction, where 0 means one thread per hardware
     * thread.  It controls only how many cores may compute leaf CVs
     * concurrently.
     */
-    // }}}
     const int32_t NUM_THREADS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 
 private:
@@ -583,14 +559,12 @@ private:
     }
 
     /// Absorb the tree-role prefix into \a node
-    // {{{
     /**
     * Every node's first absorbed bytes bind its role in the tree and the
     * tree geometry.  See the class documentation ("Domain separation") for
     * why.  Leaves must additionally absorb their chunk index (done by
     * \c hash_leaf_into_()).
     */
-    // }}}
     void absorb_role_prefix_(node_type& node, const uint8_t role) const
     {
         // The role is a fixed-width framing byte, deliberately not left-encoded.
@@ -600,7 +574,6 @@ private:
     }
 
     /// Hash one chunk to its chaining value, written into \a cv_dst
-    // {{{
     /**
     * A pure function of the node parameters, the chunk index, and the chunk
     * bytes.  That purity is what lets leaves run on any thread in any order
@@ -614,7 +587,6 @@ private:
     *        because chunk 0 is absorbed directly by the final node
     * \param cv_dst the destination for the \c CV_LEN -byte chaining value
     */
-    // }}}
     void hash_leaf_into_(const std::span<const std::byte> chunk, const int64_t chunk_index,
                          const std::span<std::byte> cv_dst) const
     {
@@ -670,7 +642,6 @@ private:
     }
 
     /// Hash two adjacent chunks to their chaining values with one lane-paired node
-    // {{{
     /**
     * The lane-paired counterpart of \c hash_leaf_into_, available only when
     * \c HAS_PAIRED_LEAF.  The chunks at \a chunk_index and
@@ -691,7 +662,6 @@ private:
     * \param cv_dst_a the destination for \a chunk_a 's \c CV_LEN -byte CV
     * \param cv_dst_b the destination for \a chunk_b 's \c CV_LEN -byte CV
     */
-    // }}}
     void hash_leaf_pair_into_(const std::span<const std::byte> chunk_a,
                               const std::span<const std::byte> chunk_b,
                               const int64_t chunk_index,
@@ -752,7 +722,6 @@ private:
     }
 
     /// Securely wipe the first \a wipe_len bytes of a byte vector's allocation
-    // {{{
     /**
     * Every buffer this class holds carries message plaintext, so it is wiped
     * before release.  \a wipe_len must cover every byte ever written.
@@ -771,7 +740,6 @@ private:
     * \c chunk_buf_ is such a caller, since its capacity is the caller-chosen
     * CHUNK_SIZE.
     */
-    // }}}
     static void zeroize_(std::vector<std::byte>& v, const size_t wipe_len)
     {
 #if defined(DEBUG)
@@ -868,7 +836,6 @@ private:
     }
 
     /// Wake, join, and discard the worker threads
-    // {{{
     /**
     * Called from \c finalize_(), where the workers have nothing left to do,
     * and from the destructor.  The destructor MUST call this.  The workers
@@ -881,7 +848,6 @@ private:
     * zeroized by its worker before that worker exited, and a drained slot's
     * before that.
     */
-    // }}}
     void stop_pool_()
     {
         if (!pool_is_active_())
@@ -912,7 +878,6 @@ private:
     }
 
     /// The body of each worker thread
-    // {{{
     /**
     * Claim the oldest queued slot, and with a paired-leaf policy the next one
     * too when it is already queued.  Hash the claimed chunks to their CVs in
@@ -945,7 +910,6 @@ private:
     * callable and call std::terminate.  A hashing exception is parked in the
     * slots for the calling thread to rethrow.
     */
-    // }}}
     void pool_worker_loop_()
     {
         for (;;)
@@ -1101,7 +1065,6 @@ private:
     }
 
     /// Absorb \a bytes into the final node, after draining any pending CVs
-    // {{{
     /**
     * The single choke point for feeding the final node any chunk data or
     * chaining value.  It drains the streaming pipeline first, a no-op when
@@ -1114,7 +1077,6 @@ private:
     * workers, to overlap the drain with their hashing.  That leaves this
     * drain a no-op.
     */
-    // }}}
     void absorb_into_final_node_(const std::span<const std::byte> bytes)
     {
         drain_pending_cvs_();
@@ -1122,7 +1084,6 @@ private:
     }
 
     /// Dispatch one chunk into the next ring slot for a pool worker
-    // {{{
     /**
     * The pipeline in one method:
     *
@@ -1154,7 +1115,6 @@ private:
     *        \a chunk, swapped into the slot instead of copying \a chunk
     * \pre the pool is active
     */
-    // }}}
     void dispatch_leaf_(const std::span<const std::byte> chunk,
                         std::vector<std::byte>* const owned)
     {
@@ -1209,7 +1169,6 @@ private:
     }
 
     /// Hand one complete chunk to the tree (the per-chunk router)
-    // {{{
     /**
     * Chunk 0 is absorbed directly by the final node.  Every later chunk is
     * hashed by a leaf, through the pipeline once the pool is running and
@@ -1232,7 +1191,6 @@ private:
     *        buffer, which is zeroized and has CHUNK_SIZE capacity, so it
     *        remains a valid buffer on every path.
     */
-    // }}}
     void flush_chunk_(const std::span<const std::byte> chunk,
                       std::vector<std::byte>* const owned = nullptr)
     {
@@ -1274,7 +1232,6 @@ private:
     }
 
     /// Hash a batch's chunks on the calling thread, pairing adjacent leaves
-    // {{{
     /**
     * The no-worker counterpart of the batch path's paired leaf hashing, used
     * when the streaming pool can never run.  That is a single-threaded tree,
@@ -1289,7 +1246,6 @@ private:
     * \pre \c HAS_PAIRED_LEAF
     * \pre the streaming pipeline is idle (the pool never started)
     */
-    // }}}
     void flush_paired_chunks_inline_(const std::byte* src, const int64_t num_chunks)
     {
 #if defined(DEBUG)
@@ -1339,7 +1295,6 @@ private:
     }
 
     /// Hash a batch of \a num_chunks consecutive whole chunks starting at \a src
-    // {{{
     /**
     * This is the parallel heart of the class.  The batch's leaf chunks are
     * statically partitioned across up to NUM_THREADS worker threads.  Each
@@ -1379,7 +1334,6 @@ private:
     * \pre at least one input byte follows the batch, which the caller
     *      enforces as the more-input-follows rule
     */
-    // }}}
     void flush_bulk_chunks_(const std::byte* src, const int64_t num_chunks)
     {
 #if defined(DEBUG)
@@ -1559,7 +1513,6 @@ private:
     }
 
     /// Consume \a len bytes of \a data
-    // {{{
     /**
     * A chunk is never flushed until at least one more input byte is known to
     * follow it, because the *last* chunk of the stream is flushed at
@@ -1574,7 +1527,6 @@ private:
     * the batch is large enough (see flush_bulk_chunks_()).  Only a leading
     * partial chunk and the trailing bytes pass through the chunk buffer.
     */
-    // }}}
     void add_(std::span<const std::byte> src)
     {
 #if defined(DEBUG)
@@ -1627,7 +1579,6 @@ private:
 
 protected:
     /// Absorb the trailing chunk and the chunk count into the final node
-    // {{{
     /**
     * The chunk buffer holds the last chunk of the stream.  It is 1 to
     * CHUNK_SIZE bytes (see add_()), and empty only when *nothing* was ever
@@ -1642,7 +1593,6 @@ protected:
     * \c mtx_, on its first invocation, then extract the digest from
     * \c final_node_.
     */
-    // }}}
     void finalize_()
     {
 #if defined(DEBUG)
@@ -1696,7 +1646,6 @@ private:
     friend Derived;
 
     /// ctor (only a derived tree constructs the base)
-    // {{{
     /**
     * \param policy the node policy, which owns everything needed to construct
     *        this tree's nodes (see \c tree_node_policy)
@@ -1709,7 +1658,6 @@ private:
     *       \a num_threads are checked, so whatever the node constructor
     *       throws is reported ahead of those checks.
     */
-    // }}}
     explicit HashTree(NodePolicy policy, const int chunk_size_bytes, const int num_threads) :
     policy_{std::move(policy)},
     final_node_{policy_.make_node()},
@@ -1755,7 +1703,6 @@ public:
     HashTree& operator=(HashTree&&) = delete;
 
     /// Consume the input data into the tree
-    // {{{
     /**
     * \param src the input data
     * \return a reference to the derived tree (to enable method chaining)
@@ -1763,7 +1710,6 @@ public:
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     Derived& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};

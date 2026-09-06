@@ -88,7 +88,6 @@ struct compress_castella_tree_node_policy final
 };
 
 /// A tree-hashing wrapper around \c compress_castella_hash
-// {{{
 /**
 * A KangarooTwelve-style two-level tree hash built from
 * \c compress_castella_hash nodes so that hashing can use more than one CPU
@@ -99,7 +98,6 @@ struct compress_castella_tree_node_policy final
 * \c compress_castella_hash.  The same input produces unrelated digests.  That
 * is by design, since the tree's role prefix separates the domains.
 */
-// }}}
 struct compress_castella_tree final
     : public Castella::HashTree<compress_castella_tree_node_policy, compress_castella_tree>
 {

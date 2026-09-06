@@ -152,13 +152,11 @@ private:
     bool has_been_finalized_ = false;
 
     /// Check the value of \c mix_rate_
-    // {{{
     /**
     * \note If \c mix_rate_ is 0, periodic mixing is disabled and no further checks are done.
     * \exception std::invalid_argument if \c mix_rate_ is < \c MIX_RATE_MIN
     * \exception std::invalid_argument if \c mix_rate_ is > \c MIX_RATE_MAX
     */
-    // }}}
     void check_constraints_() const
     {
         if (mix_rate_ == 0)
@@ -178,7 +176,6 @@ private:
     }
 
     /// Bind the mix rate into the initial state
-    // {{{
     /**
     * The mix rate affects the state only when a mix is performed.  Without
     * this, different mix rates would produce identical digests for any input
@@ -188,7 +185,6 @@ private:
     * XORing the mix rate into every lane preserves the distinctness of the
     * initial lane values.
     */
-    // }}}
     void bind_mix_rate_() noexcept
     {
         const auto mix_rate_block = broadcast_u16(to_unsigned(mix_rate_));
@@ -375,7 +371,6 @@ private:
 
     /// Finalize the state (if it's not already) and copy the digest prefix
     /// into \a dst
-    // {{{
     /**
     * The shared core of \c final_digest_bytes and \c final_digest_to.  It adds
     * the padding bytes, applies the finalizing permutation once, then copies
@@ -384,7 +379,6 @@ private:
     * \pre the caller holds \c mtx_
     * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
     */
-    // }}}
     void final_digest_into_(const std::span<std::byte> dst) noexcept
     {
 #if defined(DEBUG)
@@ -414,7 +408,6 @@ public:
     }
 
     /// ctor
-    // {{{
     /**
     * \param mix_rate the number of absorptions between periodic mixes, where 0 disables mixing
     * \exception std::invalid_argument if \a mix_rate violates a constraint
@@ -424,7 +417,6 @@ public:
     *            body, so a wildly out-of-range value reports this rather than
     *            the above
     */
-    // }}}
     explicit compress_castella_hash(const int mix_rate) :
     mix_rate_{narrow_cast<decltype(mix_rate_)>(mix_rate)}
     {
@@ -447,7 +439,6 @@ public:
     }
 
     /// Consume the input data
-    // {{{
     /**
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
@@ -455,7 +446,6 @@ public:
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    // }}}
     compress_castella_hash& add(const std::span<const std::byte> src)
     {
         std::scoped_lock lock{mtx_};
@@ -531,7 +521,6 @@ public:
     }
 
     /// Get the final digest bytes, written into \a dst
-    // {{{
     /**
     * Like \c final_digest_bytes(int) but writes the first
     * \c std::size(dst) bytes of the finalized state into the
@@ -543,7 +532,6 @@ public:
     *       \a n is in \c final_digest_bytes(int).  Anything past that is left
     *       untouched.
     */
-    // }}}
     void final_digest_to(std::span<std::byte> dst)
     {
         std::scoped_lock lock{mtx_};

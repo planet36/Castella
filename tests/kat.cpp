@@ -361,7 +361,6 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 }
 
 /// Print the whole KAT file to standard output
-// {{{
 /**
 * The lengths sweep the interesting boundaries:
 *   - duplex: around one block (16), and around the C=4 rate (192 bytes),
@@ -377,7 +376,6 @@ print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msgl
 *   - permute: round counts well below NUM_ROUNDS_MAX, where the last-N
 *     round-constant rule is observable
 */
-// }}}
 void
 generate()
 {

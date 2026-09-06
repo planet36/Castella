@@ -22,7 +22,6 @@
 #include <span>
 
 /// Two independent \c compress_castella_hash instances with the same mix rate, advanced in lockstep
-// {{{
 /**
 * The throughput building block of cch leaf pairing (see
 * \c Castella::HashTree and the cch tree policy in cch-tree.hpp).
@@ -55,7 +54,6 @@
 * Like \c DuplexX2, this class is a single-thread worker's scratch object.
 * \c add touches the nodes' internals without taking their mutexes.
 */
-// }}}
 template <size_t N = 16>
 struct compress_castella_hash_x2 final
 {
@@ -84,7 +82,6 @@ public:
     ~compress_castella_hash_x2() = default;
 
     /// Consume the input data into node A and node B
-    // {{{
     /**
     * The lockstep counterpart of \c compress_castella_hash::add_.  The two
     * lanes absorb different bytes but always the same number of them, so both
@@ -96,7 +93,6 @@ public:
     * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep)
     * \pre neither node has been finalized
     */
-    // }}}
     void add(std::span<const std::byte> src_a, std::span<const std::byte> src_b)
     {
 #if defined(DEBUG)

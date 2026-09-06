@@ -7,7 +7,7 @@
 #undef NDEBUG
 
 #include "as_byte_span.hpp"
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"

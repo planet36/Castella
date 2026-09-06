@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "cch-tree.hpp"
 #include "cch.hpp"
 #include "check_utils.hpp"

@@ -36,7 +36,7 @@
 */
 
 #include "as_byte_span.hpp"
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
@@ -57,7 +57,7 @@
 
 /// Convert a hexadecimal character to its nibble value
 /**
-* The inverse of \c nibble_char in bytes_to_hex.hpp, which maps a nibble to a
+* The inverse of \c nibble_char in bytes_hex.hpp, which maps a nibble to a
 * lowercase hexadecimal character.  This direction additionally accepts
 * uppercase, and validates rather than assuming a precondition.
 *
@@ -79,7 +79,7 @@ hex_nibble(const char c)
 
 /// Decode a hexadecimal script field into the bytes it represents
 /**
-* The inverse of \c bytes_to_hex in bytes_to_hex.hpp: two hexadecimal
+* The inverse of \c bytes_to_hex in bytes_hex.hpp: two hexadecimal
 * characters of \a hex become one byte of the result.  The script spells the
 * empty byte string as "-", because a zero-length field cannot be read from a
 * whitespace-delimited line.

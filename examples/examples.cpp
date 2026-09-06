@@ -6,7 +6,7 @@
 #endif
 #undef NDEBUG
 
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "castella-duplex.hpp"
 #include "encode.hpp"
 #include "quote_shell_always.hpp"

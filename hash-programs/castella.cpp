@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "check_utils.hpp"

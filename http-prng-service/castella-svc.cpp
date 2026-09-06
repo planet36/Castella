@@ -8,7 +8,7 @@
 */
 
 #include "as_byte_span.hpp"
-#include "bytes_to_hex.hpp"
+#include "bytes_hex.hpp"
 #include "castella-duplex.hpp"
 #include "config.h"
 #include "disable_core_dumps.h"

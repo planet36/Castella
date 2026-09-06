@@ -80,34 +80,34 @@ hex_nibble(const char c)
 /// Decode a hexadecimal script field into the bytes it represents
 /**
 * The inverse of \c bytes_to_hex in bytes_hex.hpp: two hexadecimal
-* characters of \a hex become one byte of the result.  The script spells the
+* characters of \a s become one byte of the result.  The script spells the
 * empty byte string as "-", because a zero-length field cannot be read from a
 * whitespace-delimited line.
 *
-* \param hex the hexadecimal characters to decode, or "-" for no bytes
+* \param s the hexadecimal characters to decode, or "-" for no bytes
 * \return the decoded bytes
-* \exception std::invalid_argument if \a hex has an odd length or holds a
+* \exception std::invalid_argument if \a s has an odd length or holds a
 *            character that is not a hexadecimal digit
 *
 * The result is a \c std::string so that it passes straight to the \c Duplex
 * members that take a \c std::string_view.
 */
 [[nodiscard]] static std::string
-hex_to_bytes(const std::string_view hex)
+hex_to_bytes(const std::string_view s)
 {
-    if (hex == "-")
+    if (s == "-")
         return {};
 
-    if ((std::size(hex) % 2) != 0)
+    if ((std::size(s) % 2) != 0)
         throw std::invalid_argument("hex string has an odd length");
 
     std::string result;
-    result.reserve(std::size(hex) / 2);
+    result.reserve(std::size(s) / 2);
 
-    for (size_t i = 0; i < std::size(hex); i += 2)
+    for (size_t i = 0; i < std::size(s); i += 2)
     {
-        const auto hi = hex_nibble(hex[i]);
-        const auto lo = hex_nibble(hex[i + 1]);
+        const auto hi = hex_nibble(s[i]);
+        const auto lo = hex_nibble(s[i + 1]);
         result.push_back(static_cast<char>((hi << 4) | lo));
     }
 

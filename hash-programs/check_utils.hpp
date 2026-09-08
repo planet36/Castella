@@ -44,7 +44,7 @@ decode_hex_to_bytes(const std::string_view s)
     if ((std::size(s) % 2) != 0)
         return std::nullopt;
 
-    const auto nibble_val = [](const char c) -> int {
+    const auto decode_hex_to_nibble = [](const char c) -> int {
         if (c >= '0' && c <= '9')
             return c - '0';
         if (c >= 'a' && c <= 'f')
@@ -58,8 +58,8 @@ decode_hex_to_bytes(const std::string_view s)
 
     for (std::size_t i = 0; i < std::size(result); ++i)
     {
-        const int hi = nibble_val(s[2 * i]);
-        const int lo = nibble_val(s[2 * i + 1]);
+        const int hi = decode_hex_to_nibble(s[2 * i]);
+        const int lo = decode_hex_to_nibble(s[2 * i + 1]);
 
         if (hi < 0 || lo < 0)
             return std::nullopt;

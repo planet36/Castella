@@ -40,7 +40,7 @@ encode_nibble_to_hex(const uint8_t x) noexcept
 * \retval -1 if \a c is not a hexadecimal character
 */
 [[nodiscard]] static constexpr int
-nibble_val(const char c) noexcept
+decode_hex_to_nibble(const char c) noexcept
 {
     if (c >= '0' && c <= '9')
         return c - '0';

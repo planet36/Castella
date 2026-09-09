@@ -103,9 +103,17 @@ constexpr std::string_view kat_mac_function_name = "Castella-MAC";
 constexpr int64_t EXPECTED_KATS = 91;
 
 /// Get the deterministic KAT message of length \a len: <code>msg[i] = i mod 256</code>
+/**
+* \retval {} if \a len is not positive
+*/
 [[nodiscard]] std::vector<std::byte>
 make_msg(const int len)
 {
+    if (len <= 0)
+    {
+        return {};
+    }
+
     std::vector<std::byte> msg(len);
 
     for (int i = 0; i < len; ++i)
@@ -195,9 +203,17 @@ tree_digest(const int capacity_blocks, const int num_rounds, const int input_suf
 }
 
 /// Get the deterministic KAT key of length \a len: <code>key[i] = 255 - (i mod 256)</code>
+/**
+* \retval {} if \a len is not positive
+*/
 [[nodiscard]] std::vector<std::byte>
 make_key(const int len)
 {
+    if (len <= 0)
+    {
+        return {};
+    }
+
     std::vector<std::byte> key(len);
 
     for (int i = 0; i < len; ++i)

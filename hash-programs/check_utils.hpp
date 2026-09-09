@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "bytes_hex.hpp"
+
 #include <charconv>
 #include <cinttypes>
 #include <cstddef>
@@ -44,16 +46,6 @@ decode_hex_to_bytes(const std::string_view s)
 {
     if ((std::size(s) % 2) != 0)
         throw std::invalid_argument("hex string has an odd length");
-
-    const auto decode_hex_to_nibble = [](const char c) -> int {
-        if (c >= '0' && c <= '9')
-            return c - '0';
-        if (c >= 'a' && c <= 'f')
-            return c - 'a' + 10;
-        if (c >= 'A' && c <= 'F')
-            return c - 'A' + 10;
-        return -1;
-    };
 
     std::vector<std::byte> result(std::size(s) / 2);
 

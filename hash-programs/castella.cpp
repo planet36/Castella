@@ -700,12 +700,14 @@ parse_tagged_line(std::string_view s, check_line_fields& cl_fields)
     if (!consume_prefix(s, " = "))
         return false;
 
-    auto digest = decode_hex_to_bytes(s);
-
-    if (!digest.has_value())
+    try
+    {
+        cl_fields.expected_digest = decode_hex_to_bytes(s);
+    }
+    catch (const std::invalid_argument&)
+    {
         return false;
-
-    cl_fields.expected_digest = *std::move(digest);
+    }
 
     return is_valid_digest_size(cl_fields.expected_digest);
 }
@@ -724,12 +726,14 @@ parse_untagged_line(std::string_view s, check_line_fields& cl_fields)
     if (space_pos == std::string_view::npos)
         return false;
 
-    auto digest = decode_hex_to_bytes(s.substr(0, space_pos));
-
-    if (!digest.has_value())
+    try
+    {
+        cl_fields.expected_digest = decode_hex_to_bytes(s.substr(0, space_pos));
+    }
+    catch (const std::invalid_argument&)
+    {
         return false;
-
-    cl_fields.expected_digest = *std::move(digest);
+    }
 
     if (!is_valid_digest_size(cl_fields.expected_digest))
         return false;

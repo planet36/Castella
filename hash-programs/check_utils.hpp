@@ -26,8 +26,8 @@
 #include <fstream>
 #include <iostream>
 #include <istream>
-#include <optional>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -35,14 +35,15 @@
 /// Parse a hexadecimal string (of even length) as bytes
 /**
 * \param s the hexadecimal string, in either letter case
-* \return the bytes, or \c std::nullopt if \a s has odd length or contains
-*         a character that is not a hexadecimal digit
+* \return the decoded bytes
+* \exception std::invalid_argument if \a s has an odd length or holds a
+*            character that is not a hexadecimal digit
 */
-[[nodiscard]] inline std::optional<std::vector<std::byte>>
+[[nodiscard]] inline std::vector<std::byte>
 decode_hex_to_bytes(const std::string_view s)
 {
     if ((std::size(s) % 2) != 0)
-        return std::nullopt;
+        throw std::invalid_argument("hex string has an odd length");
 
     const auto decode_hex_to_nibble = [](const char c) -> int {
         if (c >= '0' && c <= '9')
@@ -62,7 +63,7 @@ decode_hex_to_bytes(const std::string_view s)
         const int lo = decode_hex_to_nibble(s[2 * i + 1]);
 
         if (hi < 0 || lo < 0)
-            return std::nullopt;
+            throw std::invalid_argument("not a hex digit");
 
         result[i] = static_cast<std::byte>((hi << 4) | lo);
     }

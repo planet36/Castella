@@ -571,6 +571,10 @@ get_int_field(const field_list& fields, const std::string_view key, const int mi
 /// Get a hexadecimal field decoded as a byte string
 /**
 * An empty value is allowed.
+*
+* \retval std::nullopt if the field is absent
+* \exception std::invalid_argument if the field's value is not a hexadecimal
+*            string
 */
 [[nodiscard]] std::optional<std::string>
 get_hex_string_field(const field_list& fields, const std::string_view key)
@@ -585,10 +589,7 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
 
     const auto bytes = decode_hex_to_bytes(*value);
 
-    if (!bytes.has_value())
-        return std::nullopt;
-
-    return std::string{reinterpret_cast<const char*>(std::data(*bytes)), std::size(*bytes)};
+    return std::string{reinterpret_cast<const char*>(std::data(bytes)), std::size(bytes)};
 }
 
 /// Recompute the digest of one KAT line
@@ -761,8 +762,17 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         {
             const auto digest_hex = find_field(fields, "digest");
 
-            if (digest_hex.has_value())
-                expected = decode_hex_to_bytes(*digest_hex);
+            try
+            {
+                if (digest_hex.has_value())
+                    expected = decode_hex_to_bytes(*digest_hex);
+            }
+            catch (const std::invalid_argument& e)
+            {
+                ++num_malformed;
+                std::println(stderr, "{}: line {}: {}", path, lineno, e.what());
+                continue;
+            }
         }
 
         if (!expected.has_value())

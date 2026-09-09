@@ -62,7 +62,7 @@
 *
 * \param s the hexadecimal digits to decode, or "-" for no bytes
 * \return the decoded bytes
-* \exception std::invalid_argument if \a s has an odd length or holds a
+* \exception std::invalid_argument if the size of \a s is odd or \a s holds a
 *            character that is not a hexadecimal digit
 *
 * The result is a \c std::string so that it passes straight to the \c Duplex

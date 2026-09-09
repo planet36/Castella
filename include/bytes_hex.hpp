@@ -20,9 +20,9 @@
 #include <string_view>
 #include <vector>
 
-/// Convert a nibble value to a hexadecimal digit
+/// Encode a nibble value to a hexadecimal digit
 /**
-* \param x the nibble value to convert
+* \param x the nibble value to encode
 * \return the lowercase hexadecimal digit representing \a x
 * \pre \a x is in the interval <code>[0, 15]</code>
 */
@@ -38,8 +38,8 @@ encode_nibble_to_hex(const uint8_t x) noexcept
 
 /// Decode a hexadecimal digit to a nibble value
 /**
-* \param c the hexadecimal digit to convert
-* \return the nibble value of \a c, in the interval <code>[0, 15]</code>
+* \param c the hexadecimal digit to decode
+* \return the decoded nibble value of \a c, in the interval <code>[0, 15]</code>
 * \exception std::invalid_argument if \a c is not a hexadecimal digit
 */
 [[nodiscard]] static constexpr uint8_t
@@ -52,9 +52,9 @@ decode_hex_to_nibble(const char c)
     throw std::invalid_argument("not a hex digit");
 }
 
-/// Convert a span of bytes to a hexadecimal string
+/// Encode a span of bytes to a hexadecimal string
 /**
-* \param byte_sp the bytes to convert
+* \param byte_sp the bytes to encode
 * \return a lowercase hexadecimal string representing \a byte_sp
 */
 [[nodiscard]] static std::string
@@ -77,18 +77,18 @@ encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
     return result;
 }
 
-/// Parse a hexadecimal string (of even length) as bytes
+/// Decode a hexadecimal string (of even length) to bytes
 /**
-* \param s the hexadecimal string, in either letter case
+* \param s the hexadecimal string to decode, in either letter case
 * \return the decoded bytes
-* \exception std::invalid_argument if \a s has an odd length or holds a
+* \exception std::invalid_argument if the size of \a s is odd or \a s holds a
 *            character that is not a hexadecimal digit
 */
 [[nodiscard]] static std::vector<std::byte>
 decode_hex_to_bytes(const std::string_view s)
 {
     if ((std::size(s) % 2) != 0)
-        throw std::invalid_argument("hex string has an odd length");
+        throw std::invalid_argument("size of hex string is odd");
 
     std::vector<std::byte> result(std::size(s) / 2);
 

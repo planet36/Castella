@@ -9,15 +9,12 @@
 * The program-specific parts of a check mode live in each program.  Those are
 * recognizing its own line formats and recomputing a digest.
 *
-* This header holds the format-neutral parts: hex parsing, constant-time
-* digest comparison, and the consume-style line parsing primitives.  It also
-* holds the checkfile-driving loop, with its cksum-style accounting and exit
-* status.
+* This header holds the format-neutral parts: constant-time digest comparison
+* and the consume-style line parsing primitives.  It also holds the
+* checkfile-driving loop, with its cksum-style accounting and exit status.
 */
 
 #pragma once
-
-#include "bytes_hex.hpp"
 
 #include <charconv>
 #include <cinttypes>
@@ -29,39 +26,9 @@
 #include <iostream>
 #include <istream>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
-
-/// Parse a hexadecimal string (of even length) as bytes
-/**
-* \param s the hexadecimal string, in either letter case
-* \return the decoded bytes
-* \exception std::invalid_argument if \a s has an odd length or holds a
-*            character that is not a hexadecimal digit
-*/
-[[nodiscard]] inline std::vector<std::byte>
-decode_hex_to_bytes(const std::string_view s)
-{
-    if ((std::size(s) % 2) != 0)
-        throw std::invalid_argument("hex string has an odd length");
-
-    std::vector<std::byte> result(std::size(s) / 2);
-
-    for (std::size_t i = 0; i < std::size(result); ++i)
-    {
-        const int hi = decode_hex_to_nibble(s[2 * i]);
-        const int lo = decode_hex_to_nibble(s[2 * i + 1]);
-
-        if (hi < 0 || lo < 0)
-            throw std::invalid_argument("not a hex digit");
-
-        result[i] = static_cast<std::byte>((hi << 4) | lo);
-    }
-
-    return result;
-}
 
 /// Compare two byte spans of equal size with no early exit on the first difference
 /**

@@ -15,7 +15,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <vector>
 
 /// Convert a nibble value to a hexadecimal digit
 /**
@@ -71,6 +74,35 @@ encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
         const uint8_t lo = val & 0x0F;
         result[i++] = encode_nibble_to_hex(hi);
         result[i++] = encode_nibble_to_hex(lo);
+    }
+
+    return result;
+}
+
+/// Parse a hexadecimal string (of even length) as bytes
+/**
+* \param s the hexadecimal string, in either letter case
+* \return the decoded bytes
+* \exception std::invalid_argument if \a s has an odd length or holds a
+*            character that is not a hexadecimal digit
+*/
+[[nodiscard]] static std::vector<std::byte>
+decode_hex_to_bytes(const std::string_view s)
+{
+    if ((std::size(s) % 2) != 0)
+        throw std::invalid_argument("hex string has an odd length");
+
+    std::vector<std::byte> result(std::size(s) / 2);
+
+    for (std::size_t i = 0; i < std::size(result); ++i)
+    {
+        const int hi = decode_hex_to_nibble(s[2 * i]);
+        const int lo = decode_hex_to_nibble(s[2 * i + 1]);
+
+        if (hi < 0 || lo < 0)
+            throw std::invalid_argument("not a hex digit");
+
+        result[i] = static_cast<std::byte>((hi << 4) | lo);
     }
 
     return result;

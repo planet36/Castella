@@ -136,9 +136,10 @@ Define the adversary before hunting.  Five surfaces, five adversaries — four o
 ### 1d.  Untrusted-input parsers (CLI)
 - **Adversary:** supplies a malicious `--check` file, crafted `--tag` line, filenames, or
   env vars; wants OOB read/write, crash, or a false "OK" verification.
-- **In scope:** `check_utils.hpp` (hex parse, shell unquote, checkfile driver), `parse_int.hpp`
-  / env parsing, mmap of attacker-controlled files (zero-length, huge, truncated during read),
-  and the constant-time compare being used for the *verification* decision.
+- **In scope:** `bytes_hex.hpp` (hex parse), `check_utils.hpp` (shell unquote, checkfile
+  driver), `parse_int.hpp` / env parsing, mmap of attacker-controlled files (zero-length,
+  huge, truncated during read), and the constant-time compare being used for the
+  *verification* decision.
 
 ### 1e.  The published cryptanalytic evidence
 (`SPEC.md`'s Evidence section, `research/README.md`, `research/VERIFYING-CLAIMS.md`,

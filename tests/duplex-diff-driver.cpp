@@ -40,7 +40,6 @@
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
-#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -55,34 +54,11 @@
 #include <system_error>
 #include <type_traits>
 
-/// Convert a hexadecimal digit to its nibble value
-/**
-* The inverse of \c encode_nibble_to_hex in bytes_hex.hpp, which maps a
-* nibble to a lowercase hexadecimal digit.  This direction additionally
-* accepts uppercase, and validates rather than assuming a precondition.
-*
-* \param c the hexadecimal digit to convert
-* \return the value of \a c, in the interval <code>[0, 15]</code>
-* \exception std::invalid_argument if \a c is not a hexadecimal digit
-*/
-[[nodiscard]] static uint8_t
-hex_nibble(const char c)
-{
-    if (c >= '0' && c <= '9')
-        return static_cast<uint8_t>(c - '0');
-    if (c >= 'a' && c <= 'f')
-        return static_cast<uint8_t>(c - 'a' + 10);
-    if (c >= 'A' && c <= 'F')
-        return static_cast<uint8_t>(c - 'A' + 10);
-    throw std::invalid_argument("not a hex digit");
-}
-
 /// Decode a hexadecimal script field into the bytes it represents
 /**
-* The inverse of \c encode_bytes_to_hex in bytes_hex.hpp: two hexadecimal
-* digits of \a s become one byte of the result.  The script spells the empty
-* byte string as "-", because a zero-length field cannot be read from a
-* whitespace-delimited line.
+* A wrapper around \c decode_hex_to_bytes for the one thing a script field
+* adds.  The script spells the empty byte string as "-", because a
+* zero-length field cannot be read from a whitespace-delimited line.
 *
 * \param s the hexadecimal digits to decode, or "-" for no bytes
 * \return the decoded bytes
@@ -93,25 +69,14 @@ hex_nibble(const char c)
 * members that take a \c std::string_view.
 */
 [[nodiscard]] static std::string
-decode_hex_to_bytes(const std::string_view s)
+decode_hex_field(const std::string_view s)
 {
     if (s == "-")
         return {};
 
-    if ((std::size(s) % 2) != 0)
-        throw std::invalid_argument("hex string has an odd length");
+    const auto bytes = decode_hex_to_bytes(s);
 
-    std::string result;
-    result.reserve(std::size(s) / 2);
-
-    for (size_t i = 0; i < std::size(s); i += 2)
-    {
-        const auto hi = hex_nibble(s[i]);
-        const auto lo = hex_nibble(s[i + 1]);
-        result.push_back(static_cast<char>((hi << 4) | lo));
-    }
-
-    return result;
+    return std::string{reinterpret_cast<const char*>(std::data(bytes)), std::size(bytes)};
 }
 
 /// Read one whitespace-delimited field, or throw
@@ -198,9 +163,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 const auto num_rounds = read_field<int>(iss, "rounds");
                 const auto input_suffix = read_field<int>(iss, "suffix");
                 const auto function_name =
-                    decode_hex_to_bytes(read_field<std::string>(iss, "N"));
+                    decode_hex_field(read_field<std::string>(iss, "N"));
                 const auto customization_str =
-                    decode_hex_to_bytes(read_field<std::string>(iss, "S"));
+                    decode_hex_field(read_field<std::string>(iss, "S"));
 
                 duplex = std::make_unique<Castella::Duplex>(
                     capacity_blocks, num_rounds, input_suffix, function_name,
@@ -213,17 +178,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             if (op == "add")
             {
-                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
                 duplex->add(as_byte_span(data));
             }
             else if (op == "addle")
             {
-                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
                 duplex->add_left_encoded(as_byte_span(data));
             }
             else if (op == "addre")
             {
-                const auto data = decode_hex_to_bytes(read_field<std::string>(iss, "hex"));
+                const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
                 duplex->add_right_encoded(as_byte_span(data));
             }
             else if (op == "addlei")

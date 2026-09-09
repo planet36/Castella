@@ -142,6 +142,7 @@ round_constant_bytes(const int r, const int aes_r, const int i)
 /**
 * \param counter_init false for the all-zero state, true for
 *        <code>s[i] = i mod 256</code> over the total state bytes
+* \param num_rounds how many rounds of \c P to apply
 *
 * Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX are
 * the point, because \c P uses the \e last \a num_rounds rounds' constants.

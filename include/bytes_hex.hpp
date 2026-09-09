@@ -17,10 +17,10 @@
 #include <span>
 #include <string>
 
-/// Convert a nibble value to a hexadecimal character
+/// Convert a nibble value to a hexadecimal digit
 /**
 * \param x the nibble value to convert
-* \return the lowercase hexadecimal character representing \a x
+* \return the lowercase hexadecimal digit representing \a x
 * \pre \a x is in the interval <code>[0, 15]</code>
 */
 [[nodiscard]] static constexpr char
@@ -33,11 +33,11 @@ encode_nibble_to_hex(const uint8_t x) noexcept
     return static_cast<char>(x + (x < 10 ? '0' : -10 + 'a'));
 }
 
-/// Convert a hexadecimal character to a nibble value
+/// Decode a hexadecimal digit to a nibble value
 /**
-* \param c the hexadecimal character to convert
+* \param c the hexadecimal digit to convert
 * \return the nibble value of \a c
-* \retval -1 if \a c is not a hexadecimal character
+* \retval -1 if \a c is not a hexadecimal digit
 */
 [[nodiscard]] static constexpr int
 decode_hex_to_nibble(const char c) noexcept

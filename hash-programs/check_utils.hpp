@@ -36,7 +36,7 @@
 /**
 * \param s the hexadecimal string, in either letter case
 * \return the bytes, or \c std::nullopt if \a s has odd length or contains
-*         a non-hexadecimal character
+*         a character that is not a hexadecimal digit
 */
 [[nodiscard]] inline std::optional<std::vector<std::byte>>
 decode_hex_to_bytes(const std::string_view s)

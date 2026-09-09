@@ -28,7 +28,7 @@
 *     squeeze <n>                  squeeze_bytes(n), writes "out <hex>"
 *
 * A field written as <hex> holds an arbitrary byte string, encoded two
-* hexadecimal characters per byte.  Such a string may contain whitespace or be
+* hexadecimal digits per byte.  Such a string may contain whitespace or be
 * empty, and a whitespace-delimited line contains neither, so the bytes never
 * appear literally.
 *
@@ -55,13 +55,13 @@
 #include <system_error>
 #include <type_traits>
 
-/// Convert a hexadecimal character to its nibble value
+/// Convert a hexadecimal digit to its nibble value
 /**
-* The inverse of \c encode_nibble_to_hex in bytes_hex.hpp, which maps a nibble to a
-* lowercase hexadecimal character.  This direction additionally accepts
-* uppercase, and validates rather than assuming a precondition.
+* The inverse of \c encode_nibble_to_hex in bytes_hex.hpp, which maps a
+* nibble to a lowercase hexadecimal digit.  This direction additionally
+* accepts uppercase, and validates rather than assuming a precondition.
 *
-* \param c the hexadecimal character to convert
+* \param c the hexadecimal digit to convert
 * \return the value of \a c, in the interval <code>[0, 15]</code>
 * \exception std::invalid_argument if \a c is not a hexadecimal digit
 */
@@ -80,11 +80,11 @@ hex_nibble(const char c)
 /// Decode a hexadecimal script field into the bytes it represents
 /**
 * The inverse of \c encode_bytes_to_hex in bytes_hex.hpp: two hexadecimal
-* characters of \a s become one byte of the result.  The script spells the
-* empty byte string as "-", because a zero-length field cannot be read from a
+* digits of \a s become one byte of the result.  The script spells the empty
+* byte string as "-", because a zero-length field cannot be read from a
 * whitespace-delimited line.
 *
-* \param s the hexadecimal characters to decode, or "-" for no bytes
+* \param s the hexadecimal digits to decode, or "-" for no bytes
 * \return the decoded bytes
 * \exception std::invalid_argument if \a s has an odd length or holds a
 *            character that is not a hexadecimal digit

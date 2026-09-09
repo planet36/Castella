@@ -39,19 +39,19 @@ encode_nibble_to_hex(const uint8_t x) noexcept
 /// Decode a hexadecimal digit to a nibble value
 /**
 * \param c the hexadecimal digit to convert
-* \return the nibble value of \a c
-* \retval -1 if \a c is not a hexadecimal digit
+* \return the nibble value of \a c, in the interval <code>[0, 15]</code>
+* \exception std::invalid_argument if \a c is not a hexadecimal digit
 */
-[[nodiscard]] static constexpr int
-decode_hex_to_nibble(const char c) noexcept
+[[nodiscard]] static constexpr uint8_t
+decode_hex_to_nibble(const char c)
 {
     if (c >= '0' && c <= '9')
-        return c - '0';
+        return static_cast<uint8_t>(c - '0');
     if (c >= 'a' && c <= 'f')
-        return c - 'a' + 10;
+        return static_cast<uint8_t>(c - 'a' + 10);
     if (c >= 'A' && c <= 'F')
-        return c - 'A' + 10;
-    return -1;
+        return static_cast<uint8_t>(c - 'A' + 10);
+    throw std::invalid_argument("not a hex digit");
 }
 
 /// Convert a span of bytes to a hexadecimal string
@@ -96,11 +96,8 @@ decode_hex_to_bytes(const std::string_view s)
 
     for (std::size_t i = 0; i < std::size(result); ++i)
     {
-        const int hi = decode_hex_to_nibble(s[2 * i]);
-        const int lo = decode_hex_to_nibble(s[2 * i + 1]);
-
-        if (hi < 0 || lo < 0)
-            throw std::invalid_argument("not a hex digit");
+        const auto hi = decode_hex_to_nibble(s[2 * i]);
+        const auto lo = decode_hex_to_nibble(s[2 * i + 1]);
 
         result[i] = static_cast<std::byte>((hi << 4) | lo);
     }

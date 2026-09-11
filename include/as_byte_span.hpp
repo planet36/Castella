@@ -1,21 +1,29 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// Get a view to the object as a span of bytes
+/// Get a view to an object or a contiguous range as a span of bytes
 /**
-* Each overload returns a view that's valid only while the referenced storage
-* remains valid.
-*
-* Beware of a dangling span.  The storage may be destroyed, reallocated, or
-* modified.  A temporary argument does not outlive the statement that creates
-* it.
-*
 * \file
 * \author Steven Ward
+*
+* Each overload returns a view that dangles once the referenced storage is
+* destroyed or reallocated.  A temporary argument is destroyed at the end of the
+* statement that creates it.
+*
+* This leaves \c s dangling:
+* \code{.cpp}
+auto s = as_byte_span(std::string{"abc"});
+\endcode
+*
+* But this is safe:
+* \code{.cpp}
+f(as_byte_span(std::string{"abc"}));
+\endcode
 */
 
 #pragma once
 
+#include <iterator>
 #include <memory>
 #include <ranges>
 #include <span>
@@ -23,29 +31,39 @@
 
 /// Get a view to a single object as a span of bytes
 /**
-* The view spans the object representation, so padding bytes within \a T are
-* included, and their values are unspecified.
+* Padding bytes within \a T are included, and their values are unspecified.
 *
 * \param x the object to view
-* \return a \c std::span of <code>const std::byte</code> over the object
+* \return a <code>std::span<const std::byte, sizeof(T)></code> over the object
 *         representation of \a x
 */
 template <typename T>
-requires (!std::ranges::contiguous_range<T>) && std::is_trivially_copyable_v<T>
-[[nodiscard]] constexpr auto
+requires (!std::ranges::range<T>) && (!std::is_pointer_v<T>) &&
+         (!std::input_or_output_iterator<T>) && std::is_trivially_copyable_v<T>
+[[nodiscard]] auto
 as_byte_span(const T& x) noexcept
 {
-    return std::as_bytes(std::span(std::addressof(x), 1));
+    return std::as_bytes(std::span<const T, 1>(std::addressof(x), 1));
 }
 
 /// Get a view to the elements of a contiguous range as a span of bytes
 /**
+* A string literal is an array that includes its terminating null character, so
+* <code>as_byte_span("abc")</code> has 4 bytes.
+*
 * \param container the range to view
 * \return a \c std::span of <code>const std::byte</code> over the elements of
-*         \a container
+*         \a container, with a static extent when \a container has one
 */
-[[nodiscard]] constexpr auto
-as_byte_span(const std::ranges::contiguous_range auto& container) noexcept
+template <typename R>
+requires std::ranges::contiguous_range<const R> &&
+         std::ranges::sized_range<const R> &&
+         std::is_trivially_copyable_v<std::ranges::range_value_t<const R>> &&
+         (!std::is_pointer_v<std::ranges::range_value_t<const R>>) &&
+         (!std::input_or_output_iterator<std::ranges::range_value_t<const R>>) &&
+         (!std::ranges::borrowed_range<std::ranges::range_value_t<const R>>)
+[[nodiscard]] auto
+as_byte_span(const R& container) noexcept
 {
     return std::as_bytes(std::span{container});
 }

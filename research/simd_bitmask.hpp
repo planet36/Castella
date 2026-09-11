@@ -40,24 +40,12 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 static inline void
 separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
 {
-#if defined(__SSE4_1__)
+    struct u64x2 { uint64_t lo, hi; };
+    static_assert(sizeof(u64x2) == sizeof(uint8x16_t));
 
-    lo = static_cast<uint64_t>(_mm_extract_epi64(v, 0));
-    hi = static_cast<uint64_t>(_mm_extract_epi64(v, 1));
-
-#elif defined(__aarch64__)
-
-    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vreinterpretq_u64_u8
-    const uint64x2_t tmp = vreinterpretq_u64_u8(v);
-    // https://developer.arm.com/architectures/instruction-sets/intrinsics/vgetq_lane_u64
-    lo = vgetq_lane_u64(tmp, 0);
-    hi = vgetq_lane_u64(tmp, 1);
-
-#else
-
-#error "Architecture not supported"
-
-#endif
+    const auto halves = std::bit_cast<u64x2>(v);
+    lo = halves.lo;
+    hi = halves.hi;
 }
 
 /// Build a 128-bit \c std::bitset from two 64-bit integers
@@ -96,8 +84,8 @@ inline constexpr simd_arr_t<128> simd_bitmask128_arr = []
 
     for (size_t i = 0; i < 64; ++i)
     {
-        result[i] = combine_u64x2(0, UINT64_C(1) << i);       // hi, lo
-        result[i + 64] = combine_u64x2(UINT64_C(1) << i, 0);
+        result[i] = combine_u64x2(0, UINT64_C(1) << i); // hi, lo
+        result[i + 64] = combine_u64x2(UINT64_C(1) << i, 0); // hi, lo
     }
 
     return result;

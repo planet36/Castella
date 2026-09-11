@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
-/// POSIX fd and mmap utilities for size queries, page alignment, and access-pattern hints.
+/// POSIX fd and mmap utilities for file queries, OFD locks, and access-pattern hints
 /**
 * \file
 * \author Steven Ward
@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-/// Determines whether a file descriptor refers to a seekable file.
+/// Determines whether a file descriptor refers to a seekable file
 /**
 * Probes seekability by performing a no-op \c lseek to the current position.
 * This succeeds on regular files and block devices, and fails on pipes,
@@ -34,7 +34,7 @@ is_seekable(const int fd)
     return lseek(fd, 0, SEEK_CUR) != -1;
 }
 
-/// Returns the size of the file referred to by a file descriptor.
+/// Returns the size of the file referred to by a file descriptor
 /**
 * Retrieves file metadata via \c fstat(2) and extracts \c st_size.
 *
@@ -53,7 +53,7 @@ get_file_size(const int fd)
     return statbuf.st_size;
 }
 
-/// Acquires a blocking OFD read (shared) lock on an entire file.
+/// Acquires a blocking OFD read (shared) lock on an entire file
 /**
 * Applies an \c F_RDLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLKW, blocking until the lock is available.
@@ -63,8 +63,8 @@ get_file_size(const int fd)
 * locks (\c F_SETLKW), OFD locks are:
 *   - not released when another file descriptor referring to the same open
 *     file description is closed
-*   - not shared among threads of the same process, so each thread acquires
-*     and releases independently
+*   - independent between threads only when each thread opens the file itself,
+*     since threads that use one open file description share its lock
 *
 * Multiple readers may hold the lock simultaneously.  The call blocks only if
 * another open file description holds a write lock.
@@ -101,7 +101,7 @@ acq_read_lock_fd(int fd)
     return fcntl(fd, F_OFD_SETLKW, &lock);
 }
 
-/// Acquires a blocking OFD write (exclusive) lock on an entire file.
+/// Acquires a blocking OFD write (exclusive) lock on an entire file
 /**
 * Applies an \c F_WRLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLKW, blocking until the lock is available.
@@ -111,8 +111,8 @@ acq_read_lock_fd(int fd)
 * locks (\c F_SETLKW), OFD locks are:
 *   - not released when another file descriptor referring to the same open
 *     file description is closed
-*   - not shared among threads of the same process, so each thread acquires
-*     and releases independently
+*   - independent between threads only when each thread opens the file itself,
+*     since threads that use one open file description share its lock
 *
 * The call blocks until all read and write locks held by other open file
 * descriptions are released.  Only one writer may hold the lock at a time.
@@ -149,7 +149,7 @@ acq_write_lock_fd(int fd)
     return fcntl(fd, F_OFD_SETLKW, &lock);
 }
 
-/// Releases an OFD lock held on an entire file.
+/// Releases an OFD lock held on an entire file
 /**
 * Applies \c F_UNLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLK, unconditionally releasing any read or write OFD lock
@@ -158,7 +158,7 @@ acq_write_lock_fd(int fd)
 * \param fd Open file descriptor whose lock should be released.
 * \return \c 0 on success, \c -1 on error (with \c errno set by \c fcntl(2)).
 *
-* \note OFD locks (\c F_OFD_SETLKW) require Linux 3.15 or later.
+* \note OFD locks (\c F_OFD_SETLK) require Linux 3.15 or later.
 * \sa acq_read_lock_fd(), acq_write_lock_fd()
 * \sa https://sourceware.org/glibc/manual/latest/html_mono/libc.html#File-Locks-1
 * \sa https://sourceware.org/glibc/manual/latest/html_mono/libc.html#Open-File-Description-Locks-1
@@ -185,13 +185,13 @@ rel_lock_fd(int fd)
     return fcntl(fd, F_OFD_SETLK, &lock);
 }
 
-/// Advises the kernel that a file will be read sequentially and only once.
+/// Advises the kernel that a file will be read sequentially and only once
 /**
 * Issues two successive \c posix_fadvise(2) hints over the entire file:
-*   - \c POSIX_FADV_SEQUENTIAL — expect sequential page references, prompting
-*     aggressive read-ahead.
-*   - \c POSIX_FADV_NOREUSE — pages are unlikely to be needed again, allowing
-*     the kernel to reclaim them sooner.
+*   - \c POSIX_FADV_SEQUENTIAL tells the kernel to expect sequential page
+*     references, prompting aggressive read-ahead
+*   - \c POSIX_FADV_NOREUSE says the pages are unlikely to be needed again,
+*     allowing the kernel to reclaim them sooner
 *
 * On failure of either call, \c errno is set to the returned error code and
 * the function returns immediately without issuing the remaining hint.
@@ -226,14 +226,14 @@ fadvise_sequential_noreuse(const int fd)
     return false;
 }
 
-/// Advises the kernel that a memory-mapped region will be read sequentially soon.
+/// Advises the kernel that a memory-mapped region will be read sequentially soon
 /**
 * Issues two successive \c posix_madvise(3) hints over the mapping:
-*   - \c POSIX_MADV_SEQUENTIAL — expect sequential access, prompting
-*     aggressive read-ahead and allowing pages before the current position
-*     to be released.
-*   - \c POSIX_MADV_WILLNEED — the region will be needed soon; the kernel
-*     may begin faulting pages in proactively.
+*   - \c POSIX_MADV_SEQUENTIAL tells the kernel to expect sequential access,
+*     prompting aggressive read-ahead and allowing pages before the current
+*     position to be released
+*   - \c POSIX_MADV_WILLNEED says the region will be needed soon, so the
+*     kernel may begin faulting pages in proactively
 *
 * On failure of either call, \c errno is set to the returned error code and
 * the function returns immediately without issuing the remaining hint.

@@ -19,15 +19,15 @@
 #include <concepts>
 #include <stdexcept>
 
-/// Cast \a value to integral type \a To, throwing if the value is out of range.
+/// Cast \a value to integral type \a To, throwing if the value is out of range
 /**
 * \tparam To   The target integral type
 * \param value The value to cast
 * \return \a value cast to \a To
 * \exception std::range_error if \a value is not representable in \a To
 *
-* \note \c std::in_range is not used because it does not support character
-*       types or \c bool, which are included in the \c std::integral concept.
+* \note \c std::in_range is not used because it rejects const-qualified
+*       template types.  See \c in_range.hpp.
 */
 template <std::integral To>
 [[nodiscard]] static constexpr To

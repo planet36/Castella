@@ -13,10 +13,14 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 /// Join a range of strings into a single string
 /**
+* A null pointer element joins as an empty string, so the separators around it
+* are kept.
+*
 * \param range_strings the strings to join
 * \param joiner the separator inserted between consecutive strings
 * \return the concatenation of all strings in \a range_strings, separated by \a joiner
@@ -30,7 +34,7 @@ str_join(R&& range_strings, std::string_view joiner)
 
     bool first = true;
 
-    for (std::string_view s : std::forward<R>(range_strings))
+    for (auto&& s : std::forward<R>(range_strings))
     {
         if (first)
         {
@@ -40,7 +44,16 @@ str_join(R&& range_strings, std::string_view joiner)
         {
             result += joiner;
         }
-        result += s;
+
+        if constexpr (std::is_pointer_v<std::remove_cvref_t<decltype(s)>>)
+        {
+            if (s != nullptr)
+                result += s;
+        }
+        else
+        {
+            result += std::string_view{s};
+        }
     }
 
     return result;

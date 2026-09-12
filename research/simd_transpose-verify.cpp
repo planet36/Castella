@@ -12,39 +12,10 @@
 
 #include "simd_equal.hpp"
 #include "simd_transpose.hpp"
+#include "simd_types.hpp"
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
-
-static_assert(sizeof(float) == 4);
-static_assert(sizeof(double) == 8);
-
-/**
-* \sa https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Value_types/v128
-*/
-union alignas(16) V128
-{
-    std::array<std::byte    , 16 / sizeof(std::byte    )> bytes{};
-    std::array<std::int8_t  , 16 / sizeof(std::int8_t  )>  i8;
-    std::array<std::uint8_t , 16 / sizeof(std::uint8_t )>  u8;
-    std::array<std::int16_t , 16 / sizeof(std::int16_t )> i16;
-    std::array<std::uint16_t, 16 / sizeof(std::uint16_t)> u16;
-    std::array<std::int32_t , 16 / sizeof(std::int32_t )> i32;
-    std::array<std::uint32_t, 16 / sizeof(std::uint32_t)> u32;
-    std::array<std::int64_t , 16 / sizeof(std::int64_t )> i64;
-    std::array<std::uint64_t, 16 / sizeof(std::uint64_t)> u64;
-    std::array<float        , 16 / sizeof(float        )> f32;
-    std::array<double       , 16 / sizeof(double       )> f64;
-#if defined(__SIZEOF_INT128__)
-    __int128_t  i128;
-    __uint128_t u128;
-#endif
-    uint8x16_t v;
-};
-
-static_assert(sizeof(V128) == 16);
-static_assert(alignof(V128) == 16);
 
 template <std::size_t N>
 [[nodiscard]] static simd_arr_t<N>
@@ -52,7 +23,7 @@ simd_transpose_naive(const simd_arr_t<N>& x)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
-    std::array<V128, N> tmp{};
+    std::array<simd_union_t, N> tmp{};
     decltype(tmp) tmp_transposed{};
     simd_arr_t<N> x_transposed{};
 

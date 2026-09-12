@@ -21,7 +21,8 @@
 #include <cstddef>
 #include <span>
 
-/// Two independent \c compress_castella_hash instances with the same mix rate, advanced in lockstep
+/// Two independent \c compress_castella_hash instances with the same mix rate,
+/// advanced in lockstep
 /**
 * The throughput building block of cch leaf pairing (see
 * \c Castella::HashTree and the cch tree policy in cch-tree.hpp).

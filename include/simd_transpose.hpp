@@ -160,7 +160,8 @@ simd_transpose(std::array<__m128i, 16>& x) noexcept
 
 #if defined(__AVX2__)
 
-/// Transpose each 128-bit lane of \a x (treating it as two independent 2x2 matrices of \c uint64_t) using AVX2 intrinsics
+/// Transpose each 128-bit lane of \a x (treating it as two independent 2x2 matrices
+/// of \c uint64_t) using AVX2 intrinsics
 /**
 * The AVX2 integer unpacks stay within each 128-bit lane, so this is the 2x2
 * SSE2 network above lifted verbatim to ymm registers.  That is what lets two
@@ -177,7 +178,8 @@ simd_transpose(std::array<__m256i, 2>& x) noexcept
     x[1] = AB_1;
 }
 
-/// Transpose each 128-bit lane of \a x (treating it as two independent 4x4 matrices of \c uint32_t) using AVX2 intrinsics
+/// Transpose each 128-bit lane of \a x (treating it as two independent 4x4 matrices
+/// of \c uint32_t) using AVX2 intrinsics
 /**
 * The 4x4 SSE2 network above, lifted to ymm registers.  See the 2x2 overload.
 */
@@ -195,7 +197,8 @@ simd_transpose(std::array<__m256i, 4>& x) noexcept
     x[3] = _mm256_unpackhi_epi64(AB_23, CD_23); // ABCD_3
 }
 
-/// Transpose each 128-bit lane of \a x (treating it as two independent 8x8 matrices of \c uint16_t) using AVX2 intrinsics
+/// Transpose each 128-bit lane of \a x (treating it as two independent 8x8 matrices
+/// of \c uint16_t) using AVX2 intrinsics
 /**
 * The 8x8 SSE2 network above, lifted to ymm registers.  See the 2x2 overload.
 */
@@ -230,7 +233,8 @@ simd_transpose(std::array<__m256i, 8>& x) noexcept
     x[7] = _mm256_unpackhi_epi64(ABCD_67, EFGH_67); // ABCDEFGH_7
 }
 
-/// Transpose each 128-bit lane of \a x (treating it as two independent 16x16 matrices of \c uint8_t) using AVX2 intrinsics
+/// Transpose each 128-bit lane of \a x (treating it as two independent 16x16 matrices
+/// of \c uint8_t) using AVX2 intrinsics
 /**
 * The 16x16 SSE2 network above, lifted to ymm registers.  See the 2x2
 * overload.
@@ -307,7 +311,8 @@ simd_transpose(std::array<__m256i, 16>& x) noexcept
     x[0xf] = _mm256_unpackhi_epi64(ABCDEFGH_ef, IJKLMNOP_ef); // ABCDEFGHIJKLMNOP_f
 }
 
-/// Transpose one 2x2 matrix of \c uint64_t stored in the folded (row 0, row 1) layout using AVX2 intrinsics
+/// Transpose one 2x2 matrix of \c uint64_t stored in the folded (row 0, row 1) layout
+/// using AVX2 intrinsics
 /**
 * Held in 1 ymm register as x[0] = [row 0 | row 1], and produced the same way.
 * Transposing a 2x2 matrix swaps the off-diagonal elements, which here is just
@@ -321,7 +326,8 @@ simd_transpose_folded(std::array<__m256i, 1>& x) noexcept
     x[0] = _mm256_permute4x64_epi64(x[0], q0_q2_q1_q3);
 }
 
-/// Transpose one 4x4 matrix of \c uint32_t stored in the folded (row j, row j+2) layout using AVX2 intrinsics
+/// Transpose one 4x4 matrix of \c uint32_t stored in the folded (row j, row j+2) layout
+/// using AVX2 intrinsics
 /**
 * Held in 2 ymm registers as x[j] = [row j | row j+2], and produced the same
 * way.  Rows 0-1 (A-B) are in the low 128-bit lanes, rows 2-3 (C-D) in the
@@ -348,7 +354,8 @@ simd_transpose_folded(std::array<__m256i, 2>& x) noexcept
     x[1] = _mm256_permute4x64_epi64(COL_13, q0_q2_q1_q3);
 }
 
-/// Transpose one 8x8 matrix of \c uint16_t stored in the folded (row j, row j+4) layout using AVX2 intrinsics
+/// Transpose one 8x8 matrix of \c uint16_t stored in the folded (row j, row j+4) layout
+/// using AVX2 intrinsics
 /**
 * Held in 4 ymm registers as x[j] = [row j | row j+4], and produced the same
 * way.  Rows 0-3 (A-D) are in the low 128-bit lanes, rows 4-7 (E-H) in the
@@ -389,7 +396,8 @@ simd_transpose_folded(std::array<__m256i, 4>& x) noexcept
     x[3] = _mm256_permute4x64_epi64(COL_37, q0_q2_q1_q3);
 }
 
-/// Transpose one 16x16 matrix of \c uint8_t stored in the folded (row j, row j+8) layout using AVX2 intrinsics
+/// Transpose one 16x16 matrix of \c uint8_t stored in the folded (row j, row j+8) layout
+/// using AVX2 intrinsics
 /**
 * Held in 8 ymm registers as x[j] = [row j | row j+8], and produced the same
 * way, which is what lets consecutive transposes chain in registers without

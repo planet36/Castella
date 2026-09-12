@@ -42,7 +42,8 @@ using arr_blocks_x2 = simd_arr_x2_t<N>;
 
 #endif
 
-/// For state size \a N, get the minimum number of rounds for \c Castella::permute to achieve full bit diffusion
+/// For state size \a N, get the minimum number of rounds for \c Castella::permute
+/// to achieve full bit diffusion
 /**
 * The values were obtained from research/permute-num_rounds.cpp and
 * corroborated by research/permute-num_rounds-avalanche_matrix.cpp
@@ -188,7 +189,8 @@ inline constexpr auto round_constants = create_round_constants<NUM_ROUNDS_MAX>()
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
-/// The round constants for a single Castella round, folded for the register-resident \a N-block permutation
+/// The round constants for a single Castella round,
+/// folded for the register-resident \a N-block permutation
 /**
 * \c round_constants_folded_t<N>[aes_r][j] is the 256-bit AES round key for
 * folded state element \c j in AES round \c aes_r.  Element \c j holds blocks

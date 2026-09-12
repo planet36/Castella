@@ -221,7 +221,8 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
     }
 }
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr with 256-bit round keys
+/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// with 256-bit round keys
 /**
 * Each element's key here is a full 256-bit value, so the two lanes of an
 * element may use different 128-bit round keys.  \c aes_enc_arr_x2 instead

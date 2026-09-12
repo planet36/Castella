@@ -143,7 +143,7 @@ private:
     /// The number of absorptions since the state was last mixed
     int16_t absorbs_since_mix_ = 0;
 
-    /// After this many absorptions, the state is mixed.
+    /// After this many absorptions, the state is mixed
     const int16_t mix_rate_ = DEFAULT_MIX_RATE; // absorptions per mix
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MIN));
     static_assert(in_range<decltype(mix_rate_)>(MIX_RATE_MAX));
@@ -544,18 +544,18 @@ public:
         final_digest_into_(dst);
     }
 
-    /// Get the size (in bytes) of the state.
+    /// Get the size (in bytes) of the state
     [[nodiscard]] constexpr static int get_state_size_bytes() noexcept
     {
         return static_cast<int>(sizeof(state_));
     }
 
-    /// Get the maximum number of digest bytes that can be returned.
+    /// Get the maximum number of digest bytes that can be returned
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept
     {
         return get_state_size_bytes() / 4;
     }
 
-    /// Get the mix rate (i.e. the number of absorptions before the state is mixed).
+    /// Get the mix rate (i.e. the number of absorptions before the state is mixed)
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };

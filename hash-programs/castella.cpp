@@ -170,7 +170,7 @@ resolve_num_rounds(const int digest_size_bytes) noexcept
     return num_rounds_given.value_or(get_necessary_num_rounds(digest_size_bytes));
 }
 
-/// Print the version information.
+/// Print the version information
 void
 print_version()
 {
@@ -180,7 +180,7 @@ print_version()
     std::println("Written by {}", program_author);
 }
 
-/// Print the help message.
+/// Print the help message
 void
 print_usage()
 {
@@ -337,7 +337,7 @@ print_usage()
     std::println("Report bugs to <https://github.com/planet36/Castella/issues>.");
 }
 
-/// Process the command line options.
+/// Process the command line options
 /**
 * \param argc the arg count
 * \param argv the arg vector

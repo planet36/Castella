@@ -96,7 +96,7 @@ get_default_num_bytes_to_squeeze()
         return capacity_blocks * sizeof(Castella::block_t) / 2;
 }
 
-/// Print the version information.
+/// Print the version information
 void
 print_version()
 {
@@ -105,7 +105,7 @@ print_version()
     std::println("Written by {}", program_author);
 }
 
-/// Print the help message.
+/// Print the help message
 void
 print_usage()
 {

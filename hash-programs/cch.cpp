@@ -63,7 +63,7 @@ bool check_mode = false;
 bool quiet = false;
 // }}}
 
-/// Print the version information.
+/// Print the version information
 void
 print_version()
 {
@@ -73,7 +73,7 @@ print_version()
     std::println("Written by {}", program_author);
 }
 
-/// Print the help message.
+/// Print the help message
 void
 print_usage()
 {
@@ -206,7 +206,7 @@ print_usage()
     std::println("Report bugs to <https://github.com/planet36/Castella/issues>.");
 }
 
-/// Process the command line options.
+/// Process the command line options
 /**
 * \param argc the arg count
 * \param argv the arg vector

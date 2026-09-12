@@ -45,7 +45,7 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// There is no such intrinsic named "_mm256_aesimc_epi128".
+/// There is no such intrinsic named "_mm256_aesimc_epi128"
 [[nodiscard]] static inline __m256i
 // NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 _mm256_aesimc_epi128(__m256i data) noexcept

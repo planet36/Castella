@@ -1121,7 +1121,7 @@ public:
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
-    /// Get the size (in bytes) of the state.
+    /// Get the size (in bytes) of the state
     /**
     * The state size is fixed and does not depend on any user-provided parameters.
     */
@@ -1130,13 +1130,13 @@ public:
         return static_cast<int>(sizeof(block_t)) * B;
     }
 
-    /// Get the size (in bytes) of the capacity portion of the state.
+    /// Get the size (in bytes) of the capacity portion of the state
     [[nodiscard]] int get_capacity_size_bytes() const noexcept
     {
         return static_cast<int>(sizeof(block_t)) * C;
     }
 
-    /// Get the size (in bytes) of the rate (input buffer) portion of the state.
+    /// Get the size (in bytes) of the rate (input buffer) portion of the state
     [[nodiscard]] int get_rate_size_bytes() const noexcept
     {
         return static_cast<int>(sizeof(block_t)) * R;

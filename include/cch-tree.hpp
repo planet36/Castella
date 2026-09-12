@@ -152,19 +152,19 @@ public:
         return final_node_.final_digest_bytes(n);
     }
 
-    /// Get the size (in bytes) of a node's state.
+    /// Get the size (in bytes) of a node's state
     [[nodiscard]] constexpr static int get_state_size_bytes() noexcept
     {
         return node_type::get_state_size_bytes();
     }
 
-    /// Get the maximum number of digest bytes that can be returned.
+    /// Get the maximum number of digest bytes that can be returned
     [[nodiscard]] constexpr static int get_max_digest_size_bytes() noexcept
     {
         return node_type::get_max_digest_size_bytes();
     }
 
-    /// Get the mix rate (i.e. the number of absorptions before a node's state is mixed).
+    /// Get the mix rate (i.e. the number of absorptions before a node's state is mixed)
     /**
     * 0 means periodic mixing is disabled.
     */

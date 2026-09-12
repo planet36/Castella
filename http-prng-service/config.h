@@ -35,11 +35,11 @@ inline constexpr int input_suffix = 1;
 inline constexpr std::string_view customization_str = "HTTP PRNG service";
 
 /// High-quality entropy will be added to the Castella service after this
-/// much time (in seconds) elapses.
+/// much time (in seconds) elapses
 inline constexpr int period_sec = 60;
 
 /// High-quality entropy will be added to the Castella service after this
-/// many consecutive bytes have been squeezed.
+/// many consecutive bytes have been squeezed
 inline constexpr int max_consec_bytes_sqzd = 0xFFFF;
 
 /// The size (in bytes) of the high-quality entropy buffer

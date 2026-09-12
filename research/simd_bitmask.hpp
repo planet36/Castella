@@ -31,23 +31,6 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
     return std::bit_cast<uint8x16_t>(u64x2{.lo = lo, .hi = hi});
 }
 
-/// Split a 128-bit SIMD value into its high and low 64-bit halves
-/**
-* \param[in]  v  the 128-bit SIMD value to split
-* \param[out] hi the upper 64 bits of \a v
-* \param[out] lo the lower 64 bits of \a v
-*/
-static inline void
-separate(const uint8x16_t v, uint64_t& hi, uint64_t& lo) noexcept
-{
-    struct u64x2 { uint64_t lo, hi; };
-    static_assert(sizeof(u64x2) == sizeof(uint8x16_t));
-
-    const auto halves = std::bit_cast<u64x2>(v);
-    lo = halves.lo;
-    hi = halves.hi;
-}
-
 /// Build a 128-bit \c std::bitset from two 64-bit integers
 /**
 * \param hi the upper 64 bits
@@ -71,10 +54,8 @@ make_bitset(const uint64_t hi, const uint64_t lo) noexcept
 [[nodiscard]] static inline std::bitset<128>
 make_bitset(const uint8x16_t v) noexcept
 {
-    uint64_t lo{};
-    uint64_t hi{};
-    separate(v, hi, lo);
-    return make_bitset(hi, lo);
+    const simd_union_t u{.v = v};
+    return make_bitset(u.u64[1], u.u64[0]); // hi, lo
 }
 
 /// One single-bit bitmask per bit position in a 128-bit SIMD register

@@ -18,9 +18,9 @@
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
 #include "narrow_cast.hpp"
+#include "simd_types.hpp"
 
 #include <algorithm>
-#include <array>
 #if defined(DEBUG)
 #include <cassert>
 #endif
@@ -455,18 +455,16 @@ public:
 
         if (num_bytes_remaining > 0)
         {
-            alignas(block_t) std::array<std::byte, sizeof(block_t)> tmp{};
+            simd_union_t tmp{};
 
-            _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),
-                            _mm256_extracti128_si256(state_x2_[i], 0));
-            (void)std::memcpy(out_a, std::data(tmp), num_bytes_remaining);
+            tmp.v = _mm256_extracti128_si256(state_x2_[i], 0);
+            (void)std::memcpy(out_a, std::data(tmp.bytes), num_bytes_remaining);
 
-            _mm_store_si128(reinterpret_cast<__m128i*>(std::data(tmp)),
-                            _mm256_extracti128_si256(state_x2_[i], 1));
-            (void)std::memcpy(out_b, std::data(tmp), num_bytes_remaining);
+            tmp.v = _mm256_extracti128_si256(state_x2_[i], 1);
+            (void)std::memcpy(out_b, std::data(tmp.bytes), num_bytes_remaining);
 
             // tmp held outer-state bytes beyond those squeezed, so wipe it.
-            explicit_bzero(std::data(tmp), sizeof(tmp));
+            explicit_bzero(&tmp, sizeof(tmp));
         }
     }
 

@@ -59,7 +59,7 @@ test_duplex_x2(const int capacity_blocks, const int num_rounds)
     {
         // Lengths chosen to land on either side of the rate (at most
         // 224 bytes) so that pieces span 0, 1, and multiple absorptions.
-        const auto len = arc4random_uniform(600);
+        const auto len = 1 + arc4random_uniform(599);
 
         std::vector<std::byte> bytes_a(len);
         std::vector<std::byte> bytes_b(len);

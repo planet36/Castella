@@ -11,8 +11,8 @@
 #pragma once
 
 #include "castella-hash-tree.hpp"
-#include "cch.hpp"
 #include "cch-x2.hpp"
+#include "cch.hpp"
 
 #include <mutex>
 #include <span>

@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include "castella-duplex.hpp"
 #include "castella-duplex-x2.hpp"
+#include "castella-duplex.hpp"
 #include "castella-hash-tree.hpp"
 
 #include <mutex>

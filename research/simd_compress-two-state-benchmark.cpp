@@ -46,17 +46,22 @@
 
 #include "castella-permute.hpp"
 #include "cch.hpp"
+#include "parse_int.hpp"
 #include "simd_compress.hpp"
 #include "simd_equal.hpp"
 
+#include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <err.h>
+#include <exception>
 #include <format>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -195,7 +200,8 @@ BM_states_sequential(benchmark::State& BM_state, const int buf_size)
     }
 
     BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(N * buf_size));
+                               static_cast<int64_t>(N * buf_size) /
+                               static_cast<double>(BM_state.threads()));
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(data.states);
@@ -227,7 +233,8 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
     }
 
     BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(N * buf_size));
+                               static_cast<int64_t>(N * buf_size) /
+                               static_cast<double>(BM_state.threads()));
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(data.states);
@@ -318,12 +325,38 @@ self_check()
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
+    using namespace std::literals;
+
     // Copied from benchmark.h
     benchmark::MaybeReenterWithoutASLR(argc, argv);
     benchmark::Initialize(&argc, argv);
 
     if (benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
+
+    // {{{ determine num_threads
+
+    constexpr int min_threads = 1;
+    const auto hw_threads = static_cast<int>(std::thread::hardware_concurrency());
+    const auto max_threads = std::max(min_threads, hw_threads);
+
+    // NUM_THREADS=0 means max_threads
+    int num_threads = min_threads;
+
+    try
+    {
+        num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);
+    }
+    catch (const std::exception& ex)
+    {
+        (void)std::fflush(stdout);
+        errx(EXIT_FAILURE, "%s", ex.what());
+    }
+
+    if (num_threads == 0)
+        num_threads = max_threads;
+
+    // }}}
 
     self_check<2>();
     self_check<3>();
@@ -335,11 +368,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             ((benchmark::RegisterBenchmark(
                   std::format("{}-states-sequential({}x_{})", N + 2, N + 2,
                               format_size(buf_size)),
-                  BM_states_sequential<N + 2>, buf_size),
+                  BM_states_sequential<N + 2>, buf_size)->Threads(num_threads),
               benchmark::RegisterBenchmark(
                   std::format("{}-states-interleaved({}x_{})", N + 2, N + 2,
                               format_size(buf_size)),
-                  BM_states_interleaved<N + 2>, buf_size)),
+                  BM_states_interleaved<N + 2>, buf_size)->Threads(num_threads)),
              ...);
         }(std::make_index_sequence<3>{});
     }
@@ -365,14 +398,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                               N + 2,
                               format_size(buf_size_for_total(total_size, N + 2))),
                   BM_states_sequential<N + 2>,
-                  buf_size_for_total(total_size, N + 2)),
+                  buf_size_for_total(total_size, N + 2))->Threads(num_threads),
               benchmark::RegisterBenchmark(
                   std::format("{}-states-interleaved-eqtotal({}={}x_{})", N + 2,
                               format_size((N + 2) * buf_size_for_total(total_size, N + 2)),
                               N + 2,
                               format_size(buf_size_for_total(total_size, N + 2))),
                   BM_states_interleaved<N + 2>,
-                  buf_size_for_total(total_size, N + 2))),
+                  buf_size_for_total(total_size, N + 2))->Threads(num_threads)),
              ...);
         }(std::make_index_sequence<3>{});
     }

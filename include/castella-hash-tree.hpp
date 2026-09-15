@@ -16,6 +16,7 @@
 
 #include "as_byte_span.hpp"
 #include "byte_width.hpp"
+#include "contiguous_byte_range.hpp"
 #include "narrow_cast.hpp"
 
 #include <algorithm>
@@ -31,7 +32,6 @@
 #include <span>
 #include <stdexcept>
 #include <string.h> // explicit_bzero
-#include <string_view>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -1704,32 +1704,35 @@ public:
 
     /// Consume the input data into the tree
     /**
+    * A string literal is an array that includes its terminating null
+    * character, so <code>add("abc")</code> absorbs 4 bytes.  Pass
+    * <code>"abc"sv</code> to absorb only the 3 characters.
+    *
     * \param src the input data
     * \return a reference to the derived tree (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    Derived& add(const std::span<const std::byte> src)
+    Derived& add(const contiguous_byte_range auto& src)
     {
         std::scoped_lock lock{mtx_};
 
         // Adding after finalization is an error, unlike a plain node hash's
         // squeeze.  The final node has already absorbed the trailing chunk
         // count, so later chunks could not be integrated into the tree.  The
-        // check is unconditional, so even an empty or null-data span throws,
-        // agreeing with add("").
+        // check is unconditional, so even an empty or null-data range throws.
         if (has_been_finalized_)
             throw std::logic_error("Castella::HashTree::add: tree has been finalized");
 
-        add_(src);
+        add_(as_byte_span(src));
 
         return derived_();
     }
 
-    /// \copybrief add(std::span<const std::byte>)
+    /// \copybrief add(const contiguous_byte_range auto&)
     /**
-    * The raw-data form, equivalent to the byte-span form.
+    * The raw-data form, equivalent to the range form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -1746,21 +1749,6 @@ public:
 #endif
 
         return add(std::span{static_cast<const std::byte*>(data), len});
-    }
-
-    /// \copybrief add(std::span<const std::byte>)
-    /**
-    * The string form, equivalent to the byte-span form.
-    *
-    * \param s the input data
-    * \return a reference to the derived tree (to enable method chaining)
-    * \exception std::system_error if the mutex cannot be locked
-    * \exception std::logic_error if this object has been finalized
-    */
-    Derived& add(const std::string_view s)
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(as_byte_span(s));
     }
 };
 

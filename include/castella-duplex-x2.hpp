@@ -17,6 +17,7 @@
 #include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
+#include "contiguous_byte_range.hpp"
 #include "narrow_cast.hpp"
 #include "simd_types.hpp"
 
@@ -31,7 +32,6 @@
 #include <span>
 #include <stdexcept>
 #include <string.h> // explicit_bzero
-#include <string_view>
 #if defined(DEBUG)
 #include <utility>
 #endif
@@ -302,11 +302,10 @@ private:
     }
 
     /// Unambiguously encode the byte string into both input buffers
-    void left_encode_bytes_(const std::string_view s) noexcept
+    void left_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        left_encode_(std::size(s));
-        add_(as_byte_span(s), as_byte_span(s));
+        left_encode_(std::size(src));
+        add_(src, src);
     }
 
     /// Initialize the state (both lanes absorb the same construction-time bytes)
@@ -317,8 +316,8 @@ private:
     * \c DuplexX2 lane is interchangeable with a \c Duplex constructed with
     * the same parameters.
     */
-    void init_(const std::string_view function_name,
-               const std::string_view customization_str) noexcept
+    void init_(const std::span<const std::byte> function_name,
+               const std::span<const std::byte> customization_str) noexcept
     {
         left_encode_(get_state_size_bytes());
         left_encode_(get_rate_size_bytes());
@@ -337,11 +336,13 @@ public:
     *            initializes.  The member-init \c narrow_cast runs first, so a
     *            wildly out-of-range value reports this rather than the above
     */
+    template <contiguous_byte_range FN = std::span<const std::byte>,
+              contiguous_byte_range CS = std::span<const std::byte>>
     explicit DuplexX2(const int capacity_blocks,
                       const int num_rounds,
                       const int input_suffix = 0,
-                      const std::string_view function_name = "",
-                      const std::string_view customization_str = "") :
+                      const FN& function_name = {},
+                      const CS& customization_str = {}) :
     C{narrow_cast<decltype(C)>(capacity_blocks)},
     R{narrow_cast<decltype(R)>(Duplex::B - C)},
     NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
@@ -350,7 +351,7 @@ public:
         check_constraints_();
 
         // The members are zero-initialized, as required by init_.
-        init_(function_name, customization_str);
+        init_(as_byte_span(function_name), as_byte_span(customization_str));
     }
 
     // Disable default construction and copying
@@ -368,18 +369,21 @@ public:
 
     /// Consume \a src_a into duplex A and \a src_b into duplex B
     /**
+    * A string literal's terminating null character is absorbed, as described
+    * for Duplex::add(const contiguous_byte_range auto&).
+    *
     * \param src_a the input data for duplex A
     * \param src_b the input data for duplex B
     * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep: the
     *      lanes may absorb different bytes, never different lengths)
     */
-    void add(const std::span<const std::byte> src_a,
-             const std::span<const std::byte> src_b) noexcept
+    void add(const contiguous_byte_range auto& src_a,
+             const contiguous_byte_range auto& src_b) noexcept
     {
-        add_(src_a, src_b);
+        add_(as_byte_span(src_a), as_byte_span(src_b));
     }
 
-    /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
+    /// \copybrief add(const contiguous_byte_range auto&, const contiguous_byte_range auto&)
     /**
     * The raw-data form.
     *

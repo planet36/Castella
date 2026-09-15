@@ -32,6 +32,8 @@ left_encode_1(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
 
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
     std::vector<std::byte> result;
     result.reserve(1 + w);
 
@@ -53,6 +55,8 @@ left_encode_1(const std::integral auto x)
 left_encode_2(std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -101,6 +105,8 @@ left_encode_4(std::integral auto x) noexcept
 
     const auto w = static_cast<uint8_t>(byte_width(x));
 
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
+
     result.unchecked_push_back(static_cast<std::byte>(w));
 
     // extract w bytes, going from least significant byte to most significant byte
@@ -121,6 +127,8 @@ left_encode_4(std::integral auto x) noexcept
 right_encode_1(const std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -143,6 +151,8 @@ right_encode_1(const std::integral auto x)
 right_encode_2(std::integral auto x)
 {
     const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     std::vector<std::byte> result;
     result.reserve(1 + w);
@@ -191,6 +201,8 @@ right_encode_4(std::integral auto x) noexcept
     fixed_vector<std::byte, 1 + sizeof(decltype(x))> result;
 
     const auto w = static_cast<uint8_t>(byte_width(x));
+
+    static_assert(sizeof(w) == 1, "size of byte width must be 1");
 
     // extract w bytes, going from least significant byte to most significant byte
     for (std::remove_cv_t<decltype(w)> i = 0; i < w; ++i)

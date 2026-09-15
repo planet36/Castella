@@ -144,7 +144,7 @@ parallel_hash_like(const std::string_view X,
     size_t n = 0;
     for (size_t off = 0; off < X.size(); off += B, ++n)
     {
-        const auto cv = Castella::Duplex(capacity_blocks, num_rounds, input_suffix, "", "")
+        const auto cv = Castella::Duplex(capacity_blocks, num_rounds, input_suffix)
                             .add(X.substr(off, B))
                             .squeeze_bytes(cv_len);
 

@@ -74,7 +74,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     process_options(argc, argv);
 
-    Castella::Duplex duplex{capacity_blocks, num_rounds};
+    Castella::Duplex duplex(capacity_blocks, num_rounds);
 
     duplex.add("duplex-prng-stream seed"sv);
 

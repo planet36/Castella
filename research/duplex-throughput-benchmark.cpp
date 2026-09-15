@@ -44,7 +44,7 @@ BM_duplex_absorb(benchmark::State& BM_state, const int capacity_blocks, const in
     std::array<std::byte, 64 * 1024> buf;
     arc4random_buf(std::data(buf), sizeof(buf));
 
-    Castella::Duplex duplex{capacity_blocks, num_rounds};
+    Castella::Duplex duplex(capacity_blocks, num_rounds);
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
     {
@@ -67,7 +67,7 @@ BM_duplex_squeeze(benchmark::State& BM_state, const int capacity_blocks, const i
 {
     // Perform setup here
 
-    Castella::Duplex duplex{capacity_blocks, num_rounds};
+    Castella::Duplex duplex(capacity_blocks, num_rounds);
 
     std::vector<std::byte> dst(static_cast<size_t>(duplex.get_rate_size_bytes()));
 

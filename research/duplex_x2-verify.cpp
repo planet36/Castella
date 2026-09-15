@@ -32,6 +32,7 @@
 #include <err.h>
 #include <exception>
 #include <print>
+#include <string_view>
 #include <unistd.h>
 #include <vector>
 
@@ -40,15 +41,15 @@ int
 test_duplex_x2(const int capacity_blocks, const int num_rounds)
 {
     constexpr int input_suffix = 0x0b;
-    constexpr auto function_name = "duplex_x2-verify";
-    constexpr auto customization_str = "lockstep";
+    constexpr std::string_view function_name = "duplex_x2-verify";
+    constexpr std::string_view customization_str = "lockstep";
 
-    Castella::Duplex duplex_a{capacity_blocks, num_rounds, input_suffix, function_name,
-                              customization_str};
-    Castella::Duplex duplex_b{capacity_blocks, num_rounds, input_suffix, function_name,
-                              customization_str};
-    Castella::DuplexX2 duplex_x2{capacity_blocks, num_rounds, input_suffix, function_name,
-                                 customization_str};
+    Castella::Duplex duplex_a(capacity_blocks, num_rounds, input_suffix, function_name,
+                              customization_str);
+    Castella::Duplex duplex_b(capacity_blocks, num_rounds, input_suffix, function_name,
+                              customization_str);
+    Castella::DuplexX2 duplex_x2(capacity_blocks, num_rounds, input_suffix, function_name,
+                                 customization_str);
 
     // Absorb a random number of random-length pieces.  The two lanes get
     // different bytes, but always the same length, which is the lockstep

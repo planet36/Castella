@@ -47,7 +47,6 @@
 #include <span>
 #include <stdexcept>
 #include <string.h> // explicit_bzero
-#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -629,13 +628,6 @@ private:
         add_(src);
     }
 
-    /// \copydoc left_encode_bytes_(std::span<const std::byte>)
-    void left_encode_bytes_(const std::string_view s) noexcept
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        left_encode_bytes_(as_byte_span(s));
-    }
-
     /// Unambiguously encode the byte string into the input buffer
     /**
     * The right_encode counterpart of \c left_encode_bytes_().  The byte string
@@ -686,8 +678,8 @@ private:
     * computation (the key fingerprint) if different values of 𝑆 are used.
     * </blockquote>
     */
-    void init_(const std::string_view function_name,
-               const std::string_view customization_str) noexcept
+    void init_(const std::span<const std::byte> function_name,
+               const std::span<const std::byte> customization_str) noexcept
     {
         /*
         * ## _NIST.SP.800-185.pdf_
@@ -768,11 +760,13 @@ public:
     *            wildly out-of-range value reports this rather than the above
     * \pre \a capacity_blocks is even
     */
+    template <contiguous_byte_range FN = std::span<const std::byte>,
+              contiguous_byte_range CS = std::span<const std::byte>>
     explicit Duplex(const int capacity_blocks,
                     const int num_rounds,
                     const int input_suffix = 0,
-                    const std::string_view function_name = "",
-                    const std::string_view customization_str = "") :
+                    const FN& function_name = {},
+                    const CS& customization_str = {}) :
     C{narrow_cast<decltype(C)>(capacity_blocks)},
     R{narrow_cast<decltype(R)>(B - C)},
     NUM_ROUNDS{narrow_cast<decltype(NUM_ROUNDS)>(num_rounds)},
@@ -781,7 +775,7 @@ public:
         check_constraints_();
 
         // The members are zero-initialized, as required by init_.
-        init_(function_name, customization_str);
+        init_(as_byte_span(function_name), as_byte_span(customization_str));
     }
 
     // Disable default construction and copying

@@ -31,6 +31,7 @@
 #include "as_byte_span.hpp"
 #include "byte_width.hpp"
 #include "castella-permute.hpp"
+#include "contiguous_byte_range.hpp"
 #include "in_range.hpp"
 #include "narrow_cast.hpp"
 
@@ -799,23 +800,27 @@ public:
 
     /// Consume the input data
     /**
+    * A string literal is an array that includes its terminating null
+    * character, so <code>add("abc")</code> absorbs 4 bytes.  Pass
+    * <code>"abc"sv</code> to absorb only the 3 characters.
+    *
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    Duplex& add(const std::span<const std::byte> src)
+    Duplex& add(const contiguous_byte_range auto& src)
     {
         std::scoped_lock lock{mtx_};
 
-        add_(src);
+        add_(as_byte_span(src));
 
         return *this;
     }
 
-    /// \copybrief add(std::span<const std::byte>)
+    /// \copybrief add(const contiguous_byte_range auto&)
     /**
-    * The raw-data form, equivalent to the byte-span form.
+    * The raw-data form, equivalent to the range form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -833,41 +838,30 @@ public:
         return add(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copybrief add(std::span<const std::byte>)
-    /**
-    * The string form, equivalent to the byte-span form.
-    *
-    * \param s the input data
-    * \return a reference to this object (to enable method chaining)
-    * \exception std::system_error if the mutex cannot be locked
-    */
-    Duplex& add(const std::string_view s)
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(as_byte_span(s));
-    }
-
     /// Consume the left-encoded size of the input data, then its contents
     /**
+    * A string literal's terminating null character is absorbed and counted in
+    * the encoded size, as described for add(const contiguous_byte_range auto&).
+    *
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note An empty span absorbs left_encode(0), whether or not its data is
+    * \note An empty range absorbs left_encode(0), whether or not its data is
     *       null.
     */
-    Duplex& add_left_encoded(const std::span<const std::byte> src)
+    Duplex& add_left_encoded(const contiguous_byte_range auto& src)
     {
         std::scoped_lock lock{mtx_};
 
-        left_encode_bytes_(src);
+        left_encode_bytes_(as_byte_span(src));
 
         return *this;
     }
 
-    /// \copybrief add_left_encoded(std::span<const std::byte>)
+    /// \copybrief add_left_encoded(const contiguous_byte_range auto&)
     /**
-    * The raw-data form, equivalent to the byte-span form.
+    * The raw-data form, equivalent to the range form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -885,41 +879,30 @@ public:
         return add_left_encoded(std::span{static_cast<const std::byte*>(data), len});
     }
 
-    /// \copybrief add_left_encoded(std::span<const std::byte>)
-    /**
-    * The string form, equivalent to the byte-span form.
-    *
-    * \param s the input data
-    * \return a reference to this object (to enable method chaining)
-    * \exception std::system_error if the mutex cannot be locked
-    */
-    Duplex& add_left_encoded(const std::string_view s)
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_left_encoded(as_byte_span(s));
-    }
-
     /// Consume the input data, then its right-encoded size
     /**
+    * A string literal's terminating null character is absorbed and counted in
+    * the encoded size, as described for add(const contiguous_byte_range auto&).
+    *
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
-    * \note An empty span absorbs right_encode(0), whether or not its data is
+    * \note An empty range absorbs right_encode(0), whether or not its data is
     *       null.
     */
-    Duplex& add_right_encoded(const std::span<const std::byte> src)
+    Duplex& add_right_encoded(const contiguous_byte_range auto& src)
     {
         std::scoped_lock lock{mtx_};
 
-        right_encode_bytes_(src);
+        right_encode_bytes_(as_byte_span(src));
 
         return *this;
     }
 
-    /// \copybrief add_right_encoded(std::span<const std::byte>)
+    /// \copybrief add_right_encoded(const contiguous_byte_range auto&)
     /**
-    * The raw-data form, equivalent to the byte-span form.
+    * The raw-data form, equivalent to the range form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -935,20 +918,6 @@ public:
 #endif
 
         return add_right_encoded(std::span{static_cast<const std::byte*>(data), len});
-    }
-
-    /// \copybrief add_right_encoded(std::span<const std::byte>)
-    /**
-    * The string form, equivalent to the byte-span form.
-    *
-    * \param s the input data
-    * \return a reference to this object (to enable method chaining)
-    * \exception std::system_error if the mutex cannot be locked
-    */
-    Duplex& add_right_encoded(const std::string_view s)
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add_right_encoded(as_byte_span(s));
     }
 
     /// Consume the left-encoding of the integer \a x

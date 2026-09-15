@@ -135,7 +135,7 @@ private:
             // two states' work interleaved, which is the point of this class.
             // The states are kept in local variables so that they may stay in
             // registers across chunks, as in the single node's bulk loop.
-            if (std::size(src_a) >= node_a_.get_state_size_bytes())
+            if (std::size(src_a) >= static_cast<std::size_t>(node_a_.get_state_size_bytes()))
             {
                 state_t state_a = node_a_.state_;
                 state_t state_b = node_b_.state_;
@@ -158,7 +158,8 @@ private:
                         Castella::permute(state_a, node_type::PERIODIC_MIX_NUM_ROUNDS);
                         Castella::permute(state_b, node_type::PERIODIC_MIX_NUM_ROUNDS);
                     }
-                } while (std::size(src_a) >= node_a_.get_state_size_bytes());
+                } while (std::size(src_a) >=
+                         static_cast<std::size_t>(node_a_.get_state_size_bytes()));
 
                 node_a_.state_ = state_a;
                 node_b_.state_ = state_b;
@@ -170,7 +171,7 @@ private:
         {
             // Then, process whole chunks directly from the sources, bypassing the
             // input buffers.
-            while (std::size(src_a) >= node_a_.get_state_size_bytes())
+            while (std::size(src_a) >= static_cast<std::size_t>(node_a_.get_state_size_bytes()))
             {
                 node_a_.absorb_(src_a);
                 node_b_.absorb_(src_b);

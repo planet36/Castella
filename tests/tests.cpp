@@ -111,7 +111,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             CHECK(std::ssize(digest_bytes) == hash_obj.get_rate_size_bytes());
         }
 
-        hash_obj.add("My eyes!  The goggles do nothing!");
+        hash_obj.add("My eyes!  The goggles do nothing!"sv);
 
         {
             // Verify that the output matches the expected result

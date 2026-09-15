@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <err.h>
 #include <exception>
+#include <string_view>
 #include <unistd.h>
 #include <vector>
 
@@ -69,11 +70,13 @@ catch (const std::exception& ex)
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
+    using namespace std::literals;
+
     process_options(argc, argv);
 
     Castella::Duplex duplex{capacity_blocks, num_rounds};
 
-    duplex.add("duplex-prng-stream seed");
+    duplex.add("duplex-prng-stream seed"sv);
 
     std::vector<std::byte> buf(static_cast<size_t>(duplex.get_rate_size_bytes()));
 

@@ -56,6 +56,7 @@
 #include "castella-duplex-tree.hpp"
 #include "castella-duplex.hpp"
 #include "cch-tree.hpp"
+#include "contiguous_byte_range.hpp"
 #include "encode.hpp"
 
 #include <array>
@@ -177,7 +178,8 @@ permute_state(const bool counter_init, const int num_rounds)
 
 [[nodiscard]] std::vector<std::byte>
 duplex_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
-              const std::string_view function_name, const std::string_view customization_str,
+              const contiguous_byte_range auto& function_name,
+              const contiguous_byte_range auto& customization_str,
               const int msglen, const int out)
 {
     Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
@@ -191,7 +193,8 @@ duplex_digest(const int capacity_blocks, const int num_rounds, const int input_s
 
 [[nodiscard]] std::vector<std::byte>
 tree_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
-            const std::string_view function_name, const std::string_view customization_str,
+            const contiguous_byte_range auto& function_name,
+            const contiguous_byte_range auto& customization_str,
             const int chunk_size_bytes, const int msglen, const int out)
 {
     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
@@ -237,7 +240,8 @@ make_key(const int len)
 */
 [[nodiscard]] std::vector<std::byte>
 mac_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
-           const std::string_view function_name, const std::string_view customization_str,
+           const contiguous_byte_range auto& function_name,
+           const contiguous_byte_range auto& customization_str,
            const int chunk_size_bytes, const int keylen, const int msglen, const int out)
 {
     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
@@ -576,7 +580,7 @@ get_int_field(const field_list& fields, const std::string_view key, const int mi
 * \exception std::invalid_argument if the field's value is not a hexadecimal
 *            string
 */
-[[nodiscard]] std::optional<std::string>
+[[nodiscard]] std::optional<std::vector<std::byte>>
 get_hex_string_field(const field_list& fields, const std::string_view key)
 {
     const auto value = find_field(fields, key);
@@ -584,12 +588,7 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
     if (!value.has_value())
         return std::nullopt;
 
-    if (std::empty(*value))
-        return std::string{};
-
-    const auto bytes = decode_hex_to_bytes(*value);
-
-    return std::string{reinterpret_cast<const char*>(std::data(bytes)), std::size(bytes)};
+    return decode_hex_to_bytes(*value);
 }
 
 /// Recompute the digest of one KAT line

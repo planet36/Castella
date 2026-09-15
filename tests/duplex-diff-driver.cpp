@@ -35,11 +35,11 @@
 * Blank lines and lines beginning with '#' are ignored.
 */
 
-#include "as_byte_span.hpp"
 #include "bytes_hex.hpp"
 #include "castella-duplex.hpp"
 #include "parse_int.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -53,6 +53,7 @@
 #include <string_view>
 #include <system_error>
 #include <type_traits>
+#include <vector>
 
 /// Decode a hexadecimal script field into the bytes it represents
 /**
@@ -64,19 +65,14 @@
 * \return the decoded bytes
 * \exception std::invalid_argument if the size of \a s is odd or \a s holds a
 *            character that is not a hexadecimal digit
-*
-* The result is a \c std::string so that it passes straight to the \c Duplex
-* members that take a \c std::string_view.
 */
-[[nodiscard]] static std::string
+[[nodiscard]] static std::vector<std::byte>
 decode_hex_field(const std::string_view s)
 {
     if (s == "-")
         return {};
 
-    const auto bytes = decode_hex_to_bytes(s);
-
-    return std::string{reinterpret_cast<const char*>(std::data(bytes)), std::size(bytes)};
+    return decode_hex_to_bytes(s);
 }
 
 /// Read one whitespace-delimited field, or throw
@@ -179,17 +175,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             if (op == "add")
             {
                 const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
-                duplex->add(as_byte_span(data));
+                duplex->add(data);
             }
             else if (op == "addle")
             {
                 const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
-                duplex->add_left_encoded(as_byte_span(data));
+                duplex->add_left_encoded(data);
             }
             else if (op == "addre")
             {
                 const auto data = decode_hex_field(read_field<std::string>(iss, "hex"));
-                duplex->add_right_encoded(as_byte_span(data));
+                duplex->add_right_encoded(data);
             }
             else if (op == "addlei")
             {

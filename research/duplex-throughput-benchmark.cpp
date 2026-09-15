@@ -32,6 +32,7 @@
 #include <err.h>
 #include <exception>
 #include <format>
+#include <set>
 #include <string>
 #include <thread>
 #include <vector>
@@ -149,22 +150,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
+    constexpr int N = 16;
+
     // Even values between C_MIN and C_MAX
     constexpr std::array capacities{2, 4, 6, 8};
 
     // the minimum, the castella hash program's default, a round margin, the maximum
-    constexpr std::array round_counts{Castella::NUM_ROUNDS_MIN<16>(), 6, 8,
-                                      Castella::NUM_ROUNDS_MAX};
+    const std::set round_counts{Castella::NUM_ROUNDS_MIN<N>(), 6, 8,
+                                Castella::NUM_ROUNDS_MAX};
 
     for (const auto capacity_blocks : capacities)
     {
-        for (int i = 0; i < std::ssize(round_counts); ++i)
+        for (const auto num_rounds : round_counts)
         {
-            // skip adjacent duplicates if NUM_ROUNDS_MIN<16>() collides with a listed value
-            if (i > 0 && round_counts[i] == round_counts[i - 1])
-                continue;
-
-            register_pair(capacity_blocks, round_counts[i], num_threads);
+            register_pair(capacity_blocks, num_rounds, num_threads);
         }
     }
 

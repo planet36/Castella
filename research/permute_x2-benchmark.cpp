@@ -32,6 +32,7 @@
 #include <err.h>
 #include <exception>
 #include <format>
+#include <set>
 #include <string>
 #include <thread>
 
@@ -121,8 +122,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    for (auto num_rounds = Castella::NUM_ROUNDS_MIN<static_cast<int>(N)>();
-         num_rounds <= Castella::NUM_ROUNDS_MAX; ++num_rounds)
+    // the minimum, the castella hash program's default, a round margin, the maximum
+    const std::set round_counts{Castella::NUM_ROUNDS_MIN<N>(), 6, 8,
+                                Castella::NUM_ROUNDS_MAX};
+
+    for (const auto num_rounds : round_counts)
     {
         const std::string BM_name_seq =
             std::format("permute-pair-sequential(num_rounds={})", num_rounds);

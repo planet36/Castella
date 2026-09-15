@@ -14,11 +14,12 @@
 #include "castella-duplex-x2.hpp"
 #include "castella-duplex.hpp"
 #include "castella-hash-tree.hpp"
+#include "contiguous_byte_range.hpp"
+#include "to_byte_vector.hpp"
 
+#include <cstddef>
 #include <mutex>
 #include <span>
-#include <string>
-#include <string_view>
 #include <vector>
 
 namespace Castella
@@ -27,8 +28,7 @@ namespace Castella
 /// The \c HashTree node policy for \c Duplex (see \c DuplexTree)
 /**
 * The parameters are copies.  A leaf is built once per chunk, long after the
-* \c DuplexTree constructor's \c std::string_view arguments may have gone
-* away.
+* \c DuplexTree constructor's range arguments may have gone away.
 */
 struct DuplexTreeNodePolicy final
 {
@@ -41,8 +41,8 @@ struct DuplexTreeNodePolicy final
     const int capacity_blocks;
     const int num_rounds;
     const int input_suffix;
-    std::string function_name;
-    std::string customization_str;
+    std::vector<std::byte> function_name;
+    std::vector<std::byte> customization_str;
 
     /// Construct a node
     [[nodiscard]] node_type make_node() const
@@ -136,18 +136,20 @@ public:
     *            \a input_suffix does not fit the \c Duplex member it
     *            initializes
     */
+    template <contiguous_byte_range FN = std::span<const std::byte>,
+              contiguous_byte_range CS = std::span<const std::byte>>
     explicit DuplexTree(const int capacity_blocks,
                         const int num_rounds,
                         const int input_suffix = 0,
-                        const std::string_view function_name = "",
-                        const std::string_view customization_str = "",
+                        const FN& function_name = {},
+                        const CS& customization_str = {},
                         const int chunk_size_bytes = DEFAULT_CHUNK_SIZE,
                         const int num_threads = 0) :
     base_type(DuplexTreeNodePolicy{.capacity_blocks = capacity_blocks,
                                    .num_rounds = num_rounds,
                                    .input_suffix = input_suffix,
-                                   .function_name = std::string{function_name},
-                                   .customization_str = std::string{customization_str}},
+                                   .function_name = to_byte_vector(function_name),
+                                   .customization_str = to_byte_vector(customization_str)},
               chunk_size_bytes, num_threads)
     {}
 

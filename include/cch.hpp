@@ -12,6 +12,7 @@
 #include "as_byte_span.hpp"
 #include "broadcast.hpp"
 #include "castella-permute.hpp"
+#include "contiguous_byte_range.hpp"
 #include "fixed_vector.hpp"
 #include "in_range.hpp"
 #include "lfsr.hpp"
@@ -30,7 +31,6 @@
 #include <span>
 #include <stdexcept>
 #include <string.h> // explicit_bzero
-#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -440,13 +440,17 @@ public:
 
     /// Consume the input data
     /**
+    * A string literal is an array that includes its terminating null
+    * character, so <code>add("abc")</code> absorbs 4 bytes.  Pass
+    * <code>"abc"sv</code> to absorb only the 3 characters.
+    *
     * \param src the input data
     * \return a reference to this object (to enable method chaining)
     * \exception std::system_error if the mutex cannot be locked
     * \exception std::logic_error if this object has been finalized
     * \note Each method call is thread-safe, but no mutex is held between chained calls.
     */
-    compress_castella_hash& add(const std::span<const std::byte> src)
+    compress_castella_hash& add(const contiguous_byte_range auto& src)
     {
         std::scoped_lock lock{mtx_};
 
@@ -455,14 +459,14 @@ public:
             throw std::logic_error("compress_castella_hash.add: state is finalized");
         }
 
-        add_(src);
+        add_(as_byte_span(src));
 
         return *this;
     }
 
-    /// \copybrief add(std::span<const std::byte>)
+    /// \copybrief add(const contiguous_byte_range auto&)
     /**
-    * The raw-data form, equivalent to the byte-span form.
+    * The raw-data form, equivalent to the range form.
     *
     * \param data the input data
     * \param len the size (in bytes) of the input data
@@ -479,21 +483,6 @@ public:
 #endif
 
         return add(std::span{static_cast<const std::byte*>(data), len});
-    }
-
-    /// \copybrief add(std::span<const std::byte>)
-    /**
-    * The string form, equivalent to the byte-span form.
-    *
-    * \param s the input data
-    * \return a reference to this object (to enable method chaining)
-    * \exception std::system_error if the mutex cannot be locked
-    * \exception std::logic_error if this object has been finalized
-    */
-    compress_castella_hash& add(const std::string_view s)
-    {
-        static_assert(sizeof(decltype(s)::value_type) == 1, "must be a byte string");
-        return add(as_byte_span(s));
     }
 
     /// Get the final digest bytes

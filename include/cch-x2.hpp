@@ -10,8 +10,10 @@
 
 #pragma once
 
+#include "as_byte_span.hpp"
 #include "castella-permute.hpp"
 #include "cch.hpp"
+#include "contiguous_byte_range.hpp"
 #include "simd_compress.hpp"
 
 #if defined(DEBUG)
@@ -82,19 +84,15 @@ public:
     // Each node zeroizes itself, so nothing is left for this to do
     ~compress_castella_hash_x2() = default;
 
-    /// Consume the input data into node A and node B
+private:
+    /// Add \a src_a / \a src_b to node A / node B
     /**
     * The lockstep counterpart of \c compress_castella_hash::add_.  The two
     * lanes absorb different bytes but always the same number of them, so both
     * nodes buffer, compress, and mix on the same schedule.  That is what lets
     * one bulk loop advance both states with interleaved instructions.
-    *
-    * \param src_a the input data for node A
-    * \param src_b the input data for node B
-    * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep)
-    * \pre neither node has been finalized
     */
-    void add(std::span<const std::byte> src_a, std::span<const std::byte> src_b)
+    void add_(std::span<const std::byte> src_a, std::span<const std::byte> src_b)
     {
 #if defined(DEBUG)
         assert(std::size(src_a) == std::size(src_b)); // lockstep
@@ -195,7 +193,24 @@ public:
 #endif
     }
 
-    /// \copybrief add(std::span<const std::byte>, std::span<const std::byte>)
+public:
+    /// Consume the input data into node A and node B
+    /**
+    * A string literal's terminating null character is absorbed, as described
+    * for compress_castella_hash::add(const contiguous_byte_range auto&).
+    *
+    * \param src_a the input data for node A
+    * \param src_b the input data for node B
+    * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep)
+    * \pre neither node has been finalized
+    */
+    void add(const contiguous_byte_range auto& src_a,
+             const contiguous_byte_range auto& src_b)
+    {
+        add_(as_byte_span(src_a), as_byte_span(src_b));
+    }
+
+    /// \copybrief add(const contiguous_byte_range auto&, const contiguous_byte_range auto&)
     /**
     * The raw-data form.
     *

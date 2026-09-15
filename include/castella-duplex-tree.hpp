@@ -47,8 +47,8 @@ struct DuplexTreeNodePolicy final
     /// Construct a node
     [[nodiscard]] node_type make_node() const
     {
-        return node_type{capacity_blocks, num_rounds, input_suffix, function_name,
-                         customization_str};
+        return node_type(capacity_blocks, num_rounds, input_suffix, function_name,
+                         customization_str);
     }
 
     /// The chaining value length, which is the capacity size in bytes
@@ -86,8 +86,8 @@ struct DuplexTreeNodePolicy final
     /// Construct a lockstep node pair
     [[nodiscard]] node_x2_type make_node_x2() const
     {
-        return node_x2_type{capacity_blocks, num_rounds, input_suffix, function_name,
-                            customization_str};
+        return node_x2_type(capacity_blocks, num_rounds, input_suffix, function_name,
+                            customization_str);
     }
 
     /// Write both nodes' chaining values into their destinations
@@ -143,12 +143,12 @@ public:
                         const std::string_view customization_str = "",
                         const int chunk_size_bytes = DEFAULT_CHUNK_SIZE,
                         const int num_threads = 0) :
-    base_type{DuplexTreeNodePolicy{.capacity_blocks = capacity_blocks,
+    base_type(DuplexTreeNodePolicy{.capacity_blocks = capacity_blocks,
                                    .num_rounds = num_rounds,
                                    .input_suffix = input_suffix,
                                    .function_name = std::string{function_name},
                                    .customization_str = std::string{customization_str}},
-              chunk_size_bytes, num_threads}
+              chunk_size_bytes, num_threads)
     {}
 
     /// Squeeze bytes from the final node, and return them as a

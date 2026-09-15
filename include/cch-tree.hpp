@@ -35,7 +35,7 @@ struct compress_castella_tree_node_policy final
     /// Construct a node
     [[nodiscard]] node_type make_node() const
     {
-        return node_type{mix_rate};
+        return node_type(mix_rate);
     }
 
     /// The chaining value length, which is the maximum digest size
@@ -74,7 +74,7 @@ struct compress_castella_tree_node_policy final
     /// Construct an interleaved node pair (same mix rate as \c make_node)
     [[nodiscard]] node_x2_type make_node_x2() const
     {
-        return node_x2_type{mix_rate};
+        return node_x2_type(mix_rate);
     }
 
     /// Write both nodes' final digests into their destinations
@@ -124,8 +124,8 @@ public:
     explicit compress_castella_tree(const int mix_rate = node_type::DEFAULT_MIX_RATE,
                                     const int chunk_size_bytes = DEFAULT_CHUNK_SIZE,
                                     const int num_threads = 0) :
-    base_type{compress_castella_tree_node_policy{.mix_rate = mix_rate}, chunk_size_bytes,
-              num_threads}
+    base_type(compress_castella_tree_node_policy{.mix_rate = mix_rate}, chunk_size_bytes,
+              num_threads)
     {}
 
     /// Get the final digest bytes

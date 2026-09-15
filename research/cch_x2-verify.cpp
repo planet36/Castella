@@ -38,9 +38,9 @@
 int
 test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_pieces)
 {
-    compress_castella_hash<> hash_a{mix_rate};
-    compress_castella_hash<> hash_b{mix_rate};
-    compress_castella_hash_x2<> pair{mix_rate};
+    compress_castella_hash<> hash_a(mix_rate);
+    compress_castella_hash<> hash_b(mix_rate);
+    compress_castella_hash_x2<> pair(mix_rate);
 
     const auto num_pieces = static_cast<int>(arc4random_uniform(max_num_pieces + 1));
 

@@ -347,7 +347,7 @@ compute_file_digest(const std::string& path, const int digest_size,
     // node hashes a chunk faster than it could be handed to another core (see
     // USE_STREAMING_POOL), so the chunks fed by process_file's read loop are
     // hashed inline on this thread.
-    compress_castella_tree hash_obj{rate, chunk_size_bytes, num_threads};
+    compress_castella_tree hash_obj(rate, chunk_size_bytes, num_threads);
 
     process_file(path, hash_obj, use_mmap);
 

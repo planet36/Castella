@@ -279,7 +279,7 @@ mac_digest(const int capacity_blocks, const int num_rounds, const int input_suff
 [[nodiscard]] std::vector<std::byte>
 cch_digest(const int mix_rate, const int msglen, const int out)
 {
-    compress_castella_hash<> node{mix_rate};
+    compress_castella_hash<> node(mix_rate);
 
     const auto msg = make_msg(msglen);
     (void)node.add(msg);
@@ -291,7 +291,7 @@ cch_digest(const int mix_rate, const int msglen, const int out)
 cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
                const int out)
 {
-    compress_castella_tree tree{mix_rate, chunk_size_bytes, 1};
+    compress_castella_tree tree(mix_rate, chunk_size_bytes, 1);
 
     const auto msg = make_msg(msglen);
     (void)tree.add(msg);

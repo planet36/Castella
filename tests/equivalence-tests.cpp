@@ -230,7 +230,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     for (const int mix_rate : {0, 1, 256})
     {
         const auto make_tree = [&](const int num_threads) {
-            return compress_castella_tree{mix_rate, chunk_size, num_threads};
+            return compress_castella_tree(mix_rate, chunk_size, num_threads);
         };
         const auto get_digest = [](compress_castella_tree& tree) {
             return tree.final_digest_bytes(64);

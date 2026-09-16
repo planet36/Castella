@@ -73,7 +73,7 @@ Neither of those two Python programs is run by `run-research.sh` (which drives o
 
 Raw benchmark results are saved in a folder named `results`.
 
-`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  The one exception is the 2026-07-10 non-VAES section, which predates the practice and records neither a count nor a cv.
+`run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  The one exception is the 2026-07-10 non-VAES section, which predates the practice and records no repetition count.
 
 Every benchmark that reports a byte rate reports it **per thread**.  google-benchmark sums a counter across threads and divides by the wall time of the parallel region, which yields the aggregate rate — so a plain `SetBytesProcessed` scales with the thread count.  The throughput counters therefore carry the `kAvgThreads` flag, which divides that sum back down by the thread count, and a rate stays flat as `NUM_THREADS` rises instead of multiplying by it.  `run-benchmarks.bash` sets `NUM_THREADS=1`, so every table below is a single-thread figure and unaffected by the convention either way.
 
@@ -86,182 +86,182 @@ Every performance claim in this repository was measured on x86-64 with VAES; non
 
 The one open ARM question is the cch leaf pairing: the tree's pairing opt-in is guarded by `__VAES__ && __AVX2__`, so ARM hashes leaves one at a time.  The untested expectation is that this matches the non-VAES x86 finding below — 128-bit AES codegen already runs 16 independent chains per state, so a second interleaved state should be a wash to a loss outside the DRAM regime.  To check on ARM hardware: build and run `simd_compress-two-state-benchmark` and compare the pair rows' interleaved vs. sequential per-byte throughput; if interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
 
-## Findings: Duplex throughput through the public API (2026-08-12)
+## Findings: Duplex throughput through the public API (2026-09-15)
 
 `duplex-throughput-benchmark.cpp` measures `Castella::Duplex` end to end: absorb is repeated `add` of a cache-resident 64 KiB buffer, squeeze is repeated `squeeze_to` of a rate-size buffer (the PRNG usage).  Medians of 5 repetitions, pinned to core 0 (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Values are GiB/s, **absorb / squeeze**:
 
 | _C_ (rate bytes) | rounds=3 | rounds=6 | rounds=8 | rounds=16 |
 |------------------|---------:|---------:|---------:|----------:|
-| 2 (224) | 6.42 / 4.72 | 3.61 / 3.08 | 2.79 / 2.47 | 1.46 / 1.33 |
-| 4 (192) | 5.71 / 4.21 | 3.18 / 2.66 | 2.45 / 2.11 | 1.25 / 1.15 |
-| 8 (128) | 3.93 / 2.83 | 2.19 / 1.76 | 1.62 / 1.41 | 0.83 / 0.77 |
+| 2 (224) | 6.45 / 4.79 | 3.58 / 3.07 | 2.79 / 2.48 | 1.47 / 1.36 |
+| 4 (192) | 5.69 / 4.19 | 3.20 / 2.69 | 2.47 / 2.15 | 1.25 / 1.17 |
+| 8 (128) | 3.93 / 2.75 | 2.17 / 1.78 | 1.64 / 1.42 | 0.83 / 0.77 |
 
 Interpretation:
 
-* The numbers cross-check against the permutation benchmarks from the same run (absorb ceiling = rate bytes ÷ permutation time): at _C_ = 4, rounds = 6, the ceiling is 192 B ÷ 53.3 ns = 3.36 GiB/s and the measured absorb is 3.18 (95%); at rounds = 3 the same comparison gives ~86%.  Both percentages reproduce the figures this section recorded from an earlier run at different absolute speeds, which is what the cross-check is for.  The buffering overhead (copy + XOR into the outer state) is a fixed per-byte cost that matters more the faster the permutation.
-* At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.63 (rounds = 3) to 1.75 (rounds = 16), converging on the rate ratio 224:128 = 1.75 as the permutation dominates.
-* The "~3.2 GiB/s per core" absorb figure quoted in the top-level README comes from this run's 3.18 GiB/s at _C_ = 4, rounds = 6 (the castella hash program's defaults).  Absolute figures wander between sessions on this machine — the two 2026 runs of this benchmark put it at 3.25 and 3.18 — so the figure is quoted rounded and the ratios are the stable part.
-* Squeeze is 72–93% of absorb at the same parameters (converging as rounds grow): every `squeeze_to` pads and absorbs the near-empty input buffer, permutes, and copies the rate bytes out.
+* The numbers cross-check against the permutation benchmarks from the same run (absorb ceiling = rate bytes ÷ permutation time): at _C_ = 4, rounds = 6, the ceiling is 192 B ÷ 52.7 ns = 3.39 GiB/s and the measured absorb is 3.20 (94%); at rounds = 3 the same comparison gives ~87%.  Both percentages reproduce the figures this section recorded from earlier runs at different absolute speeds, which is what the cross-check is for.  The buffering overhead (copy + XOR into the outer state) is a fixed per-byte cost that matters more the faster the permutation.
+* At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.64 (rounds = 3) to 1.76 (rounds = 16), arriving at the rate ratio 224:128 = 1.75 as the permutation dominates.
+* The "~3.2 GiB/s per core" absorb figure quoted in the top-level README comes from this run's 3.20 GiB/s at _C_ = 4, rounds = 6 (the castella hash program's defaults).  Absolute figures wander between sessions on this machine — the three 2026 runs of this benchmark put it at 3.25, 3.18 and 3.20 — so the figure is quoted rounded and the ratios are the stable part.
+* Squeeze is 70–94% of absorb at the same parameters (converging as rounds grow): every `squeeze_to` pads and absorbs the near-empty input buffer, permutes, and copies the rate bytes out.
 
-## Findings: full-suite rerun on the committed flags (2026-08-12)
+## Findings: full-suite rerun on the committed flags (2026-09-15)
 
 A full `bash run-benchmarks.bash` (pinned, default 5 repetitions, on the committed config.mk flags `-march=x86-64-v3 -maes -mvaes`) reproduced every recorded ratio.  This is the run the Duplex-throughput, AES-stage, folded-permute and cch-pair sections above all record, so their numbers are one dated measurement rather than four:
 
-* Folded permute, _N_ = 16: 1.66× (rounds = 3) to 1.71× (rounds = 4 and above) over the generic path — the documented ~1.7×.
-* `permute_x2`: 1.54–1.75× over two sequential register-resident permutes for rounds ≥ 4 (1.44× at rounds = 3, where the pack/unpack boundary cost weighs most) — bracketing the documented ~1.7×.  The spread is wider than the 1.69–1.79× a 7-repetition run gave, and the sequential arm is where it comes from: its medians step unevenly with the round count (70.4 ns at 4, 80.8 at 5, 107 at 6), which the paired arm does not.
-* AES stage in isolation: vaes\_cast 87.6 GiB/s vs. generic 47.6 = 1.84× — the ratio the dedicated section records, and the same 1.84× a 7-repetition run gave at ~1.4% higher absolute speeds.
+* Folded permute, _N_ = 16: 1.64× (rounds = 3) to 1.71× (rounds = 8) over the generic path — the documented ~1.7×.
+* `permute_x2`: 1.70–1.76× over two sequential register-resident permutes for rounds ≥ 6 (1.41× at rounds = 3, where the pack/unpack boundary cost weighs most) — bracketing the documented ~1.7×.  Both arms now step evenly with the round count, so the spread above rounds = 3 is narrower than the 1.54–1.75× an earlier 5-repetition run gave; that run's width came from its sequential arm alone.
+* AES stage in isolation: vaes\_cast 89.4 GiB/s vs. generic 48.9 = 1.83× — the ratio the dedicated section records.
 * The interleaved cch pair and the wider-group question: see the dedicated section below.
 
-## Findings: the AES stage in isolation (2026-08-12)
+## Findings: the AES stage in isolation (2026-09-15)
 
 `aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` functions of `aes_enc.hpp` by themselves — the permute benchmarks only ever exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` predates these functions and measures single-round, shared-key prototypes instead.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round keys from `Castella::round_constants`, each iteration transforming the previous result in place (latency-chained).  Medians of 5 repetitions, `-march=x86-64-v3 -maes -mvaes` (compare only within this table; `x2_broadcast` processes two 256-byte states per call, hence the per-byte column):
 
 | variant | header function | ns/call | per byte |
 |---------|-----------------|--------:|---------:|
-| generic\<16\> | `aes_enc_arr_generic`, the non-VAES fallback | 5.02 | 47.6 GiB/s |
-| vaes\_cast\<16\> | `aes_enc_arr_paircast`, what `aes_enc_arr` selects in real use | 2.73 | 87.6 GiB/s |
-| x2\_broadcast\<16\> | `aes_enc_arr_x2`, key broadcast to both lanes (`permute_x2`) | 6.91 (2 states) | 69.3 GiB/s |
-| folded\<8x2\> | `aes_enc_arr_folded`, 256-bit keys, folded state (register-resident `permute`) | 2.70 | 88.6 GiB/s |
+| generic\<16\> | `aes_enc_arr_generic`, the non-VAES fallback | 4.89 | 48.9 GiB/s |
+| vaes\_cast\<16\> | `aes_enc_arr_paircast`, what `aes_enc_arr` selects in real use | 2.68 | 89.4 GiB/s |
+| x2\_broadcast\<16\> | `aes_enc_arr_x2`, key broadcast to both lanes (`permute_x2`) | 6.95 (2 states) | 68.8 GiB/s |
+| folded\<8x2\> | `aes_enc_arr_folded`, 256-bit keys, folded state (register-resident `permute`) | 2.73 | 87.6 GiB/s |
 
 Interpretation:
 
-* The VAES pair-cast is **1.84×** the generic path on the AES stage alone — larger than the ~1.7× whole-permute gap, which the transpose dilutes.
+* The VAES pair-cast is **1.83×** the generic path on the AES stage alone — larger than the ~1.7× whole-permute gap, which the transpose dilutes.
 * folded ≈ vaes\_cast confirms that both run the same eight 256-bit AES dependency chains; the folded `permute`'s win over the generic path comes from keeping the state in registers *across the transpose*, not from the AES stage.
-* x2\_broadcast is slower per byte than vaes\_cast (3.46 ns per state vs. 2.73) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
+* x2\_broadcast is slower per byte than vaes\_cast (3.48 ns per state vs. 2.68) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
 
 The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` — which is unguarded, so it runs on every target — already round-trips it for every state size and round count.  An earlier revision of this table timed them and drew a conclusion about which overload `permute_inv` selects; that conclusion was wrong (it takes the VAES path, not the generic one), and since the speed cannot matter, the rows were dropped rather than corrected.
 
-## Findings: the folded permute wins at _N_ = 16 (2026-08-12)
+## Findings: the folded permute wins at _N_ = 16 (2026-09-15)
 
 `permute_folded-benchmark.cpp` compares the folded (register-resident) `Castella::permute` against the generic path it replaced (`Castella::permute_generic`).  Medians of 5 repetitions, pinned to core 0 (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Ratios are generic ÷ folded; compare only within this table.
 
 | rounds | generic | folded | ratio |
 |-------:|--------:|-------:|------:|
-| 3 | 45.0 ns | 27.1 ns | 1.66× |
-| 4 | 60.7 ns | 35.5 ns | 1.71× |
-| 8 | 120 ns | 70.7 ns | 1.70× |
-| 16 | 240 ns | 140 ns | 1.71× |
+| 3 | 44.0 ns | 26.8 ns | 1.64× |
+| 6 | 88.2 ns | 52.4 ns | 1.68× |
+| 8 | 119 ns | 69.8 ns | 1.71× |
+| 16 | 237 ns | 140 ns | 1.69× |
 
-Interpretation: the speedup **grows with the round count** — the fold/unfold at the boundaries is a fixed cost amortized over more register-resident rounds, which is why rounds = 3 gives 1.66× and everything above it 1.70–1.71×.  The win itself comes from the generic path round-tripping the state through memory every round and paying the store-to-load-forwarding stall: a 256-bit AES load spanning two 128-bit transpose stores.
+Interpretation: the speedup **grows with the round count** — the fold/unfold at the boundaries is a fixed cost amortized over more register-resident rounds, which is why rounds = 3 gives 1.64× and everything above it 1.68–1.71×.  The win itself comes from the generic path round-tripping the state through memory every round and paying the store-to-load-forwarding stall: a 256-bit AES load spanning two 128-bit transpose stores.
 
 Conclusion: folding is a clear ~1.7× win at the 16-block state, which is the only size used outside `research/`.  `permute_folded` is instantiated for every supported _N_, and the smaller sizes benefited by even more when that generalization was measured — but _N_ < 16 is research-only, the benchmark no longer registers it, and it is not tracked here.
 
-## Findings: the cch pair pays ~1.1×; group width is free below L2, footprint is what costs (2026-08-12)
+## Findings: the cch pair pays ~1.1×; group width is free below L2, footprint is what costs (2026-09-15)
 
-`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 5 repetitions over a power-of-two size ladder, pinned to core 0, random interleaving on (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group; cv is the larger of the two arms'.  **A † marks a "vs. pair" ratio that does not exceed the combined cv of the two rows compared (added in quadrature) — read those as no difference, not as a result.**
+`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 5 repetitions over a power-of-two size ladder, pinned to core 0, random interleaving on (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group.  **At 5 repetitions this benchmark's run-to-run scatter reaches a few percent, so read any "vs. pair" ratio within about 3% of 1.00× as no difference rather than as a result.**
 
 This machine: L1d 32 KiB and L2 4 MiB per core, L3 36 MiB shared.  The size labels below are those levels and are specific to this hardware.
 
-**Fixed per buffer.**  The working set is _N_ × the size, which is the shape the tree has: a leaf hashes a fixed `CHUNK_SIZE` however many leaves run, so widening the group widens the footprint.  § At 8 MiB the _N_ = 4 working set is 32 MiB against a shared 36 MiB L3, and its sequential arm collapses to 33.8 GiB/s at 8.0% cv against the pair's 51.6; read that group as the L3 cliff, not as a width result.  The 256 KiB pair row carries an 11.6% cv — the worst of any _N_ = 2 baseline in the run — so that group's ratios are the least trustworthy in the table even where they look small.
+**Fixed per buffer.**  The working set is _N_ × the size, which is the shape the tree has: a leaf hashes a fixed `CHUNK_SIZE` however many leaves run, so widening the group widens the footprint.  § At 8 MiB the _N_ = 4 working set is 32 MiB against a shared 36 MiB L3, and its sequential arm collapses to 32.9 GiB/s against the pair's 52.8; read that group as the L3 cliff, not as a width result.
 
-| per-buffer size | _N_ | sequential | interleaved | speedup | vs. pair | cv |
-|---|---:|---:|---:|---:|---:|---:|
-| 1 KiB (`CHUNK_SIZE_MIN`) | 2 | 69.9 GiB/s | 71.6 GiB/s | 1.03× | — | 3.0% |
-|  | 3 | 70.9 GiB/s | 70.8 GiB/s | 1.00× | 0.99× † | 1.8% |
-|  | 4 | 70.5 GiB/s | 71.6 GiB/s | 1.02× | 1.00× † | 2.9% |
-| 2 KiB | 2 | 69.5 GiB/s | 72.2 GiB/s | 1.04× | — | 2.2% |
-|  | 3 | 69.2 GiB/s | 72.2 GiB/s | 1.05× | 1.00× † | 2.6% |
-|  | 4 | 67.7 GiB/s | 72.8 GiB/s | 1.08× | 1.01× † | 2.8% |
-| 4 KiB | 2 | 66.7 GiB/s | 72.1 GiB/s | 1.07× | — | 2.7% |
-|  | 3 | 67.4 GiB/s | 72.0 GiB/s | 1.07× | 1.00× † | 1.2% |
-|  | 4 | 66.8 GiB/s | 72.9 GiB/s | 1.10× | 1.02× † | 2.0% |
-| 8 KiB | 2 | 64.8 GiB/s | 71.6 GiB/s | 1.11× | — | 2.4% |
-|  | 3 | 66.2 GiB/s | 73.1 GiB/s | 1.11× | 1.02× † | 2.4% |
-|  | 4 | 65.7 GiB/s | 74.6 GiB/s | 1.14× | 1.04× | 2.9% |
-| 16 KiB (_N_ = 2 fills L1d) | 2 | 66.2 GiB/s | 73.0 GiB/s | 1.10× | — | 2.0% |
-|  | 3 | 62.8 GiB/s | 68.7 GiB/s | 1.09× | 0.94× | 3.4% |
-|  | 4 | 61.2 GiB/s | 67.3 GiB/s | 1.10× | 0.92× | 2.5% |
-| 32 KiB | 2 | 61.3 GiB/s | 65.0 GiB/s | 1.06× | — | 2.8% |
-|  | 3 | 60.6 GiB/s | 65.6 GiB/s | 1.08× | 1.01× † | 3.1% |
-|  | 4 | 60.8 GiB/s | 68.6 GiB/s | 1.13× | 1.06× | 2.1% |
-| **64 KiB (`DEFAULT_CHUNK_SIZE`)** | 2 | 62.2 GiB/s | 66.3 GiB/s | 1.06× | — | 1.6% |
-|  | 3 | 63.3 GiB/s | 66.4 GiB/s | 1.06× | 1.00× † | 2.9% |
-|  | 4 | 62.0 GiB/s | 68.0 GiB/s | 1.10× | 1.03× † | 2.9% |
-| 128 KiB | 2 | 62.2 GiB/s | 67.1 GiB/s | 1.08× | — | 2.1% |
-|  | 3 | 61.8 GiB/s | 65.4 GiB/s | 1.06× | 0.97× † | 2.7% |
-|  | 4 | 61.0 GiB/s | 67.2 GiB/s | 1.10× | 1.00× † | 1.7% |
-| 256 KiB | 2 | 61.1 GiB/s | 66.8 GiB/s | 1.09× | — | 11.6% |
-|  | 3 | 61.3 GiB/s | 65.2 GiB/s | 1.07× | 0.98× † | 2.6% |
-|  | 4 | 63.1 GiB/s | 67.1 GiB/s | 1.06× | 1.00× † | 3.2% |
-| 512 KiB | 2 | 61.6 GiB/s | 65.9 GiB/s | 1.07× | — | 2.8% |
-|  | 3 | 59.6 GiB/s | 64.8 GiB/s | 1.08× | 0.98× † | 4.2% |
-|  | 4 | 60.6 GiB/s | 65.8 GiB/s | 1.08× | 1.00× † | 3.0% |
-| 1 MiB | 2 | 60.2 GiB/s | 63.0 GiB/s | 1.05× | — | 4.7% |
-|  | 3 | 58.2 GiB/s | 62.1 GiB/s | 1.06× | 0.98× † | 4.2% |
-|  | 4 | 57.5 GiB/s | 60.2 GiB/s | 1.05× | 0.96× † | 6.8% |
-| 2 MiB | 2 | 52.1 GiB/s | 62.2 GiB/s | 1.19× | — | 8.0% |
-|  | 3 | 55.4 GiB/s | 56.2 GiB/s | 1.01× | 0.90× † | 7.5% |
-|  | 4 | 56.1 GiB/s | 61.3 GiB/s | 1.09× | 0.99× † | 2.1% |
-| 4 MiB (= L2) | 2 | 54.1 GiB/s | 58.0 GiB/s | 1.07× | — | 5.9% |
-|  | 3 | 50.6 GiB/s | 59.1 GiB/s | 1.17× | 1.02× † | 6.4% |
-|  | 4 | 56.8 GiB/s | 61.8 GiB/s | 1.08× | 1.06× † | 9.6% |
-| 8 MiB § | 2 | 51.6 GiB/s | 56.8 GiB/s | 1.10× | — | 7.5% |
-|  | 3 | 46.6 GiB/s | 51.1 GiB/s | 1.10× | 0.90× † | 13.8% |
-|  | 4 | 33.8 GiB/s | 44.3 GiB/s | 1.31× | 0.78× | 8.0% |
-| 128 MiB | 2 | 25.4 GiB/s | 28.0 GiB/s | 1.10× | — | 4.1% |
-|  | 3 | 23.9 GiB/s | 29.5 GiB/s | 1.23× | 1.05× † | 6.6% |
-|  | 4 | 24.4 GiB/s | 30.0 GiB/s | 1.23× | 1.07× | 3.3% |
+| per-buffer size | _N_ | sequential | interleaved | speedup | vs. pair |
+|---|---:|---:|---:|---:|---:|
+| 1 KiB (`CHUNK_SIZE_MIN`) | 2 | 69.4 GiB/s | 70.8 GiB/s | 1.02× | — |
+|  | 3 | 68.8 GiB/s | 70.2 GiB/s | 1.02× | 0.99× |
+|  | 4 | 69.7 GiB/s | 72.1 GiB/s | 1.04× | 1.02× |
+| 2 KiB | 2 | 70.6 GiB/s | 72.2 GiB/s | 1.02× | — |
+|  | 3 | 68.1 GiB/s | 72.1 GiB/s | 1.06× | 1.00× |
+|  | 4 | 68.8 GiB/s | 72.0 GiB/s | 1.05× | 1.00× |
+| 4 KiB | 2 | 67.3 GiB/s | 72.9 GiB/s | 1.08× | — |
+|  | 3 | 67.2 GiB/s | 73.8 GiB/s | 1.10× | 1.01× |
+|  | 4 | 67.9 GiB/s | 72.8 GiB/s | 1.07× | 1.00× |
+| 8 KiB | 2 | 66.6 GiB/s | 72.9 GiB/s | 1.09× | — |
+|  | 3 | 65.5 GiB/s | 73.1 GiB/s | 1.12× | 1.00× |
+|  | 4 | 65.8 GiB/s | 73.5 GiB/s | 1.12× | 1.01× |
+| 16 KiB (_N_ = 2 fills L1d) | 2 | 65.3 GiB/s | 73.1 GiB/s | 1.12× | — |
+|  | 3 | 63.6 GiB/s | 70.3 GiB/s | 1.10× | 0.96× |
+|  | 4 | 63.3 GiB/s | 68.1 GiB/s | 1.08× | 0.93× |
+| 32 KiB | 2 | 60.8 GiB/s | 66.9 GiB/s | 1.10× | — |
+|  | 3 | 62.2 GiB/s | 67.5 GiB/s | 1.09× | 1.01× |
+|  | 4 | 62.0 GiB/s | 68.1 GiB/s | 1.10× | 1.02× |
+| **64 KiB (`DEFAULT_CHUNK_SIZE`)** | 2 | 61.9 GiB/s | 67.4 GiB/s | 1.09× | — |
+|  | 3 | 62.2 GiB/s | 67.6 GiB/s | 1.09× | 1.00× |
+|  | 4 | 62.0 GiB/s | 68.8 GiB/s | 1.11× | 1.02× |
+| 128 KiB | 2 | 62.2 GiB/s | 67.9 GiB/s | 1.09× | — |
+|  | 3 | 62.0 GiB/s | 68.4 GiB/s | 1.10× | 1.01× |
+|  | 4 | 61.5 GiB/s | 68.2 GiB/s | 1.11× | 1.00× |
+| 256 KiB | 2 | 62.8 GiB/s | 67.9 GiB/s | 1.08× | — |
+|  | 3 | 63.8 GiB/s | 67.9 GiB/s | 1.06× | 1.00× |
+|  | 4 | 62.1 GiB/s | 68.5 GiB/s | 1.10× | 1.01× |
+| 512 KiB | 2 | 61.9 GiB/s | 66.6 GiB/s | 1.08× | — |
+|  | 3 | 61.6 GiB/s | 67.2 GiB/s | 1.09× | 1.01× |
+|  | 4 | 62.1 GiB/s | 66.3 GiB/s | 1.07× | 1.00× |
+| 1 MiB | 2 | 61.0 GiB/s | 66.1 GiB/s | 1.08× | — |
+|  | 3 | 57.0 GiB/s | 63.3 GiB/s | 1.11× | 0.96× |
+|  | 4 | 52.7 GiB/s | 62.7 GiB/s | 1.19× | 0.95× |
+| 2 MiB | 2 | 51.9 GiB/s | 61.8 GiB/s | 1.19× | — |
+|  | 3 | 55.1 GiB/s | 63.0 GiB/s | 1.14× | 1.02× |
+|  | 4 | 54.8 GiB/s | 62.5 GiB/s | 1.14× | 1.01× |
+| 4 MiB (= L2) | 2 | 52.7 GiB/s | 61.2 GiB/s | 1.16× | — |
+|  | 3 | 56.4 GiB/s | 61.7 GiB/s | 1.09× | 1.01× |
+|  | 4 | 49.2 GiB/s | 60.7 GiB/s | 1.23× | 0.99× |
+| 8 MiB § | 2 | 52.8 GiB/s | 58.6 GiB/s | 1.11× | — |
+|  | 3 | 44.2 GiB/s | 52.8 GiB/s | 1.20× | 0.90× |
+|  | 4 | 32.9 GiB/s | 46.6 GiB/s | 1.42× | 0.80× |
+| 128 MiB | 2 | 22.1 GiB/s | 29.0 GiB/s | 1.31× | — |
+|  | 3 | 24.4 GiB/s | 29.4 GiB/s | 1.20× | 1.01× |
+|  | 4 | 23.2 GiB/s | 31.4 GiB/s | 1.35× | 1.08× |
 
-**Fixed total.**  The same working set split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size at the same index above, making the _N_ = 2 rows of the two modes the same configuration measured twice — the control.  ‡ The _N_ = 3 groups are not exactly equal-footprint: a buffer is a whole number of 256-byte chunks, so _N_ = 3 rounds down — to 75% of the target at 2 KiB and ~94% at 4 and 8 KiB, then ≥98% from 16 KiB up and indistinguishable at the printed precision from 1 MiB.  The ratios are per byte, so the shortfall does not inflate throughput, but at the three marked sizes the _N_ = 3 footprint really is smaller than the pair's.
+**Fixed total.**  The same working set split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size at the same index above, making the _N_ = 2 rows of the two modes the same configuration measured twice — the control.  ‡ The _N_ = 3 groups are not exactly equal-footprint: a buffer is a whole number of 256-byte chunks, so _N_ = 3 rounds down — to 75% of the target at 2 KiB and 94–95% at 4 and 8 KiB, then ≥98% from 16 KiB up and indistinguishable at the printed precision from 1 MiB.  The ratios are per byte, so the shortfall does not inflate throughput, but at the three marked sizes the _N_ = 3 footprint really is smaller than the pair's.
 
-| total working set | _N_ | sequential | interleaved | speedup | vs. pair | cv |
-|---|---:|---:|---:|---:|---:|---:|
-| 2 KiB | 2 | 70.6 GiB/s | 69.6 GiB/s | 0.99× | — | 1.0% |
-|  | 3 | 69.8 GiB/s | 68.9 GiB/s | 0.99× | 0.99× † | 2.2% |
-|  | 4 | 70.9 GiB/s | 71.5 GiB/s | 1.01× | 1.03× † | 2.7% |
-| 4 KiB | 2 | 69.0 GiB/s | 70.0 GiB/s | 1.01× | — | 2.2% |
-|  | 3 | 69.6 GiB/s | 70.4 GiB/s | 1.01× | 1.02× † | 2.6% |
-|  | 4 | 69.1 GiB/s | 72.9 GiB/s | 1.06× | 1.04× | 2.1% |
-| 8 KiB | 2 | 68.8 GiB/s | 71.8 GiB/s | 1.04× | — | 3.5% |
-|  | 3 | 68.5 GiB/s | 70.9 GiB/s | 1.04× | 1.00× † | 2.7% |
-|  | 4 | 70.1 GiB/s | 74.0 GiB/s | 1.05× | 1.04× † | 1.9% |
-| 16 KiB | 2 | 65.4 GiB/s | 73.9 GiB/s | 1.13× | — | 2.0% |
-|  | 3 | 66.6 GiB/s | 70.0 GiB/s | 1.05× | 0.95× | 2.3% |
-|  | 4 | 68.0 GiB/s | 73.4 GiB/s | 1.08× | 0.99× † | 1.5% |
-| 32 KiB (= L1d) | 2 | 66.6 GiB/s | 72.2 GiB/s | 1.08× | — | 2.9% |
-|  | 3 | 65.5 GiB/s | 72.0 GiB/s | 1.10× | 1.00× † | 2.2% |
-|  | 4 | 66.1 GiB/s | 73.0 GiB/s | 1.10× | 1.01× † | 2.0% |
-| 64 KiB | 2 | 62.6 GiB/s | 66.2 GiB/s | 1.06× | — | 1.7% |
-|  | 3 | 60.6 GiB/s | 66.0 GiB/s | 1.09× | 1.00× † | 4.4% |
-|  | 4 | 60.7 GiB/s | 67.5 GiB/s | 1.11× | 1.02× † | 2.5% |
-| **128 KiB (2 chunks)** | 2 | 61.4 GiB/s | 67.4 GiB/s | 1.10× | — | 3.0% |
-|  | 3 | 62.2 GiB/s | 64.3 GiB/s | 1.03× | 0.95× | 2.6% |
-|  | 4 | 62.5 GiB/s | 68.6 GiB/s | 1.10× | 1.02× † | 1.9% |
-| 256 KiB | 2 | 61.4 GiB/s | 66.7 GiB/s | 1.09× | — | 5.3% |
-|  | 3 | 61.9 GiB/s | 66.9 GiB/s | 1.08× | 1.00× † | 4.0% |
-|  | 4 | 62.2 GiB/s | 68.5 GiB/s | 1.10× | 1.03× † | 3.5% |
-| 512 KiB | 2 | 60.5 GiB/s | 65.0 GiB/s | 1.07× | — | 2.5% |
-|  | 3 | 59.9 GiB/s | 67.9 GiB/s | 1.13× | 1.04× † | 5.1% |
-|  | 4 | 61.0 GiB/s | 67.7 GiB/s | 1.11× | 1.04× | 3.1% |
-| 1 MiB | 2 | 61.7 GiB/s | 66.3 GiB/s | 1.08× | — | 2.0% |
-|  | 3 | 62.3 GiB/s | 67.3 GiB/s | 1.08× | 1.02× † | 4.0% |
-|  | 4 | 61.4 GiB/s | 66.9 GiB/s | 1.10× | 1.01× † | 1.2% |
-| 2 MiB | 2 | 60.7 GiB/s | 66.2 GiB/s | 1.09× | — | 3.4% |
-|  | 3 | 60.2 GiB/s | 65.2 GiB/s | 1.08× | 0.99× † | 4.9% |
-|  | 4 | 60.1 GiB/s | 66.5 GiB/s | 1.11× | 1.00× † | 2.3% |
-| 4 MiB (= L2) | 2 | 53.4 GiB/s | 61.3 GiB/s | 1.14× | — | 6.1% |
-|  | 3 | 58.8 GiB/s | 64.1 GiB/s | 1.08× | 1.04× † | 5.5% |
-|  | 4 | 55.6 GiB/s | 62.5 GiB/s | 1.12× | 1.03× † | 7.6% |
-| 8 MiB | 2 | 56.0 GiB/s | 60.9 GiB/s | 1.09× | — | 7.5% |
-|  | 3 | 55.7 GiB/s | 62.3 GiB/s | 1.12× | 1.02× † | 5.3% |
-|  | 4 | 55.0 GiB/s | 63.9 GiB/s | 1.16× | 1.05× † | 5.6% |
-| 16 MiB | 2 | 52.5 GiB/s | 54.8 GiB/s | 1.04× | — | 6.1% |
-|  | 3 | 55.5 GiB/s | 63.9 GiB/s | 1.15× | 1.16× | 5.6% |
-|  | 4 | 51.6 GiB/s | 56.3 GiB/s | 1.09× | 1.03× † | 7.3% |
-| 256 MiB | 2 | 22.6 GiB/s | 27.7 GiB/s | 1.22× | — | 5.1% |
-|  | 3 | 24.6 GiB/s | 29.5 GiB/s | 1.20× | 1.07× † | 6.0% |
-|  | 4 | 22.5 GiB/s | 30.5 GiB/s | 1.37× | 1.11× | 2.6% |
+| total working set | _N_ | sequential | interleaved | speedup | vs. pair |
+|---|---:|---:|---:|---:|---:|
+| 2 KiB | 2 | 69.9 GiB/s | 71.3 GiB/s | 1.02× | — |
+|  | 3 | 71.2 GiB/s | 70.1 GiB/s | 0.98× | 0.98× |
+|  | 4 | 71.7 GiB/s | 71.4 GiB/s | 1.00× | 1.00× |
+| 4 KiB | 2 | 69.3 GiB/s | 71.8 GiB/s | 1.04× | — |
+|  | 3 | 70.7 GiB/s | 69.8 GiB/s | 0.99× | 0.97× |
+|  | 4 | 69.7 GiB/s | 71.9 GiB/s | 1.03× | 1.00× |
+| 8 KiB | 2 | 67.3 GiB/s | 72.4 GiB/s | 1.08× | — |
+|  | 3 | 67.6 GiB/s | 73.2 GiB/s | 1.08× | 1.01× |
+|  | 4 | 67.7 GiB/s | 73.6 GiB/s | 1.09× | 1.02× |
+| 16 KiB | 2 | 65.3 GiB/s | 71.8 GiB/s | 1.10× | — |
+|  | 3 | 66.9 GiB/s | 72.4 GiB/s | 1.08× | 1.01× |
+|  | 4 | 69.3 GiB/s | 72.5 GiB/s | 1.05× | 1.01× |
+| 32 KiB (= L1d) | 2 | 66.0 GiB/s | 73.0 GiB/s | 1.11× | — |
+|  | 3 | 65.0 GiB/s | 73.0 GiB/s | 1.12× | 1.00× |
+|  | 4 | 65.3 GiB/s | 72.9 GiB/s | 1.12× | 1.00× |
+| 64 KiB | 2 | 62.4 GiB/s | 65.9 GiB/s | 1.06× | — |
+|  | 3 | 60.5 GiB/s | 66.8 GiB/s | 1.10× | 1.01× |
+|  | 4 | 61.7 GiB/s | 68.0 GiB/s | 1.10× | 1.03× |
+| **128 KiB (2 chunks)** | 2 | 61.1 GiB/s | 67.3 GiB/s | 1.10× | — |
+|  | 3 | 62.7 GiB/s | 68.4 GiB/s | 1.09× | 1.02× |
+|  | 4 | 61.9 GiB/s | 67.1 GiB/s | 1.08× | 1.00× |
+| 256 KiB | 2 | 63.8 GiB/s | 68.1 GiB/s | 1.07× | — |
+|  | 3 | 60.4 GiB/s | 68.2 GiB/s | 1.13× | 1.00× |
+|  | 4 | 62.7 GiB/s | 68.6 GiB/s | 1.09× | 1.01× |
+| 512 KiB | 2 | 60.2 GiB/s | 66.9 GiB/s | 1.11× | — |
+|  | 3 | 62.8 GiB/s | 68.4 GiB/s | 1.09× | 1.02× |
+|  | 4 | 63.2 GiB/s | 67.9 GiB/s | 1.07× | 1.01× |
+| 1 MiB | 2 | 62.1 GiB/s | 66.9 GiB/s | 1.08× | — |
+|  | 3 | 61.8 GiB/s | 67.2 GiB/s | 1.09× | 1.00× |
+|  | 4 | 62.3 GiB/s | 68.3 GiB/s | 1.10× | 1.02× |
+| 2 MiB | 2 | 58.4 GiB/s | 66.2 GiB/s | 1.13× | — |
+|  | 3 | 61.7 GiB/s | 67.1 GiB/s | 1.09× | 1.01× |
+|  | 4 | 61.6 GiB/s | 67.0 GiB/s | 1.09× | 1.01× |
+| 4 MiB (= L2) | 2 | 54.7 GiB/s | 61.4 GiB/s | 1.12× | — |
+|  | 3 | 56.3 GiB/s | 63.2 GiB/s | 1.12× | 1.03× |
+|  | 4 | 54.7 GiB/s | 64.8 GiB/s | 1.19× | 1.05× |
+| 8 MiB | 2 | 52.9 GiB/s | 57.9 GiB/s | 1.10× | — |
+|  | 3 | 57.7 GiB/s | 64.5 GiB/s | 1.12× | 1.11× |
+|  | 4 | 53.7 GiB/s | 62.8 GiB/s | 1.17× | 1.08× |
+| 16 MiB | 2 | 51.1 GiB/s | 61.6 GiB/s | 1.20× | — |
+|  | 3 | 49.7 GiB/s | 62.6 GiB/s | 1.26× | 1.02× |
+|  | 4 | 51.0 GiB/s | 58.8 GiB/s | 1.15× | 0.95× |
+| 256 MiB | 2 | 25.3 GiB/s | 28.2 GiB/s | 1.11× | — |
+|  | 3 | 24.7 GiB/s | 29.6 GiB/s | 1.20× | 1.05× |
+|  | 4 | 24.7 GiB/s | 30.7 GiB/s | 1.24× | 1.09× |
 
 Interpretation:
 
-* **The pair pays across the cache-resident range, weakest at the smallest buffers.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so the per-chunk critical path exceeds the throughput cost and one state leaves the AES units idle part of the time; a second interleaved state doubles the chain count.  That is worth 1.03× at `CHUNK_SIZE_MIN`, rising to 1.05–1.11× from 4 KiB up and 1.10× in DRAM.  A 1 KiB buffer is only four chunks, so loop entry and the ramp eat much of the overlap the pair exists to exploit.  (The 2 MiB pair row reads 1.19×, the only speedup outside that band; its sequential arm carries 8.0% cv and its _N_ = 3 sibling reads 1.01×, so it is a noisy row rather than a regime.)
-* **Group width is free below L2 — with four scattered rows in this run that say otherwise.**  The fixed-total control holds the footprint constant and varies only the number of states, which is where register pressure would show.  Across the twenty-two _N_ = 3 and _N_ = 4 rows from a 2 KiB total to 2 MiB, eighteen are inside their noise and no row in the range, † or not, deviates from the pair by more than 5%.  The four that clear their noise do so in both directions and none has a neighbour agreeing with it: two small positives at 1.04× (4 KiB and 512 KiB totals, both _N_ = 4) and two at 0.95× (16 KiB and 128 KiB totals, both _N_ = 3), where an 11-repetition run of this same binary earlier the same day put the latter pair at 0.99× and 1.01×.  They are 5-repetition scatter, not boundaries: no account of them survives contact with their own neighbours.  The register-pressure account (two states fill the 16 ymm registers, a third and fourth spill) predicts a loss across the whole range and does not survive either.
-* **What a wider group pays for is footprint, at a cache boundary.**  In the per-buffer mode, where widening the group widens the working set, the clean loss is 16 KiB — 0.94× and 0.92×, both clearing their noise, at both widths: the pair's 32 KiB working set is exactly L1d and three or four buffers spill.  It is the one loss that has reproduced in all four 2026-08-12 runs, at both repetition counts and on both size ladders.  **The 512 KiB anomaly is retracted.**  An earlier run recorded 0.95× and 0.96× there and could not account for them; with 256 KiB, 1 MiB and 2 MiB now measured either side, 512 KiB reads 0.98× and 1.00×, both inside their noise, and its neighbours are inside theirs.  It was noise that cleared a cv, which the filled-in ladder is what exposes.
-* **Above L2 the control stops being flat and turns positive.**  All eight rows from a 4 MiB total up land between 1.02× and 1.16×, where every row below sat within 4% of the pair; six of the eight are individually †, so the result is the consistent sign rather than any one row, and the per-buffer DRAM rows agree at 1.05× and 1.07×.  More concurrent read streams is a memory-level-parallelism effect rather than an AES one, and one the tree's prefetcher already collects on contiguous leaf chunks.
+* **The pair pays across the cache-resident range, weakest at the smallest buffers.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so the per-chunk critical path exceeds the throughput cost and one state leaves the AES units idle part of the time; a second interleaved state doubles the chain count.  That is worth 1.02× at `CHUNK_SIZE_MIN`, rising to 1.08–1.12× from 4 KiB through 1 MiB and 1.31× in DRAM.  A 1 KiB buffer is only four chunks, so loop entry and the ramp eat much of the overlap the pair exists to exploit.  (The 2 MiB and 4 MiB pair rows read 1.19× and 1.16×, above that band; in both it is the sequential arm degrading around L2 rather than the pair improving.)
+* **Group width is free below L2, with nothing in this run dissenting.**  The fixed-total control holds the footprint constant and varies only the number of states, which is where register pressure would show.  Across the twenty-two _N_ = 3 and _N_ = 4 rows from a 2 KiB total to 2 MiB, **none deviates from the pair by more than 3%**.  This run is cleaner than the one it replaces, which had four rows as far out as 0.95× and 1.04× in both directions; none of those four reproduced, which is what they were read as at the time — 5-repetition scatter rather than boundaries.  The register-pressure account (two states fill the 16 ymm registers, a third and fourth spill) predicts a loss across the whole range and does not survive either.
+* **What a wider group pays for is footprint, at a cache boundary.**  In the per-buffer mode, where widening the group widens the working set, the loss is at 16 KiB — 0.96× at _N_ = 3 and 0.93× at _N_ = 4: the pair's 32 KiB working set is exactly L1d and three or four buffers spill.  It is the one loss that has reproduced in every run of this benchmark, on both size ladders, though it is shallower here than the 0.94× and 0.92× the previous run recorded.  **The 512 KiB anomaly stays retracted.**  An earlier run recorded 0.95× and 0.96× there and could not account for them; this run reads 1.01× and 1.00×, as do its neighbors either side.  It was scatter.
+* **Above L2 the control stops being flat and turns positive.**  Seven of the eight rows from a 4 MiB total up land between 1.02× and 1.11×, where every row below sat within 3% of the pair; the result is the consistent sign rather than any one row, and the per-buffer DRAM rows agree at 1.01× and 1.08×.  The eighth, _N_ = 4 at a 16 MiB total, reads 0.95×, so the sign is a trend and not a rule.  More concurrent read streams is a memory-level-parallelism effect rather than an AES one, and one the tree's prefetcher already collects on contiguous leaf chunks.
 
-**On the repetition count.**  This section is recorded at the suite default of 5 so that every findings section above rests on one dated run.  The cost is visible in the tables: three fixed-total rows moved by 4 to 10 percentage points between this run and an 11-repetition run of the identical binary hours earlier, and one pair row's cv reached 11.6%.  Every conclusion above survived that, and the two that decide anything — the 16 KiB L1d loss and the 512 KiB retraction — reproduced at both counts.  But a single anomalous row in this table is more likely to be scatter than structure, and the filled-in ladder rather than the cv is what settles which.
+**On the repetition count.**  This section is recorded at the suite default of 5 so that every findings section above rests on one dated run.  The cost is visible in the tables: the four fixed-total rows that sat as far out as 0.95× and 1.04× in the previous run at this same count are all within 3% of the pair here.  Every conclusion above survived that, and the two that decide anything — the 16 KiB L1d loss and the 512 KiB retraction — have now reproduced across runs.  But a single anomalous row in this table is more likely to be scatter than structure, and the filled-in ladder is what settles which.
 
-Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE` a 3- or 4-wide group is 1.00× and 1.03×, both inside the noise, so a second implementation would buy nothing.  The only regime where widening trends positive is a working set already past L2 — for the tree, leaf chunks far larger than the default, and even there the win is 2–16% and mostly inside the noise of individual rows; the L1d loss at 16 KiB is the mirror image and is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
+Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`; verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE` a 3- or 4-wide group is 1.00× and 1.02×, both inside the noise, so a second implementation would buy nothing.  The only regime where widening trends positive is a working set already past L2 — for the tree, leaf chunks far larger than the default, and even there the win is 2–11% and mostly inside the noise of individual rows; the L1d loss at 16 KiB is the mirror image and is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
 
 ## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
 
@@ -274,25 +274,25 @@ Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`; 
 | 8 MiB (L3)     | 0.94× | 0.89× |
 | 128 MiB (DRAM) | 1.28× | 1.28× |
 
-(The corresponding VAES ratios on the default flags are in the 2026-08-12 pair section above.)
+(The corresponding VAES ratios on the default flags are in the 2026-09-15 pair section above.)
 
 Interpretation: the pairing win exists because **VAES halves the chain count**.  With 256-bit `vaesenc`, one cch state runs only 8 independent 3-deep chains per 256-byte chunk, leaving the AES units latency-starved — the gap the second state fills.  With 128-bit `aesenc` codegen, one state already runs 16 independent chains, which saturates the AES units on its own.  The DRAM-regime ~1.28× appears in every column because it is memory-level parallelism (two concurrent read streams), not an AES effect — and in the tree, adjacent leaf chunks are contiguous memory, so the prefetcher already gets much of that.
 
-**Two caveats this table has outgrown, and neither is resolvable without re-running it.**  It predates the fixed-total mode and the filled-in size ladder, so it is fixed-per-buffer only, at four sampled cache levels, with no repetition count recorded and no cv — every methodological weakness the 2026-08-12 runs found and corrected.  Its two interior losses sit at 512 KiB and 8 MiB, which are precisely the two sizes that turned out under VAES to be noise and an L3 cliff rather than results.  And this section used to attribute the AVX2-no-VAES column's losses to register spilling (16 ymm registers holding two 8-register states with nothing to spare); that account has since been refuted for VAES codegen by the fixed-total control, and while 128-bit codegen is a different register budget, nothing here tests it.  The claim the conclusion rests on is the *DRAM-vs-cache* contrast, which is large and appears in both columns — not the individual interior rows.
+**Two caveats this table has outgrown, and neither is resolvable without re-running it.**  It predates the fixed-total mode and the filled-in size ladder, so it is fixed-per-buffer only, at four sampled cache levels, with no repetition count recorded — every methodological weakness the 2026-08-12 runs found and corrected.  Its two interior losses sit at 512 KiB and 8 MiB, which are precisely the two sizes that turned out under VAES to be noise and an L3 cliff rather than results.  And this section used to attribute the AVX2-no-VAES column's losses to register spilling (16 ymm registers holding two 8-register states with nothing to spare); that account has since been refuted for VAES codegen by the fixed-total control, and while 128-bit codegen is a different register budget, nothing here tests it.  The claim the conclusion rests on is the *DRAM-vs-cache* contrast, which is large and appears in both columns — not the individual interior rows.
 
-Conclusion: the VAES guard on the cch pairing opt-in is correct and stays — no cache-resident regime in either non-VAES column shows the ~1.1× the VAES build gets, which is what the guard turns on.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark directly to check their machine; a re-run on the current ladder, in both modes and with a cv, is what would put the interior rows back on firm ground.
+Conclusion: the VAES guard on the cch pairing opt-in is correct and stays — no cache-resident regime in either non-VAES column shows the ~1.1× the VAES build gets, which is what the guard turns on.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark directly to check their machine; a re-run on the current ladder, in both modes, is what would put the interior rows back on firm ground.
 
-## Findings: structural probes of `Castella::permute` (2026-07-19)
+## Findings: structural probes of `Castella::permute` (2026-09-15)
 
-`permute-structural-probes.cpp` (run at `-n 10000`, ~0.3 s) probes the _N_ = 16 permutation for the structural weaknesses the MILP trail bounds do not cover.  All pass/fail checks passed:
+`permute-structural-probes.cpp` (run at `-n 35000`, the `run-research.sh` setting) probes the _N_ = 16 permutation for the structural weaknesses the MILP trail bounds do not cover.  All pass/fail checks passed:
 
-* **Structured-subspace escape.**  Random states from the transpose's three natural symmetry classes — all blocks equal, constant-byte blocks (the transpose maps these two to each other), and symmetric byte matrices (which the transpose fixes) — were permuted for every round count 1–16.  In 480,000 outputs, **none re-entered any of the three classes**, and the residual-structure statistics (symmetric byte pairs, cross-block and within-block equal-byte counts) sat at their random-model expectations already at 1 round (e.g. symmetric pairs 0.457–0.475 vs. expected 0.469).  The round constants do the symmetry-breaking they were designed for.
-* **In-subspace avalanche.**  Minimal in-subspace differences diffuse like random differences: ~1024 flipped bits (half the state) from round 3 at every class.  The partial values below that are the expected diffusion ramp, not residual structure: at 1 round a one-block difference has diffused only within its block (~64 bits) and at 2 rounds reaches 1019.9 — the same "almost-complete at 2, complete at 3" picture as `permute-num_rounds`.  (An earlier draft of the probe showed the symmetric class ~25σ below expectation at all rounds; the cause was a probe bug — the paired flip canceled itself when the random matrix indices landed on the diagonal — which the printed expectation exposed immediately.  Worth keeping in mind: print the null-model value next to every measured statistic.)
+* **Structured-subspace escape.**  Random states from the transpose's three natural symmetry classes — all blocks equal, constant-byte blocks (the transpose maps these two to each other), and symmetric byte matrices (which the transpose fixes) — were permuted for every round count 1–16.  In 1,680,000 outputs, **none re-entered any of the three classes**, and the residual-structure statistics (symmetric byte pairs, cross-block and within-block equal-byte counts) sat at their random-model expectations already at 1 round (e.g. symmetric pairs 0.465–0.475 vs. expected 0.469).  The round constants do the symmetry-breaking they were designed for.
+* **In-subspace avalanche.**  Minimal in-subspace differences diffuse like random differences: ~1024 flipped bits (half the state) from round 3 at every class.  The partial values below that are the expected diffusion ramp, not residual structure: at 1 round a one-block difference has diffused only within its block (~64 bits) and at 2 rounds reaches 1020.1 — the same "almost-complete at 2, complete at 3" picture as `permute-num_rounds`.  (An earlier draft of the probe showed the symmetric class ~25σ below expectation at all rounds; the cause was a probe bug — the paired flip canceled itself when the random matrix indices landed on the diagonal — which the printed expectation exposed immediately.  Worth keeping in mind: print the null-model value next to every measured statistic.)
 * **Fixed-point screen.**  No all-same-byte state (all 256) is a fixed point of `P`, or maps to its own transpose, at any round count.  This is only a screen of the candidates symmetry suggests — a generic fixed-point search over a 2048-bit state is infeasible, and a random permutation would also pass.
 * **Round-constant properties** (the SPEC.md assertions, machine-verified for the first time): the first constant is the seed string `"expand 16-byte c"`; all 768 are distinct and nonzero; no constant is a bitwise shift (by 1–127, either direction) of its predecessor in generation order; Hamming weights μ = 63.89, min 45, max 79.
 * **Slide-resistance screen.**  A slide attack needs the round function to repeat: a slid pair `(x, R(x))` stays slid, `(Rᵏ(x), Rᵏ⁺¹(x))`, only if every round applies the same `R`.  The cited defense (Keccak's *Making of*, § 7.4, quoted in `castella-permute.hpp`) is a per-round asymmetry, which Castella gets from its constant schedule.  The screen rules out the strongest form an attacker could still hope for — an **affine** self-similar schedule, where some whole-round shift `s` relates two rounds by a fixed XOR difference `δ` (`rc[round r+s] = rc[round r] ⊕ δ` at every position, the "slide with a twist" precondition).  For all 15 whole-round shifts, no such `δ` exists.  This is strictly stronger than the distinctness check above, which only excludes `δ = 0`; here a full Castella round consumes 48 distinct LFSR constants placed at 48 different (block, AES-round) positions, so no round is an affine image of another and the round functions are genuinely all different.
 
-Scope: these probes are necessary sanity checks, not distinguisher proofs — they test the symmetry classes the transpose makes natural, and absence of evidence in 10^4 samples is not evidence of absence for subtler invariant subspaces.  **The invariant-subspace half of that caveat has since been discharged for a large, exactly-characterized class**: `permute-invariant-subspaces.py` decides the same three symmetry classes without sampling and rules out every byte-aligned invariant subspace outright (next section).  The fixed-point screen is unaffected and remains a screen.  The slide screen is exact (it checks the whole 16-round schedule, not a sample), but it rules out only the constant-schedule route to a slide; it does not preclude a rebound/start-from-the-middle attack, which is a distinct technique not addressed here.  The pass/fail checks exit nonzero on violation, so the program can gate regressions.
+Scope: these probes are necessary sanity checks, not distinguisher proofs — they test the symmetry classes the transpose makes natural, and absence of evidence in 10^4–10^5 samples is not evidence of absence for subtler invariant subspaces.  **The invariant-subspace half of that caveat has since been discharged for a large, exactly-characterized class**: `permute-invariant-subspaces.py` decides the same three symmetry classes without sampling and rules out every byte-aligned invariant subspace outright (next section).  The fixed-point screen is unaffected and remains a screen.  The slide screen is exact (it checks the whole 16-round schedule, not a sample), but it rules out only the constant-schedule route to a slide; it does not preclude a rebound/start-from-the-middle attack, which is a distinct technique not addressed here.  The pass/fail checks exit nonzero on violation, so the program can gate regressions.
 
 ## Findings: exact invariant-subspace search over `Castella::permute` (2026-08-03)
 

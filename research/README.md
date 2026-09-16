@@ -75,6 +75,8 @@ Raw benchmark results are saved in a folder named `results`.
 
 `run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions; override with `BENCHMARK_REPS=…`.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  The one exception is the 2026-07-10 non-VAES section, which predates the practice and records neither a count nor a cv.
 
+Every benchmark that reports a byte rate reports it **per thread**.  google-benchmark sums a counter across threads and divides by the wall time of the parallel region, which yields the aggregate rate — so a plain `SetBytesProcessed` scales with the thread count.  The throughput counters therefore carry the `kAvgThreads` flag, which divides that sum back down by the thread count, and a rate stays flat as `NUM_THREADS` rises instead of multiplying by it.  `run-benchmarks.bash` sets `NUM_THREADS=1`, so every table below is a single-thread figure and unaffected by the convention either way.
+
 ## Benchmark coverage on ARM
 
 Every performance claim in this repository was measured on x86-64 with VAES; none has been validated on ARM.  What runs where:

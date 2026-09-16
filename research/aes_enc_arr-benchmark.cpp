@@ -52,7 +52,6 @@
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
-#include <cstdint>
 #include <cstdlib>
 #include <err.h>
 #include <exception>
@@ -78,8 +77,10 @@ BM_generic(benchmark::State& BM_state)
         aes_enc_arr_generic(arr, keys);
     }
 
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(arr);
@@ -102,8 +103,10 @@ BM_vaes_cast(benchmark::State& BM_state)
         aes_enc_arr_paircast(arr, keys);
     }
 
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(arr);
@@ -126,8 +129,10 @@ BM_x2_broadcast(benchmark::State& BM_state)
         aes_enc_arr_x2(arr, keys);
     }
 
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(arr);
@@ -150,8 +155,10 @@ BM_folded(benchmark::State& BM_state)
         aes_enc_arr_folded(arr, keys);
     }
 
-    BM_state.SetBytesProcessed(BM_state.iterations() *
-                               static_cast<int64_t>(sizeof(arr)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(arr);

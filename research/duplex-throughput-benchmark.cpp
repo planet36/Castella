@@ -26,7 +26,6 @@
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
@@ -59,8 +58,10 @@ BM_duplex_absorb(benchmark::State& BM_state, const int capacity_blocks, const in
     duplex.squeeze_to(digest);
     benchmark::DoNotOptimize(digest);
 
-    BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(sizeof(buf)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(buf),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 }
 
 void
@@ -82,8 +83,10 @@ BM_duplex_squeeze(benchmark::State& BM_state, const int capacity_blocks, const i
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(dst);
 
-    BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(std::size(dst)));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * std::size(dst),
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 }
 
 static void

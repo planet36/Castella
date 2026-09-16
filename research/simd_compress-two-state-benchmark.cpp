@@ -55,7 +55,6 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <cstdlib>
 #include <err.h>
 #include <exception>
@@ -199,9 +198,10 @@ BM_states_sequential(benchmark::State& BM_state, const int buf_size)
         }
     }
 
-    BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(N * buf_size) /
-                               static_cast<double>(BM_state.threads()));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * N * buf_size,
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(data.states);
@@ -232,9 +232,10 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
         }
     }
 
-    BM_state.SetBytesProcessed(static_cast<int64_t>(BM_state.iterations()) *
-                               static_cast<int64_t>(N * buf_size) /
-                               static_cast<double>(BM_state.threads()));
+    // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
+    BM_state.counters["bytes_per_second"] =
+        benchmark::Counter(static_cast<double>(BM_state.iterations()) * N * buf_size,
+                           benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
     benchmark::DoNotOptimize(data.states);

@@ -44,12 +44,12 @@
 * This class owns two ordinary nodes and drives their private absorb
 * machinery in one interleaved bulk loop.  The initial state, mix-rate
 * binding, padding, and finalization logic therefore all remain in ONE place,
-* cch.hpp, and each lane computes exactly what a standalone node computes
+* cch.hpp, and each node computes exactly what it would compute standalone
 * (verified by research/cch_x2-verify.cpp).  This class is an execution-level
 * optimization only and must never be digest-visible.
 *
 * Lockstep constrains only \c add.  Every absorbed piece must have the SAME
-* LENGTH in both lanes, though the contents may differ, so the two nodes' mix
+* LENGTH in both nodes, though the contents may differ, so the two nodes' mix
 * schedules stay aligned.  Finalization needs no lockstep, being one buffered
 * absorb plus one permutation per node amortized over a whole leaf chunk, so
 * \c final_digest_pair_to just finalizes each node.
@@ -88,7 +88,7 @@ private:
     /// Add \a src_a / \a src_b to node A / node B
     /**
     * The lockstep counterpart of \c compress_castella_hash::add_.  The two
-    * lanes absorb different bytes but always the same number of them, so both
+    * nodes absorb different bytes but always the same number of them, so both
     * nodes buffer, compress, and mix on the same schedule.  That is what lets
     * one bulk loop advance both states with interleaved instructions.
     */
@@ -151,7 +151,7 @@ private:
                     src_a = src_a.subspan(node_a_.get_state_size_bytes());
                     src_b = src_b.subspan(node_b_.get_state_size_bytes());
 
-                    // The lanes share one absorb schedule, so one counter
+                    // The nodes share one absorb schedule, so one counter
                     // decides the mix for both states.
                     if (node_a_.should_mix_state_(absorbs_since_mix))
                     {

@@ -159,7 +159,7 @@ concept tree_node_policy =
 *    whole chunks, such as a memory-mapped file added in one call, the leaf
 *    chunks of that call are hashed by up to NUM_THREADS transient worker
 *    threads, statically partitioned, with zero copying.  See
-*    \c flush_bulk_chunks_().  When the node policy supports lane-paired
+*    \c flush_bulk_chunks_().  When the node policy supports paired
 *    leaf hashing (see \c HAS_PAIRED_LEAF), each thread additionally hashes
 *    its adjacent leaf chunks two at a time.
 *
@@ -173,7 +173,7 @@ concept tree_node_policy =
 *    The fixed ring size is itself the bound on in-flight chunks, the
 *    backpressure.  See \c dispatch_leaf_().
 *
-*    When the node policy supports lane-paired leaf hashing (see
+*    When the node policy supports paired leaf hashing (see
 *    \c HAS_PAIRED_LEAF), a worker claims up to TWO adjacent slots at once
 *    and hashes both chunks with one paired node.  See
 *    \c pool_worker_loop_().  Pipelined chunks are always full, so the chunk
@@ -277,17 +277,22 @@ private:
     /// Role byte for a leaf node (hashes one chunk to a CV)
     static constexpr uint8_t ROLE_LEAF = 0x01;
 
-    /// Whether the node policy also supports lane-paired leaf hashing
+    /// Whether the node policy also supports paired leaf hashing
     /**
     * Detected, not required.  A policy opts in by additionally providing a
-    * \c node_x2_type that advances two same-parameter nodes in lockstep (see
-    * \c Castella::DuplexX2), a \c make_node_x2() factory, and an
-    * \c extract_cv_x2().  Adjacent full leaf chunks are then hashed two at a
-    * time on one thread, as two states in the two 128-bit lanes of ymm
-    * registers, via VAES.  See \c hash_leaf_pair_into_().
+    * \c node_x2_type that advances two same-parameter nodes in lockstep, a
+    * \c make_node_x2() factory, and an \c extract_cv_x2().  Adjacent full
+    * leaf chunks are then hashed two at a time on one thread.  See
+    * \c hash_leaf_pair_into_().
+    *
+    * How a pair shares the work is up to its type.  \c Castella::DuplexX2
+    * packs its two states into the two 128-bit lanes of ymm registers, and
+    * \c compress_castella_hash_x2 interleaves two ordinary nodes in one bulk
+    * loop.
     *
     * A paired leaf computes bit-identical CVs, which is the lockstep
-    * contract.  research/duplex_x2-verify.cpp verifies it for \c DuplexX2.
+    * contract.  research/duplex_x2-verify.cpp and research/cch_x2-verify.cpp
+    * verify it for those two types.
     */
     static constexpr bool HAS_PAIRED_LEAF =
         requires(const NodePolicy p, NodePolicy::node_x2_type& pair,
@@ -607,10 +612,10 @@ private:
         policy_.extract_cv(leaf, cv_dst);
     }
 
-    /// Absorb the same left-encoded integer into both lanes of \a pair
+    /// Absorb the same left-encoded integer into both nodes of \a pair
     /**
-    * The lane-paired counterpart of \c absorb_left_encoded_ for a value
-    * that is identical in both lanes.
+    * The paired counterpart of \c absorb_left_encoded_ for a value
+    * that is identical in both nodes.
     *
     * \a pair is constrained to the policy's own \c node_x2_type, the way
     * \c absorb_left_encoded_ names \c node_type outright.  It stays a
@@ -641,18 +646,18 @@ private:
         pair.add(as_byte_span(x).first(w), as_byte_span(x).first(w));
     }
 
-    /// Hash two adjacent chunks to their chaining values with one lane-paired node
+    /// Hash two adjacent chunks to their chaining values with one node pair
     /**
-    * The lane-paired counterpart of \c hash_leaf_into_, available only when
+    * The paired counterpart of \c hash_leaf_into_, available only when
     * \c HAS_PAIRED_LEAF.  The chunks at \a chunk_index and
     * \a chunk_index + 1 are hashed in lockstep by one \c node_x2_type,
     * producing CVs bit-identical to two \c hash_leaf_into_ calls.  Pairing
     * can therefore never affect the digest.
     *
     * Lockstep requires every absorbed piece to have the same length in both
-    * lanes.  Both chunks are full, because only the trailing chunk of a
+    * nodes.  Both chunks are full, because only the trailing chunk of a
     * stream may be short and it is never paired.  The role prefix is
-    * identical in both lanes, so only the left-encoded chunk index can
+    * identical in both nodes, so only the left-encoded chunk index can
     * differ, and only in WIDTH, at a byte-width boundary such as indices 255
     * and 256.  Such a pair falls back to two single-leaf hashes.
     *
@@ -683,7 +688,7 @@ private:
 
         if (w != static_cast<uint8_t>(byte_width(index_b)))
         {
-            // The lanes would absorb different-length index encodings, so
+            // The two nodes would absorb different-length index encodings, so
             // lockstep is impossible for this pair.
             hash_leaf_into_(chunk_a, chunk_index, cv_dst_a);
             hash_leaf_into_(chunk_b, chunk_index + 1, cv_dst_b);
@@ -692,7 +697,7 @@ private:
 
         auto pair = policy_.make_node_x2();
 
-        // The role prefix, identical in both lanes.  See absorb_role_prefix_.
+        // The role prefix, identical in both nodes.  See absorb_role_prefix_.
         pair.add(as_byte_span(ROLE_LEAF), as_byte_span(ROLE_LEAF));
         absorb_left_encoded_x2_(pair, CHUNK_SIZE);
         absorb_left_encoded_x2_(pair, CV_LEN);
@@ -1238,7 +1243,7 @@ private:
     * or a policy with \c USE_STREAMING_POOL false.
     *
     * Chunk 0, if present, is absorbed directly by the final node.  Adjacent
-    * full leaf chunks are hashed two at a time by one lane-paired node (see
+    * full leaf chunks are hashed two at a time by one node pair (see
     * \c hash_leaf_pair_into_()), and a leftover leaf is hashed singly.  Each
     * CV enters the final node in index order, immediately after it is
     * computed.
@@ -1421,8 +1426,8 @@ private:
                             if constexpr (HAS_PAIRED_LEAF)
                             {
                                 // Adjacent leaves of this worker's range are
-                                // hashed two at a time by one lane-paired
-                                // node.  A leftover leaf falls through to the
+                                // hashed two at a time by one node pair.  A
+                                // leftover leaf falls through to the
                                 // single-leaf loop below.
                                 for (; k + 1 < range_end; k += 2)
                                 {

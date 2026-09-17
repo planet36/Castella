@@ -22,7 +22,7 @@ permute_inv-verify
 permute_x2-benchmark
 permute_x2-verify
 results/
-simd_compress-two-state-benchmark
+simd_compress-num_states-benchmark
 simd_compress_aes_enc-num_rounds
 simd_compress_aes_enc-num_rounds-benchmark
 simd_transpose-verify

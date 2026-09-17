@@ -39,7 +39,7 @@
 * the per-chunk AES throughput cost, leaving the AES units partly idle.
 * Interleaving a second state's chains in the same bulk loop fills those idle
 * slots, which measured faster than hashing the two inputs sequentially (see
-* research/simd_compress-two-state-benchmark.cpp).
+* research/simd_compress-num_states-benchmark.cpp).
 *
 * This class owns two ordinary nodes and drives their private absorb
 * machinery in one interleaved bulk loop.  The initial state, mix-rate

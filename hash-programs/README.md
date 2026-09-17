@@ -106,7 +106,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
   taskset -c 0 hyperfine --shell=none --warmup=5 './cch --num-threads=1 /tmp/test.txt'
   ```
 
-  (`taskset` pins the run to one core, matching the per-core claim.  Node-level throughput — one hash state, no tree — is measured by `research/simd_compress-two-state-benchmark` instead; see [research/README.md](../research/README.md).)
+  (`taskset` pins the run to one core, matching the per-core claim.  Node-level throughput — one hash state, no tree — is measured by `research/simd_compress-num_states-benchmark` instead; see [research/README.md](../research/README.md).)
 
 * **"Memory-mapped files parallelize best" / "throughput limited by the reading thread"**: `bash benchmark.threads.bash` sweeps `--num-threads` (override with `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads; `castella --no-mmap` and piped input flatten once the single reading thread is the bottleneck (with VAES leaf pairing, at about 2 threads); `cch --no-mmap` and piped input ignore extra threads entirely (streamed cch input hashes inline by design).  Plot any of the CSVs with `python plot-results.py --xlog results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv` (`--xlog` because the default thread counts are powers of 2 up to `nproc`).
 

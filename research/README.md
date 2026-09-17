@@ -46,7 +46,7 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | permute-num\_rounds-benchmark.cpp | Benchmark `Castella::permute` across different round counts and state sizes |
 | permute\_x2-benchmark.cpp | Benchmark the lane-paired `Castella::permute_x2` against two sequential `Castella::permute` calls |
 | simd\_compress\_aes\_enc-num\_rounds-benchmark.cpp | Benchmark `simd_compress_aes_enc_r{2,3,4}` |
-| simd\_compress-two-state-benchmark.cpp | Probe whether advancing 2, 3, or 4 `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question, and whether a wider group would pay) |
+| simd\_compress-num\_states-benchmark.cpp | Probe whether advancing 2, 3, or 4 `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question, and whether a wider group would pay) |
 | squeeze\_bytes-benchmark.cpp | Benchmark alternative implementations of `squeeze_bytes` |
 
 ## Usage
@@ -81,10 +81,10 @@ Every benchmark that reports a byte rate reports it **per thread**.  google-benc
 
 Every performance claim in this repository was measured on x86-64 with VAES; none has been validated on ARM.  What runs where:
 
-* **ARM-capable** — they build on aarch64 with the Crypto extensions and measure real code paths there: `duplex-throughput-benchmark`, `permute-num_rounds-benchmark`, `aes_enc_0-aes_num_rounds-benchmark`, `copy_bytes_into-benchmark`, `left_encode-right_encode-benchmark`, `squeeze_bytes-benchmark`, and `simd_compress-two-state-benchmark` (its guard explicitly includes `__aarch64__ && __ARM_FEATURE_AES`).
+* **ARM-capable** — they build on aarch64 with the Crypto extensions and measure real code paths there: `duplex-throughput-benchmark`, `permute-num_rounds-benchmark`, `aes_enc_0-aes_num_rounds-benchmark`, `copy_bytes_into-benchmark`, `left_encode-right_encode-benchmark`, `squeeze_bytes-benchmark`, and `simd_compress-num_states-benchmark` (its guard explicitly includes `__aarch64__ && __ARM_FEATURE_AES`).
 * **x86-64-with-VAES only** — they measure code paths that exist only there, and compile to a stub that prints `skipped` elsewhere: `permute_folded-benchmark`, `permute_x2-benchmark`, `aes_enc_arr-benchmark`, `aes_enc_arr_cast-benchmark`, `nested-for-loop-order-aes_enc_0-benchmark`, `simd_compress_aes_enc-num_rounds-benchmark`.
 
-The one open ARM question is the cch leaf pairing: the tree's pairing opt-in is guarded by `__VAES__ && __AVX2__`, so ARM hashes leaves one at a time.  The untested expectation is that this matches the non-VAES x86 finding below — 128-bit AES codegen already runs 16 independent chains per state, so a second interleaved state should be a wash to a loss outside the DRAM regime.  To check on ARM hardware: build and run `simd_compress-two-state-benchmark` and compare the pair rows' interleaved vs. sequential per-byte throughput; if interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
+The one open ARM question is the cch leaf pairing: the tree's pairing opt-in is guarded by `__VAES__ && __AVX2__`, so ARM hashes leaves one at a time.  The untested expectation is that this matches the non-VAES x86 finding below — 128-bit AES codegen already runs 16 independent chains per state, so a second interleaved state should be a wash to a loss outside the DRAM regime.  To check on ARM hardware: build and run `simd_compress-num_states-benchmark` and compare the pair rows' interleaved vs. sequential per-byte throughput; if interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
 
 ## Findings: Duplex throughput through the public API (2026-09-15)
 
@@ -148,7 +148,7 @@ Conclusion: folding is a clear ~1.7× win at the 16-block state, which is the on
 
 ## Findings: the cch pair pays ~1.1×; group width is free below L2, footprint is what costs (2026-09-15)
 
-`simd_compress-two-state-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 5 repetitions over a power-of-two size ladder, pinned to core 0, random interleaving on (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group.  **At 5 repetitions this benchmark's run-to-run scatter reaches a few percent, so read any "vs. pair" ratio within about 3% of 1.00× as no difference rather than as a result.**
+`simd_compress-num_states-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, either sequentially (buffer after buffer — what _N_ single-leaf hashes do) or interleaved chunk by chunk (what a grouped leaf node would do), in two modes.  Medians of 5 repetitions over a power-of-two size ladder, pinned to core 0, random interleaving on (`bash run-benchmarks.bash`), `-march=x86-64-v3 -maes -mvaes`.  Speedup = interleaved ÷ sequential; "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group.  **At 5 repetitions this benchmark's run-to-run scatter reaches a few percent, so read any "vs. pair" ratio within about 3% of 1.00× as no difference rather than as a result.**
 
 This machine: L1d 32 KiB and L2 4 MiB per core, L3 36 MiB shared.  The size labels below are those levels and are specific to this hardware.
 

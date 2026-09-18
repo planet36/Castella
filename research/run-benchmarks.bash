@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # Usage: run-benchmarks.bash
-# Run all *-benchmark executables in the current directory, save raw results to results/, and print sorted median summaries.
+# Run all *-benchmark executables in the current directory, save raw results to
+# results/, and print sorted median summaries.
 
 export LC_ALL=C
 

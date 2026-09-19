@@ -250,6 +250,7 @@ Castella is licensed under the [Mozilla Public License 2.0](https://www.mozilla.
 * KMAC
 * TupleHash
 
+![blazingly fast](https://blazingly.fast/api/badge.svg?repo=planet36/Castella)
 
 [^Schneier]: [Schneier's Law](https://www.schneier.com/blog/archives/2011/04/schneiers_law.html)
 <q>Anyone, from the most clueless amateur to the best cryptographer, can create an algorithm that he himself can't break.</q>

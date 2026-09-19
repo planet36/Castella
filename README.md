@@ -1,7 +1,5 @@
 # Castella: A <q>heavyweight</q> AES-based permutation and the hash functions built on it
 
-![blazingly fast](https://blazingly.fast/api/badge.svg?repo=planet36/Castella)
-
 This C++ library implements a <q>heavyweight</q> permutation function using AES CPU instructions, plus a duplex/sponge, parallel tree hashing, a keyed MAC, and a PRNG on top.
 
 <q>Heavyweight</q> is the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography): a wide 256-byte state and a hardware AES round function, not a small-state [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) design.  It describes the design, not the speed — the [tree hashes rival, and in one case roughly double, multithreaded `b3sum`](#is-this-as-fast-as-b3sum) on page-cache-hot files.
@@ -252,6 +250,7 @@ Castella is licensed under the [Mozilla Public License 2.0](https://www.mozilla.
 * KMAC
 * TupleHash
 
+![blazingly fast](https://blazingly.fast/api/badge.svg?repo=planet36/Castella)
 
 [^Schneier]: [Schneier's Law](https://www.schneier.com/blog/archives/2011/04/schneiers_law.html)
 <q>Anyone, from the most clueless amateur to the best cryptographer, can create an algorithm that he himself can't break.</q>

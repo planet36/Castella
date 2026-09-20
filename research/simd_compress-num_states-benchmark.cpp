@@ -200,7 +200,7 @@ BM_states_sequential(benchmark::State& BM_state, const int buf_size)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * N * buf_size,
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * N * buf_size),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
@@ -234,7 +234,7 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * N * buf_size,
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * N * buf_size),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.

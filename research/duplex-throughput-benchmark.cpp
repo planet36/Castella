@@ -60,7 +60,7 @@ BM_duplex_absorb(benchmark::State& BM_state, const int capacity_blocks, const in
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(buf),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * sizeof(buf)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 }
 
@@ -85,7 +85,7 @@ BM_duplex_squeeze(benchmark::State& BM_state, const int capacity_blocks, const i
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * std::size(dst),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * std::size(dst)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 }
 

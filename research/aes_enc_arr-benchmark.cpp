@@ -79,7 +79,7 @@ BM_generic(benchmark::State& BM_state)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * sizeof(arr)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
@@ -105,7 +105,7 @@ BM_vaes_cast(benchmark::State& BM_state)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * sizeof(arr)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
@@ -131,7 +131,7 @@ BM_x2_broadcast(benchmark::State& BM_state)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * sizeof(arr)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.
@@ -157,7 +157,7 @@ BM_folded(benchmark::State& BM_state)
 
     // Counters are summed across threads.  kAvgThreads makes this the per-thread rate.
     BM_state.counters["bytes_per_second"] =
-        benchmark::Counter(static_cast<double>(BM_state.iterations()) * sizeof(arr),
+        benchmark::Counter(static_cast<double>(BM_state.iterations() * sizeof(arr)),
                            benchmark::Counter::kAvgThreadsRate, benchmark::Counter::kIs1024);
 
     // This is to prevent the compiler from eliding the work above.

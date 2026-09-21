@@ -269,26 +269,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     using T = std::byte;
     constexpr int N = 256 / sizeof(T);
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark("squeeze_bytes_1", BM_squeeze_bytes<T, N>, squeeze_bytes_1<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_2", BM_squeeze_bytes<T, N>, squeeze_bytes_2<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_3", BM_squeeze_bytes<T, N>, squeeze_bytes_3<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>);
-        benchmark::RegisterBenchmark("squeeze_bytes_7", BM_squeeze_bytes<T, N>, squeeze_bytes_7<T, N>);
-    }
-    else
-    {
-        benchmark::RegisterBenchmark("squeeze_bytes_1", BM_squeeze_bytes<T, N>, squeeze_bytes_1<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_2", BM_squeeze_bytes<T, N>, squeeze_bytes_2<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_3", BM_squeeze_bytes<T, N>, squeeze_bytes_3<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("squeeze_bytes_7", BM_squeeze_bytes<T, N>, squeeze_bytes_7<T, N>)->Threads(num_threads);
-    }
+    benchmark::RegisterBenchmark("squeeze_bytes_1", BM_squeeze_bytes<T, N>, squeeze_bytes_1<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_2", BM_squeeze_bytes<T, N>, squeeze_bytes_2<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_3", BM_squeeze_bytes<T, N>, squeeze_bytes_3<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_4", BM_squeeze_bytes<T, N>, squeeze_bytes_4<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_5", BM_squeeze_bytes<T, N>, squeeze_bytes_5<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_6", BM_squeeze_bytes<T, N>, squeeze_bytes_6<T, N>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("squeeze_bytes_7", BM_squeeze_bytes<T, N>, squeeze_bytes_7<T, N>)->Threads(num_threads);
 
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();

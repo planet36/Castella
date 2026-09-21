@@ -167,30 +167,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 #pragma GCC diagnostic pop
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r2", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r2);
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r3", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r3);
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r4", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r4);
+    benchmark::RegisterBenchmark("simd128_compress_aes_enc_r2", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r2)->Threads(num_threads);
+    benchmark::RegisterBenchmark("simd128_compress_aes_enc_r3", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r3)->Threads(num_threads);
+    benchmark::RegisterBenchmark("simd128_compress_aes_enc_r4", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r4)->Threads(num_threads);
 
 #if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r2", BM_compress<__m256i>, simd256_compress_aes_enc_r2);
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r3", BM_compress<__m256i>, simd256_compress_aes_enc_r3);
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r4", BM_compress<__m256i>, simd256_compress_aes_enc_r4);
+    benchmark::RegisterBenchmark("simd256_compress_aes_enc_r2", BM_compress<__m256i>, simd256_compress_aes_enc_r2)->Threads(num_threads);
+    benchmark::RegisterBenchmark("simd256_compress_aes_enc_r3", BM_compress<__m256i>, simd256_compress_aes_enc_r3)->Threads(num_threads);
+    benchmark::RegisterBenchmark("simd256_compress_aes_enc_r4", BM_compress<__m256i>, simd256_compress_aes_enc_r4)->Threads(num_threads);
 #endif
-    }
-    else
-    {
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r2", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r2)->Threads(num_threads);
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r3", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r3)->Threads(num_threads);
-        benchmark::RegisterBenchmark("simd128_compress_aes_enc_r4", BM_compress<uint8x16_t>, simd128_compress_aes_enc_r4)->Threads(num_threads);
-
-#if defined(__x86_64__) && defined(__VAES__)
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r2", BM_compress<__m256i>, simd256_compress_aes_enc_r2)->Threads(num_threads);
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r3", BM_compress<__m256i>, simd256_compress_aes_enc_r3)->Threads(num_threads);
-        benchmark::RegisterBenchmark("simd256_compress_aes_enc_r4", BM_compress<__m256i>, simd256_compress_aes_enc_r4)->Threads(num_threads);
-#endif
-    }
 
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();

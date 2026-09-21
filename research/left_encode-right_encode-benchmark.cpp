@@ -343,42 +343,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     using T = unsigned int;
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark("left_encode_1", BM_lr_encode_vec<T>, left_encode_1<T>);
-        benchmark::RegisterBenchmark("left_encode_2", BM_lr_encode_vec<T>, left_encode_2<T>);
+    benchmark::RegisterBenchmark("left_encode_1", BM_lr_encode_vec<T>, left_encode_1<T>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("left_encode_2", BM_lr_encode_vec<T>, left_encode_2<T>)->Threads(num_threads);
 #if defined(__cpp_lib_ranges_concat)
-        benchmark::RegisterBenchmark("left_encode_3", BM_lr_encode_vec<T>, left_encode_3<T>);
+    benchmark::RegisterBenchmark("left_encode_3", BM_lr_encode_vec<T>, left_encode_3<T>)->Threads(num_threads);
 #endif
-        benchmark::RegisterBenchmark("left_encode_4", BM_lr_encode_fvec<T>, left_encode_4<T>);
-        benchmark::RegisterBenchmark("left_encode", BM_lr_encode_fvec<T>, left_encode<T>);
+    benchmark::RegisterBenchmark("left_encode_4", BM_lr_encode_fvec<T>, left_encode_4<T>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("left_encode", BM_lr_encode_fvec<T>, left_encode<T>)->Threads(num_threads);
 
-        benchmark::RegisterBenchmark("right_encode_1", BM_lr_encode_vec<T>, right_encode_1<T>);
-        benchmark::RegisterBenchmark("right_encode_2", BM_lr_encode_vec<T>, right_encode_2<T>);
+    benchmark::RegisterBenchmark("right_encode_1", BM_lr_encode_vec<T>, right_encode_1<T>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("right_encode_2", BM_lr_encode_vec<T>, right_encode_2<T>)->Threads(num_threads);
 #if defined(__cpp_lib_ranges_concat)
-        benchmark::RegisterBenchmark("right_encode_3", BM_lr_encode_vec<T>, right_encode_3<T>);
+    benchmark::RegisterBenchmark("right_encode_3", BM_lr_encode_vec<T>, right_encode_3<T>)->Threads(num_threads);
 #endif
-        benchmark::RegisterBenchmark("right_encode_4", BM_lr_encode_fvec<T>, right_encode_4<T>);
-        benchmark::RegisterBenchmark("right_encode", BM_lr_encode_fvec<T>, right_encode<T>);
-    }
-    else
-    {
-        benchmark::RegisterBenchmark("left_encode_1", BM_lr_encode_vec<T>, left_encode_1<T>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("left_encode_2", BM_lr_encode_vec<T>, left_encode_2<T>)->Threads(num_threads);
-#if defined(__cpp_lib_ranges_concat)
-        benchmark::RegisterBenchmark("left_encode_3", BM_lr_encode_vec<T>, left_encode_3<T>)->Threads(num_threads);
-#endif
-        benchmark::RegisterBenchmark("left_encode_4", BM_lr_encode_fvec<T>, left_encode_4<T>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("left_encode", BM_lr_encode_fvec<T>, left_encode<T>)->Threads(num_threads);
-
-        benchmark::RegisterBenchmark("right_encode_1", BM_lr_encode_vec<T>, right_encode_1<T>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("right_encode_2", BM_lr_encode_vec<T>, right_encode_2<T>)->Threads(num_threads);
-#if defined(__cpp_lib_ranges_concat)
-        benchmark::RegisterBenchmark("right_encode_3", BM_lr_encode_vec<T>, right_encode_3<T>)->Threads(num_threads);
-#endif
-        benchmark::RegisterBenchmark("right_encode_4", BM_lr_encode_fvec<T>, right_encode_4<T>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("right_encode", BM_lr_encode_fvec<T>, right_encode<T>)->Threads(num_threads);
-    }
+    benchmark::RegisterBenchmark("right_encode_4", BM_lr_encode_fvec<T>, right_encode_4<T>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("right_encode", BM_lr_encode_fvec<T>, right_encode<T>)->Threads(num_threads);
 
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();

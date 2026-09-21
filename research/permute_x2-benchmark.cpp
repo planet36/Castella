@@ -132,18 +132,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             std::format("permute-pair-sequential(num_rounds={})", num_rounds);
         const std::string BM_name_x2 = std::format("permute_x2(num_rounds={})", num_rounds);
 
-        if (num_threads == 1)
-        {
-            benchmark::RegisterBenchmark(BM_name_seq, BM_permute_pair_sequential, num_rounds);
-            benchmark::RegisterBenchmark(BM_name_x2, BM_permute_x2, num_rounds);
-        }
-        else
-        {
-            benchmark::RegisterBenchmark(BM_name_seq, BM_permute_pair_sequential, num_rounds)
-                ->Threads(num_threads);
-            benchmark::RegisterBenchmark(BM_name_x2, BM_permute_x2, num_rounds)
-                ->Threads(num_threads);
-        }
+        benchmark::RegisterBenchmark(BM_name_seq, BM_permute_pair_sequential, num_rounds)
+            ->Threads(num_threads);
+        benchmark::RegisterBenchmark(BM_name_x2, BM_permute_x2, num_rounds)
+            ->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

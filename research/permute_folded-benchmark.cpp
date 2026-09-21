@@ -88,18 +88,10 @@ register_pair(const int num_rounds, const int num_threads)
     const std::string BM_name_folded =
         std::format("folded<{}>(num_rounds={})", N, num_rounds);
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark(BM_name_generic, BM_permute_generic<N>, num_rounds);
-        benchmark::RegisterBenchmark(BM_name_folded, BM_permute_folded<N>, num_rounds);
-    }
-    else
-    {
-        benchmark::RegisterBenchmark(BM_name_generic, BM_permute_generic<N>, num_rounds)
-            ->Threads(num_threads);
-        benchmark::RegisterBenchmark(BM_name_folded, BM_permute_folded<N>, num_rounds)
-            ->Threads(num_threads);
-    }
+    benchmark::RegisterBenchmark(BM_name_generic, BM_permute_generic<N>, num_rounds)
+        ->Threads(num_threads);
+    benchmark::RegisterBenchmark(BM_name_folded, BM_permute_folded<N>, num_rounds)
+        ->Threads(num_threads);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)

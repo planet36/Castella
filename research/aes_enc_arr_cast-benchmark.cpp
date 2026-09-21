@@ -193,40 +193,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    if (num_threads == 1)
-    {
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,2>", BM_aes_enc_arr<__m128i, 2>);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,4>", BM_aes_enc_arr<__m128i, 4>);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,8>", BM_aes_enc_arr<__m128i, 8>);
-        benchmark::RegisterBenchmark("aes_enc_arr<m128i,16>", BM_aes_enc_arr<__m128i, 16>);
+    //benchmark::RegisterBenchmark("aes_enc_arr<m128i,2>", BM_aes_enc_arr<__m128i, 2>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr<m128i,4>", BM_aes_enc_arr<__m128i, 4>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr<m128i,8>", BM_aes_enc_arr<__m128i, 8>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("aes_enc_arr<m128i,16>", BM_aes_enc_arr<__m128i, 16>)->Threads(num_threads);
 
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,2>", BM_aes_enc_arr_cast<__m128i, 2>);
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,4>", BM_aes_enc_arr_cast<__m128i, 4>);
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,8>", BM_aes_enc_arr_cast<__m128i, 8>);
-        benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,16>", BM_aes_enc_arr_cast<__m128i, 16>);
+    //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,2>", BM_aes_enc_arr_cast<__m128i, 2>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,4>", BM_aes_enc_arr_cast<__m128i, 4>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,8>", BM_aes_enc_arr_cast<__m128i, 8>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,16>", BM_aes_enc_arr_cast<__m128i, 16>)->Threads(num_threads);
 
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,1>", BM_aes_enc_arr<__m256i, 1>);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,2>", BM_aes_enc_arr<__m256i, 2>);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,4>", BM_aes_enc_arr<__m256i, 4>);
-        benchmark::RegisterBenchmark("aes_enc_arr<m256i,8>", BM_aes_enc_arr<__m256i, 8>);
-    }
-    else
-    {
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,2>", BM_aes_enc_arr<__m128i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,4>", BM_aes_enc_arr<__m128i, 4>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m128i,8>", BM_aes_enc_arr<__m128i, 8>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aes_enc_arr<m128i,16>", BM_aes_enc_arr<__m128i, 16>)->Threads(num_threads);
-
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,2>", BM_aes_enc_arr_cast<__m128i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,4>", BM_aes_enc_arr_cast<__m128i, 4>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,8>", BM_aes_enc_arr_cast<__m128i, 8>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aes_enc_arr_cast<m128i,16>", BM_aes_enc_arr_cast<__m128i, 16>)->Threads(num_threads);
-
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,1>", BM_aes_enc_arr<__m256i, 1>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,2>", BM_aes_enc_arr<__m256i, 2>)->Threads(num_threads);
-        //benchmark::RegisterBenchmark("aes_enc_arr<m256i,4>", BM_aes_enc_arr<__m256i, 4>)->Threads(num_threads);
-        benchmark::RegisterBenchmark("aes_enc_arr<m256i,8>", BM_aes_enc_arr<__m256i, 8>)->Threads(num_threads);
-    }
+    //benchmark::RegisterBenchmark("aes_enc_arr<m256i,1>", BM_aes_enc_arr<__m256i, 1>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr<m256i,2>", BM_aes_enc_arr<__m256i, 2>)->Threads(num_threads);
+    //benchmark::RegisterBenchmark("aes_enc_arr<m256i,4>", BM_aes_enc_arr<__m256i, 4>)->Threads(num_threads);
+    benchmark::RegisterBenchmark("aes_enc_arr<m256i,8>", BM_aes_enc_arr<__m256i, 8>)->Threads(num_threads);
 
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();

@@ -97,22 +97,12 @@ register_pair(const int capacity_blocks, const int num_rounds, const int num_thr
     const std::string BM_name_squeeze =
         std::format("squeeze(C={},num_rounds={})", capacity_blocks, num_rounds);
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark(BM_name_absorb, BM_duplex_absorb, capacity_blocks,
-                                     num_rounds);
-        benchmark::RegisterBenchmark(BM_name_squeeze, BM_duplex_squeeze, capacity_blocks,
-                                     num_rounds);
-    }
-    else
-    {
-        benchmark::RegisterBenchmark(BM_name_absorb, BM_duplex_absorb, capacity_blocks,
-                                     num_rounds)
-            ->Threads(num_threads);
-        benchmark::RegisterBenchmark(BM_name_squeeze, BM_duplex_squeeze, capacity_blocks,
-                                     num_rounds)
-            ->Threads(num_threads);
-    }
+    benchmark::RegisterBenchmark(BM_name_absorb, BM_duplex_absorb, capacity_blocks,
+                                 num_rounds)
+        ->Threads(num_threads);
+    benchmark::RegisterBenchmark(BM_name_squeeze, BM_duplex_squeeze, capacity_blocks,
+                                 num_rounds)
+        ->Threads(num_threads);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)

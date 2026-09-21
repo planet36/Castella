@@ -214,22 +214,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // {{{ speed
 
-    if (num_threads == 1)
-    {
-        benchmark::RegisterBenchmark("copy_bytes_into_copy",     BM_copy_bytes_into, copy_bytes_into_copy    );
-        benchmark::RegisterBenchmark("copy_bytes_into_copy_n",   BM_copy_bytes_into, copy_bytes_into_copy_n  );
-        benchmark::RegisterBenchmark("copy_bytes_into_ranges",   BM_copy_bytes_into, copy_bytes_into_ranges  );
-        benchmark::RegisterBenchmark("copy_bytes_into_ranges_n", BM_copy_bytes_into, copy_bytes_into_ranges_n);
-        benchmark::RegisterBenchmark("copy_bytes_into_memcpy",   BM_copy_bytes_into, copy_bytes_into_memcpy  );
-    }
-    else
-    {
-        benchmark::RegisterBenchmark("copy_bytes_into_copy",     BM_copy_bytes_into, copy_bytes_into_copy    )->Threads(num_threads);
-        benchmark::RegisterBenchmark("copy_bytes_into_copy_n",   BM_copy_bytes_into, copy_bytes_into_copy_n  )->Threads(num_threads);
-        benchmark::RegisterBenchmark("copy_bytes_into_ranges",   BM_copy_bytes_into, copy_bytes_into_ranges  )->Threads(num_threads);
-        benchmark::RegisterBenchmark("copy_bytes_into_ranges_n", BM_copy_bytes_into, copy_bytes_into_ranges_n)->Threads(num_threads);
-        benchmark::RegisterBenchmark("copy_bytes_into_memcpy",   BM_copy_bytes_into, copy_bytes_into_memcpy  )->Threads(num_threads);
-    }
+    benchmark::RegisterBenchmark("copy_bytes_into_copy",     BM_copy_bytes_into, copy_bytes_into_copy    )->Threads(num_threads);
+    benchmark::RegisterBenchmark("copy_bytes_into_copy_n",   BM_copy_bytes_into, copy_bytes_into_copy_n  )->Threads(num_threads);
+    benchmark::RegisterBenchmark("copy_bytes_into_ranges",   BM_copy_bytes_into, copy_bytes_into_ranges  )->Threads(num_threads);
+    benchmark::RegisterBenchmark("copy_bytes_into_ranges_n", BM_copy_bytes_into, copy_bytes_into_ranges_n)->Threads(num_threads);
+    benchmark::RegisterBenchmark("copy_bytes_into_memcpy",   BM_copy_bytes_into, copy_bytes_into_memcpy  )->Threads(num_threads);
 
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();

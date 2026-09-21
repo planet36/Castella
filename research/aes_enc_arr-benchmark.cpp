@@ -264,10 +264,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     for (const auto& [BM_name, BM_func] : benchmarks)
     {
-        auto* benchmark = benchmark::RegisterBenchmark(BM_name, BM_func);
-
-        if (num_threads > 1)
-            benchmark->Threads(num_threads);
+        benchmark::RegisterBenchmark(BM_name, BM_func)->Threads(num_threads);
     }
 
     benchmark::RunSpecifiedBenchmarks();

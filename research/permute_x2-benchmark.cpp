@@ -23,8 +23,8 @@
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
 #include "castella-permute.hpp"
+#include "get_num_threads.hpp"
 #include "pack_states.hpp"
-#include "parse_int.hpp"
 
 #include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
@@ -96,29 +96,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     if (benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
 
-    // {{{ determine num_threads
-
-    constexpr int min_threads = 1;
-    const auto hw_threads = static_cast<int>(std::thread::hardware_concurrency());
-    const auto max_threads = std::max(min_threads, hw_threads);
-
-    // NUM_THREADS=0 means max_threads
-    int num_threads = min_threads;
-
-    try
-    {
-        num_threads = parse_env_int("NUM_THREADS", 0, max_threads, min_threads);
-    }
-    catch (const std::exception& ex)
-    {
-        (void)std::fflush(stdout);
-        errx(EXIT_FAILURE, "%s", ex.what());
-    }
-
-    if (num_threads == 0)
-        num_threads = max_threads;
-
-    // }}}
+    const int num_threads = get_num_threads();
 
     // {{{ speed
 

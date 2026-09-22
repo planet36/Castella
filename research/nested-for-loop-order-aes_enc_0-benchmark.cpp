@@ -6,15 +6,10 @@
 #include "simd_equal.hpp"
 #include "simd_types.hpp"
 
-#include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <string>
-#include <thread>
 
 template <size_t N>
 static void

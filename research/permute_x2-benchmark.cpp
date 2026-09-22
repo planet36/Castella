@@ -26,15 +26,11 @@
 #include "get_num_threads.hpp"
 #include "pack_states.hpp"
 
-#include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <format>
 #include <set>
 #include <string>
-#include <thread>
 
 inline constexpr int N = 16; // permute_x2 supports only the 16-block state
 

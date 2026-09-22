@@ -10,13 +10,9 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <ranges>
 #include <span>
-#include <thread>
 #include <vector>
 
 // copied from Castella::Duplex::squeeze_bytes

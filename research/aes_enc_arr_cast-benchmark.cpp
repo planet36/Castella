@@ -6,16 +6,12 @@
 #include "get_num_threads.hpp"
 #include "simd_equal.hpp"
 
-#include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <err.h>
-#include <exception>
 #include <immintrin.h>
-#include <thread>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-attributes"

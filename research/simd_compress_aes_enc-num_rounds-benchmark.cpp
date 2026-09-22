@@ -5,14 +5,9 @@
 #include "simd_compress.hpp"
 #include "simd_equal.hpp"
 
-#include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
-#include <thread>
 
 template <typename T>
 using func_compress_t = T (&)(const T, const T);

@@ -48,14 +48,10 @@
 #include "simd_equal.hpp"
 #include "unpack_states.hpp"
 
-#include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
-#include <thread>
 #include <utility>
 
 constexpr size_t N_BLOCKS = Castella::Duplex::B;

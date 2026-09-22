@@ -50,17 +50,13 @@
 #include "simd_compress.hpp"
 #include "simd_equal.hpp"
 
-#include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <format>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 

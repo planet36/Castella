@@ -4,15 +4,10 @@
 #include "castella-permute.hpp"
 #include "get_num_threads.hpp"
 
-#include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <format>
 #include <string>
-#include <thread>
 
 template <size_t N>
 void

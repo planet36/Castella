@@ -22,18 +22,13 @@
 #include "castella-duplex.hpp"
 #include "get_num_threads.hpp"
 
-#include <algorithm>
 #include <array>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cstddef>
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
 #include <format>
 #include <set>
 #include <string>
-#include <thread>
 #include <vector>
 
 void

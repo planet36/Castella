@@ -4,13 +4,8 @@
 #include "aes_enc.hpp"
 #include "get_num_threads.hpp"
 
-#include <algorithm>
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
-#include <cstdio>
 #include <cstdlib>
-#include <err.h>
-#include <exception>
-#include <thread>
 
 void
 BM_aes_enc_0(benchmark::State& BM_state, const int aes_num_rounds)

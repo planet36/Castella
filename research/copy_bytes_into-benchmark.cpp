@@ -9,14 +9,10 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstddef>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <err.h>
-#include <exception>
 #include <ranges>
 #include <span>
-#include <thread>
 #include <vector>
 
 // copied from Castella::Duplex::squeeze_into_

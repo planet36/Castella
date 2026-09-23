@@ -170,7 +170,7 @@ calculate_metrics_avalanche_matrix(const int num_samples,
     // https://en.wikipedia.org/wiki/Binomial_distribution
     // Note: this treats each matrix cell as an independent Binomial(num_samples, p)
     // trial, but cells from the same sample share a baseline permutation and aren't
-    // truly independent. This is adequate for detecting gross diffusion failures,
+    // truly independent.  This is adequate for detecting gross diffusion failures,
     // but is not a rigorous basis for distinguishing rounds whose statistics are
     // close to the pass/fail threshold.
     const auto n = static_cast<double>(num_samples); // number of trials

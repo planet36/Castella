@@ -131,7 +131,7 @@ These figures are machine-dependent; reproduce them with [hash-programs/benchmar
 ### To build and use Castella
 
 * [GCC 14](https://gcc.gnu.org/gcc-14/changes.html) or newer
-  * [C++23](https://en.cppreference.com/cpp/23) features are used
+  * [C++23](https://en.cppreference.com/cpp/23)
   * clang++ is not supported
 * An x86-64 or ARM64 processor with [AES instructions](https://en.wikipedia.org/wiki/AES_instruction_set)
   * x86-64 is the only tested platform

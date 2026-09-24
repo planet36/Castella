@@ -30,8 +30,8 @@ int num_failed = 0;
 
 /// How many checks a complete run makes
 /**
-* Checked after the summary, so an example that was removed or that stopped
-* short cannot report success on the checks that did run.  Update it
+* It is checked after the summary, so a run that loses an example or stops
+* short fails rather than reporting success on fewer checks.  Update it
 * deliberately when examples are added or removed.
 */
 constexpr int EXPECTED_CHECKS = 31;
@@ -195,10 +195,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     }
 
     /*
-    * The following examples show how to achieve similar behavior to SP 800-185
-    * constructions (using the same variable notation/conventions).
-    *
-    * These examples use the following conventions:
+    * The following examples show how to achieve behavior similar to the
+    * SP 800-185 constructions, with the same variable notation:
     *
     * - _K_ is the key
     * - _X_ is the input data

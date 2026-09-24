@@ -123,8 +123,8 @@ standard library.  `permute-multiplicity-verify.py` needs only the standard libr
 `spec-conformance.py`.
 
 The two `./`-prefixed rows need `make -C research` first.  It links google-benchmark into
-every binary in that directory, so the probes need it installed even though they benchmark
-nothing.
+every binary in that directory except the `*-verify` programs, so the probes need it
+installed even though they benchmark nothing.
 
 `<pulp>` is `~/.venvs/pulp/bin/python3`.  **The MILP script needs the venv** because PuLP
 has no Arch package and pip refuses to install into the system Python.  HiGHS does have one
@@ -535,7 +535,7 @@ balanced" means "not provable by this model".  This section holds only the proce
 the clock.
 
 ```bash
-cd research && make    # links google-benchmark into every binary here
+cd research && make    # links google-benchmark into every binary here but the *-verify ones
 
 # The diffusion floor of 3 rounds, which binds R* at every capacity but C = 8.  In the
 # N=16 table r=1 reads ~3.1% (one block), r=2 ~49.8% with skewed higher moments, and

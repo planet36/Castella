@@ -5,15 +5,14 @@
 
 """Differential fuzzer for Castella::Duplex against the SPEC.md model.
 
-Generates random programs of duplex API calls (interleaved add,
-add_left_encoded, add_right_encoded, apply_padding_rule and squeeze_bytes)
-over random constructor parameters.  It then checks that the C++ library and
+It generates random programs of duplex API calls (interleaved add,
+add_left_encoded, add_right_encoded, apply_padding_rule, and squeeze_bytes)
+over random constructor parameters, and checks that the C++ library and
 the independent Python model in spec-conformance.py agree on every squeeze.
 
-A program is one generated unit of work, meaning constructor parameters plus a
-call sequence ending in at least one squeeze.  It is not a single comparison.
-One program yields as many comparisons as it has squeezes, which is why the
-summary counts both.
+A program is one generated unit of work, constructor parameters plus a call
+sequence ending in at least one squeeze.  It yields as many comparisons as it
+has squeezes, which is why the summary counts both.
 
 This covers what KAT.txt cannot.  Every duplex KAT is a single add followed by
 a single squeeze, so split and streamed adds, both encoding entry points,
@@ -47,7 +46,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_DRIVER = HERE / "duplex-diff-driver"
 MODEL_PATH = HERE.parent / "research" / "spec-conformance.py"
 
-# "Castella" -- the same default seed as equivalence-tests.cpp
+# "Castella", the same default seed as equivalence-tests.cpp
 DEFAULT_SEED = 0x43617374_656C6C61
 SEED_MAX = 2**64  # exclusive, matching equivalence-tests' uint64_t seed
 
@@ -141,7 +140,7 @@ def gen_len(rng: random.Random, rate: int) -> int:
 
 
 def gen_squeeze_len(rng: random.Random, C: int) -> int:
-    """Pick a squeeze length within [0, rate]; the C++ clamp is out of scope."""
+    """Pick a squeeze length within [0, rate], leaving the C++ clamp untested."""
     rate = 16 * (16 - C)
     if rng.random() < 0.5:
         return rng.choice((0, 1, 2, 16, 16 * C // 2, rate - 1, rate))

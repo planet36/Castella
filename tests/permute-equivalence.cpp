@@ -12,7 +12,7 @@
 *   \c N/2 ymm registers for all rounds.
 * - \c permute_generic everywhere else.
 *
-* The two must be bit-identical, otherwise every digest in this repo would
+* The two must be bit-identical, or every digest in this repo would
 * depend on which path the build selected.
 *
 * Without this program that relationship is only guarded transitively.  A

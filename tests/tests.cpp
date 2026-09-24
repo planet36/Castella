@@ -43,8 +43,8 @@ int num_checks = 0;
 
 /// Count one runtime check, then \c assert it
 /**
-* A macro rather than a function so that a failure still names the expression
-* rather than the parameter.  The file undefines \c NDEBUG above, so this is
+* It is a macro rather than a function, so that a failure names the
+* expression rather than the parameter.  The file undefines \c NDEBUG above, so this is
 * active in every build.
 */
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -659,7 +659,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             const std::span<const std::byte> Z_sp{Z};
 
-            // inline sequential reference (NUM_THREADS == 1: no pool)
+            // inline sequential reference (NUM_THREADS == 1, so no pool)
             const auto expected = tree_digest(Z_sp, 1);
 
             // 512: sub-chunk pieces (pure buffering, zero-copy move

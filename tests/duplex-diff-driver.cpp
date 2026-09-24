@@ -13,8 +13,8 @@
 * The whole run is batched through one process because the Python model is the
 * slow side.  Per-program process startup would be pure overhead.
 *
-* Script grammar, one op per line, "-" denoting an empty byte string.  A
-* program is one generated unit of work: a constructor plus a call sequence
+* The script has one op per line, with "-" denoting an empty byte string.  A
+* program is one generated unit of work, a constructor plus a call sequence
 * ending in at least one squeeze.
 *
 *     program <id>                 begin a program (echoed back)
@@ -57,9 +57,9 @@
 
 /// Decode a hexadecimal script field into the bytes it represents
 /**
-* A wrapper around \c decode_hex_to_bytes for the one thing a script field
-* adds.  The script spells the empty byte string as "-", because a
-* zero-length field cannot be read from a whitespace-delimited line.
+* It wraps \c decode_hex_to_bytes for the one thing a script field adds.  The
+* script spells the empty byte string as "-", because a zero-length field
+* cannot be read from a whitespace-delimited line.
 *
 * \param s the hexadecimal digits to decode, or "-" for no bytes
 * \return the decoded bytes

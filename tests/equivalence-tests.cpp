@@ -59,7 +59,7 @@ constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 /**
 * \param name the tree type, for the failure message
 * \param make_tree callable as <code>make_tree(num_threads)</code>,
-*        returning a fresh tree (a prvalue: the tree types are non-movable)
+*        returning a fresh tree (a prvalue, since the tree types are non-movable)
 * \param get_digest callable as <code>get_digest(tree)</code>, finalizing
 *        the tree and returning its digest
 * \param input the input bytes

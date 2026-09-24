@@ -11,17 +11,17 @@
 *
 *     kat [FILE]        (default FILE: KAT.txt)
 *
-* Or regenerate the file -- ONLY when the digests deliberately change:
+* Or regenerate the file, ONLY when the digests deliberately change:
 *
 *     kat --generate > KAT.txt
 *
 * Each non-comment line is one test.  The message of length msglen is the
 * deterministic byte pattern <code>msg[i] = i mod 256</code>, and the MAC
-* key of length keylen is <code>key[i] = 255 - (i mod 256)</code> -- a
+* key of length keylen is <code>key[i] = 255 - (i mod 256)</code>, a
 * different pattern, so a key and a message of equal length cannot be
 * swapped unnoticed.  The fn=, custom=, and digest= values are
 * hexadecimal (fn and custom decode to byte strings and may be empty).
-* Line formats:
+* The lines have these formats:
 *
 *     rc r= aes_r= i= out= digest=
 *     permute init= rounds= out= digest=
@@ -32,7 +32,7 @@
 *     cchtree mix= chunk= msglen= out= digest=
 *
 * "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, "cch"
-* is a plain \c compress_castella_hash node and "cchtree" is
+* is a plain \c compress_castella_hash node, and "cchtree" is
 * \c compress_castella_tree.  "mac" is the keyed construction SPEC.md
 * specifies for <code>castella --key-file</code>: the same
 * \c Castella::DuplexTree over
@@ -89,7 +89,7 @@ constexpr std::string_view kat_customization_str = "KAT";
 
 /// The function name of every generated MAC KAT
 /**
-* Fixed by the construction rather than chosen here: it is what separates
+* The construction fixes it, rather than this file.  It is what separates
 * MACs from unkeyed digests (SPEC.md, "The keyed (MAC) construction"), and
 * it is the name \c hash-programs/castella.cpp uses for \c --key-file.
 */
@@ -97,9 +97,9 @@ constexpr std::string_view kat_mac_function_name = "Castella-MAC";
 
 /// How many KATs \c generate() emits, and so how many KAT.txt holds
 /**
-* Checked only for the default file, so a truncated or partly written one
-* cannot report success on what it did hold.  Update it deliberately when
-* the sweeps in \c generate() change.
+* It is checked only for the default file, so a truncated or partly written
+* KAT.txt fails rather than succeeding on the lines it does hold.  Update it
+* deliberately when the sweeps in \c generate() change.
 */
 constexpr int64_t EXPECTED_KATS = 91;
 
@@ -127,7 +127,7 @@ make_msg(const int len)
 
 /// Get one round constant, as bytes: <code>RC[r][aes_r][i]</code>
 /**
-* Pins the constant schedule on its own, so a wrong LFSR seed, stride or
+* This pins the constant schedule on its own, so a wrong LFSR seed, stride, or
 * emission order is caught here rather than as a wrong digest 200 lines
 * of specification downstream.
 */
@@ -145,7 +145,7 @@ round_constant_bytes(const int r, const int aes_r, const int i)
 *        <code>s[i] = i mod 256</code> over the total state bytes
 * \param num_rounds how many rounds of \c P to apply
 *
-* Pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX are
+* This pins the permutation on its own.  Round counts below \c NUM_ROUNDS_MAX are
 * the point, because \c P uses the \e last \a num_rounds rounds' constants.
 * A first-N implementation therefore reproduces the 16-round vector and fails
 * every shorter one.
@@ -230,7 +230,7 @@ make_key(const int len)
 
 /// Get the keyed (MAC) digest, as SPEC.md's "The keyed (MAC) construction" defines it
 /**
-* A \c Castella::DuplexTree over
+* It is a \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>.
 * The key block is exactly chunk 0, so \a msg keeps its chunk alignment.  This
 * mirrors \c compute_file_digest in hash-programs/castella.cpp, but is written
@@ -598,7 +598,7 @@ get_hex_string_field(const field_list& fields, const std::string_view key)
 [[nodiscard]] std::optional<std::vector<std::byte>>
 recompute_kat_line(const std::string_view type, const field_list& fields, const int out)
 {
-    // The primitive lines carry no message; every other type needs one.
+    // The primitive lines carry no message, and every other type needs one.
     if (type == "rc")
     {
         const auto r = get_int_field(fields, "r", 0, Castella::NUM_ROUNDS_MAX - 1);

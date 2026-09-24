@@ -66,11 +66,13 @@ namespace Castella
 *
 * A policy also declares \c USE_STREAMING_POOL as a static constexpr bool.
 * That says whether the streaming path's persistent worker pool pays off for
-* this node type.  Streamed chunks are buffered by the calling thread, so a
-* pool worker must pull each freshly written chunk across cores, out of the
-* producer's cache.  The transfer pays off only when hashing a chunk costs
-* clearly more than shipping it, which holds for the slower \c Duplex and not
-* for the much faster \c compress_castella_hash.
+* this node type.
+*
+* Streamed chunks are buffered by the calling thread, so a pool worker must
+* pull each freshly written chunk across cores, out of the producer's cache.
+* The transfer pays off only when hashing a chunk costs clearly more than
+* shipping it, which holds for the slower \c Duplex and not for the much
+* faster \c compress_castella_hash.
 *
 * When \c USE_STREAMING_POOL is false, streamed chunks are hashed inline and
 * only the one-shot batch path parallelizes.  That path's workers read clean
@@ -139,7 +141,7 @@ concept tree_node_policy =
 * different geometry different functions.  Leaves additionally absorb their
 * chunk index, which pins each CV to its position.
 *
-* NOTE: A tree is *not* interoperable with its plain node hash.  The same
+* \note A tree is *not* interoperable with its plain node hash.  The same
 * input produces unrelated digests, because the role prefix separates the
 * two domains.
 *
@@ -148,10 +150,11 @@ concept tree_node_policy =
 * The digest is a function of the tree geometry (CHUNK_SIZE, CV_LEN), the
 * node parameters, and the input bytes only.  Chunk boundaries fall at fixed
 * byte offsets, so the digest does not depend on how the input is split
-* across add() calls.  Leaf hashing is a pure function of the parameters,
-* the index, and the chunk, and CVs are always absorbed in index order, so
-* the digest cannot depend on how many threads compute the leaves or in what
-* order they finish.
+* across add() calls.
+*
+* Leaf hashing is a pure function of the parameters, the index, and the
+* chunk, and CVs are always absorbed in index order, so the digest cannot
+* depend on how many threads compute the leaves or in what order they finish.
 *
 * ## Parallelism: two complementary paths
 *
@@ -311,7 +314,7 @@ private:
     const NodePolicy policy_;
 
 protected:
-    /// The final node (root); constructed eagerly
+    /// The final node (root), constructed eagerly
     /**
     * Eager construction validates the node parameters in the tree constructor
     * rather than at the first flush, because the node's constructor throws on
@@ -1305,10 +1308,11 @@ private:
     * statically partitioned across up to NUM_THREADS worker threads.  Each
     * worker computes the CVs for a contiguous range of chunk indices and
     * writes them into its own disjoint slice of one preallocated CV array, so
-    * the workers need no synchronization at all.  After the workers are
-    * joined, the calling thread absorbs the CVs into the final node in index
-    * order, which is why the completion order of the workers, and hence the
-    * thread count, can never affect the digest.
+    * the workers need no synchronization at all.
+    *
+    * After the workers are joined, the calling thread absorbs the CVs into
+    * the final node in index order, which is why the completion order of the
+    * workers, and hence the thread count, can never affect the digest.
     *
     * If the batch contains chunk 0, the calling thread absorbs it into the
     * final node *while* the workers hash leaves.  Chunk 0 never goes through
@@ -1505,13 +1509,10 @@ private:
             }
         }
 
-        // Absorb the CVs in index order.  This is the only ordering the
-        // digest can observe, and it is independent of which worker computed
-        // which CV.  The CVs are already contiguous in cvs, in index order,
-        // so one add() of the whole buffer absorbs the same byte stream as a
-        // per-CV loop would, with the same absorptions at the same offsets.
-        // The node's add is a pure byte-stream absorber, insensitive to call
-        // boundaries.
+        // Absorb the CVs in index order, the only ordering the digest can
+        // observe.  They are already contiguous in cvs, and the node's add()
+        // is insensitive to call boundaries, so one add() of the whole buffer
+        // absorbs the same byte stream as a per-CV loop would.
         absorb_into_final_node_(cvs);
 
         num_chunks_flushed_ += num_chunks;
@@ -1523,6 +1524,7 @@ private:
     * follow it, because the *last* chunk of the stream is flushed at
     * finalization.  Deferring the flush this way makes the chunking a
     * function of byte offsets only, invariant under add() call granularity.
+    *
     * It also gives the invariant that once any chunk has been flushed the
     * chunk buffer is never empty.  An input of exactly k*CHUNK_SIZE bytes
     * produces k chunks, never k full chunks plus an empty one.

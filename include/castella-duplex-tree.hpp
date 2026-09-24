@@ -107,7 +107,7 @@ struct DuplexTreeNodePolicy final
 * the tree structure, domain separation, thread-count independence, and the
 * two parallel paths.
 *
-* NOTE: This class is *not* interoperable with plain \c Duplex.  The same
+* \note This class is *not* interoperable with plain \c Duplex.  The same
 * input produces unrelated digests.  That is by design, since the tree's role
 * prefix separates the domains.
 */

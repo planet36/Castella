@@ -8,7 +8,7 @@
 * \sa https://en.cppreference.com/w/cpp/io/manip/quoted
 * \sa https://www.gnu.org/software/bash/manual/bash.html#Single-Quotes
 *
-* Note: Only \c std::string_view and \c std::string are supported.
+* \note Only \c std::string_view and \c std::string are supported.
 */
 
 #pragma once

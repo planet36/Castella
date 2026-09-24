@@ -37,6 +37,7 @@
 * chains per 256-byte chunk, but each chain is serial *across* chunks.  The
 * per-chunk critical path of 3 chained \c vaesenc latencies therefore exceeds
 * the per-chunk AES throughput cost, leaving the AES units partly idle.
+*
 * Interleaving a second state's chains in the same bulk loop fills those idle
 * slots, which measured faster than hashing the two inputs sequentially (see
 * research/simd_compress-num_states-benchmark.cpp).

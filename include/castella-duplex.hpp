@@ -1013,7 +1013,7 @@ public:
     * block.  We call the maximum length of σ the _maximum duplex rate_ …
     * </blockquote>
     *
-    * **_NOTE:_** Castella does not enforce any such _maximum duplex rate_.
+    * \note Castella does not enforce any such _maximum duplex rate_.
     *
     * <blockquote>
     * We denote a call with σ the empty string by the term _blank call_, and a
@@ -1054,7 +1054,8 @@ public:
     * \param dst the destination buffer
     * \exception std::system_error if the mutex cannot be locked
     * \note The size of \a dst is clamped to \c get_rate_size_bytes(), as \a n
-    *       is in \c squeeze_bytes(int); anything past that is left untouched.
+    *       is in \c squeeze_bytes(int), and anything past that is left
+    *       untouched.
     * \note Like \c squeeze_bytes, the input suffix and padding are added
     *       before squeezing, even if \a dst is empty.
     */

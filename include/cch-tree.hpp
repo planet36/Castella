@@ -94,7 +94,7 @@ struct compress_castella_tree_node_policy final
 * core.  See \c Castella::HashTree for the tree structure, domain separation,
 * thread-count independence, and the two parallel paths.
 *
-* NOTE: This class is *not* interoperable with plain
+* \note This class is *not* interoperable with plain
 * \c compress_castella_hash.  The same input produces unrelated digests.  That
 * is by design, since the tree's role prefix separates the domains.
 */

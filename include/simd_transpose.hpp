@@ -341,7 +341,8 @@ simd_transpose_folded(std::array<__m256i, 1>& x) noexcept
 static void
 simd_transpose_folded(std::array<__m256i, 2>& x) noexcept
 {
-    // Low lanes: rows A-B; high lanes: rows C-D (same network per lane).
+    // Rows A-B go in the low lanes and rows C-D in the high lanes, with the
+    // same network per lane.
     const __m256i AB_01 = _mm256_unpacklo_epi32(x[0], x[1]);
     const __m256i AB_23 = _mm256_unpackhi_epi32(x[0], x[1]);
 

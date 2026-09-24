@@ -392,9 +392,7 @@ parse_tagged_line(std::string_view s, check_line_fields& cl_fields)
     if (!consume_prefix(s, ",mix-rate="))
         return false;
 
-    // 0 disables periodic mixing.  Otherwise the range is [MIX_RATE_MIN,
-    // MIX_RATE_MAX], and MIX_RATE_MIN is 1, so the valid values are
-    // contiguous.
+    // The same contiguous range --mix-rate accepts (see process_options)
     if (!consume_int(s, 0, compress_castella_hash<>::MIX_RATE_MAX, cl_fields.mix_rate))
         return false;
 

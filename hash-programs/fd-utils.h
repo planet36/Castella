@@ -106,13 +106,8 @@ acq_read_lock_fd(int fd)
 * Applies an \c F_WRLCK over the whole file (offset 0, length 0) using
 * \c F_OFD_SETLKW, blocking until the lock is available.
 *
-* The lock is an Open File Description (OFD) lock, associated with the open
-* file description rather than the process.  Unlike traditional POSIX advisory
-* locks (\c F_SETLKW), OFD locks are:
-*   - not released when another file descriptor referring to the same open
-*     file description is closed
-*   - independent between threads only when each thread opens the file itself,
-*     since threads that use one open file description share its lock
+* The lock is an Open File Description (OFD) lock, with the semantics
+* \c acq_read_lock_fd describes.
 *
 * The call blocks until all read and write locks held by other open file
 * descriptions are released.  Only one writer may hold the lock at a time.

@@ -33,7 +33,7 @@
 # error "invalid BLOCKSIZE"
 #endif
 
-// helper
+/// Read \a fd to its end and add every byte to \a hash_obj
 /**
 * \retval true upon error
 * \retval false upon success
@@ -102,7 +102,7 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
 
         if (mmap_addr == MAP_FAILED)
         {
-            // mmap may have failed because the file isn't memory-mappable.
+            // The file may not be memory-mappable, so fall back to read().
 
             if (process_file_read_fd(fd.get(), hash_obj))
                 throw SYSERR_PATH(path);

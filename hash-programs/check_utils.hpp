@@ -6,8 +6,8 @@
 * \file
 * \author Steven Ward
 *
-* The program-specific parts of a check mode live in each program.  Those are
-* recognizing its own line formats and recomputing a digest.
+* The program-specific parts of a check mode, recognizing its own line formats
+* and recomputing a digest, live in each program.
 *
 * This header holds the format-neutral parts: constant-time digest comparison
 * and the consume-style line parsing primitives.  It also holds the
@@ -34,8 +34,8 @@
 /**
 * Use this in place of \c operator== or \c std::memcmp when either operand is secret.
 *
-* Every byte is examined whatever the contents.  The time to compare therefore does not
-* reveal how many leading bytes matched.
+* Every byte is examined whatever the contents, so the time to compare does not reveal how
+* many leading bytes matched.
 *
 * Spans of unequal size compare unequal immediately, so a difference in length is not
 * concealed.  This function is for data whose length is not secret.

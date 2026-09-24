@@ -16,10 +16,9 @@ test -x cch      || { printf "%q: ./cch is not executable\n"      "${SCRIPT_NAME
 PASS=0
 FAIL=0
 
-# The number of assertions this script is expected to make.
-# Without it, a deleted assertion still reports "0 failed" and exits 0,
-# so the script could not report success on the assertions that did run.
-# Update this when assertions are added or removed.
+# The number of assertions this script is expected to make.  Without it, a
+# run missing an assertion would still report "0 failed" and exit 0.  Update
+# this when assertions are added or removed.
 declare -r EXPECTED_ASSERTIONS=140
 
 function assert_eq_cmd_str
@@ -223,9 +222,8 @@ yes "$LINE" | head --bytes 1M    > "${CASTELLA_TMP}/test-1MiB.txt"  || exit
 # `yes | head` raises SIGPIPE
 set -o pipefail
 
-# Verify command output with known output
-#
-# Pass --untagged so we can use `first_field` to effortlessly read the digest.
+# Verify command output against known output.  These pass --untagged so that
+# `first_field` can read the digest.
 
 CUSTOM='hash'
 ROUNDS=3
@@ -543,7 +541,7 @@ assert_eq_cmd_cmd \
     './cch --untagged --chunk-size=4096 --num-threads=1 --no-mmap ${CASTELLA_TMP}/test-100KB.txt | first_field'
 
 # Verify that sufficiently different "--mix-rate" values give distinct results.
-# The input file size must be at least 512 Bytes (twice the state size).
+# The input file size must be at least 512 bytes (twice the state size).
 
 assert_neq_cmd_cmd \
     './cch --untagged --mix-rate=0 ${CASTELLA_TMP}/test-1MiB.txt | first_field' \

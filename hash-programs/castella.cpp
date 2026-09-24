@@ -486,8 +486,8 @@ catch (const std::exception& ex)
 [[nodiscard]] constexpr int
 get_max_key_size_bytes(const int chunk_size_bytes) noexcept
 {
-    // 10 = the two left_encode fields above at their 5-byte maximum
-    // (1 length byte + up to 4 value bytes each)
+    // 10 is the two left_encode fields above at their 5-byte maximum, 1
+    // length byte plus up to 4 value bytes each.
     return std::min(key_size_max, chunk_size_bytes - 10);
 }
 
@@ -510,9 +510,9 @@ read_key_file(const std::string& path, const int max_size_bytes)
         errx(EXIT_FAILURE, "%s: could not open key file", path.c_str());
 
     key_buffer key;
-    // Reserving the whole permitted size keeps the key in one locked page.  It
-    // also means push_back never reallocates.  The reserve is then the only
-    // allocation the key buffer makes, and this try block catches its failure.
+    // Reserving the whole permitted size keeps the key in one locked page, and
+    // push_back then never reallocates, so this try block catches the key
+    // buffer's only allocation.
     try
     {
         key.reserve(max_size_bytes);

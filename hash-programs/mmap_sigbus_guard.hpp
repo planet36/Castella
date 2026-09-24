@@ -27,7 +27,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdlib>
-// POSIX sigaction, siginfo_t, SA_SIGINFO -- not in <csignal>
+// POSIX sigaction, siginfo_t, SA_SIGINFO are not in <csignal>
 #include <signal.h>
 #include <string>
 #include <unistd.h>
@@ -35,14 +35,14 @@
 namespace mmap_sigbus
 {
 
-/// The read-only mmap region currently being hashed (unpublished = null begin)
+/// The read-only mmap region currently being hashed (a null begin when unpublished)
 inline std::atomic<const unsigned char*> region_begin{nullptr};
 inline std::atomic<const unsigned char*> region_end{nullptr};
 
 /// The full diagnostic line, composed when a region is published
 inline std::string message;
 
-/// So only the first of several simultaneously-faulting workers prints
+/// Set by the first of several simultaneously faulting workers, so only it prints
 inline std::atomic_flag reported;
 
 /// SIGBUS handler that exits cleanly on a fault in the published region

@@ -81,9 +81,6 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}openssl dgst -SHAKE-256 -xoflen 64 ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -SM3                  ${CASTELLA_TMP}/test.txt" \
 "${PIN}./castella --num-threads=1 ${CASTELLA_TMP}/test.txt" \
-"./castella --rounds=3 --size=32 ${CASTELLA_TMP}/test.txt" \
-"./castella --rounds=3 --size=48 ${CASTELLA_TMP}/test.txt" \
-"./castella --rounds=3 --size=64 ${CASTELLA_TMP}/test.txt" \
 "./castella            --size=32 ${CASTELLA_TMP}/test.txt" \
 "./castella            --size=48 ${CASTELLA_TMP}/test.txt" \
 "./castella            --size=64 ${CASTELLA_TMP}/test.txt" \

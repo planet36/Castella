@@ -11,7 +11,7 @@ BINS = $(basename $(SRCS))
 
 all: $(BINS)
 
-# Deliberately does not depend on `all`.  Only the benchmarks need
+# This target deliberately does not depend on `all`.  Only the benchmarks need
 # google-benchmark.  Adding the prerequisite would make the root `make test`
 # require it everywhere.
 test:

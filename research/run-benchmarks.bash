@@ -12,7 +12,7 @@ export LC_ALL=C
 NUM_THREADS=1
 export NUM_THREADS
 
-# Should be an odd number for simpler median
+# An odd count gives a simpler median.
 BENCHMARK_REPS=${BENCHMARK_REPS:-5}
 
 # Pin to one CPU per thread.  Mid-run core migration adds noise that can

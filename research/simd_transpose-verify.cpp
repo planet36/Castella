@@ -6,8 +6,8 @@
 * \file
 * \author Steven Ward
 *
-* Evidence that the simd_transpose overloads are correct on x86-64 and AArch64:
-* <https://godbolt.org/z/GMKMd617G>
+* Evidence that the simd_transpose overloads are correct on x86-64 and AArch64
+* is at <https://godbolt.org/z/GMKMd617G>.
 */
 
 #include "simd_equal.hpp"

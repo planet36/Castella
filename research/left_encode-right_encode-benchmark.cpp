@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <vector>
 
-// NOTE: These functions make a copy of the input data.
+// These functions make a copy of the input data.
 
 /// Unambiguously encode the integer into a byte string
 /**

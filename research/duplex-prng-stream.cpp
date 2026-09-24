@@ -4,9 +4,10 @@
 /// Emit an endless Castella duplex PRNG byte stream to stdout
 /**
 * \file
-* The PRNG usage of the duplex.  Absorb a fixed seed string, so the stream is
-* reproducible, then repeatedly squeeze the full rate to stdout.  Intended
-* for piping into a statistical test battery such as PractRand:
+* This is the PRNG usage of the duplex.  It absorbs a fixed seed string, so
+* the stream is reproducible, then repeatedly squeezes the full rate to
+* stdout.  It is meant for piping into a statistical test battery such as
+* PractRand:
 *
 *     ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
 *

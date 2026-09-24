@@ -168,7 +168,7 @@ calculate_metrics_avalanche_matrix(const int num_samples,
     }
 
     // https://en.wikipedia.org/wiki/Binomial_distribution
-    // Note: this treats each matrix cell as an independent Binomial(num_samples, p)
+    // This treats each matrix cell as an independent Binomial(num_samples, p)
     // trial, but cells from the same sample share a baseline permutation and aren't
     // truly independent.  This is adequate for detecting gross diffusion failures,
     // but is not a rigorous basis for distinguishing rounds whose statistics are
@@ -185,7 +185,7 @@ calculate_metrics_avalanche_matrix(const int num_samples,
 
     constexpr int total_cells = state_size_bits * state_size_bits;
 
-    // XXX: Not in Unicode yet: LATIN SUBSCRIPT SMALL LETTER Z
+    // XXX: Unicode has no LATIN SUBSCRIPT SMALL LETTER Z yet.
 
     std::println("Nr:"      // number of rounds
                  "\tμz"     // mean z (ideally equal to 0)

@@ -33,7 +33,7 @@
 #include <unistd.h>
 #include <vector>
 
-/// One trial: random pieces (equal lengths, different contents) then digests
+/// Add equal-length random pieces with different contents, then compare digests
 /// \return the number of digest comparisons made
 int
 test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_pieces)

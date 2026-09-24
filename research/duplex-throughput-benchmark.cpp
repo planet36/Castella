@@ -12,7 +12,7 @@
 *     buffer is cache-resident, so this measures hashing, not memory
 *     streaming)
 *   - squeeze(C=…,num_rounds=…): repeated \c squeeze_to of a rate-size
-*     buffer (the PRNG usage; every call pads and permutes)
+*     buffer (the PRNG usage, where every call pads and permutes)
 *
 * This benchmark measures the absorb rates directly, rather than deriving
 * them from permutation times.  A duplex is inherently sequential, so both

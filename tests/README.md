@@ -35,7 +35,7 @@ Every `duplex` line in KAT.txt has the same shape (construct, one `add`, one `sq
 
 A *program* is one generated unit of work, constructor parameters plus a call sequence ending in at least one squeeze.  It yields as many comparisons as it has squeezes, which is why the summary counts both.  The whole run is batched through one driver process, because the pure-Python model is the slow side.  `make test` runs it at the default seed and program count, and `--seed` explores new programs, exactly as with `equivalence-tests`.
 
-* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (331 squeezes, ~1.6 s), with a nonzero exit status on any divergence.
+* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (329 squeezes, ~1.6 s), with a nonzero exit status on any divergence.
 * `python3 duplex-diff-fuzz.py -n 5000 --seed 0x1234` runs a longer, different sweep.
 
 The deepest sweep run to date found no divergence: `-n 400000 --seed 0x1` verified **639 947 squeezes** in 40 min (2026-08-02).  Throughput is ~150 programs/s and scales linearly, so size a sweep from that.  Memory grows with the run and reached 1.5 GB at 400 k programs.

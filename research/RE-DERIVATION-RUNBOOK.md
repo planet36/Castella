@@ -112,7 +112,7 @@ free -h                                                       # -M is per proces
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time, beside the C++ and spec-conformance.py.  This compares its difference propagation with the KAT-verified one at r = 1..6, and `make -C research test` also runs it | `240 state pairs verified, 0 failed`, 0.8 s |
-| `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 331 squeezes, 0 failed, 1.6 s |
+| `make -C tests duplex-diff-driver && python3 tests/duplex-diff-fuzz.py` | Duplex API vs the spec model at the pinned seed | 200 programs, 329 squeezes, 0 failed, 1.6 s |
 | `for a in 1 2 3 4; do <pulp> research/permute-min-active-sboxes.py -N 16 -a "$a" -r 1; done` | MILP validation against the published AES bounds | 1, 5, 9, 25, all `optimal`, 6 s (2026-08-09, under HiGHS; CBC takes 25 s) |
 
 Everything above except the last row and the two compiled ones runs on the system

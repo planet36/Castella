@@ -7,15 +7,14 @@
 
 permute-division-property.py *decides* balancedness with a solver, and its
 positive answers are UNSATs.  Those are sound, but only as sound as the
-model's wiring.  The results it produced were then explained by a hand proof.
+model's wiring.  The results it produced are explained by a hand proof.
 Over a full-block cube round 1 is a bijection on that block, the transpose
 hands every block one active byte, each of whose 256 values therefore repeats
 2^120 times, and 2^120 is even, so the XOR-sum vanishes.  That argument never
-mentions AES, which is why it was also applied to `P^-1` and the two halves
-composed into a 4-round inside-out zero-sum.
+mentions AES, which is why it was also applied to `P^-1`, and the two halves
+were once composed into a 4-round inside-out zero-sum.
 
-Nothing had checked the argument itself.  This program does, two ways that
-fail independently.
+This program checks the argument itself, two ways that fail independently.
 
 Part A -- the premises, at full width
 ------------------------------------
@@ -23,15 +22,15 @@ The argument's four premises are each decidable on the real 16x16 state,
 against the permutation in spec-conformance.py (an independent
 implementation of SPEC.md, pinned to the C++ by tests/KAT.txt):
 
-1. one round is `T . A` with `A` block-local -- checked as a decomposition
-   that must reproduce `permute(state, 1)`, then measured pairwise;
-2. therefore output byte (b, j) depends on input block j alone, so a cube
-   filling block 0 reaches exactly the 16 bytes (b, 0) -- the upper bound is
-   exact given 1, the lower bound is measured;
+1. One round is `T . A` with `A` block-local, checked as a decomposition
+   that must reproduce `permute(state, 1)` and then measured pairwise.
+2. So output byte (b, j) depends on input block j alone, and a cube filling
+   block 0 reaches exactly the 16 bytes (b, 0).  The upper bound is exact
+   given 1, and the lower bound is measured.
 3. `A` restricted to a block is a bijection, proven rather than sampled.
    The S-box is an exhaustively checked permutation, and the rest of `aesenc`
    is F2-affine with an invertible 128x128 linear part, by exact rank.
-4. a bijection on 2^128 sends each output byte value to exactly 2^120
+4. A bijection on 2^128 sends each output byte value to exactly 2^120
    preimages, and 2^120 is even.
 
 Premise 3 is stronger than the argument needs, which the controls in Part B
@@ -63,11 +62,12 @@ so cannot be enumerated.
 What the two parts found
 ------------------------
 The forward 2-round result is confirmed on both counts.  The 4-round
-inside-out figure is **refuted**.  It needs one cube whose two ends both
-balance, and the two halves were run on different cubes.  The solver's
+inside-out figure is **refuted**.  It needed one cube whose two ends both
+balance, but the two halves were run on different cubes.  The solver's
 backward mode takes its cube in post-transpose coordinates (documented in
-build_trail), so `--inside-out 2 2 -c block` gives the forward half a *row* of
-the byte matrix and the backward half a *column*, and no state has both.
+build_trail), so `--inside-out 2 2 -c block`, before inside_out transposed the
+cube, gave the forward half a *row* of the byte matrix and the backward half a
+*column*, and no state has both.
 
 Measured per cube at N = 2 and N = 3, a row reaches forward 2 and backward 1,
 and a column forward 1 and backward 2.  Either way the inside-out reach is
@@ -79,7 +79,7 @@ Usage
   python3 permute-multiplicity-verify.py --reduced 3
   python3 permute-multiplicity-verify.py --self-test
 
-Standard library only.  Exits nonzero if any check fails.
+It uses only the standard library and exits nonzero if any check fails.
 """
 
 import argparse
@@ -286,9 +286,9 @@ def check_block_bijective(rng: random.Random, trials: int = 2000) -> None:
 def check_multiplicity() -> None:
     """Premise 4: a bijection on 2^128 gives every byte value 2^120 preimages.
 
-    Arithmetic, and stated here so the one number the whole argument turns
-    on -- the parity of the multiplicity -- is written down and checked
-    rather than left in prose.
+    This is arithmetic, stated here so that the one number the whole
+    argument turns on, the parity of the multiplicity, is written down and
+    checked rather than left in prose.
     """
     mult = 2 ** (8 * (BLOCK_BYTES - 1))
     if mult * 256 != 2 ** 128:
@@ -304,8 +304,9 @@ def check_multiplicity() -> None:
 def check_one_round_byte_cube(rng: random.Random, trials: int = 3) -> None:
     """The published 1-round result, exhaustively (it costs 2^8 states).
 
-    Not a premise of the 2-round argument, but the same machinery and cheap,
-    so it guards against a regression in the shipped permutation itself.
+    This is not a premise of the 2-round argument, but it uses the same
+    machinery and is cheap, so it guards against a regression in the shipped
+    permutation itself.
     """
     for _ in range(trials):
         st = random_state(rng)
@@ -330,7 +331,7 @@ def check_one_round_byte_cube(rng: random.Random, trials: int = 3) -> None:
 
 
 def check_inside_out_cube_coordinates() -> None:
-    """Why the two inside-out halves cannot share a cube, at full width.
+    """Why the two inside-out halves need the cube transposed, at full width.
 
     permute-division-property.py builds `P^-1` as (A^-1 . T)^r with the
     LEADING transpose dropped, so its `--inverse` cube lives in the
@@ -394,9 +395,9 @@ def gf_mul(a: int, b: int) -> int:
     return p
 
 
-# MDS circulants, first row.  N = 4 is AES's own MixColumns; N = 2 and N = 3
-# were searched for (self_test re-derives that each is MDS, since a singular
-# one would silently break premise 3 in the reduced instance).
+# MDS circulants, first row.  N = 4 is AES's own MixColumns, and N = 2 and
+# N = 3 were searched for.  self_test re-checks that each is invertible, since
+# a singular one would silently break premise 3 in the reduced instance.
 COEF = {2: (2, 3), 3: (1, 1, 2), 4: (2, 3, 1, 1)}
 
 
@@ -428,7 +429,7 @@ def mat_inv(m: list[list[int]]) -> list[list[int]]:
 
 
 def pack(row) -> int:
-    """N bytes, little-endian, as one int -- the reduced block."""
+    """Pack N little-endian bytes into one int, the reduced block."""
     v = 0
     for k, b in enumerate(row):
         v |= b << (8 * k)
@@ -444,8 +445,8 @@ class Reduced:
     """An N x N byte matrix with Castella's round shape.
 
     Block i is row i.  A round applies a block map to every row and then
-    transposes, exactly as `P` does; the block map is three sub-rounds of
-    S-box, MDS circulant, round constant, mirroring three AES rounds.  Rows
+    transposes, exactly as `P` does.  The block map is three sub-rounds of
+    S-box, MDS circulant, and round constant, mirroring three AES rounds.  Rows
     are packed ints and each sub-round is a table XOR, which is what makes
     N = 3's 2^24-state cube affordable.
     """
@@ -458,8 +459,8 @@ class Reduced:
         self._inv_sbox: bytes | None = INV_SBOX if sbox is SBOX else None
         m = circulant(n)
         minv = mat_inv(m)
-        # fwd[j][v]: what input byte j holding v contributes to a sub-round,
-        # i.e. column j of M times S[v].  A sub-round is the XOR over j.
+        # fwd[j][v] is what input byte j holding v contributes to a sub-round,
+        # column j of M times S[v].  A sub-round is the XOR over j.
         self.fwd = [[pack([gf_mul(m[i][j], sbox[v]) for i in range(n)])
                      for v in range(256)] for j in range(n)]
         # The inverse sub-round applies M^-1 first and S^-1 after, so its
@@ -484,8 +485,9 @@ class Reduced:
     def _inverse_sbox(self) -> bytes:
         """The inverse S-box, built on first use and kept.
 
-        Not built in `__init__`: the Part B controls construct `Reduced` with
-        deliberately non-bijective S-boxes and call only `forward()`.
+        It is not built in `__init__`, because the Part B controls construct
+        `Reduced` with deliberately non-bijective S-boxes and call only
+        `forward()`.
         """
         if self._inv_sbox is None:
             if sorted(self.sbox) != list(range(256)):
@@ -530,7 +532,7 @@ class Memo(Reduced):
     """Reduced with bounded memoization of the two block maps.
 
     A cache hit means the input genuinely repeated, so this cannot change a
-    verdict -- and `--self-test` checks that it does not, by re-running the
+    verdict, and `--self-test` checks that it does not by re-running the
     N = 2 table uncached.  The bound keeps memory flat when the cube block
     itself is the thing varying.
     """
@@ -567,7 +569,8 @@ CUBE_KINDS = ("row", "col", "diag")
 def cube_states(n: int, kind: str, base: list[int]):
     """Every middle state of the cube, as packed rows.
 
-    `row` is one whole block -- what `-c block` means to the forward half.
+    `row` is one whole block, which is what `-c block` means to the forward
+    half.
     `col` is byte 0 of every block, the transpose image of a row, which is
     what `-c block` names once the backward half's dropped leading transpose
     is undone.  `diag` is a third 256^N cube that is neither.
@@ -733,10 +736,9 @@ def part_b_controls(seed: int) -> None:
     print("  [C2] a random bijective S-box balances too, so the argument "
           "really does not use AES: OK")
 
-    # 2-to-1 everywhere: not a bijection, but every preimage count doubles
-    # and so stays even.  The zero-sum must SURVIVE this -- if it did not,
-    # the mechanism would be bijectivity rather than the parity bijectivity
-    # happens to give.
+    # A 2-to-1 S-box is not a bijection, but every preimage count doubles and
+    # so stays even.  The zero-sum must SURVIVE this, or the mechanism would
+    # be bijectivity rather than the parity bijectivity happens to give.
     doubled = Memo(n, seed, sbox=bytes(SBOX[x & 0xFE] for x in range(256)))
     d = xor_is_zero((doubled.forward(st, 2)
                      for st in cube_states(n, "row", base)), n)
@@ -784,8 +786,8 @@ def self_test() -> None:
     if bytes(INV_SBOX[SBOX[x]] for x in range(256)) != bytes(range(256)):
         raise VerificationError("INV_SBOX does not invert SBOX")
 
-    # The memoized and plain classes must agree; the cache is the one piece
-    # here whose whole purpose is to change how much work happens.
+    # The memoized and plain classes must agree, because the cache is the one
+    # piece here whose whole purpose is to change how much work happens.
     base = base_state(2, 1)
     plain, memo = Reduced(2, 1), Memo(2, 1)
     for kind in CUBE_KINDS:
@@ -809,8 +811,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description="Verify the even-multiplicity zero-sum argument.")
     ap.add_argument("--reduced", type=int, default=2, metavar="N",
-                    help="reduced width for Part B; 2 takes 3 s, 3 takes "
-                         "35 min and reproduces it exactly (default: 2)")
+                    help="reduced width for Part B.  2 takes 3 s, and 3 "
+                         "takes 35 min and reproduces it exactly "
+                         "(default: 2)")
     ap.add_argument("--rounds", type=int, default=3,
                     help="highest round count to measure in Part B "
                          "(default: 3)")

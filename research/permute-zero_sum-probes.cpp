@@ -14,20 +14,21 @@
 * bit's sums survive all bases with probability 2^-NUM_BASES, so surviving
 * bits indicate structure rather than chance.
 *
-* Two cube placements:
+* It tries two cube placements:
 *
-* * single-block -- all k bits inside one random block, the placement that
-*   minimizes mixing.  At 1 round this MUST find structure (the positive
-*   control): one round cannot spread a block beyond one byte per output
-*   block, so the 15 unvaried input blocks leave 1920 output bits constant.
-* * spread -- k bits at random positions across the whole state.  At 1
-*   round every spread cube spanning 2+ blocks also sums to zero in ALL
-*   bits (one round is nonlinear only block-locally, and each block sees
-*   its sub-cube's values an even number of times); gone by 2 rounds.
+* * single-block puts all k bits inside one random block, the placement that
+*   minimizes mixing.  At 1 round this MUST find structure, which is the
+*   positive control.  One round cannot spread a block beyond one byte per
+*   output block, so the 15 unvaried input blocks leave 1920 output bits
+*   constant.
+* * spread puts k bits at random positions across the whole state.  At 1
+*   round every spread cube spanning 2+ blocks also sums to zero in ALL bits,
+*   because one round is nonlinear only block-locally and each block sees its
+*   sub-cube's values an even number of times.  That is gone by 2 rounds.
 *
 * Any surviving bit at 3+ rounds (full diffusion) is a zero-sum
-* distinguisher of the reduced-round permutation and a FAIL; rows for 1-2
-* rounds are informational.
+* distinguisher of the reduced-round permutation and a FAIL.  The rows for
+* 1-2 rounds are informational, apart from the positive control.
 */
 
 #if !defined(DEBUG)

@@ -3,12 +3,11 @@
 
 """The shared model of the Castella permutation's layers.
 
-The AES pieces (S-box, DDT, ShiftRows, MixColumns, one aesenc round) and the
-simd_transpose map, factored out of permute-trail-search.py so that every
-program modeling `P` uses one implementation, validated in one place by
-self_test().
+It holds the AES pieces (S-box, DDT, ShiftRows, MixColumns, one aesenc round)
+and the simd_transpose map, so that every program modeling `P` uses one
+implementation, validated in one place by self_test().
 
-Pure standard library, so importing this must not require z3.  That lets
+It is pure standard library, so importing it never requires z3.  That lets
 trail-model-crossvalidate.py gate it from `make test` unconditionally.
 
 spec-conformance.py must NEVER import this module.  It is the independent
@@ -148,9 +147,9 @@ AESENC_VECTORS = [
 def self_test() -> None:
     """Sanity-check the S-box, DDT, and AES round model against known values.
 
-    Raises SelfTestError on any mismatch.  It deliberately does not use
-    `assert`.  This runs on every invocation, not only under --self-test, and
-    an assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch rather than using `assert`, because
+    this runs on every invocation, not only under --self-test, and an assert
+    would pass vacuously under `python3 -O`.
     """
     for din, want in ((0x00, 0x63), (0x53, 0xED), (0xFF, 0x16)):
         if SBOX[din] != want:
@@ -182,7 +181,7 @@ def hex_state(state_bytes: StateBytes) -> str:
                     for block in state_bytes)
 
 
-# Run on import, like the DDT4_OUT check above.  Every program that models `P`
-# then gets the same validated layers, so no importer has to remember to check
-# what it borrows.  1.7 ms against a 29 ms import.
+# Run on import, like the DDT4_OUT check above, so every program that models
+# `P` gets validated layers without having to check what it borrows.  It costs
+# 1.7 ms of a 29 ms import.
 self_test()

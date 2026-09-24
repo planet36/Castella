@@ -22,10 +22,11 @@
 *    self-similar schedule is what a slide would need, with or without a
 *    twist, and distinctness alone only rules out the zero difference.
 *
-* Probes 2 and 3 are pass/fail, with a nonzero exit on any violation.  Probe
-* 1's tables are informational.  Compare the residual-structure means against
-* the printed random-model expectations.  Deviations at 1 round are expected,
-* and they must vanish as rounds increase.
+* Probes 2 and 3 are pass/fail, with a nonzero exit on any violation, and so
+* is a subspace re-entry in probe 1.  Probe 1's statistics are otherwise
+* informational, to be compared against the printed random-model
+* expectations.  Deviations at 1 round are expected, and they must vanish as
+* rounds increase.
 */
 
 #if !defined(DEBUG)
@@ -62,7 +63,7 @@ static_assert(state_size_bytes == B * B);
 using u128 = unsigned __int128;
 #pragma GCC diagnostic pop
 
-// matrix view: M[row][col] = byte col of block row
+// View the state as a matrix, M[row][col] being byte col of block row
 static constexpr uint8_t&
 mat(bytes_t& b, const int row, const int col)
 {
@@ -370,7 +371,7 @@ probe_round_constants()
 {
     int num_failed_checks = 0;
 
-    std::vector<u128> flat; // generation order: round, AES round, block
+    std::vector<u128> flat; // in generation order (round, AES round, block)
     for (const auto& rc_round : Castella::round_constants)
         for (const auto& rc_aes_round : rc_round)
             for (const auto& rc : rc_aes_round)

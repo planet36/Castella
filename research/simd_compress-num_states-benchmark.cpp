@@ -6,15 +6,14 @@
 * \file
 * \author Steven Ward
 *
-* Design probe for cch leaf pairing and beyond.  Would an interleaved
-* compress_castella_hash node group, meaning N states advanced in lockstep on
-* one thread, beat N sequential nodes?  The N=2 result motivated
-* compress_castella_hash_x2 (include/cch-x2.hpp).  N=3 and N=4 ask whether a
-* wider group is worth building.
+* This probes whether an interleaved compress_castella_hash node group, N
+* states advanced in lockstep on one thread, beats N sequential nodes.  The
+* N=2 result motivated compress_castella_hash_x2 (include/cch-x2.hpp), and
+* N=3 and N=4 test whether a wider group is worth building.
 *
 * Each benchmark hashes N equal-size buffers with N independent states using
-* the cch absorb loop.  That is simd_compress_aes_enc_r3_arr per 256-byte
-* chunk, plus the periodic mix permute at the default mix rate.
+* the cch absorb loop, simd_compress_aes_enc_r3_arr per 256-byte chunk plus
+* the periodic mix permute at the default mix rate.
 *
 *   - sequential: buffer 0 start to finish with state 0, then buffer 1 with
 *     state 1, and so on, which is what N single-leaf hashes do today
@@ -26,19 +25,19 @@
 * saturate the AES units or the memory system.  Buffer sizes span L1 to DRAM
 * to separate those two regimes.
 *
-* A register-file limit was the other candidate, since one state is 8 ymm
+* A register-file limit was the other candidate (one state is 8 ymm
 * registers, so 2 states already fill all 16 and 3 or 4 must spill between
-* chunks.  The measurements refute it.  At a fixed total footprint, N=3 and
-* N=4 match the pair everywhere below L2 (research/README.md).  What a wider
-* group costs is footprint, which is why both modes exist.
+* chunks), and the measurements refute it.  At a fixed total footprint, N=3
+* and N=4 match the pair everywhere below L2 (research/README.md), so what a
+* wider group costs is footprint, which is why both modes exist.
 *
 * The benchmark itself is portable to any AES-capable target (the absorb
-* loop and permutation have non-VAES and ARM fallbacks), so the question
-* can be measured on hardware without VAES -- where the answer differs:
-* with 128-bit aesenc codegen one state already runs 16 independent
-* chains (VAES halves that to 8, which is what leaves latency to fill),
-* and measured compute-regime ratios drop to ~1.0.  That is why the cch
-* tree policy's pairing opt-in stays behind the VAES flags.
+* loop and permutation have non-VAES and ARM fallbacks), so the question can
+* be measured on hardware without VAES, where the answer differs.  With
+* 128-bit aesenc codegen one state already runs 16 independent chains, where
+* VAES halves that to 8 and so leaves latency to fill, and measured
+* compute-regime ratios drop to ~1.0.  That is why the cch tree policy's
+* pairing opt-in stays behind the VAES flags.
 */
 
 #if (defined(__x86_64__) && defined(__AES__)) || \
@@ -114,10 +113,10 @@ inline constexpr std::array buf_sizes{
 
 /// Total working sets, the same regimes held at the total rather than per buffer
 /**
-* Derived rather than written out, so each total is the 2-state working set of
-* the size at the same index by construction.  That is what makes the \a N = 2
-* rows of the two modes the same configuration, the control that exposed this
-* run's cache-level noise, and a hand-maintained copy could drift out of it.
+* They are derived rather than written out, so each total is by construction
+* the 2-state working set of the size at the same index.  That makes the
+* \a N = 2 rows of the two modes the same configuration, the control that
+* exposes cache-level noise, which a hand-maintained copy could drift out of.
 */
 inline constexpr auto total_sizes = []
 {
@@ -239,8 +238,8 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
 
 /// The per-buffer size that puts \a total_bytes of working set behind \a n states
 /**
-* Rounded down to a whole number of chunks, so every state absorbs only full
-* chunks.  The N buffers together then cover \a total_bytes to within one
+* It is rounded down to a whole number of chunks, so every state absorbs only
+* full chunks.  The N buffers together then cover \a total_bytes to within one
 * chunk per state.
 */
 [[nodiscard]] static constexpr int
@@ -361,9 +360,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // this cache level".
     //
     // The name reports the total each row actually covers, not the one
-    // requested.  A buffer is a whole number of 256-byte chunks, so at the
-    // smallest total N = 3 lands on 1536 B rather than 2048, which is 75%, and
-    // the footprints are no longer equal.  Every other row is within 2%.
+    // requested.  A buffer is a whole number of 256-byte chunks, so N = 3
+    // lands on 75% of the 2 KiB total and about 94% of the 4 and 8 KiB ones,
+    // where the footprints are no longer equal.  From 16 KiB up every row is
+    // within 2%.
     for (const auto total_size : total_sizes)
     {
         [&]<size_t... N>(std::index_sequence<N...>) {

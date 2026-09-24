@@ -29,23 +29,25 @@ Write the permutation as an alternation of affine layers and S-box layers:
 
 A subspace U with offset a is invariant when every layer maps the current
 coset of U onto a coset of U.  Affine layers translate cosets, so their
-condition is on the linear part; the S-box layer's condition is the hard one.
+condition is on the linear part, and the S-box layer's condition is the hard
+one.
 The two are analyzed separately below, and the S-box condition turns out to
 be so restrictive that it decides the whole byte-aligned case on its own.
 
 Sections
 --------
-1. S-box affine census (exhaustive).  Over all 690,880 two-dimensional
-   affine subspaces of F_2^8, which have an affine image under the AES
-   S-box, and which preserve their own direction space.  A set A maps to an
+1. S-box affine census (exhaustive).  It counts, over all 690,880
+   two-dimensional affine subspaces of F_2^8, which have an affine image
+   under the AES S-box and which of those preserve their own direction
+   space.  A set A maps to an
    affine set iff the map A -> S(A) is affine, iff every 2-dimensional
    affine subspace of A satisfies S(a)^S(a^u)^S(a^v)^S(a^u^v) = 0.  So
    dimension 2 decides every dimension above it, and the census at
    dimension 3 confirms the lift.
 
 2. MixColumns compatibility of 1-dimensional local subspaces (exhaustive).
-   Section 1 leaves only dimensions 0, 1 and 8 available to a byte-aligned
-   subspace.  Dimension 1 survives the S-box for some directions; this
+   Section 1 leaves only dimensions 0, 1, and 8 available to a byte-aligned
+   subspace.  Dimension 1 survives the S-box for some directions, and this
    section decides whether any of them survives MixColumns.
 
 3. Byte-support closure (exhaustive over all 2^256 supports).  With
@@ -53,17 +55,17 @@ Sections
    byte-support ("truncated") subspace, and invariance is closure of its
    support under the round's support digraph.  Supports propagate WITHOUT
    cancellation because a bijection sits on every byte, so this is computed
-   layer by layer -- see the warning below.
+   layer by layer (see the warning below).
 
 4. Symmetry classes, layer by layer (exact).  Which of ShiftRows, the
-   S-box layer, MixColumns, the transpose and the round-constant addition
+   S-box layer, MixColumns, the transpose, and the round-constant addition
    preserve each of the three classes, decided rather than sampled.
 
 5. Forced closure (exact per coset).  For the classes of section 4, which
    are not byte-aligned, grow the smallest subspace that any invariant
    subspace containing the tested coset would have to contain.  Reaching
    the full 2048 dimensions is a proof that no such invariant subspace
-   exists; falling short is inconclusive, and is reported as such.
+   exists, while falling short is inconclusive and is reported as such.
 
 Do not analyze the S-box-deleted round
 --------------------------------------
@@ -96,12 +98,12 @@ Usage
   python3 permute-invariant-subspaces.py --offsets 4 --seed 1
   python3 permute-invariant-subspaces.py --self-test
 
-Exits 1 if any decided check finds an invariant subspace, so it can gate
-regressions, and 2 if a check could not be decided -- section 5's closure
-stalling, which is not a finding.  Nothing here solves anything, but it
-imports permute_model for the cross-validated layer machinery
-(shift_rows_src, mix_column, transpose_map) and spec-conformance.py for the
-round function and constant schedule -- so no layer is modeled twice.
+It exits 1 if any decided check finds an invariant subspace, so it can gate
+regressions, and 2 if a check could not be decided (section 5's closure
+stalling, which is not a finding).  Nothing here solves anything.  It imports
+permute_model for the cross-validated layer machinery (shift_rows_src,
+mix_column, transpose_map) and spec-conformance.py for the round function and
+constant schedule, so no layer is modeled twice.
 """
 
 import argparse
@@ -343,7 +345,7 @@ class Echelon:
         self.rows: dict[int, int] = {}
 
     def reduce(self, v: int) -> int:
-        """Reduce v against the current basis; 0 iff v is in the subspace."""
+        """Reduce v against the current basis, giving 0 iff v is in it."""
         while v:
             p = v.bit_length() - 1
             row = self.rows.get(p)
@@ -353,7 +355,7 @@ class Echelon:
         return 0
 
     def add(self, v: int) -> int:
-        """Insert v if independent; return the residue actually added (or 0)."""
+        """Insert v if independent, and return the residue added (or 0)."""
         r = self.reduce(v)
         if r:
             self.rows[r.bit_length() - 1] = r

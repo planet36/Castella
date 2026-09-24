@@ -7,25 +7,25 @@
 * \author Steven Ward
 *
 * Measures the AES stage in isolation, without the transpose, in the real
-* workload shape.  That is \c Castella::AES_NUM_ROUNDS rounds with per-block
-* round keys taken from \c Castella::round_constants.  The permute benchmarks
-* only ever exercise these functions fused with the transpose.
-* aes_enc_arr_cast-benchmark predates them and measures local single-round,
-* shared-key prototypes instead.
+* workload shape of \c Castella::AES_NUM_ROUNDS rounds, each block keyed by
+* its own entry of \c Castella::round_constants.  The permute benchmarks only
+* ever exercise these functions fused with the transpose, and
+* aes_enc_arr_cast-benchmark measures older single-round, shared-key
+* prototypes.
 *
 * Contenders (all on a 16-block state):
 *
 *   - generic<16>: \c aes_enc_arr_generic, the per-uint8x16_t loop that a
 *     target without VAES runs.
 *   - vaes_cast<16>: \c aes_enc_arr_paircast, what \c aes_enc_arr dispatches
-*     to in real use -- adjacent __m128i pairs cast to __m256i, 256-bit
-*     round-key loads.
-*   - x2_broadcast<16>: \c aes_enc_arr_x2, used by permute_x2 -- two
-*     independent 16-block states, one per 128-bit lane, the same 128-bit
+*     to in real use, which casts adjacent __m128i pairs to __m256i and loads
+*     256-bit round keys.
+*   - x2_broadcast<16>: \c aes_enc_arr_x2, used by permute_x2, which runs two
+*     independent 16-block states, one per 128-bit lane, with each 128-bit
 *     round key broadcast to both lanes.
 *   - folded<8x2>: \c aes_enc_arr_folded, used by the register-resident
-*     Castella::permute -- one 16-block state folded into 8 elements
-*     (element j = blocks j and j+8), round keys from
+*     Castella::permute, which folds one 16-block state into 8 elements
+*     (element j = blocks j and j+8) and takes its round keys from
 *     \c Castella::round_constants_folded.
 *
 * The inverse overloads are deliberately not measured: \c permute_inv is the

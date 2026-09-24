@@ -6,19 +6,17 @@
 """Check permute_model's model of `P` against the spec model.
 
 Every active-S-box bound and every trail weight in research/README.md is a
-statement about the *model* in permute_model.py, which permute-trail-search.py
-and the other solver programs all share, not directly about Castella.  That
-model is a third implementation of the permutation -- separate from the C++
-and from spec-conformance.py -- and its layer machinery (`shift_rows_src`,
-`mix_column`, `transpose_map`) had never been compared with either.  The
-published AES bounds validate it at r=1, where Castella is pure AES and the
-transpose has not yet acted; nothing validated it above that.
+statement about the *model* in permute_model.py, which the solver programs
+share, not directly about Castella.  That model is a third implementation of
+the permutation, separate from the C++ and from spec-conformance.py.  The
+published AES bounds validate it only at r=1, where Castella is pure AES and
+the transpose has not yet acted.
 
-This drives random state PAIRS through spec-conformance.py's `permute` -- the
-from-the-spec implementation that reproduces all 91 KATs -- and propagates
-their difference, in lockstep, through the shared model's own layers, feeding it
-the S-box output differences the concrete pair actually produces.  The two must
-agree byte for byte at every round count.
+This drives random state PAIRS through spec-conformance.py's `permute`, the
+from-the-spec implementation that reproduces all 91 KATs.  In lockstep it
+propagates their difference through the shared model's own layers, feeding
+them the S-box output differences the concrete pair actually produces.  The
+two must agree byte for byte at every round count.
 
 It also checks that constant injection is difference-transparent, which the
 trail model assumes by omitting constants entirely.  The spec model XORs a
@@ -26,12 +24,11 @@ round constant into both lanes.  If injection were not an XOR, say an addition
 mod 256, the difference would depend on it and the two would part company
 here.
 
-What this deliberately does NOT check is *which* constant goes where.  Fault
-injection confirms that.  Zeroing an entry of the spec model's schedule is the
-one corruption of the four tried that this test does not catch, because both
-lanes get the same constant and it cancels.  That is correct rather than a
-gap.  A differential is constant-independent, so the trail model has no
-schedule to be wrong about.  The KATs cover the schedule instead.
+This does NOT check *which* constant goes where.  Of four fault injections
+tried, zeroing an entry of the spec model's schedule is the one this test
+misses, because both lanes get the same constant and it cancels.  That is
+correct rather than a gap, since a differential is constant-independent, so the
+trail model has no schedule to be wrong about.  The KATs cover the schedule.
 
 Exits nonzero on any disagreement, so it can gate regressions.
 """

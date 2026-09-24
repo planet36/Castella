@@ -25,8 +25,8 @@
 # Neither lever needs a new activity pattern or a new seed, and both work
 # inside the differential of a trail already in hand.  Get that trail first
 # from a --patterns or --random-seed sweep at r = 3 and 4, or from the imported
-# MILP pattern at r >= 5.  Then descend, then enumerate.  See
-# ../research/README.md.
+# MILP pattern at r >= 5.  Then descend, then enumerate.  See README.md in
+# this directory.
 #
 # RESULTS THIS REPRODUCES, as recorded:
 #     r     sweep   descent   enumeration
@@ -64,8 +64,8 @@ TIME_LIMIT="${TIME_LIMIT:-14400}"
 
 # -M is PER PROCESS and these probes grow to ~2 GB over a few hours, so a
 # parallel batch needs N * MEM within RAM.  Eight at 2500 left 1.8 GiB of 15
-# GiB free.  r = 5 overrides this below.  At 2500 it ends `unknown: max. memory
-# exceeded` after ONE trail, memory-bound rather than time-bound.
+# GiB free.  r = 5 overrides this below, because at 2500 it ends `unknown: max.
+# memory exceeded` after ONE trail, memory-bound rather than time-bound.
 MEM="${MEM:-2500}"
 
 # How many solvers may run at once.  Four at -M 2500 is the most a 16 GiB box
@@ -105,7 +105,8 @@ shift $((OPTIND - 1))
 #
 # At r = 3 and r = 4 --patterns N means "stop at the Nth pattern stage A
 # enumerates", so the number selects the winning pattern and is not a request
-# for more of them.  From r = 5 up --patterns is inert: a file holds one pattern.
+# for more of them.  From r = 5 up --patterns is inert, because a file holds
+# one pattern.
 recipe() {
     case "$1" in
         3) SEL=(-r 3 -A 129 --patterns 13 --random-seed 11 --cluster-shell -17) ;;

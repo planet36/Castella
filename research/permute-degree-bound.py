@@ -53,16 +53,16 @@ rounds rather than near-full.
 Validation
 ----------
 Run on AES itself, at n=128 with the same S-box, the bound must reproduce the
-known integral-distinguisher reach.  That is degree < 127 through 3 rounds,
-the Square distinguisher, reaching full degree at round 4.  --self-test checks
-this and the S-box delta_i values.
+known integral-distinguisher reach, the Square distinguisher's degree < 127
+through 3 rounds and full degree at round 4.  --self-test checks this and the
+S-box delta_i values.
 
 Usage
 -----
   python3 permute-degree-bound.py            # AES validation + Castella report
   python3 permute-degree-bound.py --self-test
 
-Pure standard library; no solver or package needed.
+It needs only the standard library, and no solver or package.
 """
 
 import argparse
@@ -149,8 +149,10 @@ def degree_after_layers(n: int, gamma: float, sbox_deg: int,
 
 
 def zero_sum_reach_layers(bounds: list[int], n: int) -> int:
-    """Largest number of layers with degree bound <= n-2 (a nontrivial
-    zero-sum needs a cube of dimension <= n-1, i.e. degree <= n-2)."""
+    """Count the leading layers whose degree bound is <= n-2.
+
+    A nontrivial zero-sum needs a cube of dimension <= n-1, so degree <= n-2.
+    """
     reach = 0
     for d in bounds:
         if d <= n - 2:
@@ -174,9 +176,9 @@ def run_self_test() -> list[int]:
 
     Returns the forward delta_i, so the caller need not recompute them.
 
-    Raises SelfTestError on any mismatch.  It deliberately does not use
-    `assert`.  This runs on every invocation, not only under --self-test, and
-    an assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch rather than using `assert`, because
+    this runs on every invocation, not only under --self-test, and an assert
+    would pass vacuously under `python3 -O`.
     """
     d_fwd = sbox_deltas(SBOX)
     d_inv = sbox_deltas(INV_SBOX)

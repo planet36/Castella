@@ -16,7 +16,8 @@
 *     network.  The state round-trips through memory every round, and each
 *     256-bit AES load spans two 128-bit transpose stores, which defeats
 *     store-to-load forwarding.
-*   - folded<N>: fold, N/2 ymm-resident rounds, unfold
+*   - folded<N>: fold into N/2 ymm registers, run every round there, then
+*     unfold.
 *
 * Benchmarks are registered generic/folded adjacent per (N, num_rounds) so
 * environmental drift affects both sides of each ratio equally.  The

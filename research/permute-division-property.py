@@ -45,11 +45,11 @@ layer, each a valid transition of that layer.
 Why this is tractable on a 2048-bit state
 -----------------------------------------
 A monolithic model would need 768 S-box tables per round and is hopeless.
-But **one Castella round is nonlinear only block-locally** -- the three
-AES rounds act within each 128-bit block and the transpose is linear --
-so the permutation is a DAG of 128-bit block computations wired by a byte
-permutation, and only the blocks that can carry a nonzero division
-property need variables at all.
+But **one Castella round is nonlinear only block-locally**, since the three
+AES rounds act within each 128-bit block and the transpose is linear.  So the
+permutation is a DAG of 128-bit block computations wired by a byte
+permutation, and only the blocks that can carry a nonzero division property
+need variables at all.
 
 The pruning is sound because an S-box can never take a nonzero input
 division property to a zero output one.  The ANF of y^0 is the constant 1, so
@@ -71,12 +71,9 @@ directions.  The negative one matters as much as the positive, since a model
 that proved everything balanced would also "reproduce" the first.
 
 --validate --inverse gates the P^-1 layers the same way, but **at 2 rounds,
-not 3**.  That is not a weaker cipher.  `aes_round` is SB, SR, MC and so ends
-on a linear layer, while `inv_aes_round` is MC^-1, SR^-1, SB^-1 and ends on an
-S-box.  A division property crosses a linear layer untouched and never
-survives an S-box, so counting whole rounds leaves the two directions one
-nonlinear layer out of step.  Measured, AES^-1 is 128/128 balanced at 1 and 2
-rounds and 0/128 at 3.
+not 3**, for the layer-alignment reason SQUARE_BOUNDARY gives.  That is not a
+weaker cipher.  Measured, AES^-1 is 128/128 balanced at 1 and 2 rounds and
+0/128 at 3.
 
 There are two consequences for an inside-out zero-sum, both adverse to the
 backward half.  It reaches one S-box layer less than its round count suggests,
@@ -88,23 +85,22 @@ Inside-out, and the coordinate trap in it
 -----------------------------------------
 `--inside-out FWD BWD` propagates ONE middle-state cube in both
 directions and adds the round counts.  The two directions read a bit-set
-differently -- forward it is the middle state, backward it is one
-transpose past it -- so `inside_out` transposes the cube for the backward
+differently (forward it is the middle state, and backward it is one
+transpose past it), so `inside_out` transposes the cube for the backward
 half.  Without that the same bit-set names a row of the byte matrix
 forward and a column backward, two different sets of states whose round
-counts cannot be added; a revision before 2026-08-04 did exactly that and
+counts cannot be added.  A revision before 2026-08-04 did exactly that and
 reported a 4-round zero-sum that does not exist.
 
 Expect a negative even where a zero-sum is known.  A `block` cube's
 backward half spreads over all 16 blocks, so the pruning keeps only the
-target's and the cube collapses to the one byte reaching it; balance over
-2^8 is far harder to prove than over 2^128, and the 3-round construction
-this file's own results rest on comes back "not provably balanced".  That
-is the ordinary SAT direction -- it bounds the technique, never `P` --
-but it does mean this flag cannot confirm the known reach.  What does is
-permute-multiplicity-verify.py, which checks the counting argument
-directly and brute-forces the reach at a width where the cube is
-enumerable.
+target's and the cube collapses to the one byte reaching it.  Balance over
+2^8 is far harder to prove than over 2^128, so the known 3-round
+construction comes back "not provably balanced".  That is the ordinary SAT
+direction, which bounds the technique and never `P`, but it means this flag
+cannot confirm the known reach.  permute-multiplicity-verify.py does, by
+checking the counting argument directly and brute-forcing the reach at a
+width where the cube is enumerable.
 
 Usage
 -----
@@ -116,7 +112,7 @@ Usage
   python3 permute-division-property.py --rounds 2 --cube block --inverse
   python3 permute-division-property.py --inside-out 2 1 --cube block
 
-Needs z3.  Everything else is standard library.
+It needs z3 and otherwise only the standard library.
 """
 
 import argparse
@@ -244,8 +240,8 @@ class Model:
     """Division-trail constraints over a DAG of 128-bit AES blocks."""
 
     def __init__(self) -> None:
-        # A private context: bare z3 declarations land in the global one and
-        # perturb unrelated searches (see research/README.md and
+        # Use a private context, because bare z3 declarations land in the
+        # global one and perturb unrelated searches (see
         # permute-trail-search.py's totalizer self-test).
         self.ctx = z3.Context()
         self.s = z3.Solver(ctx=self.ctx)
@@ -315,7 +311,7 @@ class Model:
         """SubBytes, ShiftRows, MixColumns on one 128-bit block.
 
         Castella's aesenc order is ShiftRows then SubBytes, but the two
-        commute -- ShiftRows permutes bytes and SubBytes acts bytewise --
+        commute, because ShiftRows permutes bytes and SubBytes acts bytewise,
         so this is the same layer sequence.
         """
         b = self.sbox_layer(bits)
@@ -611,15 +607,9 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     ends, so a partial result on either half establishes nothing here.
 
     Read a negative here as weak, and expect one even where a zero-sum is
-    known.  The backward half of a `block` cube spreads over all 16 blocks, so
-    the sparse pruning keeps only the target's and the cube collapses to the
-    single byte reaching it.  Balance over 2^8 is far harder to prove than
-    over 2^128, so the very construction this file's results rest on comes
-    back "not provably balanced".
-
-    That is the usual SAT direction, which bounds the technique and never `P`.
-    The reach is established instead by the counting argument and the brute
-    force in permute-multiplicity-verify.py.
+    known, for the reason the module docstring gives.  The counting argument
+    and the brute force in permute-multiplicity-verify.py establish the reach
+    instead.
     """
     print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "
           f"= {r_fwd + r_bwd} round(s)", flush=True)
@@ -677,14 +667,14 @@ def aes_scan(active_bytes: set[int], rounds: int, timeout_s: float,
 
 
 # Rounds at which the Square distinguisher still holds, per direction.
-# The inverse boundary is one LOWER, and the cause is layer alignment
-# rather than anything about the cipher: aes_round is SB, SR, MC, so r
-# forward rounds end on a *linear* layer, while inv_aes_round is MC^-1,
-# SR^-1, SB^-1, so r inverse rounds end on an *S-box*.  A division
-# property crosses a linear layer untouched and never survives an S-box,
-# so the inverse direction spends one nonlinear layer past the point the
-# forward direction is measured at.  Measured, not assumed: AES^-1 gives
-# 128/128 at 1 and 2 rounds and 0/128 at 3, against 128/128 at 3 forward.
+# The inverse boundary is one LOWER because of layer alignment, not anything
+# about the cipher.  aes_round is SB, SR, MC, so r forward rounds end on a
+# *linear* layer, while inv_aes_round is MC^-1, SR^-1, SB^-1, so r inverse
+# rounds end on an *S-box*.  A division property crosses a linear layer
+# untouched and never survives an S-box, so the inverse direction spends one
+# nonlinear layer past the point the forward direction is measured at.
+# Measured, AES^-1 gives 128/128 at 1 and 2 rounds and 0/128 at 3, against
+# 128/128 at 3 forward.
 SQUARE_BOUNDARY = {False: 3, True: 2}
 
 
@@ -830,8 +820,8 @@ def self_test_inverse_sbox() -> None:
                 f"relies on a nonzero division property never vanishing, in "
                 f"the inverse direction too")
     # Everything above holds of the FORWARD table too, so on its own it
-    # would pass if INV_TABLE had been built from the wrong S-box -- the
-    # likeliest way to get this wrong.  These two discriminate.
+    # would pass if INV_TABLE had been built from the wrong S-box, the
+    # likeliest way to get this wrong.  These two checks discriminate.
     identity = make_division_table(list(range(256)))
     for k in range(256):
         if identity[k] != [k]:
@@ -848,10 +838,10 @@ def self_test_inverse_sbox() -> None:
 
 
 CUBES = {
-    # One whole byte -- the byte-aligned cube the random probes never draw.
+    # One whole byte, the byte-aligned cube the random probes never draw.
     "byte": lambda: set(range(8)),
-    # Eight bits, but one in each of eight different bytes: same dimension
-    # as "byte", so it isolates alignment from cube size.
+    # Eight bits, one in each of eight different bytes, has the same
+    # dimension as "byte", so it isolates alignment from cube size.
     "scattered": lambda: {8 * byte for byte in range(8)},
     "column": lambda: {8 * (4 * 0 + r) + k for r in range(4)
                        for k in range(8)},

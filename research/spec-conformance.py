@@ -13,8 +13,8 @@ digest in the KAT file, an implementer needs nothing but SPEC.md.
 
 Usage: python3 spec-conformance.py [path/to/KAT.txt]
 
-Pure Python, no dependencies.  Verifying all 91 KATs takes several seconds,
-since the point is independence rather than speed.
+It is pure Python with no dependencies.  Verifying all 91 KATs takes several
+seconds, since the point is independence rather than speed.
 """
 
 import sys
@@ -56,7 +56,7 @@ def aesenc(block: bytes, key: bytes) -> bytes:
             f"aesenc: round key is {len(key)} bytes, expected 16")
     # SubBytes
     b = block.translate(SBOX)
-    # ShiftRows (column-major layout: byte index = 4*col + row; row r
+    # ShiftRows (column-major layout, byte index = 4*col + row, where row r
     # rotates left by r)
     s = bytearray(16)
     for col in range(4):
@@ -100,8 +100,11 @@ def lfsr_stream() -> Iterator[bytes]:
 
 
 def make_round_constants() -> tuple[list[list[list[bytes]]], list[bytes]]:
-    """RC[r][aes_r][i] for 16 rounds x 3 AES rounds x 16 blocks, and the
-    16 Compress-Castella initial-state blocks that follow them."""
+    """Return RC[r][aes_r][i] and the 16 Compress-Castella initial blocks.
+
+    RC spans 16 rounds x 3 AES rounds x 16 blocks, and the Compress-Castella
+    blocks follow it in the LFSR stream.
+    """
     gen = lfsr_stream()
     rc = [[[next(gen) for _ in range(16)] for _ in range(3)] for _ in range(16)]
     cch_init = [next(gen) for _ in range(16)]
@@ -273,7 +276,7 @@ class CompressCastella:
                 self._absorb_block()
 
     def digest(self, n: int) -> bytes:
-        """Pad, compress, finalize with a permutation, return n bytes.
+        """Pad, compress, finalize with a permutation, and return n bytes.
 
         Finalization happens on the first call only, so repeated
         extraction is idempotent (unlike a duplex squeeze).
@@ -297,7 +300,7 @@ class CompressCastella:
 # A one-method protocol is the point, not too few methods.
 # pylint: disable-next=too-few-public-methods
 class TreeNode(Protocol):
-    """All the tree needs of a node: it absorbs bytes.
+    """All the tree needs of a node, which is to absorb bytes.
 
     Extraction is not here, because Duplex squeezes where CompressCastella
     digests, so tree_digest takes it as a separate callable.

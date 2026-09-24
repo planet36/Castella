@@ -6,7 +6,7 @@
 * \file
 * \author Steven Ward
 *
-* For zero, all-distinct-byte and random states, at every state size and
+* For zero, all-distinct-byte, and random states, at every state size and
 * every round count, verify that
 *
 *     permute_inv(permute(state, num_rounds), num_rounds) == state

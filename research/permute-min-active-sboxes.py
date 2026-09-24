@@ -6,7 +6,7 @@
 """Count the minimum number of differentially active AES S-boxes in Castella::permute.
 
 This is a word-level (byte-granular) truncated-differential MILP model in the
-style of Mouha, Wang, Gu, Preneel, "Differential and Linear Cryptanalysis Using
+style of Mouha, Wang, Gu, and Preneel, "Differential and Linear Cryptanalysis Using
 Mixed-Integer Linear Programming" (Inscrypt 2011).
 
 Model
@@ -72,10 +72,10 @@ Usage
 only route to a trail at N=16 above r=4, where the trail search's own pattern
 stage has never returned one while this model solves the cell in minutes.
 
-Requires the PuLP package (pip install pulp), which bundles the CBC solver,
-and highspy for --solver highs.  Install both.  --solver defaults to cbc when
-highspy is absent, and CBC has never proved N=16 above r=3 at any time limit
-tried, where HiGHS closes r=4, 5, and 6 (RE-DERIVATION-RUNBOOK.md).
+It needs the PuLP package (pip install pulp), which bundles the CBC solver,
+and highspy for --solver highs.  Install both, because --solver defaults to cbc
+when highspy is absent, and CBC has never proved N=16 above r=3 at any time
+limit tried, where HiGHS closes r=4 through 8 (RE-DERIVATION-RUNBOOK.md).
 """
 
 import argparse
@@ -86,9 +86,8 @@ import re
 import sys
 import tempfile
 
-# Optional third-party MILP solver (see the module docstring).  It may be
-# absent when linting, so the import-error is silenced rather than made a hard
-# dependency.
+# PuLP is third-party (see the module docstring) and may be absent where pylint
+# runs, so its import-error is silenced.
 import pulp  # pylint: disable=import-error
 
 from permute_model import BLOCK_BYTES, shift_rows_src, transpose_map
@@ -217,9 +216,9 @@ def dump_pattern(path: str, args: argparse.Namespace, r: int,
     pattern = extract_pattern(layer_states)
     num_active = sum(v for layer in pattern for block in layer for v in block)
 
-    # The pattern is only transplantable if the layers read out here are the
-    # ones the objective counted; if they are not, this catches it here rather
-    # than as a puzzling stage B result.
+    # The pattern is transplantable only if the layers read out here are the
+    # ones the objective counted, and catching a mismatch here beats diagnosing
+    # a puzzling stage B result.
     objective = round(prob.objective.value())
     if num_active != objective:
         raise ValueError(f"extracted pattern has {num_active} active S-boxes "
@@ -266,7 +265,7 @@ def read_dual_bound(log_path: str) -> float | None:
     """CBC's best dual bound from its log, or None if it did not report one.
 
     Branch and bound maintains a lower bound on the optimum throughout, so
-    this is valid whenever it appears -- including on a run that found no
+    this is valid whenever it appears, including on a run that found no
     integer solution at all.  An optimal run prints no such line, because
     there the objective is the bound.
     """
@@ -284,17 +283,16 @@ class SelfTestError(Exception):
 
 
 # The AES bounds this model must reproduce at one Castella round, as
-# (AES rounds, minimum active S-boxes).  N is irrelevant here -- blocks are
-# independent within one round -- so the self-test solves them at N=2.
+# (AES rounds, minimum active S-boxes).  N is irrelevant here, because blocks
+# are independent within one round, so the self-test solves them at N=2.
 AES_VALIDATION_BOUNDS = ((1, 1), (2, 5), (3, 9), (4, 25))
 
 
 def self_test(args: argparse.Namespace) -> None:
     """Check the model against the published AES bounds.
 
-    Raises SelfTestError on any mismatch.  It deliberately does not use
-    `assert`, because an assert-based version would pass vacuously under
-    `python3 -O`.
+    Raises SelfTestError on any mismatch rather than using `assert`, which
+    would pass vacuously under `python3 -O`.
     """
     for aes_rounds, want in AES_VALIDATION_BOUNDS:
         cell = argparse.Namespace(**vars(args))
@@ -342,9 +340,9 @@ def main() -> None:
     parser.add_argument("--solver", choices=("highs", "cbc"),
                         default="highs" if highs_available() else "cbc",
                         help="MILP solver (default: %(default)s).  HiGHS is "
-                             "dramatically stronger on this model -- it closes "
-                             "N=16 r=4/5/6, which CBC never has -- but needs "
-                             "the highspy package; CBC ships with PuLP")
+                             "dramatically stronger on this model, closing "
+                             "N=16 r=4 through 8, which CBC never has, but "
+                             "needs the highspy package.  CBC ships with PuLP")
     parser.add_argument("--dump-pattern", metavar="PATH", default=None,
                         help="write each solved activity pattern to PATH as "
                              "JSON, for permute-trail-search.py "
@@ -360,7 +358,7 @@ def main() -> None:
                              "count in the working directory "
                              "(cbc-N<N>-a<a>-r<r>.log) instead of a temporary "
                              "file, so the duality gap can be watched live "
-                             "with tail -f; with --solver highs, stream the "
+                             "with tail -f.  With --solver highs, stream the "
                              "solver log to stdout")
     args = parser.parse_args()
 
@@ -399,9 +397,9 @@ def main() -> None:
 # The objective is a sum of binary variables, so the optimum is an integer.
 # Once the dual bound exceeds incumbent - 1 the incumbent is provably optimal,
 # and grinding the gap to 0 proves nothing further.  gapAbs = 0.99 lets a
-# solver stop there.  It is what made N=16 r=3 tractable under CBC, proven in
-# 72 min after failing to close in 90 without it.  HiGHS derives the same thing
-# itself ("Objective function is integral") and has closed r <= 6 with a 0%
+# solver stop there, which made N=16 r=3 tractable under CBC, proving it in 72
+# min after failing to close in 90 without it.  HiGHS derives the same thing
+# itself ("Objective function is integral") and closes every cell with a 0%
 # gap, so there the tolerance has never been the binding stopping rule.
 GAP_ABS = 0.99
 
@@ -441,9 +439,9 @@ def report_round(prob: pulp.LpProblem, r: int, dual: float | None) -> None:
         print(f"{r:>6}  {a_min:>18}  2^-{6 * a_min:<8}  optimal")
         return
 
-    # Time limit hit.  The incumbent is an UPPER bound on the minimum and
-    # yields no DP bound -- but the dual bound is a genuine LOWER bound on it
-    # at any point in the search, so report the DP bound from that.
+    # The time limit was hit.  The incumbent is an UPPER bound on the minimum
+    # and yields no DP bound, but the dual bound is a genuine LOWER bound at
+    # any point in the search, so report the DP bound from that.
     a_low = math.ceil(dual) if dual is not None and dual > 0 else None
     dp = f"2^-{6 * a_low}" if a_low is not None else "n/a"
 

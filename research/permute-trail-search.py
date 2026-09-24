@@ -14,10 +14,10 @@ probability 4/256 = 2^-6) and the best weight found here measures how tight
 the byte-level bound is ("trail tightness").
 
 That reading requires A to be a *proven* MILP optimum.  Where the MILP only
-reached an incumbent -- the cells in UNPROVEN_MIN_ACTIVE below -- 6*A is not
-a lower bound on anything, and a trail found against it is a ceiling with no
-floor beneath it.  The program reads those tables and says which case it is
-on startup.
+reached an incumbent (the cells in UNPROVEN_MIN_ACTIVE below), 6*A is not a
+lower bound on anything, and a trail found against it is a ceiling with no
+floor beneath it.  On startup the program reads those tables and says which
+case applies.
 
 Model (two stages, both in z3)
 ------------------------------
@@ -30,37 +30,37 @@ A.  A defaults to the best known MILP figure for -N/-r, which is a proven
 optimum where one exists and otherwise an incumbent.  Against an incumbent 6*A
 is a target rather than a floor (see PROVEN_MIN_ACTIVE below).
 
-Stage B -- bit-level instantiation of one pattern: each active byte becomes
-an 8-bit bitvector difference.  An S-box transition (din -> dout) is encoded
-exactly by an existential witness x:  dout == S[x ^ din] ^ S[x], which holds
-iff DDT[din][dout] != 0.  MixColumns acts linearly on differences over
-GF(2^8) mod 0x11B; ShiftRows and the transpose re-index; round constants
-cancel in XOR differences.  Inactive bytes are the constant 0.  The trail
-weight is sum(-log2(DDT[din][dout]/256)) = 6 or 7 per active S-box (the AES
-DDT contains only the entries 0, 2, and 4; each row has exactly one 4).
-After a first solution, the weight is minimized by iteratively constraining
+Stage B instantiates one pattern at the bit level, where each active byte
+becomes an 8-bit bitvector difference.  Each S-box transition (din -> dout) is
+constrained to DDT[din][dout] != 0 (Instantiation describes the two
+encodings).  MixColumns acts linearly on differences over GF(2^8) mod 0x11B,
+ShiftRows and the transpose re-index, and round constants cancel in XOR
+differences.  Inactive bytes are the constant 0.  The trail weight is
+sum(-log2(DDT[din][dout]/256)), 6 or 7 per active S-box, since the AES DDT
+contains only the entries 0, 2, and 4, with exactly one 4 per row.  After a
+first solution, the weight is minimized by iteratively constraining
 weight <= best-1 until UNSAT (optimal for that pattern) or timeout.
 
 Cardinality encodings (--card-encoding, --weight-encoding)
 ----------------------------------------------------------
-Both stages rest on a cardinality constraint: stage A fixes the active
-S-box count to A, stage B bounds the trail weight (equivalently, lower-bounds
-the number of weight-6 S-box transitions).  "pb" states each as one z3
-pseudo-Boolean; compact, but it propagates poorly at this width.
+Both stages rest on a cardinality constraint.  Stage A fixes the active
+S-box count to A, and stage B bounds the trail weight (equivalently,
+lower-bounds the number of weight-6 S-box transitions).  "pb" states each as
+one compact z3 pseudo-Boolean, which propagates poorly at this width.
 "totalizer" instead builds a sorted-unary counter out of clauses, which
 propagates, and makes weight minimization incremental: the counter is built
 once and each tighter bound is a single unit literal, so the solver keeps
 what it learned under the previous bound.
 
 The two are separate flags because the two stages stall for unrelated
-reasons -- stage A on the width of the activity count, stage B on refuting a
-weight across coupled S-boxes -- so changing both at once cannot attribute
-an effect to either.  Changing --card-encoding also changes *which* pattern
+reasons (stage A on the width of the activity count, stage B on refuting a
+weight across coupled S-boxes), so changing both at once cannot attribute an
+effect to either.  Changing --card-encoding also changes *which* pattern
 stage A returns, and hence which trail stage B lands on, so a stage-B
 comparison has to hold --card-encoding fixed.
 
 A pattern that is byte-level feasible need not be bit-level realizable
-(MixColumns imposes GF(2^8) relations the relaxation ignores); such patterns
+(MixColumns imposes GF(2^8) relations the relaxation ignores).  Such patterns
 are blocked and the next one is tried, up to --patterns.
 
 Clustering (--cluster M) runs after the search.  The best trail's
@@ -100,13 +100,14 @@ Usage
       [--card-encoding {pb,totalizer}] [--weight-encoding {pb,totalizer}]
 
 To tighten a ceiling, sweep --random-seed with a raised --patterns and pass
---no-minimize.  Each seed is an independent process, so run them in parallel;
-budget by elapsed time, not by the solve times printed per pattern, which
-exclude the per-pattern model build that dominates them.
+--no-minimize, then descend the winning trail's shell with --cluster 1
+--cluster-shell K (RE-DERIVATION-RUNBOOK.md section 3).  Each seed is an
+independent process, so run them in parallel.  Budget by elapsed time, not by
+the solve times printed per pattern, which exclude the per-pattern model
+build that dominates them.
 
-Where stage A cannot produce a pattern at all -- N=16 above r=4, where it has
-never returned one -- import one from the MILP instead, which solves the same
-cell in minutes:
+Where stage A cannot produce a pattern at all, as at N=16 above r=4, import
+one from the MILP instead, which solves the same cell in minutes:
 
   python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 \
       --dump-pattern pat-r5.json
@@ -115,7 +116,7 @@ cell in minutes:
 The two models are independent, so --pattern-file rechecks the imported
 pattern against stage A's own constraints before instantiating it.
 
-Requires the z3-solver package (Arch: python-z3-solver).
+It needs the z3-solver package (Arch: python-z3-solver).
 """
 
 import argparse
@@ -140,8 +141,8 @@ PROGRESS_INTERVAL_S = 60.0
 
 # The nested shapes this program passes around, all indexed [i][b] by block
 # and byte within a block (Layers and Pattern add a leading S-box layer).
-# z3 ships no py.typed, so its element types document rather than check;
-# Pattern and StateBytes are pure Python and are checked.
+# z3 ships no py.typed, so its element types document rather than check,
+# while Pattern and StateBytes are pure Python and are checked.
 type Layers = list[list[list[z3.BoolRef]]]      # activity variables
 type Pattern = list[list[list[bool]]]           # a solved Layers
 type BitVecState = list[list[z3.BitVecRef]]     # difference variables
@@ -198,9 +199,9 @@ def nonnegative_int(s: str) -> int:
 def self_test() -> None:
     """Check the shared permutation model, then this file's totalizer.
 
-    Raises SelfTestError on any mismatch.  It deliberately does not use
-    `assert`.  This runs on every invocation, not only under --self-test, and
-    an assert-based version would pass vacuously under `python3 -O`.
+    Raises SelfTestError on any mismatch rather than using `assert`, because
+    this runs on every invocation, not only under --self-test, and an assert
+    would pass vacuously under `python3 -O`.
     """
     model_self_test()
     totalizer_self_test()
@@ -210,24 +211,23 @@ def self_test() -> None:
 def totalizer_self_test(max_vars: int = 5) -> None:
     """Check the totalizer against every assignment, for small widths.
 
-    Exhaustive rather than spot-checked.  This encoding replaces the
-    constraint that defines what the whole search is searching for, so an
-    off-by-one in it would not fail loudly.  It would quietly move the
-    active-S-box target or the weight bound and report a wrong number.
+    The check is exhaustive because this encoding replaces the constraint
+    that defines what the whole search is searching for.  An off-by-one in it
+    would not fail loudly but would quietly move the active-S-box target or
+    the weight bound and report a wrong number.
 
-    Each of the three uses is checked against the true population count of
-    every assignment.  Those are exactly-k, the "le" family under an asserted
-    lower bound, and the "ge" family under an asserted upper bound.  A
-    truncated counter is checked too, since its omitted high outputs are where
+    Each of the three uses (exactly-k, the "le" family under an asserted lower
+    bound, and the "ge" family under an asserted upper bound) is checked
+    against the true population count of every assignment.  A truncated
+    counter is checked too, since its omitted high outputs are where
     truncation could go wrong.
 
     Everything here is built in a private z3 context, so the declarations do
-    not reach the global one the search itself uses.  They otherwise shift
-    z3's default variable order, and thus which model it returns.  Leaving
-    them global moved the r=1 cluster from 1048 characteristics to 1354.  Both
-    are valid complete enumerations of their own differential, but the
-    recorded figure stops reproducing, which is not a price a self-test may
-    charge.
+    not reach the global one the search uses, where they would shift z3's
+    default variable order and thus which model it returns.  Leaving them
+    global moved the r=1 cluster from 1048 characteristics to 1354.  Both are
+    valid complete enumerations of their own differential, but a self-test
+    must not stop the recorded figure from reproducing.
     """
     ctx = z3.Context()
 
@@ -340,12 +340,9 @@ def totalizer(s: z3.Solver, lits: Sequence[z3.BoolRef], bound: int,
         raise ValueError(f"unknown clause families {families!r}")
     if not lits:
         return []
-    # Declare into the solver's own context, not z3's global one.  The
-    # self-test builds counters of its own, and z3's default variable order
-    # follows declaration order, so leaking those declarations into the global
-    # context would change which model every later search returns.  Measured,
-    # it moved the r=1 cluster from 1048 trails to 1354, on the untouched `pb`
-    # path.
+    # Declare into the solver's own context, not z3's global one, or the
+    # self-test's counters would change which model every later search returns
+    # (see totalizer_self_test).
     ctx = s.ctx
     node_no = 0
 
@@ -469,8 +466,9 @@ def extract_pattern(model, layers: Layers) -> Pattern:
 
 def pattern_blocking_clause(layers: Layers, pattern: Pattern) -> z3.BoolRef:
     """Return a clause that forbids the solver from repeating pattern."""
-    # strict: the clause must cover every variable the pattern constrains,
-    # or blocking one pattern would also discard unexamined variants of it.
+    # The zips are strict because the clause must cover every variable the
+    # pattern constrains, or blocking one pattern would also discard
+    # unexamined variants of it.
     lits = []
     for layer, playe in zip(layers, pattern, strict=True):
         for block, pblock in zip(layer, playe, strict=True):
@@ -538,11 +536,11 @@ def verify_pattern_feasible(pattern: Pattern, timeout_ms: int,
                             max_memory: int | None, random_seed: int) -> None:
     """Check an imported pattern against stage A's own constraints.
 
-    This is what makes a pattern from another program safe to instantiate.
-    Pin it into build_pattern_solver and require sat.  Without it a byte-level
-    infeasible pattern would still reach stage B, which would report "NOT
-    bit-level realizable".  That is a different and much weaker statement, and
-    it would hide the disagreement rather than surface it.
+    This pins the pattern into build_pattern_solver and requires sat, which
+    is what makes a pattern from another program safe to instantiate.
+    Without it a byte-level infeasible pattern would still reach stage B,
+    which would report "NOT bit-level realizable", a different and much weaker
+    statement that would hide the disagreement rather than surface it.
 
     The geometry is taken from the pattern itself, which load_pattern_file
     has already matched against the run's -N and -r.
@@ -702,12 +700,11 @@ class Instantiation:
             self.solver.add(z3.PbGe([(w6, 1) for w6 in self.weight6], n6_min))
             return
         # The counter is built once, over every w6, and each tightening is
-        # then a single unit literal on it.  That is the point of doing this
-        # incrementally.  Minimization calls this in a loop with a decreasing
-        # bound, and asserting a unit keeps every clause the solver learned
-        # under the previous bound, where a fresh PbGe adds a new constraint to
-        # digest each time.  Only the "le" family is needed, since the caller
-        # only ever asserts a lower bound.
+        # then a single unit literal on it.  Minimization calls this in a loop
+        # with a decreasing bound, and asserting a unit keeps every clause the
+        # solver learned under the previous bound, where a fresh PbGe adds a
+        # new constraint to digest each time.  Only the "le" family is needed,
+        # since the caller only ever asserts a lower bound.
         if self.n6_counts is None:
             self.n6_counts = totalizer(self.solver, self.weight6,
                                        len(self.weight6), "n6", "le")
@@ -750,10 +747,9 @@ def verify_trail(num_blocks: int, num_rounds: int, input_diff: StateBytes,
                  model, inst: Instantiation) -> None:
     """Re-propagate the model's difference in Python and check every layer.
 
-    Raises TrailVerificationError if any layer disagrees with the model.  It
-    deliberately does not use `assert`.  This check is what makes a reported
-    trail evidence rather than a solver claim, so it must survive
-    `python3 -O`.
+    Raises TrailVerificationError if any layer disagrees with the model,
+    rather than using `assert`.  This check is what makes a reported trail
+    evidence rather than a solver claim, so it must survive `python3 -O`.
     """
     tmap = transpose_map(num_blocks)
     state = [list(block) for block in input_diff]
@@ -828,12 +824,11 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     """Enumerate characteristics sharing one (input, output) differential.
 
     Builds its own instantiation of the pattern, separate from the search's,
-    pins the input and output
-    differences, and enumerates distinct trails (distinct S-box output
-    tuples) up to max_trails.  The sum of 2^-weight over all of them is the
-    differential's probability restricted to this activity pattern -- a
-    LOWER-bound estimate of DP(differential), and exact for the pattern if
-    the enumeration completes.
+    pins the input and output differences, and enumerates distinct trails
+    (distinct S-box output tuples) up to max_trails.  The sum of 2^-weight
+    over all of them is the differential's probability restricted to this
+    activity pattern, a LOWER-bound estimate of DP(differential) that is exact
+    for the pattern if the enumeration completes.
 
     With `shell` set, only trails of weight <= best_weight + shell are
     enumerated.  `shell` may be NEGATIVE, which asks for trails lighter than
@@ -912,8 +907,9 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     t0 = time.monotonic()
     last_report = t0
     while len(weights) < max_trails:
-        # timeout_ms bounds one check(); this bounds the whole enumeration,
-        # which would otherwise run max_trails of them back to back.
+        # timeout_ms bounds one check(), and this bounds the whole
+        # enumeration, which would otherwise run max_trails of them back to
+        # back.
         if (time.monotonic() - t0) * 1000 >= total_timeout_ms:
             print(f"cluster enumeration hit the time limit after "
                   f"{len(weights)} trails")
@@ -982,13 +978,12 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     print(f"cluster: DP(differential | pattern) = 2^{dp_log2:.2f} vs "
           f"best single trail 2^-{best}")
     if best_weight is not None and best < best_weight:
-        # The enumeration is free to return anything within the shell, so it
-        # can hand back a characteristic lighter than the one that defined the
-        # differential.  That is a better ceiling for the round count than the
-        # search itself reported, and it would otherwise be visible only
-        # inside the histogram.  Every enumerated trail has already been
-        # re-propagated and checked against the DDT, exactly as the search's
-        # own trails are, so this is a result and not a hint.
+        # The enumeration may return anything within the shell, including a
+        # characteristic lighter than the one that defined the differential.
+        # That is a better ceiling for the round count than the search
+        # reported, and would otherwise be visible only inside the histogram.
+        # Every enumerated trail has been re-propagated and checked against
+        # the DDT like the search's own, so this is a result and not a hint.
         print(f"cluster: NOTE this beats the search's own best: weight "
               f"{best} < {best_weight}, so the ceiling for this round "
               f"count is at most {best} (DP = 2^-{best})")
@@ -1029,10 +1024,10 @@ def main() -> None:
     parser.add_argument("--random-seed", type=nonnegative_int, default=0,
                         metavar="K",
                         help="z3 random seed for every solver in the run "
-                             "(default: %(default)s, z3's own). Reorders the "
-                             "search without changing what is satisfiable; "
-                             "sweeping it finds lighter trails z3 otherwise "
-                             "keeps missing")
+                             "(default: %(default)s, z3's own).  It reorders "
+                             "the search without changing what is "
+                             "satisfiable, and sweeping it finds lighter "
+                             "trails z3 otherwise keeps missing")
     parser.add_argument("-t", "--time-limit", type=positive_float,
                         default=600.0,
                         help="time limit per solver call, in seconds.  It "
@@ -1071,9 +1066,9 @@ def main() -> None:
                              "build, but above r = 1 the persistent solver "
                              "stalls on the second trail, measured at r = 2 "
                              "as 'unknown' at 300 s against 35 s for the same "
-                             "query rebuilt.  Its learned clauses point into "
-                             "the region the first trail's blocking clause "
-                             "excludes")
+                             "query rebuilt.  The persistent solver's learned "
+                             "clauses point into the region the first "
+                             "trail's blocking clause excludes")
     parser.add_argument("--cluster-time-limit", type=positive_float,
                         default=None, metavar="SECONDS",
                         help="time limit for the whole --cluster enumeration "
@@ -1084,25 +1079,25 @@ def main() -> None:
                              "whenever calls are slow")
     parser.add_argument("--encoding", choices=("witness", "rows"),
                         default="rows",
-                        help="S-box DDT encoding (default: %(default)s; "
+                        help="S-box DDT encoding (default: %(default)s).  "
                              "'rows' takes longer to build but propagates "
                              "far better, and is the faster route to a "
-                             "trail at every round count measured)")
+                             "trail at every round count measured")
     parser.add_argument("--card-encoding", choices=CARD_ENCODINGS,
                         default="pb",
                         help="encoding of the stage-A constraint fixing the "
-                             "active-S-box count to A (default: %(default)s; "
-                             "'totalizer' is much larger to build but "
-                             "propagates)")
+                             "active-S-box count to A (default: "
+                             "%(default)s).  'totalizer' is much larger to "
+                             "build but propagates")
     parser.add_argument("--weight-encoding", choices=CARD_ENCODINGS,
                         default="pb",
                         help="encoding of the stage-B trail-weight bound "
-                             "(default: %(default)s; 'totalizer' also makes "
-                             "minimization incremental -- the counter is "
-                             "built once and each tighter bound is one unit "
-                             "literal).  Separate from --card-encoding "
-                             "because the two stages stall for different "
-                             "reasons, so they have to be varied separately")
+                             "(default: %(default)s).  'totalizer' also "
+                             "makes minimization incremental, since the "
+                             "counter is built once and each tighter bound is "
+                             "one unit literal.  It is separate from "
+                             "--card-encoding because the two stages stall "
+                             "for different reasons")
     parser.add_argument("--self-test", action="store_true",
                         help="run the model self-tests and exit")
     args = parser.parse_args()

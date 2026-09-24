@@ -342,7 +342,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       env is a VM.  The claims are the folded permute's speedup at N=16, `Duplex` absorb
       throughput per core, the x2 pairing's pinned gain, and `cch` against multithreaded and
       single-threaded `b3sum`.  Take each target figure from the document that owns it
-      (`CLAUDE.md`, `README.md`, and `research/README.md`) rather than from this file, which
+      (`research/README.md` for the permute, absorb, and pairing figures, and
+      `hash-programs/README.md` for the `b3sum` comparison) rather than from this file, which
       is not where any of them is maintained and would only become one more copy to sweep.
       Report as reproduced / not-reproduced with numbers, not adjectives.
 - [ ] **Store-forwarding / register residency.**  The folded path's raison d'être is avoiding

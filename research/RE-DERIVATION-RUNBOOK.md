@@ -268,8 +268,9 @@ grep -h 'best characteristic' r3-seed*.txt r4-seed*.txt
 python3 permute-trail-search.py -N 2 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # 2m, 626 MB; [606, 705]
 python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --print-trail -M 1200  # ~2m; [684, 791]
 
-# N=16 at r>=5 needs its pattern from the MILP, since stage A still returns none
-# (2026-08-04).  THE FOUR PATTERNS ARE ALREADY COMMITTED as patterns/pat-r5.json ..
+# N=16 at r>=5 needs its pattern from the MILP, since stage A still returns none at
+# r=5 (2026-08-04) and was skipped rather than retried at r=6..8.  THE FOUR
+# PATTERNS ARE ALREADY COMMITTED as patterns/pat-r5.json ..
 # pat-r8.json (see patterns/README.md).  The --pattern-file lines run straight off a
 # clean checkout, and the --dump-pattern lines are the REFRESH, not a prerequisite.
 # Run those only when the MILP model itself has changed.  They overwrite tracked files,

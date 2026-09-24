@@ -465,17 +465,15 @@ in the sense this plan promises.
 
 **All five are done.**  SPEC.md carries the four-layer restructure and every table listed
 below.  README.md's status note and FAQ point at the claim and the challenges.  The SHA-3
-capacity mapping is stated in SPEC.md where the strengths are derived, and referenced from
-README.md rather than repeated there.  research/README.md documents each new tool and links
-the verification guide.  ADVERSARIAL-REVIEW-PLAN.md and this file cross-reference each
-other in both directions.
+capacity mapping is stated in SPEC.md where the strengths are derived, and README.md's
+"Capacity and Rate" section carries it too, beside the digest sizes, as §4.2 asked.
+research/README.md documents each new tool and links the verification guide.
+ADVERSARIAL-REVIEW-PLAN.md and this file cross-reference each other in both directions.
 
 `castella --help` names the claimed round counts, with `num_rounds_claimed_small`/`_large`
 in hash-programs/castella.cpp deriving the default from them so the out-of-box instances
 are claimed at every capacity, while `cch --help` opens by calling itself a
-non-cryptographic checksum.  One nuance on the SHA-3 mapping: README.md points at it rather
-than reproducing the table, which is the right side of consolidate-don't-duplicate but is
-less than the "state it where digest sizes are discussed" that §4.2 asked for.
+non-cryptographic checksum.
 
 * **SPEC.md** — restructure "Security claims and non-claims" into Claim / Proven
   reductions / Evidence (§2.2); add the strengths table (§3), the claimed-instances table

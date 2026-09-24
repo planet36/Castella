@@ -6,8 +6,10 @@
 #endif
 #undef NDEBUG
 
+#include "as_byte_span.hpp"
 #include "bytes_hex.hpp"
 #include "castella-duplex.hpp"
+#include "contiguous_byte_range.hpp"
 #include "encode.hpp"
 #include "quote_shell_always.hpp"
 
@@ -17,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <print>
+#include <ranges>
 #include <source_location>
 #include <span>
 #include <string>
@@ -109,12 +112,12 @@ check_hex(const std::string_view result,
 *        one another instead of unrelated digests
 */
 [[nodiscard]] std::vector<std::byte>
-parallel_hash_like(const std::string_view X,
+parallel_hash_like(const contiguous_byte_range auto& X,
                    const size_t B,
                    const int num_bytes_to_squeeze,
                    const int capacity_blocks,
-                   const std::string_view function_name,
-                   const std::string_view customization_str,
+                   const contiguous_byte_range auto& function_name,
+                   const contiguous_byte_range auto& customization_str,
                    const bool xof)
 {
     // the same parameters as the other SP 800-185 examples
@@ -142,13 +145,14 @@ parallel_hash_like(const std::string_view X,
     // does not absorb its block index.  Each CV is bound to its position by
     // the fixed-length concatenation order alone.
     size_t n = 0;
-    for (size_t off = 0; off < X.size(); off += B, ++n)
+    for (const auto X_i : as_byte_span(X) | std::views::chunk(B))
     {
         const auto cv = Castella::Duplex(capacity_blocks, num_rounds, input_suffix)
-                            .add(X.substr(off, B))
+                            .add(X_i)
                             .squeeze_bytes(cv_len);
 
         (void)final_node.add(cv);
+        ++n;
     }
 
     // 4. z = z || right_encode(n) || right_encode(L).

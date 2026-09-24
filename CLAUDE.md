@@ -150,7 +150,7 @@ The 8 is a ceiling, not a target.  Memory usually binds first, since z3's `-M` i
 
 ## Platform Requirements
 
-- GCC 14+, and clang++ is not supported.  What sets the floor at 14 is `std::println`, which libstdc++ shipped in 14 and which the default build uses throughout (`hash-programs/`, `tests/`, `examples/`).  `research/` additionally uses `std::ranges::to`, also 14.  The `-std=c++23` flag does not set it, since earlier GCC accepts that flag, so flag support alone is no reason to lower the floor
+- GCC 14+, and clang++ is not supported.  What sets the floor at 14 is `std::println`, which libstdc++ shipped in 14 and which the default build uses throughout (`hash-programs/`, `tests/`, `examples/`).  `std::ranges::to`, used by `to_byte_vector.hpp` (and so by `DuplexTree`) and in `research/`, is also 14.  The `-std=c++23` flag does not set it, since earlier GCC accepts that flag, so flag support alone is no reason to lower the floor
 - x86-64 with AES-NI (`-maes`), or ARM64 with ARM Crypto extensions.  x86-64 is the only tested platform.  ARM64 is supported in principle.  The code compiles there, but no ARM64 build has been checked against `tests/KAT.txt`, so cross-platform digest identity is unverified
 - Compile with `-DDEBUG` to enable internal assertions (`BUILD=debug` does).  They assert internal invariants, plus the narrow contracts of the unchecked `fixed_vector` accessors, which have checked counterparts.  They never check user input, which is validated by throwing in every build.  Being compiled out at release, they are a debugging aid, not a guard anything may rely on.
 

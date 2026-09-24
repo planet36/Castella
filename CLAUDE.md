@@ -135,7 +135,7 @@ The three `research/` documents divide one subject three ways, and the split is 
 
 Put a new command in the runbook, not beside the result it produced.
 
-`examples/`, `tests/`, `research/`, and `hash-programs/` each also have a per-program table in their own `README.md`.
+`tests/`, `research/`, and `hash-programs/` each also have a per-program table in their own `README.md`.
 
 **A measured or solved figure is published in more than one document, so correcting one copy is not correcting the figure.**  Grep the value across every document above before calling it fixed, and sweep the prose around each hit, since it states the conclusion the figure was supporting and so moves with the number.  `research/RE-DERIVATION-RUNBOOK.md` § 8 is the *only* target list for the cryptanalysis figures.  `ADVERSARIAL-REVIEW-PLAN.md` § 7 keeps the requirement as a standing audit item but defers to that table, so a new carrier gets added there and nowhere else.  § 7 does own the throughput figures, and names *this* file as a carrier of them.  This file is on § 8's list too, because Key Constraints below states `R*` = 6/6/6/8 and the `floor + 3` policy, so those move with the figure.  A figure whose status label changes (`optimal` ⇄ incumbent) must change label everywhere, because only `optimal` is a security bound.
 

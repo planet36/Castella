@@ -568,7 +568,7 @@ python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 ./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
 
 # cch's non-claim rests on a measurement too: per-input diffusion at 3 AES rounds.
-./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from a=2 up; instant
+./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from 3 AES rounds; instant
 ```
 
 Four traps in that set have each cost time once already:

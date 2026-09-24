@@ -18,7 +18,7 @@ ifeq ($(ARCH), aarch64)
     CXXFLAGS += -march=armv8-a+aes
 else ifeq ($(ARCH), x86_64)
     #CXXFLAGS += -march=native
-    CXXFLAGS += -march=x86-64-v3 -maes -mvaes # x86-64-v3 implies avx, avx2
+    CXXFLAGS += -march=x86-64-v3 -maes -mvaes # x86-64-v3 implies avx and avx2
 else
     $(error Unsupported architecture: $(ARCH))
 endif
@@ -27,14 +27,14 @@ endif
 # DEBUG assertions should be enabled, but -DDEBUG is optional in CPPFLAGS.
 LINT_CPPFLAGS = -I $(ROOT)include -DDEBUG -UNDEBUG
 # Immediately assign this before unnecessary and incompatible options are added to CXXFLAGS.
-# clang does not support -fhardened. (See <https://github.com/llvm/llvm-project/issues/122687>)
+# clang does not support -fhardened (see <https://github.com/llvm/llvm-project/issues/122687>).
 LINT_CXXFLAGS := $(CXXFLAGS)
 # clang's default -fconstexpr-steps of 2^20 is too few for
 # create_round_constants<NUM_ROUNDS_MAX>().
 # Use GCC's default -fconstexpr-ops-limit of 2^25.
 LINT_CXXFLAGS += -fconstexpr-steps=33554432
 
-# Build type: release (default) or debug
+# The build type is release (the default) or debug.
 # Run `make clean` before switching between release and debug.
 BUILD ?= release
 ifeq ($(BUILD), release)

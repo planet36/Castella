@@ -57,13 +57,13 @@ The proofs and bounds are about the *specified* constructions, and this row show
 python3 spec-conformance.py     # independent pure-Python implementation of SPEC.md
 ```
 
-Expected: `../tests/KAT.txt: 91 KATs verified, 0 failed`, exit status 0, in seconds.  `make test` runs this as its last step, from `research/`, and the command above is the quick check after any spec or KAT change.
+Expected: `../tests/KAT.txt: 91 KATs verified, 0 failed`, exit status 0, in seconds.  `make test` runs this from `research/`, and the command above is the quick check after any spec or KAT change.
 
 ```bash
 make test                       # at the repository root
 ```
 
-This runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 99-assertion CLI script (which includes the keyed-MAC round trips), and finally the spec-conformance script above.  Every suite must report success.  (The Python steps need `python3`, and `make test` fails with a clear message if it is missing.)
+This runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 99-assertion CLI script (which includes the keyed-MAC round trips), and finally research's three Python scripts (the spec-conformance script above, the trail-model cross-validation, and the invariant-subspace self-test).  Every suite must report success.  (The Python steps need `python3`, and `make test` fails with a clear message if it is missing.)
 
 ## 3. Full bit diffusion at 3 rounds
 

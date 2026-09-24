@@ -351,7 +351,7 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    result tables in research/README.md.  Every round count r = 1…8 is bracketed at both
    ends, and at r = 1 the bound is *proven tight* (a real characteristic attains 6·A
    exactly).  The relaxation gap is therefore measured rather than closed: real trails sit
-   23 bits above the floor at r = 2 and 267 at r = 6, and no ceiling above r = 1 is a
+   23 bits above the floor at r = 2 and 236 at r = 6, and no ceiling above r = 1 is a
    proven minimum.  Those above r = 4 each rest on a single imported MILP pattern.  That is
    the residual caveat, disclosed in VERIFYING-CLAIMS § 16 and covered by the closure
    above.

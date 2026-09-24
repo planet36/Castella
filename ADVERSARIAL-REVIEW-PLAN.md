@@ -404,11 +404,12 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       `research/permute-structural-probes.cpp` exits nonzero on any violation of its
       fixed-point, round-constant, and slide screens, so it can gate a change that silently
       weakens `P`.  It is not wired in, though, since `make test` runs neither it nor the
-      exact subspace search, and neither wires in cheaply.  Research's Makefile puts
-      google-benchmark in `LDLIBS` for the whole directory, so the probe binary drags that
-      dependency into the root `make test` unless it gets its own rule.
-      `permute-invariant-subspaces.py` needs z3, because it imports the trail search for its
-      layer machinery.  Weigh a guarded target against writing a new avalanche test.  The
+      exact subspace search (only the latter's `--self-test`).  The probe does not wire in
+      cheaply.  Research's Makefile puts google-benchmark in `LDLIBS` for every binary but
+      the `*-verify` ones, so the probe binary drags that dependency into the root
+      `make test` unless it gets its own rule.  The subspace search would wire in cheaply,
+      since `permute-invariant-subspaces.py` needs only the standard library and runs in
+      about 13 s.  Weigh a guarded target against writing a new avalanche test.  The
       `command -v python3` guards in `tests/` and `research/` are the existing pattern for
       one.
 - [ ] **Boundary KATs.**  Confirm that KAT.txt exercises empty input, single-byte, exactly

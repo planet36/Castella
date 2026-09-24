@@ -358,9 +358,8 @@ def check_inside_out_cube_coordinates() -> None:
             f"row 0 and its transpose image share {len(shared)} bytes, "
             f"expected only the diagonal one")
     print("  [A7] the transpose is an involution and sends block 0 (a row) "
-          "to a column sharing 1 of 16 bytes with it, so the forward and "
-          "backward halves of `--inside-out N N -c block` name DIFFERENT "
-          "middle-state cubes: OK")
+          "to a column sharing 1 of 16 bytes with it, so `--inside-out` "
+          "must transpose the cube for its backward half: OK")
 
 
 def part_a(seed: int) -> None:
@@ -849,12 +848,11 @@ def main() -> None:
         print(f"  forward 2-round zero-sum: CONFIRMED (premises A1-A5, and "
               f"brute-forced at N = {args.reduced})")
         print(f"  inside-out, best over the {len(CUBE_KINDS)} cubes measured: "
-              f"{best} round(s), not 4.  `--inside-out 2 2 -c block` gives "
-              f"its two halves DIFFERENT middle-state cubes (A7), so it does "
-              f"not exhibit a 4-round zero-sum.  The argument cannot reach 4 "
-              f"from one cube either, since forward 2 needs the cube to fill "
-              f"a row and backward 2 needs it to fill a column.  This does "
-              f"not claim that no cube anywhere reaches 4.")
+              f"{best} round(s), not 4.  The retracted 4-round figure summed "
+              f"two halves over different cubes (A7).  The argument cannot "
+              f"reach 4 from one cube either, since forward 2 needs the cube "
+              f"to fill a row and backward 2 needs it to fill a column.  This "
+              f"does not claim that no cube anywhere reaches 4.")
 
 
 if __name__ == "__main__":

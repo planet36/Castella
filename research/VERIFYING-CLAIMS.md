@@ -205,7 +205,7 @@ Expected: `no anomalies` at every checkpoint (recorded runs: 311 test results th
 The §4 MILP bounds are *lower* bounds on active S-boxes.  This row checks from the other side whether real bit-level characteristics attain the bound, and measures first-order clustering.  It needs the z3 solver (Arch `python-z3-solver`).
 
 ```bash
-python3 permute-trail-search.py --self-test          # model self-checks, <0.1 s
+python3 permute-trail-search.py --self-test          # model self-checks, <1 s
 
 # permute_model.py IS a third implementation of P, and this compares it with the
 # KAT-verified one in spec-conformance.py over 240 random state pairs, r=1..6.

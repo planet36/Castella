@@ -710,7 +710,7 @@ Memory scales with `-t` as well as with _r_.  The minimization loop adds a tight
 The short `rows` runs peaked at 276 MB (_r_ = 2), 583 MB (_r_ = 3, on the old 133-box pattern), and 892 MB (_r_ = 4, on the old 225-box pattern).  That last is the same instance that cost `witness` 6.38 GiB, so the encoding choice bounds memory as decisively as it bounds time.  The _r_ = 1 cluster enumeration is the cheapest of the set at 99 MB.  All four figures are peak resident set from `/usr/bin/time -v`, measured 2026-08-01.
 
 ```bash
-python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, <0.1 s
+python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, <1 s
 ```
 
 **Everything else lives in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 3**: the per-round-count trail commands with their `-t`, `-M`, and measured timings, the `--random-seed` sweeps, and the shell descent and shell enumeration that every ceiling from _r_ = 3 to _r_ = 8 rests on.  [permute-trail-ceilings.bash](permute-trail-ceilings.bash) wraps both levers and carries the recipe table (pattern source, winning z3 seed, and shell offset _K_), without which only two of the six ceilings reproduce.  The notes below say what the results mean, not how to re-run them.

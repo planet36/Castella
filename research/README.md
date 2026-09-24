@@ -496,11 +496,13 @@ None is needed.  The script prints the finished table directly, and unlike the b
 #### Interpreting the results
 
 * `min active S-boxes` (_A_) is the model optimum **only when the status column says `optimal`**, and then it is a proven lower bound on the number of active AES S-boxes in every differential characteristic through _r_ rounds.  (The byte-level model is a relaxation of reality, as the assumptions above say, which only makes the bound conservative.)  On a `NOT proven` row the same column holds an incumbent, which bounds the minimum from the opposite side and yields no security statement, and the results tables above mark those with `≤`.
-* `DP bound` = 2<sup>−6·A</sup>: no differential characteristic through _r_ rounds has probability greater than this.  The same _A_ bounds linear trails: correlation ≤ 2<sup>−3·A</sup>.
+* `DP bound` = 2<sup>−6·A</sup> on an `optimal` row, and 2<sup>−6·lo</sup> from the dual bound `lo` on a bracketed one: no differential characteristic through _r_ rounds has probability greater than this.  The same _A_ bounds linear trails: correlation ≤ 2<sup>−3·A</sup>.
 * The `status` column is what makes a row trustworthy:
-    * `optimal` — the value is exact and proven, and only these rows yield valid DP bounds.
-    * `NOT proven … incumbent` — the solver found a trail with that many active S-boxes but could not rule out a smaller one.  It is an upper bound on the minimum and **must not** be used as a security bound.  Re-run with a larger `-t`.
-    * `no integer solution found within the time limit` — nothing usable, so re-run with a larger `-t`.
+    * `optimal` — the value is exact and proven.
+    * `NOT proven; A in [lo, incumbent] -- DP bound is from the lower end` — the solver hit its time limit holding a trail with `incumbent` active S-boxes and a proven lower bound `lo`.  The incumbent is an upper bound on the minimum and **must not** be used as a security bound, but the row's DP bound comes from `lo` and is valid.  Re-run with a larger `-t` to close the gap.
+    * `NOT proven; incumbent is an upper bound only` — the same without a usable lower bound, so the row has no DP bound (`n/a`).  Re-run with a larger `-t`.
+    * `no integer solution found, but A >= lo is proven` — no trail was found, but the lower bound still gives a valid DP bound.
+    * `<solver status>; no integer solution found` — nothing usable, so re-run with a larger `-t`.
 * _A_ never decreases as _r_ grows (any longer trail contains a shorter one), so a slow row can be bracketed by its neighbors.
 * For a _b_-bit claim against single-characteristic differential attacks, require 6·_A_ comfortably above _b_ (6·_A_ ≥ 256 is reached at _r_ = 2 for _N_ = 16, _a_ = 3).  These bounds do not cover differential clustering, rebound, or other structural attacks, so they are necessary but not sufficient for the round-count choice.
 

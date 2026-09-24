@@ -166,7 +166,7 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 <pulp> research/permute-min-active-sboxes.py -N 8 -a 3 -r 4 -t 600                # 13m30, r=4 NOT proven (135)
 # Cross-solver check.  It re-proves a cell with the OTHER branch-and-bound on an
 # identical model, so a disagreement means a solver bug rather than a modeling one.
-# (Section 1's AES row checks the model.)  r=3 is the only cell CBC can close.  It
+# (Section 1's AES row checks the model.)  r=3 is the deepest cell CBC can close.  It
 # takes 16 s under HiGHS and ~72 min under CBC, and both must print 129 / optimal.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 --solver cbc
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 600  --solver highs

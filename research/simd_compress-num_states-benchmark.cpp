@@ -74,13 +74,13 @@ inline constexpr int PERIODIC_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS
 
 /// Per-buffer sizes, where the working set is \a N times one of these
 /**
-* An unbroken power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 8 MiB,
-* plus 128 MiB for DRAM.  The density is the point.  A widening group crosses
-* a cache boundary at some size, and only neighboring sizes tell a boundary
-* apart from noise.  Sampling the levels alone once produced a 512 KiB
-* "anomaly" that its neighbors later showed to be noise (research/README.md).
+* A power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 8 MiB, plus 128 MiB
+* for DRAM.  A cache boundary shows as a step between neighboring sizes, and a
+* lone sample cannot tell a step from noise.  An earlier run that sampled only
+* the cache levels recorded a 512 KiB "anomaly" that the filled-in ladder
+* showed to be noise (research/README.md).
 *
-* Two sizes carry meaning beyond their regime.  1 KiB is \c CHUNK_SIZE_MIN,
+* Two of the sizes are also tree parameters.  1 KiB is \c CHUNK_SIZE_MIN,
 * the low end of the legal \c --chunk-size range, and only four absorbs, so
 * it bounds how short a buffer the pair can still pay on.  64 KiB is the
 * operating point.  It is the tree's \c DEFAULT_CHUNK_SIZE, so an N-wide leaf
@@ -111,19 +111,23 @@ inline constexpr std::array buf_sizes{
     128UL << 20,
 };
 
-/// Total working sets, the same regimes held at the total rather than per buffer
+/// Total working sets for the fixed-total rows
 /**
-* They are derived rather than written out, so each total is by construction
-* the 2-state working set of the size at the same index.  That makes the
-* \a N = 2 rows of the two modes the same configuration, the control that
-* exposes cache-level noise, which a hand-maintained copy could drift out of.
+* \c main splits each of these evenly across the \a N states, so that
+* comparing \a N = 3 or 4 against the pair varies only the group width.
+*
+* Each total is the pair's working set at the same rung of \c buf_sizes, so
+* the \a N = 2 rows of the two modes are the same configuration measured
+* twice.  That repeat is the control that exposes run-to-run noise.  Deriving
+* the totals keeps them in step with the ladder, where a hand-written copy
+* could drift.
 */
 inline constexpr auto total_sizes = []
 {
     auto result = buf_sizes;
 
     for (auto& total : result)
-        total *= 2;
+        total *= 2; // the pair's working set
 
     return result;
 }();

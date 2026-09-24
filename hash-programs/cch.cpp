@@ -81,14 +81,18 @@ print_usage()
     std::println("");
 
     std::println("Compute the Compress-Castella tree hash (CCH).");
-    std::println("CCH is a fast NON-CRYPTOGRAPHIC checksum (see SPEC.md); do not use it where");
-    std::println("security matters.");
+    std::println("CCH is a fast NON-CRYPTOGRAPHIC checksum (see SPEC.md).  Do not use it");
+    std::println("where security matters.");
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
+    std::println("");
+
+    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
+    std::println("Memory-mapped files parallelize.  Piped input is hashed on the calling");
+    std::println("thread, because a CCH node outruns handing chunks to other cores.");
     std::println("");
 
     std::println("Options:");
     std::println("");
-
 
     std::println("  -V, --version");
     std::println("                        Print the version information, then exit.");
@@ -116,11 +120,9 @@ print_usage()
 
     std::println("  --mix-rate=RATE");
     std::println("                        Specify the number of absorptions (full-block inputs)");
-    std::println("                        per state mix.  Valid range: [{}, {}].  Use 0 to",
-                 compress_castella_hash<>::MIX_RATE_MIN,
+    std::println("                        per state mix, or 0 to disable periodic mixing.");
+    std::println("                        (default={}) (minimum=0) (maximum={})", default_mix_rate,
                  compress_castella_hash<>::MIX_RATE_MAX);
-    std::println("                        disable periodic mixing.");
-    std::println("                        (default={})", default_mix_rate);
 
     std::println("  --no-mmap");
     std::println("                        Do not use memory mapping to read FILE.");
@@ -138,8 +140,8 @@ print_usage()
     std::println("                        (only meaningful with --check)");
 
     std::println("  --size=SIZE");
-    std::println("                        Specify the output size (in bytes).  Typical values are:");
-    std::println("                        32, 48, or 64.");
+    std::println("                        Specify the output size (in bytes).  Typical values are");
+    std::println("                        32, 48, and 64.");
     std::println("                        (default={}) (minimum={}) (maximum={})",
                  default_digest_size_bytes, min_digest_size_bytes, max_digest_size_bytes);
 
@@ -159,17 +161,21 @@ print_usage()
     std::println("*CCH Algorithm Description*");
     std::println("");
 
-    std::println("FILE is hashed as a chunked tree: each chunk is hashed to a chaining value by an independent CCH node, and a final CCH node hashes the chaining values, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize; piped input is hashed on the calling thread (a CCH node outruns handing chunks to other cores).");
+    std::println("Each chunk is hashed to a chaining value by an independent CCH node, and a");
+    std::println("final CCH node hashes the chaining values.");
     std::println("");
 
     std::println("Within each node:");
     std::println("The internal state is initialized with distinct per-lane constants.");
-    std::println("The mix rate is folded into it, so different RATE values produce distinct digests.");
+    std::println("The mix rate is folded into it, so different RATE values produce distinct");
+    std::println("digests.");
     std::println("Input data is absorbed into the state by a one-way compression function.");
-    std::println("The Castella permutation function mixes the state every RATE absorptions, which diffuses it fully.");
-    std::println("To finalize the hash, padding bytes are appended to the final block and absorbed by the compression function.");
-    std::println("The Castella permutation function is then applied to the state to produce the digest.");
+    std::println("The Castella permutation function mixes the state every RATE absorptions,");
+    std::println("which diffuses it fully.");
+    std::println("To finalize the hash, padding bytes are appended to the final block and");
+    std::println("absorbed by the compression function.");
+    std::println("The Castella permutation function is then applied to the state to produce");
+    std::println("the digest.");
     std::println("");
 
     std::println("Examples:");

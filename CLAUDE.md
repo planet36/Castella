@@ -17,13 +17,14 @@ make
 # Build and run every test suite, by delegating to each subdirectory's own `test`
 # target in turn: tests (tests, kat, `kat --generate | diff - KAT.txt`,
 # equivalence-tests, permute-equivalence, and duplex-diff-fuzz.py), examples,
-# hash-programs (test-correctness.bash), and research (spec-conformance.py).  The
-# two Python steps need python3, and each is guarded by a check at the front of
-# its recipe.
+# hash-programs (test-correctness.bash), and research (spec-conformance.py,
+# trail-model-crossvalidate.py, and permute-invariant-subspaces.py --self-test).
+# The two recipes that run Python need python3, and each is guarded by a check at
+# its front.
 #
 # research's `test` deliberately does NOT depend on its `all`.  The benchmarks
-# there link google-benchmark, which is why research is in EXTRA_SUBDIRS, but the
-# conformance script is pure Python.  Adding the prerequisite for symmetry would
+# there link google-benchmark, which is why research is in EXTRA_SUBDIRS, but its
+# three scripts are pure Python.  Adding the prerequisite for symmetry would
 # make `make test` require google-benchmark everywhere.
 make test
 

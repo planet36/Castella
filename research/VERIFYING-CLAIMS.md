@@ -63,7 +63,7 @@ Expected: `../tests/KAT.txt: 91 KATs verified, 0 failed`, exit status 0, in seco
 make test                       # at the repository root
 ```
 
-This runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 99-assertion CLI script (which includes the keyed-MAC round trips), and finally research's three Python scripts (the spec-conformance script above, the trail-model cross-validation, and the invariant-subspace self-test).  Every suite must report success.  (The Python steps need `python3`, and `make test` fails with a clear message if it is missing.)
+This runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, squeeze distinctness), the KAT file checker, the randomized thread/split digest-equivalence tests, the folded-vs-generic permute comparison, the differential fuzzer, the 31 example digests, the 140-assertion CLI script (which includes the keyed-MAC round trips), and finally research's three Python scripts (the spec-conformance script above, the trail-model cross-validation, and the invariant-subspace self-test).  Every suite must report success.  (The Python steps need `python3`, and `make test` fails with a clear message if it is missing.)
 
 ## 3. Full bit diffusion at 3 rounds
 

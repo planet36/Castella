@@ -433,8 +433,7 @@ purpose.  They are in the order queued, by what would most change the documentat
    and 1154 standing, so "minimization never completes" now holds at three round counts.
    The useful finding is the cost comparison.  Given ~20 min each on the same r = 3
    instance, minimizing pattern 1 moved the ceiling **0 bits** while item 4's sweep moved it
-   **12**.  Finding a trail in a fresh pattern is satisfiability, whereas minimizing within
-   one is refutation over that whole pattern.
+   **12**.
 
    **Spend a ceiling budget on the shell descent first, then on `--patterns`.**  On
    2026-08-06, descending one trail's weight shell moved every round count from r = 3 to

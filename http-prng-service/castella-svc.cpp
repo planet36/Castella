@@ -117,7 +117,8 @@ print_usage()
     std::println("Start a Castella HTTP PRNG service.  Send SIGINT, SIGTERM, or SIGHUP to stop it.");
     nl;
 
-    std::println(R"(The server endpoints are "absorb" and "squeeze", just like for a sponge/duplex construction.)");
+    std::println(R"(The server endpoints are "absorb" and "squeeze", just like for a)");
+    std::println("sponge/duplex construction.");
     nl;
 
     std::println(R"(All occurrences of "entropy" refer to high-quality entropy from getentropy(3).)");
@@ -142,7 +143,8 @@ print_usage()
             quote_shell_always(std::string_view{spdlog::level::to_string_view(default_log_level)}));
     std::println("             Valid log levels are:");
     std::println("                 {}", str_join(std::to_array(SPDLOG_LEVEL_NAMES), ", "));
-    std::println("             Alternatively, specify the log level in the environment variable \"SPDLOG_LEVEL\".");
+    std::println("             Alternatively, specify the log level in the environment");
+    std::println("             variable \"SPDLOG_LEVEL\".");
     std::println("             Warning!  The \"trace\" log level prints the following sensitive data:");
     std::println("                 - The periodic entropy data added to the Castella duplex object");
     std::println("                 - The body data of requests & responses");

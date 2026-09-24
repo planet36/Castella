@@ -22,8 +22,8 @@
 *
 * If interleaved does not clearly beat sequential, a wider node group has no
 * headroom, because the states' independent 3-deep VAES chains already
-* saturate the AES units or the memory system.  Buffer sizes span L1 to DRAM
-* to separate those two regimes.
+* saturate the AES units.  The buffer sizes stay cache-resident, where the AES
+* units rather than memory set the rate.
 *
 * A register-file limit was the other candidate (one state is 8 ymm
 * registers, so 2 states already fill all 16 and 3 or 4 must spill between
@@ -74,11 +74,11 @@ inline constexpr int PERIODIC_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS
 
 /// Per-buffer sizes, where the working set is \a N times one of these
 /**
-* A power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 8 MiB, plus 128 MiB
-* for DRAM.  A cache boundary shows as a step between neighboring sizes, and a
-* lone sample cannot tell a step from noise.  An earlier run that sampled only
-* the cache levels recorded a 512 KiB "anomaly" that the filled-in ladder
-* showed to be noise (research/README.md).
+* A power-of-two ladder from \c CHUNK_SIZE_MIN (1 KiB) to 512 KiB.  A cache
+* boundary shows as a step between neighboring sizes, and a lone sample cannot
+* tell a step from noise.  An earlier run that sampled only the cache levels
+* recorded a 512 KiB "anomaly" that the filled-in ladder showed to be noise
+* (research/README.md).
 *
 * Two of the sizes are also tree parameters.  1 KiB is \c CHUNK_SIZE_MIN,
 * the low end of the legal \c --chunk-size range, and only four absorbs, so
@@ -87,11 +87,15 @@ inline constexpr int PERIODIC_MIX_NUM_ROUNDS = Castella::NUM_ROUNDS_MIN<N_BLOCKS
 * group holds exactly N of them, and it is also the mix period of 256 absorbs
 * over a 256-byte state, so a leaf mixes once.
 *
-* The ladder is deliberately hardware-independent.  It spans L1 to DRAM on any
-* current CPU without naming a cache size, so which rung sits at which level is
-* read off the run rather than assumed here.  google-benchmark prints the
-* host's cache sizes in its header, and research/README.md records them
-* alongside the run it interpreted.
+* The ladder stops where the AES units stop setting the rate.  Larger buffers
+* measured bigger gains, but those came from concurrent read streams, which
+* the tree's prefetcher already collects on contiguous leaf chunks.
+*
+* The ladder is deliberately hardware-independent.  Its largest working set is
+* 2 MiB, which stays cache-resident on any current CPU, and it names no cache
+* size, so which rung sits at which level is read off the run rather than
+* assumed here.  google-benchmark prints the host's cache sizes in its header,
+* and research/README.md records them alongside the run it interpreted.
 */
 inline constexpr std::array buf_sizes{
     1UL << 10,
@@ -104,11 +108,6 @@ inline constexpr std::array buf_sizes{
     128UL << 10,
     256UL << 10,
     512UL << 10,
-    1UL << 20,
-    2UL << 20,
-    4UL << 20,
-    8UL << 20,
-    128UL << 20,
 };
 
 /// Total working sets for the fixed-total rows
@@ -255,10 +254,10 @@ buf_size_for_total(const size_t total_bytes, const size_t n) noexcept
 
 /// Format \a bytes for a benchmark name, in the largest unit that reaches 1
 /**
-* Names carry sizes from 512 B to 256 MiB.  A whole number of 256-byte chunks
+* Names carry sizes from 512 B to 1 MiB.  A whole number of 256-byte chunks
 * rarely divides a power of two once split three ways, so requiring an exact
-* unit falls back to bytes and prints \c 8388096_B.  One decimal place gives
-* \c 8_MiB instead, and the sizes a reader has to tell apart differ by far
+* unit falls back to bytes and prints \c 1048320_B.  One decimal place gives
+* \c 1_MiB instead, and the sizes a reader has to tell apart differ by far
 * more than that.  This is a label rather than a measurement, and the buffer
 * size the benchmark actually uses is \c buf_size_for_total.
 */

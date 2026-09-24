@@ -188,13 +188,14 @@ print_usage()
     std::println("");
 
     std::println("Compute the Castella tree hash.");
-    std::println("Castella is a personal research project: not standardized, externally");
-    std::println("reviewed, or cryptanalyzed by anyone but its author (see SPEC.md); do not");
-    std::println("use it where security matters.");
+    std::println("Castella is a personal research project that has not been standardized,");
+    std::println("externally reviewed, or cryptanalyzed by anyone but its author (see");
+    std::println("SPEC.md).  Do not use it where security matters.");
     std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
-    std::println("In this program, the capacity of the Castella DuplexTree nodes is about 2×SIZE.");
+    std::println("In this program, the capacity of the Castella DuplexTree nodes is");
+    std::println("about 2×SIZE.");
     std::println("");
 
     std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
@@ -273,8 +274,8 @@ print_usage()
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 
     std::println("  --size=SIZE");
-    std::println("                        Specify the output size (in bytes).  Typical values are:");
-    std::println("                        32, 48, or 64.");
+    std::println("                        Specify the output size (in bytes).  Typical values are");
+    std::println("                        32, 48, and 64.");
     std::println("                        (default={}) (minimum={}) (maximum={})",
                  default_num_bytes_to_squeeze, min_num_bytes_to_squeeze,
                  max_num_bytes_to_squeeze);

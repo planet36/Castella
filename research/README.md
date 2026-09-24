@@ -202,7 +202,7 @@ This machine: L1d 32 KiB and L2 4 MiB per core, L3 36 MiB shared.  The size labe
 |  | 3 | 24.4 GiB/s | 29.4 GiB/s | 1.20× | 1.01× |
 |  | 4 | 23.2 GiB/s | 31.4 GiB/s | 1.35× | 1.08× |
 
-**Fixed total.**  The same working set is split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size at the same index above, so the _N_ = 2 rows of the two modes are the same configuration measured twice, which is the control.  The _N_ = 3 groups are not exactly equal-footprint, because a buffer is a whole number of 256-byte chunks and _N_ = 3 rounds down.  It reaches 75% of the target at 2 KiB and 94–95% at 4 and 8 KiB, then ≥98% from 16 KiB up, and is indistinguishable at the printed precision from 1 MiB.  The ratios are per byte, so the shortfall does not inflate throughput, but at 2, 4, and 8 KiB the _N_ = 3 footprint really is smaller than the pair's.
+**Fixed total.**  The same working set is split _N_ ways, so a cross-_N_ comparison varies only the group width.  Each total is the 2-state working set of the size at the same index above, so the _N_ = 2 rows of the two modes are the same configuration measured twice, which is the control.  The _N_ = 3 groups are not exactly equal-footprint, because a buffer is a whole number of 256-byte chunks and _N_ = 3 rounds down.  It reaches 75% of the target at 2 KiB and 94% at 4 and 8 KiB, then ≥98% from 16 KiB up, and is indistinguishable at the printed precision from 1 MiB.  The ratios are per byte, so the shortfall does not inflate throughput, but at 2, 4, and 8 KiB the _N_ = 3 footprint really is smaller than the pair's.
 
 | total working set | _N_ | sequential | interleaved | speedup | vs. pair |
 |---|---:|---:|---:|---:|---:|

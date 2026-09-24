@@ -273,7 +273,7 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 # pat-r8.json (see patterns/README.md).  The --pattern-file lines run straight off a
 # clean checkout, and the --dump-pattern lines are the REFRESH, not a prerequisite.
 # Run those only when the MILP model itself has changed.  They overwrite tracked files,
-# so review that diff like any other, and they cost ~6.4 h of MILP for the set.
+# so review that diff like any other, and they cost ~6.5 h of MILP for the set.
 # Afterwards check `proven_optimal` in each file.  Only `true` licenses 6*A as a floor,
 # and the 600 s default -t silently yields an incumbent at every one of these cells.
 python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234

@@ -6,7 +6,7 @@ _N_ = 16, written by `permute-min-active-sboxes.py --dump-pattern` and read by
 
 They are committed because **every trail-search ceiling from _r_ = 5 up is a
 characteristic through one of these four patterns**, and regenerating the set
-costs about 6.4 hours of MILP.  Without them the _r_ ≥ 5 half of the bracket
+costs about 6.5 hours of MILP.  Without them the _r_ ≥ 5 half of the bracket
 table in [../README.md](../README.md) does not reproduce from a clean checkout.
 
 | file | _r_ | _A_(_r_) | status | HiGHS solve time |

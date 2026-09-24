@@ -331,8 +331,8 @@ print_usage()
     std::println("cch(1), sha256sum(1), cksum(1)");
     std::println("");
 
-    std::println("https://github.com/planet36/Castella");
-    std::println("https://keccak.team/sponge_duplex.html");
+    std::println("<https://github.com/planet36/Castella>");
+    std::println("<https://keccak.team/sponge_duplex.html>");
     std::println("");
 
     std::println("Report bugs to <https://github.com/planet36/Castella/issues>.");

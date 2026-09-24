@@ -150,7 +150,7 @@ MAC(K, X, L) = DuplexTree(C(L), num_rounds, suffix, "Castella-MAC", S, CHUNK_SIZ
                squeezing L bytes
 ```
 
-The bytepad width is the tree chunk size (where KMAC uses the rate), so the key block is exactly chunk 0 (absorbed directly by the now-keyed final node), and `X`'s bytes keep their chunk alignment.  The function name `"Castella-MAC"` separates MACs from unkeyed digests, and the trailing `right_encode(L)` makes MACs of different output lengths unrelated (an unkeyed digest of a smaller size is a truncation of the larger one, but a MAC must not be).
+The bytepad width is the tree chunk size (where KMAC uses the rate), so the key block is exactly chunk 0 (absorbed directly by the now-keyed final node), and `X`'s bytes keep their chunk alignment.  The function name `"Castella-MAC"` separates MACs from unkeyed digests, and the trailing `right_encode(L)` makes MACs of different output lengths unrelated (an unkeyed digest of a smaller size is a truncation of a larger one at the same capacity, but a MAC must not be).
 
 ## Compress-Castella (`cch`)
 
@@ -277,7 +277,7 @@ The MAC argument chains three injectivity facts onto the reductions above.
 * **Key framing.**  The key constraint (1 byte to one chunk, framing included) makes `bytepad(encode_string(K), CHUNK_SIZE)` exactly chunk 0, a fixed-length block absorbed first by the final node.  `encode_string` is injective (different lengths change `left_encode(|K|)`, equal lengths differ in the key bytes), so distinct keys produce distinct chunk-0 blocks.  And the fixed block length means the message `X`, which starts at the next chunk boundary, can never shift how the key parses.
 * **PRF.**  Under the claim and the tree reduction, the tree behaves as a random oracle up to `2^(64·C)` work, and a random oracle applied to a secret fixed-length prefix followed by the adversary's input is a PRF until the key is guessed.  Hence distinguishing and key recovery sit at min(`8·|K|`, `64·C`) bits, and forgery is additionally capped by tag guessing at `8·L`, as in the strengths table.
 
-Two MD-style failure modes are structurally absent.  There is no length extension: a tag reveals at most one rate block of output, and continuing the computation would require the `128·C`-bit inner state.  And tags of different lengths are unrelated: the trailing `right_encode(L)` makes `MAC(K, X, L)` and `MAC(K, X, L')` random-oracle outputs on *different inputs*, so a shorter tag is not a truncation of a longer one.  That is deliberately unlike unkeyed digests, where truncation consistency is a feature.
+Two MD-style failure modes are structurally absent.  There is no length extension: a tag reveals at most one rate block of output, and continuing the computation would require the `128·C`-bit inner state.  And tags of different lengths are unrelated: the trailing `right_encode(L)` makes `MAC(K, X, L)` and `MAC(K, X, L')` random-oracle outputs on *different inputs*, so a shorter tag is not a truncation of a longer one.  That is deliberately unlike unkeyed digests, where truncation consistency within an instance is a feature.
 
 ### Evidence
 

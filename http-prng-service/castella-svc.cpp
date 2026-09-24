@@ -32,12 +32,12 @@
 #include <memory>
 #include <mutex>
 #include <print>
-// POSIX sigaction, sigset_t, pthread_sigmask, sigwait -- not in <csignal>
+// POSIX sigaction, sigset_t, pthread_sigmask, sigwait are not in <csignal>
 #include <signal.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 #include <span>
 #include <stdexcept>
 #include <string>
-// POSIX strsignal -- not in <cstring>
+// POSIX strsignal is not in <cstring>
 #include <string.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 #include <string_view>
 #include <thread>
@@ -420,8 +420,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         errx(EXIT_FAILURE, "svr.bind_to_port(\"%s\", %d) failed", host.c_str(), port);
     }
 
-    // Block until entropy was added to duplex_obj.
-    // (getentropy failure exits the process, so this cannot hang.)
+    // Block until entropy has been added to duplex_obj.  A getentropy failure
+    // exits the process, so this cannot hang.
     first_entropy_added.wait();
     // Now svr is ready to accept connections.
 

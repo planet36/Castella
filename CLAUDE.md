@@ -141,7 +141,7 @@ Put a new command in the runbook, not beside the result it produced.
 
 ## Running the solver-backed research tools
 
-`research/`'s MILP and z3 programs run for minutes to hours and are memory-hungry, since one trail search can want several GiB against 15 GiB and no swap here.  So `research/RE-DERIVATION-RUNBOOK.md` § 0 sets two standing rules for anything that solves, and they apply to runs started from here:
+`research/`'s MILP and z3 programs run for minutes to hours and are memory-hungry, since one trail search can want several GiB against 15 GiB and no swap here.  So the opening of `research/RE-DERIVATION-RUNBOOK.md` sets two standing rules for anything that solves, and they apply to runs started from here:
 
 - Launch it under `nice -n 19`.  The benchmarks are the exception, never the solvers.  They measure speed, so what they need is an otherwise idle machine, and nothing that solves should be running during one.
 - Keep at most 8 solver processes going at once, trail search and MILP sharing that one budget.  `nice` does not substitute for the cap.  Shed load by killing, never `SIGSTOP`, because z3's `-t` is wall-clock, so a stopped process keeps burning it.

@@ -59,23 +59,29 @@ An instance of `Castella::Duplex` takes these parameters:
 
 | type | name | default value | constraint | description |
 |------|------|---------------|------------|-------------|
-| `uint8_t` | `capacity_blocks` | _none_ | &Element; [`Castella::Duplex::C_MIN`, `Castella::Duplex::C_MAX`] | The size (in blocks) of the capacity |
-| `uint8_t` | `num_rounds` | _none_ | &Element; [`Castella::NUM_ROUNDS_MIN`, `Castella::NUM_ROUNDS_MAX`] | The number of rounds to perform in the Castella permutation function |
-| `std::byte` | `input_suffix` | `0` | _none_ | The byte to append to the input buffer before squeezing |
-| `std::string_view` | `function_name` | `""` | _none_ | The function-name byte string |
-| `std::string_view` | `customization_str` | `""` | _none_ | The customization byte string |
+| `int` | `capacity_blocks` | _none_ | &Element; [`Castella::Duplex::C_MIN`, `Castella::Duplex::C_MAX`] | The size (in blocks) of the capacity |
+| `int` | `num_rounds` | _none_ | &Element; [`Castella::NUM_ROUNDS_MIN`, `Castella::NUM_ROUNDS_MAX`] | The number of rounds to perform in the Castella permutation function |
+| `int` | `input_suffix` | `0` | &Element; [0, 255] | The byte to append to the input buffer before squeezing |
+| contiguous byte range | `function_name` | _empty_ | _none_ | The function-name byte string |
+| contiguous byte range | `customization_str` | _empty_ | _none_ | The customization byte string |
+
+A contiguous byte range ([`contiguous_byte_range`](include/contiguous_byte_range.hpp)) is any contiguous sized range of `std::byte` or a narrow character type, such as a `std::string_view`, a `std::span<const std::byte>`, or a `std::vector<uint8_t>`.
 
 The number of rounds determines the safety margin.  The capacity size determines the security level.  See [Yes, this is Keccak!](https://keccak.team/2013/yes_this_is_keccak.html).
 
 ### Adding/Absorbing Input
 
-Input data may be given in the form of a byte span (i.e., `std::span<const std::byte>` — the primary interface) or raw data (i.e., a `const void*`, `size_t` pair, implemented in terms of the byte-span form) with these member functions:
+Input data may be given as a contiguous byte range (the primary interface) or as raw data (a `const void*`, `size_t` pair, implemented in terms of the range form) with these member functions:
 * `add`
     * Add the given data to the input buffer.
 * `add_left_encoded`
     * Add the left-encoded length of the given data, followed by the data itself, to the input buffer.
 * `add_right_encoded`
     * Add the given data, followed by its right-encoded length, to the input buffer.
+
+`add_left_encoded` and `add_right_encoded` also take a nonnegative integer, which they encode on its own, as `left_encode` and `right_encode` do in SP 800-185.
+
+A string literal is an array that includes its terminating null character, so `add("abc")` absorbs 4 bytes.  Pass `"abc"sv` to absorb only the 3 characters.
 
 When the input buffer is full, it is absorbed (via XOR) into the outer part of the state.
 

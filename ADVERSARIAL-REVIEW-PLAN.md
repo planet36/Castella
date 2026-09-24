@@ -162,8 +162,9 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   explicit *conjecture* / *evidence pending* label).  And the commands in its table must
   still run and still print what it says they print.
 - **Why this surface earns its place:** the failure mode is documented, not hypothetical.
-  Four active-S-box figures (133, 225, 243, and 290) were published as optima, were in fact
-  timed-out incumbents, and were each later refuted by a cheaper solution.
+  Three active-S-box figures (133, 225, and 243) were published as optima, were in fact
+  timed-out incumbents, and were each later refuted by a cheaper solution, as was a fourth
+  incumbent, 290.
   `research/README.md` traces the cause to a solver wrapper that reported `optimal` for any
   run that ended holding an incumbent.  Note the direction of the error: a larger `A` means a
   smaller `2^−6·A`, so a mislabeled figure makes the bound look **stronger** than reality.

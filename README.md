@@ -2,7 +2,7 @@
 
 This C++ library implements a <q>heavyweight</q> permutation function using AES CPU instructions, plus a duplex/sponge, parallel tree hashing, a keyed MAC, and a PRNG on top.
 
-<q>Heavyweight</q> is the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography): a wide 256-byte state and a hardware AES round function, not a small-state [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) design.  It describes the design, not the speed.  The [tree hashes rival, and in one case roughly double, multithreaded `b3sum`](#is-this-as-fast-as-b3sum) on page-cache-hot files.
+<q>Heavyweight</q> is the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography): a wide 256-byte state and a hardware AES round function, not a small-state [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) design.  It describes the design, not the speed.  The [tree hashes rival multithreaded `b3sum` on page-cache-hot files, and one beats it by about 1.7×](#is-this-as-fast-as-b3sum).
 
 > **Status.**  Castella is a personal research project, a permutation and hash design that has not been standardized, externally reviewed, or cryptanalyzed by anyone but its author.  **Do not use it where security matters.**  See [SPEC.md](SPEC.md) and its [security claims and non-claims](SPEC.md#security-claims-and-non-claims).
 
@@ -128,7 +128,7 @@ All of these ratios are machine-dependent.  To reproduce them, build `research/`
 <q>Heavyweight</q> does not mean slow.  On a modern x86-64 Linux system, with VAES leaf batching and multiple threads:
 
 * **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and some minimal-round configurations beat `b2sum`, `sha1sum`, and `md5sum`.
-* **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **2×** on the same files, and single-threaded roughly matches [XXH3](https://github.com/cyan4973/xxhash).
+* **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **1.7×** on the same files, and single-threaded roughly matches [XXH3](https://github.com/cyan4973/xxhash).
 
 These figures are machine-dependent, and [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash) reproduces them using [hyperfine](https://github.com/sharkdp/hyperfine).  See the [speed FAQ](#is-this-as-fast-as-b3sum) for the fuller picture.
 
@@ -185,7 +185,7 @@ It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.g
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp), the same tree structure built from much faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about 2× on the same files, and even single-threaded it roughly matches [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
+But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp), the same tree structure built from much faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about 1.7× on the same files, and even single-threaded it roughly matches [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`)!
 
 Don't take my word for it: these comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash), which uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 500 MiB file (hyperfine's warm-up runs make it page-cache-hot).  Run it yourself, because the results are machine-dependent.
 

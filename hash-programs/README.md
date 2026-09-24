@@ -96,10 +96,14 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent, and the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
+These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-09-15:
+
+* `cch` beat multithreaded `b3sum` by about 1.7× (single-thread, pinned: 3.1×).
+* `castella --rounds=3` beat multithreaded `b3sum`, while the default `--rounds=6` roughly matched it.
+* Single-threaded, `cch` roughly matched XXH3 (`xxhsum -H3`), and `castella` at its default rounds beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
+
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size:
 
-* `cch` beat multithreaded `b3sum` by 2.0× (single-thread, pinned: 3.4×).
-* `castella --rounds=3` beat multithreaded `b3sum`, while the default `--rounds=6` roughly matched it.
 * `castella --no-mmap` and piped input were fastest at 2 threads.  More threads made piped input clearly slower and `--no-mmap` slightly slower.
 * Streamed `cch` times were identical across thread counts (within 1%).
 * The default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower).

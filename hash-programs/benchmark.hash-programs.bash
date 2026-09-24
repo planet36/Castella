@@ -87,8 +87,6 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "./castella --chunk-size=262144 --rounds=3 --size=16 ${CASTELLA_TMP}/test.txt" \
 "${PIN}./cch --num-threads=1      ${CASTELLA_TMP}/test.txt" \
 "./cch                 ${CASTELLA_TMP}/test.txt" \
-"./cch --mix-rate=2048 ${CASTELLA_TMP}/test.txt" \
-"./cch --mix-rate=0    ${CASTELLA_TMP}/test.txt" \
 "./cch --chunk-size=262144 --mix-rate=0 ${CASTELLA_TMP}/test.txt" \
 "b3sum --tag                 ${CASTELLA_TMP}/test.txt" \
 "${PIN}b3sum --tag --no-mmap       ${CASTELLA_TMP}/test.txt" \

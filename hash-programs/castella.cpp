@@ -176,6 +176,7 @@ print_version()
 {
     std::println("{} {}", program_invocation_short_name, program_version);
     std::println("Copyright (C) {}", program_author);
+    std::println("");
     std::println("License {}", program_license);
     std::println("Written by {}", program_author);
 }

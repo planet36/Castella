@@ -10,15 +10,17 @@ PORT=8080
 echo "# Send bytes to the service."
 
 echo
-echo "POST /absorb  # \"Lorem ipsum...\" (Content-Type: application/octet-stream)"
+echo "POST /absorb  # base64-encoded gzipped data (Content-Type: application/octet-stream)"
 cat <<'EOT' | curl --fail --data-binary @- --header "Content-Type: application/octet-stream" "$BASE_URL:$PORT/absorb" || exit
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-https://www.lipsum.com/
+H4sIAAAAAAACA3VSsW7jMAzd9RW8KUuQ7F0O7dAiuBYdEtyNhWLTkRBZNEQqrvv19+Q7oF0KeLD0
+qPceHxnMJr3b7zWOk0rW3eBzL+Ouk3E/x2vcH5nfXpa336zm3FFGppEzhZqNBimkkxRzrxa46Oft
+INK7U2CSnBayEPOFDptxLWj/qHEHJZ9Jqg3RUOKNkshV6YK3O0gxlBa6QXdL+nlwL75nGoqMVNgn
+lJeYkqcuNPCROTU9JZ3ZG5ctNWu8UcpCZzZcOYhl8hUA3HR0KFEDJBr2X3hlgKUtbWz22rQ7D+mF
++Ma5dQD2ckc3P06xMJ0Bol1lmkM0Jk1xmloiHqBP55jF3Q8ldhDm3Pt8gaeeCoIRSD6V+PGBoM4g
+pZp7Lo3enWqxxLqhzN1Vt0jwxujXmh0NoHYPoDGSgSaElniLvBuY15M7WCtLCUGpQeZUloauygJP
+pDVaq8KwWfEWjSBTBWMhm+X7GXwBwPscr+sxiR/Q9E+iRykjF3id2l40iZbiOuS2M9e42uyCr8PA
+FRUP1cjTU+ElCAKgocJBfede3B+pqUc0+Fa1o1Biw0CnwlPL19bge7ko0F9YhuZ9XcPRW7fuXpf+
+od829BpoSmgdEc6SN0aL1K8FP9xfIfBYICkDAAA=
 EOT
 
 sleep 4

@@ -166,7 +166,7 @@ Always re-read source files before analyzing or modifying them.  Do not rely on 
 
 ## Accuracy / Verification
 
-Verify all technical claims empirically (compile/run/test) before asserting them.  Do not rely on memory for API details, header locations, language-standard requirements, or compiler behavior.
+Before asserting a technical claim, confirm it from the source, a compile, or a run, not from memory.  That applies above all to API details, header locations, language-standard requirements, and compiler behavior.
 
 ## Code Style / Comments
 

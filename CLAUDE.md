@@ -156,7 +156,7 @@ The 8 is a ceiling, not a target.  Memory usually binds first, since z3's `-M` i
 
 ## Workflow Rules
 
-Always re-read source files before analyzing or modifying them.  Do not rely on previously cached file contents.
+Re-read a source file before analyzing or modifying it rather than working from an earlier read, since the user edits and rebases alongside the session.
 
 ## Git Workflow
 

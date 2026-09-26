@@ -160,7 +160,7 @@ Re-read a source file before analyzing or modifying it rather than working from 
 
 ## Git Workflow
 
-- NEVER create git branches or worktrees, and NEVER commit or push without explicit user approval.  Work in place on the current branch.
+- Work in place on the current branch rather than creating a branch or worktree, because the user prefers a linear history.  Commit or push only with the user's explicit approval.
 - Only stage or commit changes when the user explicitly asks, and only the specific changes requested.
 - When commits are requested, make them granular (one logical change per commit) and follow existing repo conventions.
 

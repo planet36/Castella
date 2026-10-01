@@ -125,7 +125,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // 0 disables periodic mixing, and small rates mix within a few chunks.
     constexpr std::array mix_rates{0, 1, 3, compress_castella_hash<>::DEFAULT_MIX_RATE,
-                                 compress_castella_hash<>::MIX_RATE_MAX};
+                                   compress_castella_hash<>::MIX_RATE_MAX};
 
     int num_comparisons = 0;
 

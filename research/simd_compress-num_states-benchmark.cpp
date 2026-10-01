@@ -138,8 +138,7 @@ inline constexpr auto total_sizes = []
 static inline void
 absorb_chunk(state_t& state, const std::byte* chunk, int& absorbs_since_mix) noexcept
 {
-    simd_compress_aes_enc_r3_arr(state,
-                                 reinterpret_cast<const Castella::block_t*>(chunk));
+    simd_compress_aes_enc_r3_arr(state, reinterpret_cast<const Castella::block_t*>(chunk));
 
     if (++absorbs_since_mix >= MIX_RATE)
     {
@@ -149,7 +148,9 @@ absorb_chunk(state_t& state, const std::byte* chunk, int& absorbs_since_mix) noe
 }
 
 static void
-hash_buffer(state_t& state, const std::byte* src, const int len,
+hash_buffer(state_t& state,
+            const std::byte* src,
+            const int len,
             int& absorbs_since_mix) noexcept
 {
     for (int off = 0; off + state_size_bytes <= len; off += state_size_bytes)
@@ -191,8 +192,7 @@ BM_states_sequential(benchmark::State& BM_state, const int buf_size)
 
         for (int i = 0; i < N; ++i)
         {
-            hash_buffer(data.states[i], std::data(data.bufs[i]), buf_size,
-                        data.absorbs[i]);
+            hash_buffer(data.states[i], std::data(data.bufs[i]), buf_size, data.absorbs[i]);
         }
     }
 
@@ -222,9 +222,9 @@ BM_states_interleaved(benchmark::State& BM_state, const int buf_size)
             // The compile-time loop keeps the N absorbs a straight-line
             // instruction sequence, as a real interleaved node group's
             // bulk loop would be.
-            [&]<size_t... I>(std::index_sequence<I...>) {
-                (absorb_chunk(data.states[I], std::data(data.bufs[I]) + off,
-                              data.absorbs[I]),
+            [&]<size_t... I>(std::index_sequence<I...>)
+            {
+                (absorb_chunk(data.states[I], std::data(data.bufs[I]) + off, data.absorbs[I]),
                  ...);
             }(std::make_index_sequence<N>{});
         }
@@ -308,9 +308,9 @@ self_check()
 
     for (int off = 0; off + state_size_bytes <= buf_size; off += state_size_bytes)
     {
-        [&]<size_t... I>(std::index_sequence<I...>) {
-            (absorb_chunk(inter.states[I], std::data(inter.bufs[I]) + off,
-                          inter.absorbs[I]),
+        [&]<size_t... I>(std::index_sequence<I...>)
+        {
+            (absorb_chunk(inter.states[I], std::data(inter.bufs[I]) + off, inter.absorbs[I]),
              ...);
         }(std::make_index_sequence<N>{});
     }
@@ -341,7 +341,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     for (const auto buf_size : buf_sizes)
     {
-        [&]<size_t... N>(std::index_sequence<N...>) {
+        [&]<size_t... N>(std::index_sequence<N...>)
+        {
             ((benchmark::RegisterBenchmark(
                   std::format("{}-states-sequential({}x_{})", N + 2, N + 2,
                               format_size(buf_size)),
@@ -369,7 +370,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // within 2%.
     for (const auto total_size : total_sizes)
     {
-        [&]<size_t... N>(std::index_sequence<N...>) {
+        [&]<size_t... N>(std::index_sequence<N...>)
+        {
             ((benchmark::RegisterBenchmark(
                   std::format("{}-states-sequential-eqtotal({}={}x_{})", N + 2,
                               format_size((N + 2) * buf_size_for_total(total_size, N + 2)),
@@ -398,7 +400,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 #include <cstdio>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     (void)std::puts("skipped: requires x86-64 or ARM64 with AES instructions");
     return 0;

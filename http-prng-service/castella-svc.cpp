@@ -409,8 +409,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
             // XXX: This prints the body data of requests & responses.
             spdlog::trace("[{}] ({}) -> [{}] ({})",
-                encode_bytes_to_hex(as_byte_span(req.body)), std::size(req.body),
-                encode_bytes_to_hex(as_byte_span(res.body)), std::size(res.body));
+                          encode_bytes_to_hex(as_byte_span(req.body)), std::size(req.body),
+                          encode_bytes_to_hex(as_byte_span(res.body)), std::size(res.body));
         });
 
     spdlog::info("Attempting to bind to http://{}:{} ...", host, port);

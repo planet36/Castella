@@ -220,9 +220,9 @@ create_round_constants_folded() noexcept
         {
             for (size_t j = 0; j < N / 2; ++j)
             {
-                result[r][aes_r][j] = std::bit_cast<block_x2_t>(
-                    std::array{round_constants[r][aes_r][j],
-                               round_constants[r][aes_r][j + N / 2]});
+                result[r][aes_r][j] = std::bit_cast<block_x2_t>(std::array{
+                    round_constants[r][aes_r][j],
+                    round_constants[r][aes_r][j + N / 2]});
             }
         }
     }
@@ -232,7 +232,8 @@ create_round_constants_folded() noexcept
 
 /// The Castella round constants for state size \a N, folded
 template <size_t N>
-inline constexpr auto round_constants_folded = create_round_constants_folded<N, NUM_ROUNDS_MAX>();
+inline constexpr auto round_constants_folded =
+    create_round_constants_folded<N, NUM_ROUNDS_MAX>();
 
 #endif
 

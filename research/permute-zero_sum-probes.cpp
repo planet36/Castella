@@ -115,7 +115,8 @@ random_bit_positions(const int k, const uint32_t lo, const uint32_t range)
 
 /// \return the number of output bits whose k-dim cube sums vanish for all NUM_BASES bases
 static int
-count_surviving_bits(const int num_rounds, const int k,
+count_surviving_bits(const int num_rounds,
+                     const int k,
                      const std::array<uint32_t, MAX_CUBE_SIZE>& positions)
 {
     bytes_t surviving{};
@@ -198,7 +199,8 @@ probe_placement(const std::string_view name, const bool single_block, const int 
             {
                 ++num_failed_checks;
                 std::println("");
-                std::println("FAIL: positive control found no structure at 1 round (k={})", k);
+                std::println("FAIL: positive control found no structure at 1 round (k={})",
+                             k);
             }
 
             std::print("\t{}", num_surviving);

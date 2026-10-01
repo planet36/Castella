@@ -48,7 +48,13 @@ int num_checks = 0;
 * active in every build.
 */
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define CHECK(...) do { ++num_checks; assert(__VA_ARGS__); } while (false)
+#define CHECK(...)           \
+    do                       \
+    {                        \
+        ++num_checks;        \
+        assert(__VA_ARGS__); \
+    }                        \
+    while (false)
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
@@ -386,7 +392,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         // Hash the input in a single add() call.
         const auto tree_digest = [&](const std::span<const std::byte> input,
-                                     const int num_threads = 1) {
+                                     const int num_threads = 1)
+        {
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str, chunk_size,
                                       num_threads);
@@ -542,8 +549,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 constexpr int bad_chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN - 1;
 
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str,
-                                          bad_chunk_size);
+                                          function_name, customization_str, bad_chunk_size);
 
                 return 1; // unreachable
             }
@@ -634,11 +640,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             for (const int piece_size : {1000, 33'000})
             {
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, chunk_size,
-                                          4);
+                                          function_name, customization_str, chunk_size, 4);
                 for (int off = 0; off < std::ssize(Y_sp); off += piece_size)
                 {
-                    const auto len = std::min<std::ptrdiff_t>(piece_size, std::ssize(Y_sp) - off);
+                    const auto len =
+                        std::min<std::ptrdiff_t>(piece_size, std::ssize(Y_sp) - off);
                     tree.add(Y_sp.subspan(off, len));
                 }
                 CHECK(tree.squeeze_bytes() == expected);
@@ -672,8 +678,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 for (const int num_threads : {2, 4})
                 {
                     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                              function_name, customization_str,
-                                              chunk_size, num_threads);
+                                              function_name, customization_str, chunk_size,
+                                              num_threads);
                     for (int off = 0; off < std::ssize(Z_sp); off += piece_size)
                     {
                         const auto len =
@@ -690,8 +696,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 // crashes.  The destructor must wake, join, and discard the
                 // workers and the abandoned jobs.
                 Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, chunk_size,
-                                          4);
+                                          function_name, customization_str, chunk_size, 4);
                 for (int off = 0; off + 1024 <= std::ssize(Z_sp); off += 1024)
                 {
                     tree.add(Z_sp.subspan(off, 1024));

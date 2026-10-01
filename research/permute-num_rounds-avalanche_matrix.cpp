@@ -150,7 +150,8 @@ calculate_metrics_avalanche_matrix(const int num_samples,
                     // for each output row
                     for (decltype(N) out_row = 0; out_row < N; ++out_row)
                     {
-                        const auto avalanche_vector = permuted_state[out_row] ^ permuted_state_p[out_row];
+                        const auto avalanche_vector =
+                            permuted_state[out_row] ^ permuted_state_p[out_row];
 
                         const auto flipped_bits = make_bitset(avalanche_vector);
 
@@ -159,7 +160,8 @@ calculate_metrics_avalanche_matrix(const int num_samples,
                         {
                             const int out_bit_idx = out_row * row_size_bits + out_bit;
 
-                            avalanche_matrices[num_rounds - 1][in_bit_idx][out_bit_idx] += flipped_bits[out_bit];
+                            avalanche_matrices[num_rounds - 1][in_bit_idx][out_bit_idx] +=
+                                flipped_bits[out_bit];
                         }
                     }
                 }

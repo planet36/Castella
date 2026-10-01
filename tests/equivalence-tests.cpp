@@ -66,12 +66,15 @@ constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
 * \param rng the seeded generator (for the random split points)
 */
 void
-test_one_input(const std::string_view name, const auto& make_tree,
-               const auto& get_digest, const std::span<const std::byte> input,
+test_one_input(const std::string_view name,
+               const auto& make_tree,
+               const auto& get_digest,
+               const std::span<const std::byte> input,
                std::uniform_random_bit_generator auto& rng)
 {
     // The single-threaded one-shot digest is the reference.
-    const auto reference = [&] {
+    const auto reference = [&]
+    {
         auto tree = make_tree(1);
         tree.add(input);
         return get_digest(tree);
@@ -208,12 +211,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "equivalence";
 
-        const auto make_tree = [&](const int num_threads) {
+        const auto make_tree = [&](const int num_threads)
+        {
             return Castella::DuplexTree(capacity_blocks, num_rounds, input_suffix,
                                         function_name, customization_str, chunk_size,
                                         num_threads);
         };
-        const auto get_digest = [](Castella::DuplexTree& tree) {
+        const auto get_digest = [](Castella::DuplexTree& tree)
+        {
             return tree.squeeze_bytes();
         };
 
@@ -229,10 +234,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     for (const int mix_rate : {0, 1, 256})
     {
-        const auto make_tree = [&](const int num_threads) {
+        const auto make_tree = [&](const int num_threads)
+        {
             return compress_castella_tree(mix_rate, chunk_size, num_threads);
         };
-        const auto get_digest = [](compress_castella_tree& tree) {
+        const auto get_digest = [](compress_castella_tree& tree)
+        {
             return tree.final_digest_bytes(64);
         };
 

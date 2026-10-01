@@ -18,7 +18,8 @@
 // copied from Castella::Duplex::squeeze_into_
 
 // https://cppreference.com/cpp/algorithm/copy
-void copy_bytes_into_copy(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
+void
+copy_bytes_into_copy(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
 {
     // clamp src size
     if (std::size(src) > std::size(dst))
@@ -32,7 +33,8 @@ void copy_bytes_into_copy(std::span<const std::byte> src, std::span<std::byte> d
 }
 
 // https://cppreference.com/cpp/algorithm/copy_n
-void copy_bytes_into_copy_n(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
+void
+copy_bytes_into_copy_n(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
 {
     // clamp src size
     if (std::size(src) > std::size(dst))
@@ -46,7 +48,8 @@ void copy_bytes_into_copy_n(std::span<const std::byte> src, std::span<std::byte>
 }
 
 // https://cppreference.com/cpp/algorithm/ranges/copy
-void copy_bytes_into_ranges(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
+void
+copy_bytes_into_ranges(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
 {
     // clamp src size
     if (std::size(src) > std::size(dst))
@@ -59,7 +62,8 @@ void copy_bytes_into_ranges(std::span<const std::byte> src, std::span<std::byte>
 }
 
 // https://cppreference.com/cpp/algorithm/ranges/copy_n
-void copy_bytes_into_ranges_n(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
+void
+copy_bytes_into_ranges_n(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
 {
     // clamp src size
     if (std::size(src) > std::size(dst))
@@ -72,7 +76,8 @@ void copy_bytes_into_ranges_n(std::span<const std::byte> src, std::span<std::byt
 }
 
 // https://cppreference.com/cpp/string/byte/memcpy
-void copy_bytes_into_memcpy(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
+void
+copy_bytes_into_memcpy(std::span<const std::byte> src, std::span<std::byte> dst) noexcept
 {
     // clamp src size
     if (std::size(src) > std::size(dst))

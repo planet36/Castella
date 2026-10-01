@@ -84,15 +84,16 @@ namespace Castella
 * encoding members.
 */
 template <typename P>
-concept tree_node_policy =
-    requires(const P p, P::node_type& node, const std::span<std::byte> cv_dst,
-             const std::span<const std::byte> data) {
-        { p.make_node() } -> std::same_as<typename P::node_type>;
-        { p.cv_len(node) } -> std::convertible_to<int>;
-        p.extract_cv(node, cv_dst);
-        requires std::same_as<std::remove_const_t<decltype(P::USE_STREAMING_POOL)>, bool>;
-        node.add(data);
-    };
+concept tree_node_policy = requires (const P p,
+                                     P::node_type& node,
+                                     const std::span<std::byte> cv_dst,
+                                     const std::span<const std::byte> data) {
+    { p.make_node() } -> std::same_as<typename P::node_type>;
+    { p.cv_len(node) } -> std::convertible_to<int>;
+    p.extract_cv(node, cv_dst);
+    requires std::same_as<std::remove_const_t<decltype(P::USE_STREAMING_POOL)>, bool>;
+    node.add(data);
+};
 
 /// A tree-hashing layer over a node hash class
 /**
@@ -297,13 +298,14 @@ private:
     * contract.  research/duplex_x2-verify.cpp and research/cch_x2-verify.cpp
     * verify it for those two types.
     */
-    static constexpr bool HAS_PAIRED_LEAF =
-        requires(const NodePolicy p, NodePolicy::node_x2_type& pair,
-                 const std::span<std::byte> cv_dst, const std::span<const std::byte> data) {
-            { p.make_node_x2() } -> std::same_as<typename NodePolicy::node_x2_type>;
-            pair.add(data, data);
-            p.extract_cv_x2(pair, cv_dst, cv_dst);
-        };
+    static constexpr bool HAS_PAIRED_LEAF = requires (const NodePolicy p,
+                                                      NodePolicy::node_x2_type& pair,
+                                                      const std::span<std::byte> cv_dst,
+                                                      const std::span<const std::byte> data) {
+        { p.make_node_x2() } -> std::same_as<typename NodePolicy::node_x2_type>;
+        pair.add(data, data);
+        p.extract_cv_x2(pair, cv_dst, cv_dst);
+    };
 
     /// The node parameters, kept to construct leaves on demand
     /**
@@ -595,7 +597,8 @@ private:
     *        because chunk 0 is absorbed directly by the final node
     * \param cv_dst the destination for the \c CV_LEN -byte chaining value
     */
-    void hash_leaf_into_(const std::span<const std::byte> chunk, const int64_t chunk_index,
+    void hash_leaf_into_(const std::span<const std::byte> chunk,
+                         const int64_t chunk_index,
                          const std::span<std::byte> cv_dst) const
     {
 #if defined(DEBUG)
@@ -629,8 +632,9 @@ private:
     *
     * \pre \a x ≥ 0
     */
-    static void absorb_left_encoded_x2_(std::same_as<typename NodePolicy::node_x2_type> auto& pair,
-                                        const std::integral auto x)
+    static void
+    absorb_left_encoded_x2_(std::same_as<typename NodePolicy::node_x2_type> auto& pair,
+                            const std::integral auto x)
     {
 #if defined(DEBUG)
         assert(x >= 0);
@@ -1422,7 +1426,8 @@ private:
                     // destructors join at the end of this scope, before those
                     // vectors are destroyed.
                     [this, src, &cvs, &worker_exceptions, w, range_begin, range_end,
-                     first_leaf_pos, first_chunk_index, chunk_size, cv_len] {
+                     first_leaf_pos, first_chunk_index, chunk_size, cv_len]
+                    {
                         try
                         {
                             int64_t k = range_begin;
@@ -1436,17 +1441,15 @@ private:
                                 for (; k + 1 < range_end; k += 2)
                                 {
                                     const int64_t pos = first_leaf_pos + k;
-                                    const std::span chunk_a{
-                                        src + pos * chunk_size, chunk_size};
-                                    const std::span chunk_b{
-                                        src + (pos + 1) * chunk_size,
-                                        chunk_size};
+                                    const std::span chunk_a{src + pos * chunk_size,
+                                                            chunk_size};
+                                    const std::span chunk_b{src + (pos + 1) * chunk_size,
+                                                            chunk_size};
 
                                     hash_leaf_pair_into_(
                                         chunk_a, chunk_b, first_chunk_index + pos,
                                         std::span{&cvs[k * cv_len], cv_len},
-                                        std::span{&cvs[(k + 1) * cv_len],
-                                                  cv_len});
+                                        std::span{&cvs[(k + 1) * cv_len], cv_len});
                                 }
                             }
 
@@ -1455,15 +1458,13 @@ private:
                                 // k-th leaf = (first_leaf_pos + k)-th chunk
                                 // of the batch
                                 const int64_t pos = first_leaf_pos + k;
-                                const std::span chunk{
-                                    src + pos * chunk_size, chunk_size};
+                                const std::span chunk{src + pos * chunk_size, chunk_size};
 
                                 // Write the CV straight into its slice of
                                 // the flat cvs array, with no per-leaf CV
                                 // vector to allocate, copy, and free.
-                                hash_leaf_into_(
-                                    chunk, first_chunk_index + pos,
-                                    std::span{&cvs[k * cv_len], cv_len});
+                                hash_leaf_into_(chunk, first_chunk_index + pos,
+                                                std::span{&cvs[k * cv_len], cv_len});
                             }
                         }
                         catch (...)
@@ -1558,8 +1559,7 @@ private:
             // len == chunk_size.
             if (chunk_buf_.empty() && (std::size(src) > chunk_size))
             {
-                const auto num_bulk =
-                    static_cast<int64_t>((std::size(src) - 1) / chunk_size);
+                const auto num_bulk = static_cast<int64_t>((std::size(src) - 1) / chunk_size);
 
                 flush_bulk_chunks_(std::data(src), num_bulk);
 

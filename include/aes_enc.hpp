@@ -230,8 +230,9 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_arr_folded(simd_arr_x2_t<N>& arr,
-                   const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_arr_folded(
+    simd_arr_x2_t<N>& arr,
+    const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -307,8 +308,9 @@ aes_enc_arr(simd_arr_t<N>& arr,
 template <size_t aes_num_rounds, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
-aes_enc_inv_arr_paircast(simd_arr_t<N>& arr,
-                         const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_inv_arr_paircast(
+    simd_arr_t<N>& arr,
+    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -339,8 +341,9 @@ aes_enc_inv_arr_paircast(simd_arr_t<N>& arr,
 */
 template <size_t aes_num_rounds, size_t N, size_t M>
 static void
-aes_enc_inv_arr_generic(simd_arr_t<N>& arr,
-                        const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+aes_enc_inv_arr_generic(
+    simd_arr_t<N>& arr,
+    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 

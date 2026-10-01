@@ -177,10 +177,13 @@ permute_state(const bool counter_init, const int num_rounds)
 }
 
 [[nodiscard]] std::vector<std::byte>
-duplex_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
+duplex_digest(const int capacity_blocks,
+              const int num_rounds,
+              const int input_suffix,
               const contiguous_byte_range auto& function_name,
               const contiguous_byte_range auto& customization_str,
-              const int msglen, const int out)
+              const int msglen,
+              const int out)
 {
     Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix, function_name,
                               customization_str);
@@ -192,10 +195,14 @@ duplex_digest(const int capacity_blocks, const int num_rounds, const int input_s
 }
 
 [[nodiscard]] std::vector<std::byte>
-tree_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
+tree_digest(const int capacity_blocks,
+            const int num_rounds,
+            const int input_suffix,
             const contiguous_byte_range auto& function_name,
             const contiguous_byte_range auto& customization_str,
-            const int chunk_size_bytes, const int msglen, const int out)
+            const int chunk_size_bytes,
+            const int msglen,
+            const int out)
 {
     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
                               customization_str, chunk_size_bytes, 1);
@@ -239,10 +246,15 @@ make_key(const int len)
 * \exception std::invalid_argument if the framed key does not fit in one chunk
 */
 [[nodiscard]] std::vector<std::byte>
-mac_digest(const int capacity_blocks, const int num_rounds, const int input_suffix,
+mac_digest(const int capacity_blocks,
+           const int num_rounds,
+           const int input_suffix,
            const contiguous_byte_range auto& function_name,
            const contiguous_byte_range auto& customization_str,
-           const int chunk_size_bytes, const int keylen, const int msglen, const int out)
+           const int chunk_size_bytes,
+           const int keylen,
+           const int msglen,
+           const int out)
 {
     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix, function_name,
                               customization_str, chunk_size_bytes, 1);
@@ -292,7 +304,9 @@ cch_digest(const int mix_rate, const int msglen, const int out)
 }
 
 [[nodiscard]] std::vector<std::byte>
-cchtree_digest(const int mix_rate, const int chunk_size_bytes, const int msglen,
+cchtree_digest(const int mix_rate,
+               const int chunk_size_bytes,
+               const int msglen,
                const int out)
 {
     compress_castella_tree tree(mix_rate, chunk_size_bytes, 1);
@@ -310,8 +324,8 @@ print_rc_kat(const int r, const int aes_r, const int i)
 {
     const auto rc = round_constant_bytes(r, aes_r, i);
 
-    std::println("rc r={} aes_r={} i={} out={} digest={}", r, aes_r, i,
-                 std::size(rc), encode_bytes_to_hex(rc));
+    std::println("rc r={} aes_r={} i={} out={} digest={}", r, aes_r, i, std::size(rc),
+                 encode_bytes_to_hex(rc));
 }
 
 void
@@ -332,8 +346,11 @@ print_cch_kat(const int mix_rate, const int msglen, const int out)
 }
 
 void
-print_duplex_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
-                 const int msglen, const int out)
+print_duplex_kat(const int capacity_blocks,
+                 const int num_rounds,
+                 const int input_suffix,
+                 const int msglen,
+                 const int out)
 {
     std::println("duplex C={} rounds={} suffix={} fn={} custom={} msglen={} out={} digest={}",
                  capacity_blocks, num_rounds, input_suffix,
@@ -345,40 +362,54 @@ print_duplex_kat(const int capacity_blocks, const int num_rounds, const int inpu
 }
 
 void
-print_tree_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
-               const int chunk_size_bytes, const int msglen, const int out)
+print_tree_kat(const int capacity_blocks,
+               const int num_rounds,
+               const int input_suffix,
+               const int chunk_size_bytes,
+               const int msglen,
+               const int out)
 {
-    std::println("tree C={} rounds={} suffix={} fn={} custom={} chunk={} msglen={} out={} digest={}",
-                 capacity_blocks, num_rounds, input_suffix,
-                 encode_bytes_to_hex(as_byte_span(kat_function_name)),
-                 encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
-                 msglen, out,
-                 encode_bytes_to_hex(tree_digest(capacity_blocks, num_rounds, input_suffix,
-                                                 kat_function_name, kat_customization_str,
-                                                 chunk_size_bytes, msglen, out)));
+    std::println(
+        "tree C={} rounds={} suffix={} fn={} custom={} chunk={} msglen={} out={} digest={}",
+        capacity_blocks, num_rounds, input_suffix,
+        encode_bytes_to_hex(as_byte_span(kat_function_name)),
+        encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes, msglen,
+        out,
+        encode_bytes_to_hex(tree_digest(capacity_blocks, num_rounds, input_suffix,
+                                        kat_function_name, kat_customization_str,
+                                        chunk_size_bytes, msglen, out)));
 }
 
 void
-print_mac_kat(const int capacity_blocks, const int num_rounds, const int input_suffix,
-              const int chunk_size_bytes, const int keylen, const int msglen, const int out)
+print_mac_kat(const int capacity_blocks,
+              const int num_rounds,
+              const int input_suffix,
+              const int chunk_size_bytes,
+              const int keylen,
+              const int msglen,
+              const int out)
 {
-    std::println("mac C={} rounds={} suffix={} fn={} custom={} chunk={} keylen={} msglen={} out={} digest={}",
-                 capacity_blocks, num_rounds, input_suffix,
-                 encode_bytes_to_hex(as_byte_span(kat_mac_function_name)),
-                 encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes,
-                 keylen, msglen, out,
-                 encode_bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
-                                                kat_mac_function_name, kat_customization_str,
-                                                chunk_size_bytes, keylen, msglen, out)));
+    std::println(
+        "mac C={} rounds={} suffix={} fn={} custom={} chunk={} keylen={} msglen={} out={} digest={}",
+        capacity_blocks, num_rounds, input_suffix,
+        encode_bytes_to_hex(as_byte_span(kat_mac_function_name)),
+        encode_bytes_to_hex(as_byte_span(kat_customization_str)), chunk_size_bytes, keylen,
+        msglen, out,
+        encode_bytes_to_hex(mac_digest(capacity_blocks, num_rounds, input_suffix,
+                                       kat_mac_function_name, kat_customization_str,
+                                       chunk_size_bytes, keylen, msglen, out)));
 }
 
 void
-print_cchtree_kat(const int mix_rate, const int chunk_size_bytes, const int msglen,
+print_cchtree_kat(const int mix_rate,
+                  const int chunk_size_bytes,
+                  const int msglen,
                   const int out)
 {
-    std::println("cchtree mix={} chunk={} msglen={} out={} digest={}", mix_rate,
-                 chunk_size_bytes, msglen, out,
-                 encode_bytes_to_hex(cchtree_digest(mix_rate, chunk_size_bytes, msglen, out)));
+    std::println(
+        "cchtree mix={} chunk={} msglen={} out={} digest={}", mix_rate, chunk_size_bytes,
+        msglen, out,
+        encode_bytes_to_hex(cchtree_digest(mix_rate, chunk_size_bytes, msglen, out)));
 }
 
 /// Print the whole KAT file to standard output
@@ -471,8 +502,8 @@ generate()
     std::println("");
     std::println("# Castella::DuplexTree: msglen sweep (chunk boundaries; leaf index");
     std::println("# 255/256 left_encode byte-width boundary at msglen 256*1024)");
-    for (const int msglen : {0, 1, 1023, 1024, 1025, 2047, 2048, 2049,
-                                4096, 5000, 257 * 1024, 258 * 1024 + 5})
+    for (const int msglen :
+         {0, 1, 1023, 1024, 1025, 2047, 2048, 2049, 4096, 5000, 257 * 1024, 258 * 1024 + 5})
     {
         print_tree_kat(4, 6, 0, 1024, msglen, 32);
     }
@@ -517,8 +548,7 @@ generate()
 
     std::println("");
     std::println("# compress_castella_tree: msglen sweep (256 is the compression block size)");
-    for (const int msglen : {0, 1, 255, 256, 257, 1023, 1024, 1025,
-                                5000, 258 * 1024 + 5})
+    for (const int msglen : {0, 1, 255, 256, 257, 1023, 1024, 1025, 5000, 258 * 1024 + 5})
     {
         print_cchtree_kat(256, 1024, msglen, 32);
     }
@@ -555,7 +585,9 @@ find_field(const field_list& fields, const std::string_view key)
 }
 
 [[nodiscard]] std::optional<int>
-get_int_field(const field_list& fields, const std::string_view key, const int min,
+get_int_field(const field_list& fields,
+              const std::string_view key,
+              const int min,
               const int max)
 {
     const auto value = find_field(fields, key);
@@ -652,27 +684,25 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
         const auto fn = get_hex_string_field(fields, "fn");
         const auto custom = get_hex_string_field(fields, "custom");
 
-        if (!C.has_value() || !rounds.has_value() || !suffix.has_value() ||
-            !fn.has_value() || !custom.has_value())
+        if (!C.has_value() || !rounds.has_value() || !suffix.has_value() || !fn.has_value() ||
+            !custom.has_value())
             return std::nullopt;
 
         if (type == "duplex")
         {
-            return duplex_digest(*C, *rounds, *suffix, *fn, *custom,
-                                 *msglen, out);
+            return duplex_digest(*C, *rounds, *suffix, *fn, *custom, *msglen, out);
         }
 
-        const auto chunk = get_int_field(fields, "chunk",
-                                         Castella::DuplexTree::CHUNK_SIZE_MIN,
-                                         Castella::DuplexTree::CHUNK_SIZE_MAX);
+        const auto chunk =
+            get_int_field(fields, "chunk", Castella::DuplexTree::CHUNK_SIZE_MIN,
+                          Castella::DuplexTree::CHUNK_SIZE_MAX);
 
         if (!chunk.has_value())
             return std::nullopt;
 
         if (type == "tree")
         {
-            return tree_digest(*C, *rounds, *suffix, *fn, *custom, *chunk,
-                               *msglen, out);
+            return tree_digest(*C, *rounds, *suffix, *fn, *custom, *chunk, *msglen, out);
         }
 
         // The framed key has to fit in one chunk, which mac_digest checks.
@@ -681,8 +711,7 @@ recompute_kat_line(const std::string_view type, const field_list& fields, const 
         if (!keylen.has_value())
             return std::nullopt;
 
-        return mac_digest(*C, *rounds, *suffix, *fn, *custom, *chunk, *keylen,
-                          *msglen, out);
+        return mac_digest(*C, *rounds, *suffix, *fn, *custom, *chunk, *keylen, *msglen, out);
     }
 
     if (type == "cchtree")
@@ -785,8 +814,8 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
 
         try
         {
-            actual = recompute_kat_line(
-                type, fields, static_cast<int>(std::ssize(*expected)));
+            actual =
+                recompute_kat_line(type, fields, static_cast<int>(std::ssize(*expected)));
         }
         catch (const std::exception& e)
         {
@@ -807,9 +836,8 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         if (get_int_field(fields, "out", 0, 512) != std::ssize(*expected))
         {
             ++num_malformed;
-            std::println(stderr,
-                         "{}: line {}: out= does not match the digest length",
-                         path, lineno);
+            std::println(stderr, "{}: line {}: out= does not match the digest length", path,
+                         lineno);
             continue;
         }
 
@@ -826,8 +854,8 @@ verify(const char* path, const std::optional<int64_t> expect_count = std::nullop
         }
     }
 
-    std::println("{}: {} KATs verified, {} failed, {} malformed", path,
-                 num_verified, num_failed, num_malformed);
+    std::println("{}: {} KATs verified, {} failed, {} malformed", path, num_verified,
+                 num_failed, num_malformed);
 
     if (num_failed > 0 || num_malformed > 0)
         return EXIT_FAILURE;

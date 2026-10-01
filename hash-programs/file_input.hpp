@@ -128,8 +128,8 @@ process_file(const std::string& path, auto& hash_obj, const bool use_mmap)
         */
         try
         {
-            const mmap_sigbus::scoped_region guard{
-                mmap_addr, static_cast<size_t>(file_size), quote_shell_always(path)};
+            const mmap_sigbus::scoped_region guard{mmap_addr, static_cast<size_t>(file_size),
+                                                   quote_shell_always(path)};
 
             hash_obj.add(mmap_addr, file_size);
         }

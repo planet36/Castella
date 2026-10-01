@@ -159,8 +159,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
-    std::println("passed: {} squeeze comparisons of DuplexX2 against two separate Duplex objects",
-                 num_comparisons);
+    std::println(
+        "passed: {} squeeze comparisons of DuplexX2 against two separate Duplex objects",
+        num_comparisons);
 
     return 0;
 }
@@ -169,7 +170,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 #include <cstdio>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     (void)std::puts("skipped: requires x86-64 with VAES and AVX2");
     return 0;

@@ -108,9 +108,9 @@ read_field(std::istringstream& iss, const char* const what)
         const auto value = parse_int<T>(token);
         if (!value)
         {
-            const auto* const why = (value.error() == std::errc::result_out_of_range)
-                                        ? "field out of range: "
-                                        : "malformed field: ";
+            const auto* const why = (value.error() == std::errc::result_out_of_range) ?
+                                        "field out of range: " :
+                                        "malformed field: ";
             throw std::invalid_argument(why + std::string(what) + " = " + token);
         }
         return *value;
@@ -163,9 +163,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 const auto customization_str =
                     decode_hex_field(read_field<std::string>(iss, "S"));
 
-                duplex = std::make_unique<Castella::Duplex>(
-                    capacity_blocks, num_rounds, input_suffix, function_name,
-                    customization_str);
+                duplex = std::make_unique<Castella::Duplex>(capacity_blocks, num_rounds,
+                                                            input_suffix, function_name,
+                                                            customization_str);
                 continue;
             }
 

@@ -40,7 +40,8 @@
 /// \return the number of comparisons made
 template <size_t N>
 int
-test_permute_x2(const Castella::arr_blocks<N>& state_a, const Castella::arr_blocks<N>& state_b)
+test_permute_x2(const Castella::arr_blocks<N>& state_a,
+                const Castella::arr_blocks<N>& state_b)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
 
@@ -180,7 +181,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 #include <cstdio>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     (void)std::puts("skipped: requires x86-64 with VAES and AVX2");
     return 0;

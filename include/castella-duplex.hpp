@@ -787,10 +787,7 @@ public:
     Duplex& operator=(Duplex&&) = delete;
 
     /// dtor
-    ~Duplex()
-    {
-        zeroize_();
-    }
+    ~Duplex() { zeroize_(); }
 
     /// Consume the input data
     /**

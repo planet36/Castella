@@ -30,8 +30,7 @@ template <typename T>
 struct locked_allocator
 {
     // 4096 is the smallest standard page size in Linux.
-    static_assert(alignof(T) <= 4096,
-                  "locked_allocator cannot align T beyond one page");
+    static_assert(alignof(T) <= 4096, "locked_allocator cannot align T beyond one page");
 
     using value_type = T;
 
@@ -45,8 +44,7 @@ struct locked_allocator
     */
     template <typename U>
     constexpr explicit locked_allocator(const locked_allocator<U>&) noexcept
-    {
-    }
+    {}
 
     /// Allocate storage for \a n objects
     /**
@@ -58,9 +56,7 @@ struct locked_allocator
     * \sa https://man7.org/linux/man-pages/man2/mlock.2.html
     * \sa https://man7.org/linux/man-pages/man2/madvise.2.html
     */
-    [[nodiscard]]
-    T*
-    allocate(std::size_t n)
+    [[nodiscard]] T* allocate(std::size_t n)
     {
         if (n > PTRDIFF_MAX / sizeof(T))
         {
@@ -97,8 +93,7 @@ struct locked_allocator
     /**
     * \pre \a p and \a n came from a successful \c allocate() call.
     */
-    void
-    deallocate(T* p, std::size_t n) noexcept
+    void deallocate(T* p, std::size_t n) noexcept
     {
         // munmap must not clobber the caller's errno.
         const int saved_errno = errno;

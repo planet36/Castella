@@ -91,7 +91,8 @@ struct DuplexTreeNodePolicy final
     }
 
     /// Write both nodes' chaining values into their destinations
-    static void extract_cv_x2(node_x2_type& pair, const std::span<std::byte> cv_dst_a,
+    static void extract_cv_x2(node_x2_type& pair,
+                              const std::span<std::byte> cv_dst_a,
                               const std::span<std::byte> cv_dst_b)
     {
         pair.squeeze_pair_to(cv_dst_a, cv_dst_b);
@@ -150,7 +151,8 @@ public:
                                    .input_suffix = input_suffix,
                                    .function_name = to_byte_vector(function_name),
                                    .customization_str = to_byte_vector(customization_str)},
-              chunk_size_bytes, num_threads)
+              chunk_size_bytes,
+              num_threads)
     {}
 
     /// Squeeze bytes from the final node, and return them as a

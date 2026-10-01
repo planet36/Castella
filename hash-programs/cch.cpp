@@ -31,7 +31,8 @@ inline constexpr std::string_view program_version = "2026-08-08";
 
 // {{{ default values for options
 inline constexpr int min_digest_size_bytes = 1;
-inline constexpr int max_digest_size_bytes = compress_castella_hash<>::get_max_digest_size_bytes();
+inline constexpr int max_digest_size_bytes =
+    compress_castella_hash<>::get_max_digest_size_bytes();
 inline constexpr int default_digest_size_bytes = max_digest_size_bytes / 2;
 static_assert(default_digest_size_bytes >= min_digest_size_bytes);
 static_assert(default_digest_size_bytes <= max_digest_size_bytes);
@@ -293,17 +294,16 @@ try
 
         case OPTION_HASH_CHUNK_SIZE:
             chunk_size = parse_option_int(optarg, compress_castella_tree::CHUNK_SIZE_MIN,
-                                           compress_castella_tree::CHUNK_SIZE_MAX,
-                                           "--chunk-size");
+                                          compress_castella_tree::CHUNK_SIZE_MAX,
+                                          "--chunk-size");
             break;
 
         case OPTION_HASH_MIX_RATE:
             // 0 disables periodic mixing.  Otherwise the range is
             // [MIX_RATE_MIN, MIX_RATE_MAX], and MIX_RATE_MIN is 1, so the
             // valid values are contiguous.
-            mix_rate = parse_option_int(optarg, 0,
-                                         compress_castella_hash<>::MIX_RATE_MAX,
-                                         "--mix-rate");
+            mix_rate = parse_option_int(optarg, 0, compress_castella_hash<>::MIX_RATE_MAX,
+                                        "--mix-rate");
             break;
 
         case OPTION_HASH_NO_MMAP:
@@ -311,14 +311,13 @@ try
             break;
 
         case OPTION_HASH_NUM_THREADS:
-            num_threads = parse_option_int(optarg, 0,
-                                            compress_castella_tree::NUM_THREADS_MAX,
-                                            "--num-threads");
+            num_threads = parse_option_int(optarg, 0, compress_castella_tree::NUM_THREADS_MAX,
+                                           "--num-threads");
             break;
 
         case OPTION_HASH_SIZE:
             digest_size_bytes = parse_option_int(optarg, min_digest_size_bytes,
-                                                  max_digest_size_bytes, "--size");
+                                                 max_digest_size_bytes, "--size");
             break;
 
         default:
@@ -346,8 +345,10 @@ catch (const std::exception& ex)
 * \exception std::invalid_argument if a parameter is invalid
 */
 [[nodiscard]] std::vector<std::byte>
-compute_file_digest(const std::string& path, const int digest_size,
-                    const int rate, const int chunk_size_bytes)
+compute_file_digest(const std::string& path,
+                    const int digest_size,
+                    const int rate,
+                    const int chunk_size_bytes)
 {
     // FILE is hashed as a chunked tree, so the work can spread across
     // num_threads CPU cores.  Only memory-mapped input parallelizes.  A cch
@@ -507,9 +508,9 @@ verify_check_line(const check_line_fields& cl_fields, verification_totals& total
 
     try
     {
-        digest_bytes = compute_file_digest(cl_fields.path,
-                                           static_cast<int>(std::ssize(cl_fields.expected_digest)),
-                                           cl_fields.mix_rate, cl_fields.chunk_size_bytes);
+        digest_bytes = compute_file_digest(
+            cl_fields.path, static_cast<int>(std::ssize(cl_fields.expected_digest)),
+            cl_fields.mix_rate, cl_fields.chunk_size_bytes);
     }
     catch (const std::exception& ex)
     {
@@ -574,7 +575,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             else
             {
-                std::println("{}  {}", encode_bytes_to_hex(digest_bytes), quote_shell_always(path));
+                std::println("{}  {}", encode_bytes_to_hex(digest_bytes),
+                             quote_shell_always(path));
             }
         }
         catch (const std::invalid_argument& ex)

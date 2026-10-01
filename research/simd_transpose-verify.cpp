@@ -55,7 +55,8 @@ simd_transpose_naive(const simd_arr_t<N>& x)
     return x_transposed;
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int
+main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
 #if defined(__x86_64__) && defined(__SSE2__)
 

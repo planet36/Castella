@@ -250,10 +250,10 @@ private:
             assert(num_bytes_to_add > 0);
 #endif
 
-            (void)std::memcpy(&get_input_bytes_a_()[cur_input_byte_idx_],
-                              std::data(src_a), num_bytes_to_add);
-            (void)std::memcpy(&get_input_bytes_b_()[cur_input_byte_idx_],
-                              std::data(src_b), num_bytes_to_add);
+            (void)std::memcpy(&get_input_bytes_a_()[cur_input_byte_idx_], std::data(src_a),
+                              num_bytes_to_add);
+            (void)std::memcpy(&get_input_bytes_b_()[cur_input_byte_idx_], std::data(src_b),
+                              num_bytes_to_add);
 
             cur_input_byte_idx_ += num_bytes_to_add;
             src_a = src_a.subspan(num_bytes_to_add);
@@ -362,10 +362,7 @@ public:
     DuplexX2& operator=(DuplexX2&&) = delete;
 
     /// dtor
-    ~DuplexX2()
-    {
-        zeroize_();
-    }
+    ~DuplexX2() { zeroize_(); }
 
     /// Consume \a src_a into duplex A and \a src_b into duplex B
     /**

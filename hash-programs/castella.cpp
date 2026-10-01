@@ -442,25 +442,24 @@ try
             break;
 
         case OPTION_HASH_NUM_THREADS:
-            num_threads = parse_option_int(optarg, 0,
-                                            Castella::DuplexTree::NUM_THREADS_MAX,
-                                            "--num-threads");
+            num_threads = parse_option_int(optarg, 0, Castella::DuplexTree::NUM_THREADS_MAX,
+                                           "--num-threads");
             break;
 
         case OPTION_HASH_ROUNDS:
-            num_rounds_given = parse_option_int(optarg,
-                                           Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
-                                           Castella::NUM_ROUNDS_MAX, "--rounds");
+            num_rounds_given =
+                parse_option_int(optarg, Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(),
+                                 Castella::NUM_ROUNDS_MAX, "--rounds");
             break;
 
         case OPTION_HASH_SIZE:
             num_bytes_to_squeeze = parse_option_int(optarg, min_num_bytes_to_squeeze,
-                                                     max_num_bytes_to_squeeze, "--size");
+                                                    max_num_bytes_to_squeeze, "--size");
             break;
 
         case OPTION_HASH_SUFFIX:
             input_suffix = parse_option_int(optarg, std::numeric_limits<int>::min(),
-                                             std::numeric_limits<int>::max(), "--suffix");
+                                            std::numeric_limits<int>::max(), "--suffix");
             break;
 
         default:
@@ -521,8 +520,8 @@ read_key_file(const std::string& path, const int max_size_bytes)
     }
     catch (const std::exception& ex)
     {
-        errx(EXIT_FAILURE, "%s: could not allocate the key buffer: %s",
-             path.c_str(), ex.what());
+        errx(EXIT_FAILURE, "%s: could not allocate the key buffer: %s", path.c_str(),
+             ex.what());
     }
 
     char c = 0;
@@ -532,8 +531,8 @@ read_key_file(const std::string& path, const int max_size_bytes)
         {
             // errx exits without unwinding, so the local key must be scrubbed here.
             key = key_buffer{}; // deallocate
-            errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)",
-                 path.c_str(), max_size_bytes);
+            errx(EXIT_FAILURE, "%s: key file is too large (maximum %d bytes)", path.c_str(),
+                 max_size_bytes);
         }
 
         key.push_back(static_cast<std::byte>(c));
@@ -579,9 +578,12 @@ read_key_file(const std::string& path, const int max_size_bytes)
 *            key does not fit in one chunk of \a chunk_size_bytes
 */
 [[nodiscard]] std::vector<std::byte>
-compute_file_digest(const std::string& path, const int digest_size_bytes,
-                    const int rounds, const int suffix,
-                    const std::string_view custom, const int chunk_size_bytes,
+compute_file_digest(const std::string& path,
+                    const int digest_size_bytes,
+                    const int rounds,
+                    const int suffix,
+                    const std::string_view custom,
+                    const int chunk_size_bytes,
                     const std::span<const std::byte> key)
 {
     const int capacity_blocks = num_digest_bytes_to_capacity_blocks(digest_size_bytes);
@@ -593,8 +595,8 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
     // in process_file feeds the tree's streaming pipeline, so worker threads
     // hash previously read chunks while it is blocked in read().
     Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix,
-                                  keyed ? mac_function_name : function_name,
-                                  custom, chunk_size_bytes, num_threads);
+                                  keyed ? mac_function_name : function_name, custom,
+                                  chunk_size_bytes, num_threads);
 
     if (keyed)
     {
@@ -637,8 +639,10 @@ compute_file_digest(const std::string& path, const int digest_size_bytes,
 
 /// Format the digest-relevant options of a --tag line (see \c print_usage)
 [[nodiscard]] std::string
-format_tag_params(const int chunk_size_bytes, const std::string_view custom,
-                  const int rounds, const int suffix)
+format_tag_params(const int chunk_size_bytes,
+                  const std::string_view custom,
+                  const int rounds,
+                  const int suffix)
 {
     return std::format("chunk-size={},custom={},rounds={},suffix={}", chunk_size_bytes,
                        quote_shell_always(custom), rounds, suffix);
@@ -763,7 +767,8 @@ parse_untagged_line(std::string_view s, check_line_fields& cl_fields)
     // An untagged line does not carry its rounds.  When --rounds was not
     // given, derive it from this line's own digest length.  The command
     // line's --size is irrelevant in --check mode.
-    cl_fields.rounds = resolve_num_rounds(static_cast<int>(std::ssize(cl_fields.expected_digest)));
+    cl_fields.rounds =
+        resolve_num_rounds(static_cast<int>(std::ssize(cl_fields.expected_digest)));
     cl_fields.suffix = input_suffix;
 
     return true;
@@ -802,10 +807,10 @@ verify_check_line(const check_line_fields& cl_fields, verification_totals& total
 
     try
     {
-        digest_bytes = compute_file_digest(cl_fields.path,
-                                           static_cast<int>(std::ssize(cl_fields.expected_digest)),
-                                           cl_fields.rounds, cl_fields.suffix, cl_fields.custom,
-                                           cl_fields.chunk_size_bytes, key_bytes);
+        digest_bytes = compute_file_digest(
+            cl_fields.path, static_cast<int>(std::ssize(cl_fields.expected_digest)),
+            cl_fields.rounds, cl_fields.suffix, cl_fields.custom, cl_fields.chunk_size_bytes,
+            key_bytes);
     }
     catch (const std::exception& ex)
     {
@@ -888,7 +893,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             }
             else
             {
-                std::println("{}  {}", encode_bytes_to_hex(digest_bytes), quote_shell_always(path));
+                std::println("{}  {}", encode_bytes_to_hex(digest_bytes),
+                             quote_shell_always(path));
             }
         }
         catch (const std::invalid_argument& ex)

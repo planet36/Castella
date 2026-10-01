@@ -22,7 +22,8 @@
 */
 template <size_t N>
 [[nodiscard]] static Castella::arr_blocks_x2<N>
-pack_states(const Castella::arr_blocks<N>& state_a, const Castella::arr_blocks<N>& state_b) noexcept
+pack_states(const Castella::arr_blocks<N>& state_a,
+            const Castella::arr_blocks<N>& state_b) noexcept
 {
     Castella::arr_blocks_x2<N> state_x2;
 

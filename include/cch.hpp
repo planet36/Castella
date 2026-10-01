@@ -106,8 +106,7 @@ private:
     * whose 16-byte blocks repeat (all-zero pages, say) would keep every lane
     * identical until the first mix, collapsing absorption to a single lane.
     */
-    [[nodiscard]] static consteval state_t
-    create_init_state_() noexcept
+    [[nodiscard]] static consteval state_t create_init_state_() noexcept
     {
         // Continuing the stream past the last round constant makes these
         // lanes distinct from every one of them.  Reaching it depends on
@@ -320,7 +319,8 @@ private:
                     }
 
                     src = src.subspan(get_state_size_bytes());
-                } while (std::size(src) >= static_cast<std::size_t>(get_state_size_bytes()));
+                }
+                while (std::size(src) >= static_cast<std::size_t>(get_state_size_bytes()));
 
                 state_ = state;
                 absorbs_since_mix_ = absorbs_since_mix;

@@ -186,7 +186,8 @@ struct verification_totals final
 */
 [[nodiscard]] int
 run_check_files(const std::vector<std::string>& checkfile_paths,
-                const auto& parse_line, const auto& verify_line)
+                const auto& parse_line,
+                const auto& verify_line)
 {
     verification_totals totals;
     bool any_checkfile_failed = false;
@@ -249,8 +250,7 @@ run_check_files(const std::vector<std::string>& checkfile_paths,
 
     if (totals.num_unreadable > 0)
     {
-        warnx("WARNING: %" PRId64 " listed file(s) could not be read",
-              totals.num_unreadable);
+        warnx("WARNING: %" PRId64 " listed file(s) could not be read", totals.num_unreadable);
     }
 
     if (totals.num_mismatched > 0)

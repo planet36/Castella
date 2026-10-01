@@ -78,7 +78,8 @@ struct compress_castella_tree_node_policy final
     }
 
     /// Write both nodes' final digests into their destinations
-    static void extract_cv_x2(node_x2_type& pair, const std::span<std::byte> cv_dst_a,
+    static void extract_cv_x2(node_x2_type& pair,
+                              const std::span<std::byte> cv_dst_a,
                               const std::span<std::byte> cv_dst_b)
     {
         pair.final_digest_pair_to(cv_dst_a, cv_dst_b);
@@ -99,7 +100,7 @@ struct compress_castella_tree_node_policy final
 * is by design, since the tree's role prefix separates the domains.
 */
 struct compress_castella_tree final
-    : public Castella::HashTree<compress_castella_tree_node_policy, compress_castella_tree>
+: public Castella::HashTree<compress_castella_tree_node_policy, compress_castella_tree>
 {
 private:
     using base_type =
@@ -124,7 +125,8 @@ public:
     explicit compress_castella_tree(const int mix_rate = node_type::DEFAULT_MIX_RATE,
                                     const int chunk_size_bytes = DEFAULT_CHUNK_SIZE,
                                     const int num_threads = 0) :
-    base_type(compress_castella_tree_node_policy{.mix_rate = mix_rate}, chunk_size_bytes,
+    base_type(compress_castella_tree_node_policy{.mix_rate = mix_rate},
+              chunk_size_bytes,
               num_threads)
     {}
 

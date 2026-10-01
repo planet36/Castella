@@ -75,7 +75,8 @@ calculate_metrics_num_rounds(const int num_samples)
                         // for each output row
                         for (decltype(N) out_row = 0; out_row < N; ++out_row)
                         {
-                            const auto difference_vector = permuted_state[out_row] ^ permuted_state_p[out_row];
+                            const auto difference_vector =
+                                permuted_state[out_row] ^ permuted_state_p[out_row];
 
                             // Hamming distance
                             num_flipped_bits += simd_popcount(difference_vector);

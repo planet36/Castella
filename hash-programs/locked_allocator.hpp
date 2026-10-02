@@ -101,7 +101,7 @@ struct locked_allocator
 
         ::explicit_bzero(p, num_bytes);
 
-        // munmap automatically removes memory lock, so calling munlock is unnecessary.
+        // munmap drops the lock along with the mapping, so no munlock is needed.
         (void)::munmap(p, num_bytes);
 
         errno = saved_errno;

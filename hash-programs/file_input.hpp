@@ -48,7 +48,7 @@ process_file_read_fd(int fd, auto& hash_obj)
     // read(3p) returns either an error code or the number of bytes read
     while ((num_bytes_read = ::read(fd, std::data(buf), std::size(buf))) > 0)
     {
-        hash_obj.add(std::span{buf}.first(static_cast<size_t>(num_bytes_read)));
+        hash_obj.add(std::span{buf}.first(num_bytes_read));
     }
 
     return num_bytes_read < 0;

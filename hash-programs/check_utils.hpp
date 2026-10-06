@@ -89,7 +89,7 @@ consume_int(std::string_view& s, const int min, const int max, int& value) noexc
     if ((ec != std::errc{}) || (parsed < min) || (parsed > max))
         return false;
 
-    s.remove_prefix(static_cast<std::size_t>(ptr - std::data(s)));
+    s.remove_prefix(ptr - std::data(s));
     value = parsed;
     return true;
 }

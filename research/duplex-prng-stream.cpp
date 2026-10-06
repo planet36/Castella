@@ -79,7 +79,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     duplex.add("duplex-prng-stream seed"sv);
 
-    std::vector<std::byte> buf(static_cast<size_t>(duplex.get_rate_size_bytes()));
+    std::vector<std::byte> buf(duplex.get_rate_size_bytes());
 
     while (true)
     {

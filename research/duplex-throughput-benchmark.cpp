@@ -66,7 +66,7 @@ BM_duplex_squeeze(benchmark::State& BM_state, const int capacity_blocks, const i
 
     Castella::Duplex duplex(capacity_blocks, num_rounds);
 
-    std::vector<std::byte> dst(static_cast<size_t>(duplex.get_rate_size_bytes()));
+    std::vector<std::byte> dst(duplex.get_rate_size_bytes());
 
     for (auto _ : BM_state) // NOLINT(clang-analyzer-deadcode.DeadStores)
     {

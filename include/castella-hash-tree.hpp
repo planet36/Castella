@@ -779,7 +779,7 @@ private:
     */
     [[nodiscard]] auto ring_capacity_() const noexcept
     {
-        return (HAS_PAIRED_LEAF ? 4 : 2) * static_cast<int64_t>(NUM_THREADS);
+        return (HAS_PAIRED_LEAF ? 4 : 2) * NUM_THREADS;
     }
 
     /// The ring slot for monotonic position \a pos
@@ -812,7 +812,7 @@ private:
         ring_ = std::vector<Slot>(ring_capacity_());
         for (auto& slot : ring_)
         {
-            slot.chunk.reserve(static_cast<size_t>(CHUNK_SIZE));
+            slot.chunk.reserve(CHUNK_SIZE);
             slot.cv.resize(CV_LEN);
         }
 
@@ -1666,7 +1666,7 @@ private:
     {
         // Reserve once so absorption never reallocates (and so the
         // destructor has a single stable allocation to zeroize).
-        chunk_buf_.reserve(static_cast<size_t>(CHUNK_SIZE));
+        chunk_buf_.reserve(CHUNK_SIZE);
 
         absorb_role_prefix_(final_node_, ROLE_FINAL_NODE);
     }

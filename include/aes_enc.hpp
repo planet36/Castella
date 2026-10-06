@@ -171,7 +171,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 * The VAES implementation of \c aes_enc_arr.  It does the same work as
 * \c aes_enc_arr_generic, two elements at a time.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_arr_paircast(simd_arr_t<N>& arr,
@@ -204,7 +204,7 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
 * round \c aes_r both lanes use the same key, \c aes_round_keys[aes_r][i],
 * broadcast to both lanes.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
                const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -228,7 +228,7 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
 * element may use different 128-bit round keys.  \c aes_enc_arr_x2 instead
 * broadcasts one 128-bit key to both lanes.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_arr_folded(
     simd_arr_x2_t<N>& arr,
@@ -257,7 +257,7 @@ aes_enc_arr_folded(
 * This is the portable implementation of \c aes_enc_arr, and the only one
 * on targets without VAES.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_arr_generic(simd_arr_t<N>& arr,
                     const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -279,7 +279,7 @@ aes_enc_arr_generic(simd_arr_t<N>& arr,
 * when \a N is positive and even, and \c aes_enc_arr_generic everywhere
 * else.  The two are bit-identical.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_arr(simd_arr_t<N>& arr,
             const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -305,7 +305,7 @@ aes_enc_arr(simd_arr_t<N>& arr,
 * The VAES implementation of \c aes_enc_inv_arr.  It does the same work as
 * \c aes_enc_inv_arr_generic, two elements at a time.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_inv_arr_paircast(
@@ -339,7 +339,7 @@ aes_enc_inv_arr_paircast(
 * This is the portable implementation of \c aes_enc_inv_arr, and the only
 * one on targets without VAES.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_inv_arr_generic(
     simd_arr_t<N>& arr,
@@ -362,7 +362,7 @@ aes_enc_inv_arr_generic(
 * VAES when \a N is positive and even, and \c aes_enc_inv_arr_generic
 * everywhere else.  The two are bit-identical.
 */
-template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
+template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 static void
 aes_enc_inv_arr(simd_arr_t<N>& arr,
                 const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept

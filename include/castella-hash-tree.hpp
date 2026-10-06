@@ -604,7 +604,7 @@ private:
 #if defined(DEBUG)
         assert(chunk_index >= 1);
         assert(!chunk.empty());
-        assert(chunk.size() <= static_cast<size_t>(CHUNK_SIZE));
+        assert(std::cmp_less_equal(chunk.size(), CHUNK_SIZE));
         assert(std::ssize(cv_dst) == CV_LEN);
 #endif
 
@@ -1538,7 +1538,7 @@ private:
         while (!std::empty(src))
         {
             // More input follows a full buffer, so it is safe to flush.
-            if (chunk_buf_.size() == CHUNK_SIZE)
+            if (std::cmp_equal(chunk_buf_.size(), CHUNK_SIZE))
             {
                 flush_buffered_chunk_();
             }
@@ -1549,7 +1549,7 @@ private:
             // partial.  Keeping the final bytes back preserves the
             // more-input-follows rule, since (len - 1) / CHUNK_SIZE is 0 when
             // len == CHUNK_SIZE.
-            if (chunk_buf_.empty() && (std::size(src) > CHUNK_SIZE))
+            if (chunk_buf_.empty() && std::cmp_greater(std::size(src), CHUNK_SIZE))
             {
                 const auto num_bulk = static_cast<int64_t>((std::size(src) - 1) / CHUNK_SIZE);
 

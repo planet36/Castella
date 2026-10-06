@@ -135,7 +135,7 @@ constexpr auto lfsr_seed = lfsr_from_bytes16("expand 16-byte c");
 * The generator is deliberately unrelated to the AES round function used in
 * \c Castella::permute so that the round constants share no structure with it.
 */
-template <size_t NUM_ROUNDS>
+template <int NUM_ROUNDS>
 [[nodiscard]] static consteval auto
 create_round_constants() noexcept
 {
@@ -205,7 +205,7 @@ using round_constants_folded_t = std::array<simd_arr_x2_t<N / 2>, AES_NUM_ROUNDS
 * Derived from the existing \c round_constants, so the two tables always hold
 * identical values.
 */
-template <size_t N, size_t NUM_ROUNDS>
+template <size_t N, int NUM_ROUNDS>
 [[nodiscard]] static consteval auto
 create_round_constants_folded() noexcept
 {
@@ -214,9 +214,9 @@ create_round_constants_folded() noexcept
 
     std::array<round_constants_folded_t<N>, NUM_ROUNDS> result{};
 
-    for (size_t r = 0; r < NUM_ROUNDS; ++r)
+    for (int r = 0; r < NUM_ROUNDS; ++r)
     {
-        for (size_t aes_r = 0; aes_r < AES_NUM_ROUNDS; ++aes_r)
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; ++aes_r)
         {
             for (size_t j = 0; j < N / 2; ++j)
             {

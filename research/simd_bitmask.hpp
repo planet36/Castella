@@ -63,7 +63,7 @@ inline constexpr simd_arr_t<128> simd_bitmask128_arr = []
 {
     simd_arr_t<128> result{};
 
-    for (size_t i = 0; i < 64; ++i)
+    for (int i = 0; i < 64; ++i)
     {
         result[i] = combine_u64x2(0, UINT64_C(1) << i); // hi, lo
         result[i + 64] = combine_u64x2(UINT64_C(1) << i, 0); // hi, lo

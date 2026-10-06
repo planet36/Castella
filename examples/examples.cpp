@@ -113,7 +113,7 @@ check_hex(const std::string_view result,
 */
 [[nodiscard]] std::vector<std::byte>
 parallel_hash_like(const contiguous_byte_range auto& X,
-                   const size_t B,
+                   const int B,
                    const int num_bytes_to_squeeze,
                    const int capacity_blocks,
                    const contiguous_byte_range auto& function_name,
@@ -692,8 +692,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 256; // bits
         constexpr std::string_view X{"Don't make me run!  I'm full of chocolate!"};
-        constexpr size_t B = 8;    // bytes, and the last block is partial
-        constexpr size_t B_2 = 12; // a different block size
+        constexpr int B = 8;    // bytes, and the last block is partial
+        constexpr int B_2 = 12; // a different block size
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";
@@ -742,8 +742,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 512; // bits
         constexpr std::string_view X{"Stupid sexy Flanders!"};
-        constexpr size_t B = 8;    // bytes, and the last block is partial
-        constexpr size_t B_2 = 12; // a different block size
+        constexpr int B = 8;    // bytes, and the last block is partial
+        constexpr int B_2 = 12; // a different block size
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";
@@ -792,7 +792,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 256; // bits
         constexpr std::string_view X{"You don't win friends with salad."};
-        constexpr size_t B = 8; // bytes, and the last block is partial
+        constexpr int B = 8; // bytes, and the last block is partial
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";
@@ -843,7 +843,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         constexpr int L = 512; // bits
         constexpr std::string_view X{"I'm not popular enough to be different."};
-        constexpr size_t B = 8; // bytes, and the last block is partial
+        constexpr int B = 8; // bytes, and the last block is partial
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr std::string_view function_name = "Castella-Parallel-Hash";

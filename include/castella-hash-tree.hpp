@@ -1265,29 +1265,26 @@ private:
         assert(num_chunks >= 1);
 #endif
 
-        const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
-        const auto cv_len = static_cast<size_t>(CV_LEN);
-
         const int64_t first_chunk_index = num_chunks_flushed_;
 
         int64_t pos = 0;
 
         if (first_chunk_index == 0)
         {
-            absorb_into_final_node_(std::span{src, chunk_size});
+            absorb_into_final_node_(std::span{src, CHUNK_SIZE});
             pos = 1;
         }
 
         // One buffer holds a pair's two CVs, contiguous and in index order,
         // so one add() absorbs both (same byte stream as two adds).
-        std::vector<std::byte> cvs(2 * cv_len);
-        const std::span cv_a{std::data(cvs), cv_len};
-        const std::span cv_b{std::data(cvs) + cv_len, cv_len};
+        std::vector<std::byte> cvs(2 * CV_LEN);
+        const std::span cv_a{std::data(cvs), CV_LEN};
+        const std::span cv_b{std::data(cvs) + CV_LEN, CV_LEN};
 
         for (; pos + 1 < num_chunks; pos += 2)
         {
-            const std::span chunk_a{src + pos * chunk_size, chunk_size};
-            const std::span chunk_b{src + (pos + 1) * chunk_size, chunk_size};
+            const std::span chunk_a{src + pos * CHUNK_SIZE, CHUNK_SIZE};
+            const std::span chunk_b{src + (pos + 1) * CHUNK_SIZE, CHUNK_SIZE};
 
             hash_leaf_pair_into_(chunk_a, chunk_b, first_chunk_index + pos, cv_a, cv_b);
 
@@ -1296,7 +1293,7 @@ private:
 
         if (pos < num_chunks)
         {
-            const std::span chunk{src + pos * chunk_size, chunk_size};
+            const std::span chunk{src + pos * CHUNK_SIZE, CHUNK_SIZE};
 
             hash_leaf_into_(chunk, first_chunk_index + pos, cv_a);
 
@@ -1354,9 +1351,6 @@ private:
         assert(chunk_buf_.empty());
 #endif
 
-        const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
-        const auto cv_len = static_cast<size_t>(CV_LEN);
-
         const int64_t first_chunk_index = num_chunks_flushed_;
 
         // Chunk 0, if present in this batch, is absorbed directly by the
@@ -1390,14 +1384,14 @@ private:
             // workers, and hashes them inline otherwise.
             for (int64_t pos = 0; pos < num_chunks; ++pos)
             {
-                flush_chunk_(std::span{src + pos * chunk_size, chunk_size});
+                flush_chunk_(std::span{src + pos * CHUNK_SIZE, CHUNK_SIZE});
             }
             return;
         }
 
         // One flat allocation holds every CV of the batch, in leaf order.
         // Worker w writes only its own disjoint slice.
-        std::vector<std::byte> cvs(num_leaves * cv_len);
+        std::vector<std::byte> cvs(num_leaves * CV_LEN);
 
         // One slot per worker.  A worker that throws parks its exception
         // here for the calling thread to rethrow after the join.
@@ -1426,7 +1420,7 @@ private:
                     // destructors join at the end of this scope, before those
                     // vectors are destroyed.
                     [this, src, &cvs, &worker_exceptions, w, range_begin, range_end,
-                     first_leaf_pos, first_chunk_index, chunk_size, cv_len]
+                     first_leaf_pos, first_chunk_index]
                     {
                         try
                         {
@@ -1441,15 +1435,15 @@ private:
                                 for (; k + 1 < range_end; k += 2)
                                 {
                                     const int64_t pos = first_leaf_pos + k;
-                                    const std::span chunk_a{src + pos * chunk_size,
-                                                            chunk_size};
-                                    const std::span chunk_b{src + (pos + 1) * chunk_size,
-                                                            chunk_size};
+                                    const std::span chunk_a{src + pos * CHUNK_SIZE,
+                                                            CHUNK_SIZE};
+                                    const std::span chunk_b{src + (pos + 1) * CHUNK_SIZE,
+                                                            CHUNK_SIZE};
 
                                     hash_leaf_pair_into_(
                                         chunk_a, chunk_b, first_chunk_index + pos,
-                                        std::span{&cvs[k * cv_len], cv_len},
-                                        std::span{&cvs[(k + 1) * cv_len], cv_len});
+                                        std::span{&cvs[k * CV_LEN], CV_LEN},
+                                        std::span{&cvs[(k + 1) * CV_LEN], CV_LEN});
                                 }
                             }
 
@@ -1458,13 +1452,13 @@ private:
                                 // k-th leaf = (first_leaf_pos + k)-th chunk
                                 // of the batch
                                 const int64_t pos = first_leaf_pos + k;
-                                const std::span chunk{src + pos * chunk_size, chunk_size};
+                                const std::span chunk{src + pos * CHUNK_SIZE, CHUNK_SIZE};
 
                                 // Write the CV straight into its slice of
                                 // the flat cvs array, with no per-leaf CV
                                 // vector to allocate, copy, and free.
                                 hash_leaf_into_(chunk, first_chunk_index + pos,
-                                                std::span{&cvs[k * cv_len], cv_len});
+                                                std::span{&cvs[k * CV_LEN], CV_LEN});
                             }
                         }
                         catch (...)
@@ -1489,7 +1483,7 @@ private:
             // batch's CVs.
             if (first_chunk_index == 0)
             {
-                absorb_into_final_node_(std::span{src, chunk_size});
+                absorb_into_final_node_(std::span{src, CHUNK_SIZE});
             }
             else
             {
@@ -1541,12 +1535,10 @@ private:
         assert(!has_been_finalized_);
 #endif
 
-        const auto chunk_size = static_cast<size_t>(CHUNK_SIZE);
-
         while (!std::empty(src))
         {
             // More input follows a full buffer, so it is safe to flush.
-            if (chunk_buf_.size() == chunk_size)
+            if (chunk_buf_.size() == CHUNK_SIZE)
             {
                 flush_buffered_chunk_();
             }
@@ -1555,19 +1547,19 @@ private:
             // skipping the copy into chunk_buf_.  All but the last chunk's
             // worth of bytes may be flushed now, and that last chunk may be
             // partial.  Keeping the final bytes back preserves the
-            // more-input-follows rule, since (len - 1) / chunk_size is 0 when
-            // len == chunk_size.
-            if (chunk_buf_.empty() && (std::size(src) > chunk_size))
+            // more-input-follows rule, since (len - 1) / CHUNK_SIZE is 0 when
+            // len == CHUNK_SIZE.
+            if (chunk_buf_.empty() && (std::size(src) > CHUNK_SIZE))
             {
-                const auto num_bulk = static_cast<int64_t>((std::size(src) - 1) / chunk_size);
+                const auto num_bulk = static_cast<int64_t>((std::size(src) - 1) / CHUNK_SIZE);
 
                 flush_bulk_chunks_(std::data(src), num_bulk);
 
-                src = src.subspan(num_bulk * chunk_size);
+                src = src.subspan(num_bulk * CHUNK_SIZE);
             }
 
             // Buffer what remains of this call (or top up a partial chunk).
-            const size_t available_space = chunk_size - chunk_buf_.size();
+            const size_t available_space = CHUNK_SIZE - chunk_buf_.size();
             const size_t num_bytes_to_add = std::min(available_space, std::size(src));
 
 #if defined(DEBUG)

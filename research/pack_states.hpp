@@ -27,7 +27,7 @@ pack_states(const Castella::arr_blocks<N>& state_a,
 {
     Castella::arr_blocks_x2<N> state_x2;
 
-    for (size_t i = 0; i < N; ++i)
+    for (decltype(N) i = 0; i < N; ++i)
     {
         state_x2[i] = _mm256_set_m128i(state_b[i], state_a[i]);
     }

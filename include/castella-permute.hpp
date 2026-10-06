@@ -218,7 +218,7 @@ create_round_constants_folded() noexcept
     {
         for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; ++aes_r)
         {
-            for (size_t j = 0; j < N / 2; ++j)
+            for (decltype(N) j = 0; j < N / 2; ++j)
             {
                 result[r][aes_r][j] = std::bit_cast<block_x2_t>(std::array{
                     round_constants[r][aes_r][j],
@@ -299,7 +299,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
     // so the state touches memory only here and at the unfold below.
     simd_arr_x2_t<N / 2> state_folded;
 
-    for (size_t j = 0; j < N / 2; ++j)
+    for (decltype(N) j = 0; j < N / 2; ++j)
     {
         state_folded[j] = _mm256_set_m128i(state[j + N / 2], state[j]);
     }
@@ -310,7 +310,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
         simd_transpose_folded(state_folded);
     }
 
-    for (size_t j = 0; j < N / 2; ++j)
+    for (decltype(N) j = 0; j < N / 2; ++j)
     {
         state[j] = _mm256_extracti128_si256(state_folded[j], 0);
         state[j + N / 2] = _mm256_extracti128_si256(state_folded[j], 1);

@@ -1267,7 +1267,7 @@ private:
 
         const int64_t first_chunk_index = num_chunks_flushed_;
 
-        int64_t pos = 0;
+        std::remove_const_t<decltype(num_chunks)> pos = 0;
 
         if (first_chunk_index == 0)
         {
@@ -1382,7 +1382,7 @@ private:
             // the chunks to the streaming pipeline when the pool is running,
             // which is how a read loop's one- and two-chunk batches reach the
             // workers, and hashes them inline otherwise.
-            for (int64_t pos = 0; pos < num_chunks; ++pos)
+            for (std::remove_const_t<decltype(num_chunks)> pos = 0; pos < num_chunks; ++pos)
             {
                 flush_chunk_(std::span(src + pos * CHUNK_SIZE, CHUNK_SIZE));
             }
@@ -1407,9 +1407,9 @@ private:
             const int64_t leaves_per_worker = num_leaves / num_workers;
             const int64_t num_extra_leaves = num_leaves % num_workers;
 
-            int64_t range_begin = 0;
+            std::remove_const_t<decltype(num_workers)> range_begin = 0;
 
-            for (int64_t w = 0; w < num_workers; ++w)
+            for (std::remove_const_t<decltype(num_workers)> w = 0; w < num_workers; ++w)
             {
                 const int64_t range_end =
                     range_begin + leaves_per_worker + ((w < num_extra_leaves) ? 1 : 0);

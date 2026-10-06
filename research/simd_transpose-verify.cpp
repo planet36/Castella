@@ -27,14 +27,14 @@ simd_transpose_naive(const simd_arr_t<N>& x)
     decltype(tmp) tmp_transposed{};
     simd_arr_t<N> x_transposed{};
 
-    for (std::size_t i = 0; i < N; ++i)
+    for (decltype(N) i = 0; i < N; ++i)
     {
         tmp.at(i).v = x.at(i);
     }
 
-    for (std::size_t i = 0; i < N; ++i)
+    for (decltype(N) i = 0; i < N; ++i)
     {
-        for (std::size_t j = 0; j < N; ++j)
+        for (decltype(N) j = 0; j < N; ++j)
         {
             if constexpr (N == 2)
                 tmp_transposed.at(j).u64.at(i) = tmp.at(i).u64.at(j);
@@ -47,7 +47,7 @@ simd_transpose_naive(const simd_arr_t<N>& x)
         }
     }
 
-    for (std::size_t i = 0; i < N; ++i)
+    for (decltype(N) i = 0; i < N; ++i)
     {
         x_transposed.at(i) = tmp_transposed.at(i).v;
     }

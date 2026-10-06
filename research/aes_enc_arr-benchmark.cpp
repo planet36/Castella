@@ -52,6 +52,7 @@
 #include <benchmark/benchmark.h> // https://github.com/google/benchmark
 #include <cassert>
 #include <cstdlib>
+#include <type_traits>
 #include <utility>
 
 constexpr size_t N_BLOCKS = Castella::Duplex::B;
@@ -209,13 +210,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // The folded overload with the folded round constants must match
         // the unfolded transform after unfolding.
         simd_arr_x2_t<N / 2> state_folded{};
-        for (size_t j = 0; j < N / 2; ++j)
+        for (std::remove_const_t<decltype(N)> j = 0; j < N / 2; ++j)
         {
             state_folded[j] = _mm256_set_m128i(state_a[j + N / 2], state_a[j]);
         }
         aes_enc_arr_folded(state_folded, keys_folded);
         Castella::arr_blocks<N> unfolded{};
-        for (size_t j = 0; j < N / 2; ++j)
+        for (std::remove_const_t<decltype(N)> j = 0; j < N / 2; ++j)
         {
             unfolded[j] = _mm256_extracti128_si256(state_folded[j], 0);
             unfolded[j + N / 2] = _mm256_extracti128_si256(state_folded[j], 1);

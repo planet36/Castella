@@ -92,7 +92,7 @@ decode_hex_to_bytes(const std::string_view s)
 
     std::vector<std::byte> result(std::size(s) / 2);
 
-    for (std::size_t i = 0; i < std::size(result); ++i)
+    for (decltype(std::size(result)) i = 0; i < std::size(result); ++i)
     {
         const auto hi = decode_hex_to_nibble(s[2 * i]);
         const auto lo = decode_hex_to_nibble(s[2 * i + 1]);

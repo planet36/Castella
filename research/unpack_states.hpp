@@ -22,7 +22,7 @@ unpack_states(const Castella::arr_blocks_x2<N>& state_x2,
               Castella::arr_blocks<N>& state_a,
               Castella::arr_blocks<N>& state_b) noexcept
 {
-    for (size_t i = 0; i < N; ++i)
+    for (decltype(N) i = 0; i < N; ++i)
     {
         state_a[i] = _mm256_extracti128_si256(state_x2[i], 0);
         state_b[i] = _mm256_extracti128_si256(state_x2[i], 1);

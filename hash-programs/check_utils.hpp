@@ -52,7 +52,7 @@ equal_constant_time(const std::span<const std::byte> a,
 
     volatile unsigned int diff = 0;
 
-    for (std::size_t i = 0; i < std::size(a); ++i)
+    for (decltype(std::size(a)) i = 0; i < std::size(a); ++i)
     {
         diff |= std::to_integer<unsigned int>(a[i] ^ b[i]);
     }

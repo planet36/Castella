@@ -826,7 +826,7 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        return add(std::span{static_cast<const std::byte*>(data), len});
+        return add(std::span(static_cast<const std::byte*>(data), len));
     }
 
     /// Consume the left-encoded size of the input data, then its contents
@@ -867,7 +867,7 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        return add_left_encoded(std::span{static_cast<const std::byte*>(data), len});
+        return add_left_encoded(std::span(static_cast<const std::byte*>(data), len));
     }
 
     /// Consume the input data, then its right-encoded size
@@ -908,7 +908,7 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        return add_right_encoded(std::span{static_cast<const std::byte*>(data), len});
+        return add_right_encoded(std::span(static_cast<const std::byte*>(data), len));
     }
 
     /// Consume the left-encoding of the integer \a x

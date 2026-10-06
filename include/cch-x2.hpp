@@ -234,8 +234,8 @@ public:
         assert(!((data_b == nullptr) && (len != 0)));
 #endif
 
-        add(std::span{static_cast<const std::byte*>(data_a), len},
-            std::span{static_cast<const std::byte*>(data_b), len});
+        add(std::span(static_cast<const std::byte*>(data_a), len),
+            std::span(static_cast<const std::byte*>(data_b), len));
     }
 
     /// Get both nodes' final digest bytes, written into \a dst_a and \a dst_b

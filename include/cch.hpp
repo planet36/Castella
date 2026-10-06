@@ -482,7 +482,7 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        return add(std::span{static_cast<const std::byte*>(data), len});
+        return add(std::span(static_cast<const std::byte*>(data), len));
     }
 
     /// Get the final digest bytes

@@ -1271,20 +1271,20 @@ private:
 
         if (first_chunk_index == 0)
         {
-            absorb_into_final_node_(std::span{src, CHUNK_SIZE});
+            absorb_into_final_node_(std::span(src, CHUNK_SIZE));
             pos = 1;
         }
 
         // One buffer holds a pair's two CVs, contiguous and in index order,
         // so one add() absorbs both (same byte stream as two adds).
         std::vector<std::byte> cvs(2 * CV_LEN);
-        const std::span cv_a{std::data(cvs), CV_LEN};
-        const std::span cv_b{std::data(cvs) + CV_LEN, CV_LEN};
+        const std::span cv_a(std::data(cvs), CV_LEN);
+        const std::span cv_b(std::data(cvs) + CV_LEN, CV_LEN);
 
         for (; pos + 1 < num_chunks; pos += 2)
         {
-            const std::span chunk_a{src + pos * CHUNK_SIZE, CHUNK_SIZE};
-            const std::span chunk_b{src + (pos + 1) * CHUNK_SIZE, CHUNK_SIZE};
+            const std::span chunk_a(src + pos * CHUNK_SIZE, CHUNK_SIZE);
+            const std::span chunk_b(src + (pos + 1) * CHUNK_SIZE, CHUNK_SIZE);
 
             hash_leaf_pair_into_(chunk_a, chunk_b, first_chunk_index + pos, cv_a, cv_b);
 
@@ -1293,7 +1293,7 @@ private:
 
         if (pos < num_chunks)
         {
-            const std::span chunk{src + pos * CHUNK_SIZE, CHUNK_SIZE};
+            const std::span chunk(src + pos * CHUNK_SIZE, CHUNK_SIZE);
 
             hash_leaf_into_(chunk, first_chunk_index + pos, cv_a);
 
@@ -1384,7 +1384,7 @@ private:
             // workers, and hashes them inline otherwise.
             for (int64_t pos = 0; pos < num_chunks; ++pos)
             {
-                flush_chunk_(std::span{src + pos * CHUNK_SIZE, CHUNK_SIZE});
+                flush_chunk_(std::span(src + pos * CHUNK_SIZE, CHUNK_SIZE));
             }
             return;
         }
@@ -1434,16 +1434,16 @@ private:
                                 // single-leaf loop below.
                                 for (; k + 1 < range_end; k += 2)
                                 {
-                                    const int64_t pos = first_leaf_pos + k;
-                                    const std::span chunk_a{src + pos * CHUNK_SIZE,
-                                                            CHUNK_SIZE};
-                                    const std::span chunk_b{src + (pos + 1) * CHUNK_SIZE,
-                                                            CHUNK_SIZE};
+                                    const auto pos = first_leaf_pos + k;
+                                    const std::span chunk_a(src + pos * CHUNK_SIZE,
+                                                            CHUNK_SIZE);
+                                    const std::span chunk_b(src + (pos + 1) * CHUNK_SIZE,
+                                                            CHUNK_SIZE);
 
                                     hash_leaf_pair_into_(
                                         chunk_a, chunk_b, first_chunk_index + pos,
-                                        std::span{&cvs[k * CV_LEN], CV_LEN},
-                                        std::span{&cvs[(k + 1) * CV_LEN], CV_LEN});
+                                        std::span(&cvs[k * CV_LEN], CV_LEN),
+                                        std::span(&cvs[(k + 1) * CV_LEN], CV_LEN));
                                 }
                             }
 
@@ -1451,14 +1451,14 @@ private:
                             {
                                 // k-th leaf = (first_leaf_pos + k)-th chunk
                                 // of the batch
-                                const int64_t pos = first_leaf_pos + k;
-                                const std::span chunk{src + pos * CHUNK_SIZE, CHUNK_SIZE};
+                                const auto pos = first_leaf_pos + k;
+                                const std::span chunk(src + pos * CHUNK_SIZE, CHUNK_SIZE);
 
                                 // Write the CV straight into its slice of
                                 // the flat cvs array, with no per-leaf CV
                                 // vector to allocate, copy, and free.
                                 hash_leaf_into_(chunk, first_chunk_index + pos,
-                                                std::span{&cvs[k * CV_LEN], CV_LEN});
+                                                std::span(&cvs[k * CV_LEN], CV_LEN));
                             }
                         }
                         catch (...)
@@ -1483,7 +1483,7 @@ private:
             // batch's CVs.
             if (first_chunk_index == 0)
             {
-                absorb_into_final_node_(std::span{src, CHUNK_SIZE});
+                absorb_into_final_node_(std::span(src, CHUNK_SIZE));
             }
             else
             {
@@ -1747,7 +1747,7 @@ public:
         assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
 #endif
 
-        return add(std::span{static_cast<const std::byte*>(data), len});
+        return add(std::span(static_cast<const std::byte*>(data), len));
     }
 };
 

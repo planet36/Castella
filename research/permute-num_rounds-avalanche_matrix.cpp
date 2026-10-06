@@ -40,10 +40,10 @@ const std::string images_output_directory = "results";
 * \note This is a diagnostic aid, not essential output: on any I/O error, a
 * warning is printed to stderr and the function returns without throwing.
 */
-template <size_t state_size_bits>
+template <size_t STATE_SIZE_BITS>
 void
 save_avalanche_matrix_pgm(
-    const std::array<std::array<int, state_size_bits>, state_size_bits>& avalanche_matrix,
+    const std::array<std::array<int, STATE_SIZE_BITS>, STATE_SIZE_BITS>& avalanche_matrix,
     const double mean,
     const double std_dev,
     const std::string& path)
@@ -59,9 +59,9 @@ save_avalanche_matrix_pgm(
         return;
     }
 
-    ofs << "P5\n" << state_size_bits << ' ' << state_size_bits << "\n255\n";
+    ofs << "P5\n" << STATE_SIZE_BITS << ' ' << STATE_SIZE_BITS << "\n255\n";
 
-    std::vector<std::uint8_t> pixels(state_size_bits * state_size_bits);
+    std::vector<std::uint8_t> pixels(STATE_SIZE_BITS * STATE_SIZE_BITS);
 
     size_t idx = 0;
     for (const auto& row : avalanche_matrix)

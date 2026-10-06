@@ -90,8 +90,8 @@ aes_enc_0_inv(T data) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform \c aes_enc_0 \a AES_NUM_ROUNDS times on each element of \a arr
+template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
@@ -101,7 +101,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -112,14 +112,14 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0 \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform \c aes_enc_0 \a AES_NUM_ROUNDS times on each element of \a arr
+template <int AES_NUM_ROUNDS, size_t N>
 static void
 aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -128,8 +128,8 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform \c aes_enc_0_inv \a AES_NUM_ROUNDS times on each element of \a arr
+template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
@@ -139,7 +139,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0_inv(v);
         }
@@ -150,14 +150,14 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 #endif
 
-/// Perform \c aes_enc_0_inv \a aes_num_rounds times on each element of \a arr
-template <int aes_num_rounds, size_t N>
+/// Perform \c aes_enc_0_inv \a AES_NUM_ROUNDS times on each element of \a arr
+template <int AES_NUM_ROUNDS, size_t N>
 static void
 aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < aes_num_rounds; aes_r++)
+        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0_inv(arr[i]);
         }
@@ -166,16 +166,16 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * The VAES implementation of \c aes_enc_arr.  It does the same work as
 * \c aes_enc_arr_generic, two elements at a time.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_arr_paircast(simd_arr_t<N>& arr,
-                     const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+                     const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -184,7 +184,7 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
         {
             const __m256i k = _mm256_loadu_si256(
                 reinterpret_cast<const __m256i*>(&aes_round_keys[aes_r][i]));
@@ -197,23 +197,23 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
 
 #if defined(__AVX2__)
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of the lane-paired \a arr
+/// Perform \a AES_NUM_ROUNDS rounds of AES encryption on each element of the lane-paired \a arr
 /**
 * The lane-paired counterpart of \c aes_enc_arr.  Element \c i of \a arr holds
 * block \c i of two independent states, one state per 128-bit lane.  In AES
 * round \c aes_r both lanes use the same key, \c aes_round_keys[aes_r][i],
 * broadcast to both lanes.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
-               const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+               const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
         {
             const __m256i k = _mm256_broadcastsi128_si256(aes_round_keys[aes_r][i]);
             arr[i] = aes_enc(arr[i], k);
@@ -221,24 +221,24 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
     }
 }
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /// with 256-bit round keys
 /**
 * Each element's key here is a full 256-bit value, so the two lanes of an
 * element may use different 128-bit round keys.  \c aes_enc_arr_x2 instead
 * broadcasts one 128-bit key to both lanes.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_arr_folded(
     simd_arr_x2_t<N>& arr,
-    const std::array<simd_arr_x2_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+    const std::array<simd_arr_x2_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
         {
             arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
         }
@@ -249,7 +249,7 @@ aes_enc_arr_folded(
 
 #endif
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * In AES round \c aes_r, element \c i uses \c aes_round_keys[aes_r][i] as its
 * AES round key.
@@ -257,60 +257,60 @@ aes_enc_arr_folded(
 * This is the portable implementation of \c aes_enc_arr, and the only one
 * on targets without VAES.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_arr_generic(simd_arr_t<N>& arr,
-                    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+                    const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(aes_num_rounds); aes_r++)
+        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
         {
             arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
         }
     }
 }
 
-/// Perform \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * This is a wrapper.  It calls \c aes_enc_arr_paircast on x86-64 with VAES
 * when \a N is positive and even, and \c aes_enc_arr_generic everywhere
 * else.  The two are bit-identical.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_arr(simd_arr_t<N>& arr,
-            const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+            const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
 #if defined(__x86_64__) && defined(__VAES__)
     if constexpr ((N > 0) && ((N % 2) == 0))
     {
-        aes_enc_arr_paircast<aes_num_rounds>(arr, aes_round_keys);
+        aes_enc_arr_paircast<AES_NUM_ROUNDS>(arr, aes_round_keys);
     }
     else
     {
-        aes_enc_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+        aes_enc_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
     }
 #else
-    aes_enc_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+    aes_enc_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
 #endif
 }
 
 #if defined(__x86_64__) && defined(__VAES__)
 
-/// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform the inverse of \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * The VAES implementation of \c aes_enc_inv_arr.  It does the same work as
 * \c aes_enc_inv_arr_generic, two elements at a time.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
 static void
 aes_enc_inv_arr_paircast(
     simd_arr_t<N>& arr,
-    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+    const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
@@ -319,7 +319,7 @@ aes_enc_inv_arr_paircast(
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = static_cast<int>(aes_num_rounds) - 1; aes_r >= 0; aes_r--)
+        for (int aes_r = static_cast<int>(AES_NUM_ROUNDS) - 1; aes_r >= 0; aes_r--)
         {
             const __m256i k = _mm256_loadu_si256(
                 reinterpret_cast<const __m256i*>(&aes_round_keys[aes_r][i]));
@@ -332,51 +332,51 @@ aes_enc_inv_arr_paircast(
 
 #endif
 
-/// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform the inverse of \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * The AES round keys are applied in reverse order of \c aes_enc_arr.
 *
 * This is the portable implementation of \c aes_enc_inv_arr, and the only
 * one on targets without VAES.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_inv_arr_generic(
     simd_arr_t<N>& arr,
-    const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+    const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
     static_assert(M >= N);
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = static_cast<int>(aes_num_rounds) - 1; aes_r >= 0; aes_r--)
+        for (int aes_r = static_cast<int>(AES_NUM_ROUNDS) - 1; aes_r >= 0; aes_r--)
         {
             arr[i] = aes_enc_inv(arr[i], aes_round_keys[aes_r][i]);
         }
     }
 }
 
-/// Perform the inverse of \a aes_num_rounds rounds of AES encryption on each element of \a arr
+/// Perform the inverse of \a AES_NUM_ROUNDS rounds of AES encryption on each element of \a arr
 /**
 * This is a wrapper.  It calls \c aes_enc_inv_arr_paircast on x86-64 with
 * VAES when \a N is positive and even, and \c aes_enc_inv_arr_generic
 * everywhere else.  The two are bit-identical.
 */
-template <size_t aes_num_rounds, size_t N, size_t M>
+template <size_t AES_NUM_ROUNDS, size_t N, size_t M>
 static void
 aes_enc_inv_arr(simd_arr_t<N>& arr,
-                const std::array<simd_arr_t<M>, aes_num_rounds>& aes_round_keys) noexcept
+                const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
 #if defined(__x86_64__) && defined(__VAES__)
     if constexpr ((N > 0) && ((N % 2) == 0))
     {
-        aes_enc_inv_arr_paircast<aes_num_rounds>(arr, aes_round_keys);
+        aes_enc_inv_arr_paircast<AES_NUM_ROUNDS>(arr, aes_round_keys);
     }
     else
     {
-        aes_enc_inv_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+        aes_enc_inv_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
     }
 #else
-    aes_enc_inv_arr_generic<aes_num_rounds>(arr, aes_round_keys);
+    aes_enc_inv_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
 #endif
 }

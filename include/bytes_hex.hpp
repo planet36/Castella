@@ -60,7 +60,7 @@ decode_hex_to_nibble(const char c)
 [[nodiscard]] static std::string
 encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
 {
-    const size_t result_len = std::size(byte_sp) * 2;
+    const auto result_len = std::size(byte_sp) * 2;
 
     std::string result(result_len, '\0'); // size == result_len
 

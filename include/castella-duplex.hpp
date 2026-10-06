@@ -430,7 +430,7 @@ private:
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
-        const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+        const auto available_space = get_rate_size_bytes() - cur_input_byte_idx_;
 
 #if defined(DEBUG)
         assert(available_space > 0);
@@ -503,7 +503,7 @@ private:
             assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input buf is not full
 #endif
 
-            const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+            const auto available_space = get_rate_size_bytes() - cur_input_byte_idx_;
 
 #if defined(DEBUG)
             assert(available_space > 0);

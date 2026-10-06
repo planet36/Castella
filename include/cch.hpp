@@ -282,7 +282,7 @@ private:
         // First, add to the partially filled input buffer.
         if (!input_bytes_.is_empty())
         {
-            const size_t num_bytes_to_add =
+            const auto num_bytes_to_add =
                 std::min(input_bytes_.reserved_unused(), std::size(src));
 
             input_bytes_.append_range(src.first(num_bytes_to_add));

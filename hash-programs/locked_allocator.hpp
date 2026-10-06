@@ -63,7 +63,7 @@ struct locked_allocator
             throw std::bad_array_new_length();
         }
 
-        const std::size_t num_bytes = get_mapping_size(n * sizeof(T));
+        const auto num_bytes = get_mapping_size(n * sizeof(T));
 
         constexpr int prot = PROT_READ | PROT_WRITE;
         constexpr int flags = MAP_PRIVATE | MAP_ANONYMOUS;
@@ -97,7 +97,7 @@ struct locked_allocator
     {
         // munmap must not clobber the caller's errno.
         const int saved_errno = errno;
-        const std::size_t num_bytes = get_mapping_size(n * sizeof(T));
+        const auto num_bytes = get_mapping_size(n * sizeof(T));
 
         ::explicit_bzero(p, num_bytes);
 

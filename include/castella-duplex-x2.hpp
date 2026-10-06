@@ -184,7 +184,7 @@ private:
         assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input bufs are not full
 #endif
 
-        const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+        const auto available_space = get_rate_size_bytes() - cur_input_byte_idx_;
 
 #if defined(DEBUG)
         assert(available_space > 0);
@@ -237,7 +237,7 @@ private:
             assert(cur_input_byte_idx_ < get_rate_size_bytes()); // input bufs are not full
 #endif
 
-            const int available_space = get_rate_size_bytes() - cur_input_byte_idx_;
+            const auto available_space = get_rate_size_bytes() - cur_input_byte_idx_;
 
 #if defined(DEBUG)
             assert(available_space > 0);
@@ -436,7 +436,7 @@ public:
         // block, since a 128-bit store cannot write fewer than sizeof(block_t)
         // bytes.
 
-        size_t num_bytes_remaining = std::size(dst_a);
+        auto num_bytes_remaining = std::size(dst_a);
         std::byte* out_a = std::data(dst_a);
         std::byte* out_b = std::data(dst_b);
         int i = 0;

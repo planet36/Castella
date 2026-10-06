@@ -55,7 +55,7 @@
 #include <type_traits>
 #include <utility>
 
-constexpr size_t N_BLOCKS = Castella::Duplex::B;
+constexpr auto N_BLOCKS = Castella::Duplex::B;
 
 void
 BM_generic(benchmark::State& BM_state)
@@ -178,7 +178,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // {{{ accuracy testing
 
     {
-        constexpr size_t N = N_BLOCKS;
+        constexpr auto N = N_BLOCKS;
 
         const auto& keys = Castella::round_constants[0];
         const auto& keys_folded = Castella::round_constants_folded<N>[0];

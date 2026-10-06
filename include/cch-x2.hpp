@@ -112,7 +112,7 @@ private:
         // Both are at the same fill level, so one count serves both.
         if (!node_a_.input_bytes_.is_empty())
         {
-            const size_t num_bytes_to_add =
+            const auto num_bytes_to_add =
                 std::min(node_a_.input_bytes_.reserved_unused(), std::size(src_a));
 
             node_a_.input_bytes_.append_range(src_a.first(num_bytes_to_add));

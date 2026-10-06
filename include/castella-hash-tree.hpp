@@ -777,7 +777,7 @@ private:
     * doubles then.  Memory stays modest, because each slot owns one
     * CHUNK_SIZE chunk buffer.
     */
-    [[nodiscard]] int64_t ring_capacity_() const noexcept
+    [[nodiscard]] auto ring_capacity_() const noexcept
     {
         return (HAS_PAIRED_LEAF ? 4 : 2) * static_cast<int64_t>(NUM_THREADS);
     }
@@ -875,7 +875,7 @@ private:
 
         pool_stop_ = false; // no lock needed, the workers are gone
 
-        for (int64_t pos = ring_next_job_; pos < ring_tail_; ++pos)
+        for (auto pos = ring_next_job_; pos < ring_tail_; ++pos)
         {
             zeroize_(ring_slot_(pos).chunk);
         }
@@ -1265,7 +1265,7 @@ private:
         assert(num_chunks >= 1);
 #endif
 
-        const int64_t first_chunk_index = num_chunks_flushed_;
+        const auto first_chunk_index = num_chunks_flushed_;
 
         std::remove_const_t<decltype(num_chunks)> pos = 0;
 
@@ -1351,14 +1351,14 @@ private:
         assert(chunk_buf_.empty());
 #endif
 
-        const int64_t first_chunk_index = num_chunks_flushed_;
+        const auto first_chunk_index = num_chunks_flushed_;
 
         // Chunk 0, if present in this batch, is absorbed directly by the
         // final node.  Every other chunk of the batch is a leaf.
-        const int64_t first_leaf_pos = (first_chunk_index == 0) ? 1 : 0;
-        const int64_t num_leaves = num_chunks - first_leaf_pos;
+        const auto first_leaf_pos = (first_chunk_index == 0) ? 1 : 0;
+        const auto num_leaves = num_chunks - first_leaf_pos;
 
-        const int64_t num_workers =
+        const auto num_workers =
             std::min<int64_t>(NUM_THREADS, num_leaves / MIN_LEAF_CHUNKS_PER_WORKER);
 
         if (num_workers < 2)
@@ -1404,14 +1404,14 @@ private:
             // Static partition of the leaves [0, num_leaves) into contiguous
             // ranges.  The first (num_leaves % num_workers) workers take one
             // extra leaf.
-            const int64_t leaves_per_worker = num_leaves / num_workers;
-            const int64_t num_extra_leaves = num_leaves % num_workers;
+            const auto leaves_per_worker = num_leaves / num_workers;
+            const auto num_extra_leaves = num_leaves % num_workers;
 
             std::remove_const_t<decltype(num_workers)> range_begin = 0;
 
             for (std::remove_const_t<decltype(num_workers)> w = 0; w < num_workers; ++w)
             {
-                const int64_t range_end =
+                const auto range_end =
                     range_begin + leaves_per_worker + ((w < num_extra_leaves) ? 1 : 0);
 
                 workers.emplace_back(
@@ -1424,7 +1424,7 @@ private:
                     {
                         try
                         {
-                            int64_t k = range_begin;
+                            auto k = range_begin;
 
                             if constexpr (HAS_PAIRED_LEAF)
                             {
@@ -1559,8 +1559,8 @@ private:
             }
 
             // Buffer what remains of this call (or top up a partial chunk).
-            const size_t available_space = CHUNK_SIZE - chunk_buf_.size();
-            const size_t num_bytes_to_add = std::min(available_space, std::size(src));
+            const auto available_space = CHUNK_SIZE - chunk_buf_.size();
+            const auto num_bytes_to_add = std::min(available_space, std::size(src));
 
 #if defined(DEBUG)
             assert(num_bytes_to_add > 0); // guarantees the loop terminates

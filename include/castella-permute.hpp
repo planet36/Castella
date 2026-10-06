@@ -263,7 +263,7 @@ permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants}.last(num_rounds))
     {
-        aes_enc_arr<AES_NUM_ROUNDS>(state, rc);
+        aes_enc_arr(state, rc);
         simd_transpose(state);
     }
 }
@@ -306,7 +306,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants_folded<N>}.last(num_rounds))
     {
-        aes_enc_arr_folded<AES_NUM_ROUNDS>(state_folded, rc);
+        aes_enc_arr_folded(state_folded, rc);
         simd_transpose_folded(state_folded);
     }
 
@@ -350,9 +350,9 @@ static void
 permute(arr_blocks<N>& state, const int num_rounds) noexcept
 {
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
-    permute_folded<N>(state, num_rounds);
+    permute_folded(state, num_rounds);
 #else
-    permute_generic<N>(state, num_rounds);
+    permute_generic(state, num_rounds);
 #endif
 }
 
@@ -388,7 +388,7 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 
     for (const auto& rc : std::span{round_constants}.last(num_rounds))
     {
-        aes_enc_arr_x2<AES_NUM_ROUNDS>(state_x2, rc);
+        aes_enc_arr_x2(state_x2, rc);
         simd_transpose(state_x2);
     }
 }
@@ -426,7 +426,7 @@ permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
     for (const auto& rc : std::span{round_constants}.last(num_rounds) | std::views::reverse)
     {
         simd_transpose(state);
-        aes_enc_inv_arr<AES_NUM_ROUNDS>(state, rc);
+        aes_enc_inv_arr(state, rc);
     }
 }
 

@@ -287,14 +287,14 @@ aes_enc_arr(simd_arr_t<N>& arr,
 #if defined(__x86_64__) && defined(__VAES__)
     if constexpr ((N > 0) && ((N % 2) == 0))
     {
-        aes_enc_arr_paircast<AES_NUM_ROUNDS>(arr, aes_round_keys);
+        aes_enc_arr_paircast(arr, aes_round_keys);
     }
     else
     {
-        aes_enc_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
+        aes_enc_arr_generic(arr, aes_round_keys);
     }
 #else
-    aes_enc_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
+    aes_enc_arr_generic(arr, aes_round_keys);
 #endif
 }
 
@@ -370,13 +370,13 @@ aes_enc_inv_arr(simd_arr_t<N>& arr,
 #if defined(__x86_64__) && defined(__VAES__)
     if constexpr ((N > 0) && ((N % 2) == 0))
     {
-        aes_enc_inv_arr_paircast<AES_NUM_ROUNDS>(arr, aes_round_keys);
+        aes_enc_inv_arr_paircast(arr, aes_round_keys);
     }
     else
     {
-        aes_enc_inv_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
+        aes_enc_inv_arr_generic(arr, aes_round_keys);
     }
 #else
-    aes_enc_inv_arr_generic<AES_NUM_ROUNDS>(arr, aes_round_keys);
+    aes_enc_inv_arr_generic(arr, aes_round_keys);
 #endif
 }

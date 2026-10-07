@@ -1742,12 +1742,7 @@ public:
     */
     Derived& add(const void* data, size_t len)
     {
-#if defined(DEBUG)
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
-#endif
-
-        return add(std::span(static_cast<const std::byte*>(data), len));
+        return add(as_byte_span(data, len));
     }
 };
 

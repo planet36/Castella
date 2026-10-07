@@ -391,15 +391,7 @@ public:
     */
     void add(const void* data_a, const void* data_b, const size_t len) noexcept
     {
-#if defined(DEBUG)
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data_a == nullptr) && (len != 0)));
-        // NOLINTNEXTLINE(readability-simplify-boolean-expr)
-        assert(!((data_b == nullptr) && (len != 0)));
-#endif
-
-        add(std::span(static_cast<const std::byte*>(data_a), len),
-            std::span(static_cast<const std::byte*>(data_b), len));
+        add(as_byte_span(data_a, len), as_byte_span(data_b, len));
     }
 
     /// Squeeze bytes from both duplexes' outer states

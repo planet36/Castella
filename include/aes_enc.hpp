@@ -101,7 +101,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -119,7 +119,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -139,7 +139,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0_inv(v);
         }
@@ -157,7 +157,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0_inv(arr[i]);
         }
@@ -184,7 +184,7 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
         // Cast adjacent pairs of elements to __m256i.
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
-        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             const __m256i k = _mm256_loadu_si256(
                 reinterpret_cast<const __m256i*>(&aes_round_keys[aes_r][i]));
@@ -213,7 +213,7 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             const __m256i k = _mm256_broadcastsi128_si256(aes_round_keys[aes_r][i]);
             arr[i] = aes_enc(arr[i], k);
@@ -238,7 +238,7 @@ aes_enc_arr_folded(
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
         }
@@ -266,7 +266,7 @@ aes_enc_arr_generic(simd_arr_t<N>& arr,
 
     for (int i = 0; i < std::ssize(arr); ++i)
     {
-        for (int aes_r = 0; aes_r < static_cast<int>(AES_NUM_ROUNDS); aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc(arr[i], aes_round_keys[aes_r][i]);
         }

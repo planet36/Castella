@@ -36,7 +36,7 @@ BM_duplex_absorb(benchmark::State& BM_state, const int capacity_blocks, const in
 {
     // Perform setup here
 
-    std::array<std::byte, 64 * 1024> buf;
+    std::array<std::byte, 64 * 1024> buf{};
     arc4random_buf(std::data(buf), sizeof(buf));
 
     Castella::Duplex duplex(capacity_blocks, num_rounds);

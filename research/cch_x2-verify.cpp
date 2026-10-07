@@ -35,7 +35,7 @@
 
 /// Add equal-length random pieces with different contents, then compare digests
 /// \return the number of digest comparisons made
-int
+[[nodiscard]] int
 test_cch_x2(const int mix_rate, const int max_piece_len, const int max_num_pieces)
 {
     compress_castella_hash<> hash_a(mix_rate);

@@ -37,7 +37,7 @@
 #include <vector>
 
 /// \return the number of squeeze comparisons made
-int
+[[nodiscard]] int
 test_duplex_x2(const int capacity_blocks, const int num_rounds)
 {
     constexpr int input_suffix = 0x0b;

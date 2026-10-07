@@ -44,7 +44,7 @@
 
 /// \return the number of round trips made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute(const Castella::arr_blocks<N>& state)
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -93,7 +93,7 @@ inline constexpr std::array<uint8_t, 256> unique_bytes{
 /// Test state with byte values that are 0
 /// \return the number of round trips made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_bytes_zero()
 {
     Castella::arr_blocks<N> state;
@@ -104,7 +104,7 @@ test_permute_bytes_zero()
 /// Test state with byte values that are unique
 /// \return the number of round trips made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_bytes_unique()
 {
     Castella::arr_blocks<N> state;
@@ -116,7 +116,7 @@ test_permute_bytes_unique()
 /// Test state with byte values that are random
 /// \return the number of round trips made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_bytes_random()
 {
     Castella::arr_blocks<N> state;

@@ -64,19 +64,19 @@ using u128 = unsigned __int128;
 #pragma GCC diagnostic pop
 
 // View the state as a matrix, M[row][col] being byte col of block row
-static constexpr uint8_t&
+[[nodiscard]] static constexpr uint8_t&
 mat(bytes_t& b, const int row, const int col)
 {
     return b[(B * row) + col];
 }
 
-static constexpr uint8_t
+[[nodiscard]] static constexpr uint8_t
 mat(const bytes_t& b, const int row, const int col)
 {
     return b[(B * row) + col];
 }
 
-static bytes_t
+[[nodiscard]] static bytes_t
 permuted_bytes(const bytes_t& b, const int num_rounds)
 {
     auto state = std::bit_cast<state_t>(b);
@@ -84,7 +84,7 @@ permuted_bytes(const bytes_t& b, const int num_rounds)
     return std::bit_cast<bytes_t>(state);
 }
 
-static bytes_t
+[[nodiscard]] static bytes_t
 transposed(const bytes_t& b)
 {
     bytes_t result{};
@@ -94,7 +94,7 @@ transposed(const bytes_t& b)
     return result;
 }
 
-static int
+[[nodiscard]] static int
 hamming_distance(const bytes_t& a, const bytes_t& b)
 {
     const auto sa = std::bit_cast<state_t>(a);
@@ -108,7 +108,7 @@ hamming_distance(const bytes_t& a, const bytes_t& b)
 // ---- the three structured subspaces (the transpose maps 1 and 2 to each other, and fixes 3)
 
 /// all blocks equal (dimension 16 bytes)
-static bool
+[[nodiscard]] static bool
 is_equal_blocks(const bytes_t& b)
 {
     for (int i = 1; i < B; ++i)
@@ -119,7 +119,7 @@ is_equal_blocks(const bytes_t& b)
 }
 
 /// every block is a single repeated byte (dimension 16 bytes)
-static bool
+[[nodiscard]] static bool
 is_constant_byte_blocks(const bytes_t& b)
 {
     for (int i = 0; i < B; ++i)
@@ -130,7 +130,7 @@ is_constant_byte_blocks(const bytes_t& b)
 }
 
 /// Whether the byte matrix is symmetric (dimension 136 bytes)
-static bool
+[[nodiscard]] static bool
 is_symmetric(const bytes_t& b)
 {
     for (int i = 0; i < B; ++i)
@@ -140,7 +140,7 @@ is_symmetric(const bytes_t& b)
     return true;
 }
 
-static bool
+[[nodiscard]] static bool
 in_any_subspace(const bytes_t& b)
 {
     return is_equal_blocks(b) || is_constant_byte_blocks(b) || is_symmetric(b);
@@ -149,7 +149,7 @@ in_any_subspace(const bytes_t& b)
 // ---- residual-structure statistics (random-model expectations in the table headers)
 
 /// Count the pairs i<j with M[i][j] == M[j][i] (expectation 120/256 for a random state)
-static int
+[[nodiscard]] static int
 count_symmetric_pairs(const bytes_t& b)
 {
     int result = 0;
@@ -160,7 +160,7 @@ count_symmetric_pairs(const bytes_t& b)
 }
 
 /// Count the (block pair, position) triples with equal bytes (expectation 120*16/256 = 7.5)
-static int
+[[nodiscard]] static int
 count_cross_block_equal_bytes(const bytes_t& b)
 {
     int result = 0;
@@ -172,7 +172,7 @@ count_cross_block_equal_bytes(const bytes_t& b)
 }
 
 /// Count the (block, position pair) triples with equal bytes (expectation 16*120/256 = 7.5)
-static int
+[[nodiscard]] static int
 count_within_block_equal_bytes(const bytes_t& b)
 {
     int result = 0;
@@ -195,7 +195,7 @@ struct subspace
     int (*residual_stat)(const bytes_t&);
 };
 
-static bytes_t
+[[nodiscard]] static bytes_t
 random_equal_blocks()
 {
     std::array<uint8_t, B> x{};
@@ -217,7 +217,7 @@ flip_equal_blocks(bytes_t& b)
         mat(b, i, j) ^= bit;
 }
 
-static bytes_t
+[[nodiscard]] static bytes_t
 random_constant_byte_blocks()
 {
     std::array<uint8_t, B> c{};
@@ -238,7 +238,7 @@ flip_constant_byte_blocks(bytes_t& b)
         mat(b, i, j) ^= bit;
 }
 
-static bytes_t
+[[nodiscard]] static bytes_t
 random_symmetric()
 {
     bytes_t b{};
@@ -261,7 +261,7 @@ flip_symmetric(bytes_t& b)
 }
 
 /// \return the number of failed checks
-static int
+[[nodiscard]] static int
 probe_subspace_escape(const int num_samples)
 {
     int num_failed_checks = 0;
@@ -331,7 +331,7 @@ probe_subspace_escape(const int num_samples)
 // ---- probe 2
 
 /// \return the number of failed checks
-static int
+[[nodiscard]] static int
 probe_fixed_point_screen()
 {
     int num_failed_checks = 0;
@@ -366,7 +366,7 @@ probe_fixed_point_screen()
 // ---- probe 3
 
 /// \return the number of failed checks
-static int
+[[nodiscard]] static int
 probe_round_constants()
 {
     int num_failed_checks = 0;

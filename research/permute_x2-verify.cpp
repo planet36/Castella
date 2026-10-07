@@ -39,7 +39,7 @@
 
 /// \return the number of comparisons made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_x2(const Castella::arr_blocks<N>& state_a,
                 const Castella::arr_blocks<N>& state_b)
 {
@@ -88,7 +88,7 @@ test_permute_x2(const Castella::arr_blocks<N>& state_a,
 /// Test state pairs with byte values that are 0 (both states, and one of each)
 /// \return the number of comparisons made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_x2_bytes_zero()
 {
     Castella::arr_blocks<N> state_zero;
@@ -105,7 +105,7 @@ test_permute_x2_bytes_zero()
 /// Test state pairs with byte values that are random
 /// \return the number of comparisons made
 template <size_t N>
-int
+[[nodiscard]] int
 test_permute_x2_bytes_random()
 {
     Castella::arr_blocks<N> state_a;

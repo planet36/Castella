@@ -16,7 +16,7 @@
 /**
 * \c sysconf cannot fail for \c _SC_PAGESIZE, so there is no error check.
 */
-inline auto
+[[nodiscard]] inline auto
 get_page_size() noexcept
 {
     return static_cast<std::size_t>(::sysconf(_SC_PAGESIZE));
@@ -27,7 +27,7 @@ get_page_size() noexcept
 * \pre \a m > 0
 * \pre \a n + \a m - 1 does not exceed \c SIZE_MAX
 */
-constexpr auto
+[[nodiscard]] constexpr auto
 roundm_up(std::size_t n, std::size_t m) noexcept
 {
     return (n + m - 1) / m * m;
@@ -40,7 +40,7 @@ roundm_up(std::size_t n, std::size_t m) noexcept
 * \return the page size if \a num_bytes is 0
 * \pre \a num_bytes + get_page_size() - 1 does not exceed \c SIZE_MAX
 */
-inline auto
+[[nodiscard]] inline auto
 get_mapping_size(std::size_t num_bytes) noexcept
 {
     const auto page_size = get_page_size();

@@ -67,7 +67,7 @@ static_assert(std::ranges::max(CUBE_SIZES) <= MAX_CUBE_SIZE);
 
 inline constexpr int STATE_BITS = state_size_bytes * 8;
 
-static bytes_t
+[[nodiscard]] static bytes_t
 permuted_bytes(const bytes_t& b, const int num_rounds)
 {
     auto state = std::bit_cast<state_t>(b);
@@ -85,7 +85,7 @@ set_bit(bytes_t& b, const uint32_t bit_pos, const bool value)
         b[bit_pos / 8] &= static_cast<uint8_t>(~mask);
 }
 
-static int
+[[nodiscard]] static int
 count_set_bits(const bytes_t& b)
 {
     int result = 0;
@@ -95,7 +95,7 @@ count_set_bits(const bytes_t& b)
 }
 
 /// choose \a k distinct bit positions, uniform over [\a lo, \a lo + \a range)
-static std::array<uint32_t, MAX_CUBE_SIZE>
+[[nodiscard]] static std::array<uint32_t, MAX_CUBE_SIZE>
 random_bit_positions(const int k, const uint32_t lo, const uint32_t range)
 {
     std::array<uint32_t, MAX_CUBE_SIZE> positions{};
@@ -114,7 +114,7 @@ random_bit_positions(const int k, const uint32_t lo, const uint32_t range)
 }
 
 /// \return the number of output bits whose k-dim cube sums vanish for all NUM_BASES bases
-static int
+[[nodiscard]] static int
 count_surviving_bits(const int num_rounds,
                      const int k,
                      const std::array<uint32_t, MAX_CUBE_SIZE>& positions)
@@ -151,7 +151,7 @@ count_surviving_bits(const int num_rounds,
 
 /// Probe one cube placement across every round count and cube size
 /// \return the number of failed checks
-static int
+[[nodiscard]] static int
 probe_placement(const std::string_view name, const bool single_block, const int num_samples)
 {
     int num_failed_checks = 0;

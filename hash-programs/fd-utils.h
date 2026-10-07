@@ -28,7 +28,7 @@ extern "C" {
 * \param fd Open file descriptor to test.
 * \return \c true if \a fd is seekable, \c false otherwise.
 */
-static inline bool
+[[nodiscard]] static inline bool
 is_seekable(const int fd)
 {
     return lseek(fd, 0, SEEK_CUR) != -1;
@@ -42,7 +42,7 @@ is_seekable(const int fd)
 * \return File size in bytes on success, or \c -1 if \c fstat(2) fails (with
 *         \c errno set by \c fstat).
 */
-static inline off_t
+[[nodiscard]] static inline off_t
 get_file_size(const int fd)
 {
     struct stat statbuf = {};
@@ -79,7 +79,7 @@ get_file_size(const int fd)
 * \sa https://sourceware.org/glibc/manual/latest/html_mono/libc.html#Open-File-Description-Locks-Example-1
 * \sa https://man7.org/linux/man-pages/man2/fcntl.2.html
 */
-static inline int
+[[nodiscard]] static inline int
 acq_read_lock_fd(int fd)
 {
 #if defined(__cplusplus)
@@ -122,7 +122,7 @@ acq_read_lock_fd(int fd)
 * \sa https://sourceware.org/glibc/manual/latest/html_mono/libc.html#Open-File-Description-Locks-Example-1
 * \sa https://man7.org/linux/man-pages/man2/fcntl.2.html
 */
-static inline int
+[[nodiscard]] static inline int
 acq_write_lock_fd(int fd)
 {
 #if defined(__cplusplus)
@@ -160,7 +160,7 @@ acq_write_lock_fd(int fd)
 * \sa https://sourceware.org/glibc/manual/latest/html_mono/libc.html#Open-File-Description-Locks-Example-1
 * \sa https://man7.org/linux/man-pages/man2/fcntl.2.html
 */
-static inline int
+[[nodiscard]] static inline int
 rel_lock_fd(int fd)
 {
 #if defined(__cplusplus)
@@ -197,7 +197,7 @@ rel_lock_fd(int fd)
 *
 * \sa https://man7.org/linux/man-pages/man2/posix_fadvise.2.html
 */
-static inline bool
+[[nodiscard]] static inline bool
 fadvise_sequential_noreuse(const int fd)
 {
     int posix_fadvise_result = 0;
@@ -240,7 +240,7 @@ fadvise_sequential_noreuse(const int fd)
 *
 * \sa https://man7.org/linux/man-pages/man3/posix_madvise.3.html
 */
-static inline bool
+[[nodiscard]] static inline bool
 madvise_sequential_willneed(void* mmap_addr, const size_t mmap_size)
 {
     int posix_madvise_result = 0;

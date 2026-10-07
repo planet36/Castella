@@ -429,7 +429,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // Run the server on a separate thread.
     std::jthread server_thread(
-        [&]()
+        [&]
         {
             spdlog::info("Begin listening on http://{}:{} ...", host, port);
 

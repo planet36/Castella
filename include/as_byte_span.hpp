@@ -23,6 +23,10 @@ f(as_byte_span(std::string{"abc"}));
 
 #pragma once
 
+#if defined(DEBUG)
+#include <cassert>
+#endif
+#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <ranges>
@@ -66,4 +70,22 @@ requires std::ranges::contiguous_range<const R> &&
 as_byte_span(const R& container) noexcept
 {
     return std::as_bytes(std::span{container});
+}
+
+/// Get a view to a region of raw memory as a span of bytes
+/**
+* \param data the start of the region to view
+* \param len the size (in bytes) of the region
+* \return a <code>std::span<const std::byte></code> over \a len bytes at \a data
+* \pre \a data is not null, unless \a len is 0
+*/
+[[nodiscard]] static auto
+as_byte_span(const void* data, size_t len) noexcept
+{
+#if defined(DEBUG)
+    // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+    assert(!((data == nullptr) && (len != 0))); // (data != nullptr) || (len == 0)
+#endif
+
+    return std::span(static_cast<const std::byte*>(data), len);
 }

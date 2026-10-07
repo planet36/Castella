@@ -25,6 +25,7 @@ get_page_size() noexcept
 /// Round \a n up to a multiple of \a m
 /**
 * \pre \a m > 0
+* \pre \a n + \a m - 1 does not exceed \c SIZE_MAX
 */
 constexpr auto
 roundm_up(std::size_t n, std::size_t m) noexcept
@@ -37,6 +38,7 @@ roundm_up(std::size_t n, std::size_t m) noexcept
 * \c mmap rejects a length of 0, so a zero request gets one page.
 *
 * \return the page size if \a num_bytes is 0
+* \pre \a num_bytes + get_page_size() - 1 does not exceed \c SIZE_MAX
 */
 inline auto
 get_mapping_size(std::size_t num_bytes) noexcept

@@ -183,7 +183,7 @@ public:
     * construction.
     * </blockquote>
     */
-    const int8_t C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t C;
     static_assert(in_range<decltype(C)>(C_MAX));
 
     /// The size (in blocks) of the input buffer
@@ -206,7 +206,7 @@ public:
     * making it twice as fast as the 512-bit SHA-3 candidate.
     * </blockquote>
     */
-    const int8_t R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t R;
     static_assert(in_range<decltype(R)>(R_MAX));
 
     /// The number of rounds to perform in the Castella permutation function
@@ -225,7 +225,7 @@ public:
     * capacity.
     * </blockquote>
     */
-    const int8_t NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int8_t NUM_ROUNDS;
     static_assert(in_range<decltype(NUM_ROUNDS)>(NUM_ROUNDS_MAX));
 
     /// The byte to append to the input buffer before squeezing
@@ -309,7 +309,7 @@ public:
     * \sa https://github.com/XKCP/XKCP/blob/master/lib/high/Keccak/KeccakDuplex.inc#L83
     * \sa https://en.wikipedia.org/wiki/Domain_separation
     */
-    const uint8_t INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const uint8_t INPUT_SUFFIX;
 
 private:
     /// Check the values of \c C, \c R, and \c NUM_ROUNDS

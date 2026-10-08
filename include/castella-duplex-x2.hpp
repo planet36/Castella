@@ -84,16 +84,16 @@ private:
 
 public:
     /// \copydoc Duplex::C
-    decltype(Duplex::C) C; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::C) C;
 
     /// \copydoc Duplex::R
-    decltype(Duplex::R) R; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::R) R;
 
     /// \copydoc Duplex::NUM_ROUNDS
-    decltype(Duplex::NUM_ROUNDS) NUM_ROUNDS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::NUM_ROUNDS) NUM_ROUNDS;
 
     /// \copydoc Duplex::INPUT_SUFFIX
-    decltype(Duplex::INPUT_SUFFIX) INPUT_SUFFIX; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    decltype(Duplex::INPUT_SUFFIX) INPUT_SUFFIX;
 
 private:
     /// \copydoc Duplex::check_constraints_

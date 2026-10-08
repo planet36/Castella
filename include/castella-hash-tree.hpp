@@ -458,14 +458,14 @@ private:
 
 public:
     /// The size (in bytes) of a full chunk
-    const int32_t CHUNK_SIZE; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int32_t CHUNK_SIZE;
 
     /// The size (in bytes) of a leaf chaining value
     /**
     * Chosen by the node policy (see \c tree_node_policy).  It is
     * digest-relevant.  The role prefix binds it.
     */
-    const int32_t CV_LEN; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int32_t CV_LEN;
 
     /// The maximum number of worker threads to use
     /**
@@ -473,7 +473,7 @@ public:
     * thread.  It controls only how many cores may compute leaf CVs
     * concurrently.
     */
-    const int32_t NUM_THREADS; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    const int32_t NUM_THREADS;
 
 private:
     /// Check and return the chunk size

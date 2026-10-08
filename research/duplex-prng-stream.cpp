@@ -44,7 +44,7 @@ try
     int c = 0;
     while ((c = getopt(argc, argv, short_options)) != -1)
     {
-        switch (c) // NOLINT(hicpp-multiway-paths-covered)
+        switch (c)
         {
         case 'C':
             capacity_blocks = parse_option_int(optarg, Castella::Duplex::C_MIN,

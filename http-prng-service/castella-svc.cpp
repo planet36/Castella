@@ -33,12 +33,12 @@
 #include <mutex>
 #include <print>
 // POSIX sigaction, sigset_t, pthread_sigmask, sigwait are not in <csignal>
-#include <signal.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
+#include <signal.h> // NOLINT(modernize-deprecated-headers)
 #include <span>
 #include <stdexcept>
 #include <string>
 // POSIX strsignal is not in <cstring>
-#include <string.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
+#include <string.h> // NOLINT(modernize-deprecated-headers)
 #include <string_view>
 #include <thread>
 #include <type_traits>

@@ -274,7 +274,7 @@ try
     int c = 0;
     while ((c = getopt(argc, argv, short_options)) != -1)
     {
-        switch (c) // NOLINT(hicpp-multiway-paths-covered)
+        switch (c)
         {
         case 'i':
             save_images = true;

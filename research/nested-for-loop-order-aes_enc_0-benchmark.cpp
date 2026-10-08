@@ -34,7 +34,7 @@ for_each_repeat_t_param(simd_arr_t<N>& arr) noexcept
     for (int i = 0; i < std::ssize(arr); ++i)
     {
         // repeat AES_NUM_ROUNDS times
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             arr[i] = aes_enc_0(arr[i]);
         }
@@ -77,7 +77,7 @@ for_each_cast_repeat_t_param(simd_arr_t<N>& arr) noexcept
         __m256i v = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&arr[i]));
 
         // repeat AES_NUM_ROUNDS times
-        for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+        for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
         {
             v = aes_enc_0(v);
         }
@@ -107,7 +107,7 @@ static void
 repeat_for_each_t_param(simd_arr_t<N>& arr) noexcept
 {
     // repeat AES_NUM_ROUNDS times
-    for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+    for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
     {
         // for each single item
         for (int i = 0; i < std::ssize(arr); ++i)
@@ -147,7 +147,7 @@ static void
 repeat_for_each_cast_t_param(simd_arr_t<N>& arr) noexcept
 {
     // repeat AES_NUM_ROUNDS times
-    for (int aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
+    for (decltype(AES_NUM_ROUNDS) aes_r = 0; aes_r < AES_NUM_ROUNDS; aes_r++)
     {
         // for each pair of items
         for (int i = 0; i < std::ssize(arr); i += 2)

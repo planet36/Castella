@@ -33,6 +33,8 @@ do
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
+    print_hyperfine_summary_csv "$CSV"
+
     printf '\nExported results: %q\n' "$CSV"
     echo
 
@@ -42,6 +44,8 @@ do
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
+
+    print_hyperfine_summary_csv "$CSV"
 
     printf '\nExported results: %q\n' "$CSV"
     echo
@@ -53,6 +57,8 @@ do
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "cat ${CASTELLA_TMP}/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
+
+    print_hyperfine_summary_csv "$CSV"
 
     printf '\nExported results: %q\n' "$CSV"
     echo

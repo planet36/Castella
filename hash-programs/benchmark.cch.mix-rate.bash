@@ -14,4 +14,6 @@ CSV="${OUTPUT_DIR}/benchmark.cch.mix-rate.${DATETIME}.csv"
     --parameter-list MIX-RATE 1,2,3,4,6,8,12,16,24,32,48,64,96,128,192,256,384,512,768,1024,1536,2048,0 \
     "./cch --mix-rate={MIX-RATE} --num-threads=${NUM_THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
+print_hyperfine_summary_csv "$CSV"
+
 printf '\nExported results: %q\n' "$CSV"

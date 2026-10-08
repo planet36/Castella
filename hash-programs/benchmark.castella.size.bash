@@ -14,4 +14,6 @@ CSV="${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv"
     --parameter-scan SIZE 8 64 --parameter-step-size 8 \
     "./castella --rounds=6 --size={SIZE} --num-threads=${NUM_THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
+print_hyperfine_summary_csv "$CSV"
+
 printf '\nExported results: %q\n' "$CSV"

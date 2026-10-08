@@ -50,3 +50,19 @@ fi
 # CPU_LIST must contain no spaces.  4 and 4,5 work, '4, 5' does not.
 PIN=
 command -v taskset > /dev/null && PIN="taskset -c ${CPU_LIST:-0} "
+
+# Print a summary of the exported CSV results of hyperfine.
+# The output is sorted by median time.
+function print_hyperfine_summary_csv
+{
+    local CSV="$1"
+
+    # Field 1 is "command"
+    # Field 5 is "time_wall_clock_median"
+    # Field 2 is "time_wall_clock_unit"
+    {
+        printf 'command\tmedian(ms)\n' ;
+        awk -F ',' 'NR>1{printf "%s\t%0.3f %s\n", $1, $5, $2}' "$CSV" |
+            sort --field-separator=$'\t' --key 2 --general-numeric-sort ;
+    } | column --table --input-separator=$'\t'
+}

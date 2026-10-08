@@ -14,4 +14,6 @@ CSV="${OUTPUT_DIR}/benchmark.castella.rounds.${DATETIME}.csv"
     --parameter-scan ROUNDS 3 16 \
     "./castella --rounds={ROUNDS} --num-threads=${NUM_THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
+print_hyperfine_summary_csv "$CSV"
+
 printf '\nExported results: %q\n' "$CSV"

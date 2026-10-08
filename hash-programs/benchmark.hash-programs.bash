@@ -96,6 +96,8 @@ time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
 "${PIN}xxhsum --tag -H2 ${CASTELLA_TMP}/test.txt" \
 "${PIN}xxhsum --tag -H3 ${CASTELLA_TMP}/test.txt" || exit
 
+print_hyperfine_summary_csv "$CSV"
+
 printf '\nExported results: %q\n' "$CSV"
 
 # Example of most recent output (nproc=8)

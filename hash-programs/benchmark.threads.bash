@@ -28,32 +28,32 @@ for PROGRAM in castella cch
 do
     # Default I/O mode (use mmap)
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.mmap.${DATETIME}.csv"
-    hyperfine --shell=none --time-unit millisecond --warmup=5 \
+    hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
-    printf 'Exported results: %q\n' "$CSV"
+    printf '\nExported results: %q\n' "$CSV"
     echo
 
     # --no-mmap
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.no-mmap.${DATETIME}.csv"
-    hyperfine --shell=none --time-unit millisecond --warmup=5 \
+    hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "./${PROGRAM} --no-mmap --num-threads={NUM-THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
-    printf 'Exported results: %q\n' "$CSV"
+    printf '\nExported results: %q\n' "$CSV"
     echo
 
     # Piped stdin
     # A shell is needed for the pipe.
     CSV="${OUTPUT_DIR}/benchmark.threads.${PROGRAM}.stdin.${DATETIME}.csv"
-    hyperfine --shell='/usr/bin/sh' --time-unit millisecond --warmup=5 \
+    hyperfine --shell='/usr/bin/sh' --metrics=time_wall_clock:ms --style=color --warmup=5 \
         --export-csv "$CSV" \
         --parameter-list NUM-THREADS "$THREAD_COUNTS" \
         "cat ${CASTELLA_TMP}/test.txt | ./${PROGRAM} --num-threads={NUM-THREADS}" || exit
 
-    printf 'Exported results: %q\n' "$CSV"
+    printf '\nExported results: %q\n' "$CSV"
     echo
 done

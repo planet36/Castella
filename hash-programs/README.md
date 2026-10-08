@@ -118,13 +118,13 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 * **Comparisons against other hash programs** (the top-level README FAQ, with `castella` against b2sum, sha1sum, md5sum, and b3sum, and `cch` against multithreaded `b3sum` and `xxhsum -H3`): `bash benchmark.hash-programs.bash`.  For a single-thread-vs.-single-thread comparison, time `./cch --num-threads=1` against `b3sum --num-threads=1` directly:
 
   ```bash
-  taskset -c 0 hyperfine --shell=none --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'
+  taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'
   ```
 
 * **Per-core whole-program throughput**, the ~15 GiB/s per core `cch` figure, which this document is the home of (throughput = file size ÷ mean time):
 
   ```bash
-  taskset -c 0 hyperfine --shell=none --warmup=5 './cch --num-threads=1 /tmp/test.txt'
+  taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt'
   ```
 
   `taskset` pins the run to one core, matching the per-core claim.  `research/simd_compress-num_states-benchmark` measures node-level throughput instead, one hash state with no tree (see [research/README.md](../research/README.md)).

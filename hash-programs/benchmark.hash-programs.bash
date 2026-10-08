@@ -16,7 +16,7 @@ source ./benchmark-common.bash
 
 # Takes about 10:40
 CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
-time hyperfine --shell=none --time-unit millisecond --warmup=5 \
+time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
     --export-csv "$CSV" \
     --ignore-failure \
 "${PIN}cksum --algorithm sysv              ${CASTELLA_TMP}/test.txt" \
@@ -96,7 +96,7 @@ time hyperfine --shell=none --time-unit millisecond --warmup=5 \
 "${PIN}xxhsum --tag -H2 ${CASTELLA_TMP}/test.txt" \
 "${PIN}xxhsum --tag -H3 ${CASTELLA_TMP}/test.txt" || exit
 
-printf 'Exported results: %q\n' "$CSV"
+printf '\nExported results: %q\n' "$CSV"
 
 # Example of most recent output (nproc=8)
 :<<EOT

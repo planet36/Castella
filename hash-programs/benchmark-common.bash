@@ -60,9 +60,17 @@ function print_hyperfine_summary_csv
     # Field 1 is "command"
     # Field 5 is "time_wall_clock_median"
     # Field 2 is "time_wall_clock_unit"
+    #
+    # hyperfine quotes a command that contains a comma, as with CPU_LIST=4,5,
+    # so FPAT keeps a quoted field whole where -F ',' would split it.
+    # Only gawk has FPAT.
     {
         printf 'command\tmedian(ms)\n' ;
-        awk -F ',' 'NR>1{printf "%s\t%0.3f %s\n", $1, $5, $2}' "$CSV" |
+        gawk -v FPAT='([^,]*)|("([^"]|"")+")' '
+            NR>1 {
+                if ($1 ~ /^"/) { $1 = substr($1, 2, length($1) - 2); gsub(/""/, "\"", $1) }
+                printf "%s\t%0.3f %s\n", $1, $5, $2
+            }' "$CSV" |
             sort --field-separator=$'\t' --key 2 --general-numeric-sort ;
     } | column --table --input-separator=$'\t'
 }

@@ -51,18 +51,20 @@ try:
 except OSError as e:
     parser.error(f"{args.FILE}: {e.strerror}")
 
-y_axis_col = args.column
+y_axis_col = 'time_wall_clock_' + args.column
+unit_col = 'time_wall_clock_unit'
 
-if y_axis_col not in fieldnames:
-    parser.error(f"{args.FILE}: no {y_axis_col!r} column "
-                 f"(have: {', '.join(fieldnames)})")
+for col in (y_axis_col, unit_col):
+    if col not in fieldnames:
+        parser.error(f"{args.FILE}: no {col!r} column "
+                     f"(have: {', '.join(fieldnames)})")
 
 xlabel = x_axis_col.removeprefix('parameter_').title()
-ylabel = y_axis_col.title() + ' Time (ms)'
+ylabel = args.column.title() + f' Time ({rows[0][unit_col]})'
 
 try:
     x_data = [float(row[x_axis_col]) for row in rows]
-    y_data = [float(row[y_axis_col]) * 1000 for row in rows] # convert from seconds to milliseconds
+    y_data = [float(row[y_axis_col]) for row in rows]
 except (TypeError, ValueError) as e:
     parser.error(f"{args.FILE}: malformed numeric data: {e}")
 

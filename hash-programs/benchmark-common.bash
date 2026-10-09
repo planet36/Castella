@@ -65,7 +65,7 @@ function print_hyperfine_summary_csv
     # so FPAT keeps a quoted field whole where -F ',' would split it.
     # Only gawk has FPAT.
     {
-        printf 'command\tmedian(ms)\n' ;
+        printf 'command\tmedian\n' ;
         gawk -v FPAT='([^,]*)|("([^"]|"")+")' '
             NR>1 {
                 if ($1 ~ /^"/) { $1 = substr($1, 2, length($1) - 2); gsub(/""/, "\"", $1) }

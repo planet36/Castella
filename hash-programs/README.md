@@ -96,11 +96,11 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent, and the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
-These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-09-28:
+These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
 
-* `cch` beat multithreaded `b3sum` by about 1.9× (single-thread, pinned: 3.2×).
+* `cch` beat multithreaded `b3sum` by about 2.0× (single-thread, pinned: 3.5×).
 * `castella --rounds=3` beat multithreaded `b3sum`, while the default `--rounds=6` roughly matched it.
-* Single-threaded, `cch` roughly matched XXH3 (`xxhsum -H3`), and `castella` at its default rounds beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
+* Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` at its default rounds beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
 
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size:
 
@@ -121,7 +121,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'
   ```
 
-* **Per-core whole-program throughput**, the ~15 GiB/s per core `cch` figure, which this document is the home of (throughput = file size ÷ mean time):
+* **Per-core whole-program throughput**, the ~14 GiB/s per core `cch` figure, which this document is the home of (throughput = file size ÷ mean time):
 
   ```bash
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt'

@@ -46,8 +46,8 @@ then
 fi
 
 # Pins an individual single-threaded command to one core.  This is spliced into
-# a command string that `hyperfine --shell=none` splits on whitespace, so
-# CPU_LIST must contain no spaces.  4 and 4,5 work, '4, 5' does not.
+# a command string that hyperfine, running no shell by default, splits on
+# whitespace, so CPU_LIST must contain no spaces.  4 and 4,5 work, '4, 5' does not.
 PIN=
 command -v taskset > /dev/null && PIN="taskset -c ${CPU_LIST:-0} "
 

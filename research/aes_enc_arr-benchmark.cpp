@@ -235,7 +235,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {"vaes_cast<16>", BM_vaes_cast},
         {"x2_broadcast<16>", BM_x2_broadcast},
         {"folded<8x2>", BM_folded},
-    }};
+    }}; // NOLINT(readability-trailing-comma)
 
     for (const auto& [BM_name, BM_func] : benchmarks)
     {

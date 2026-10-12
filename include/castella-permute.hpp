@@ -222,7 +222,7 @@ create_round_constants_folded() noexcept
             {
                 result[r][aes_r][j] = std::bit_cast<block_x2_t>(std::array{
                     round_constants[r][aes_r][j],
-                    round_constants[r][aes_r][j + N / 2]});
+                    round_constants[r][aes_r][j + N / 2]}); // NOLINT(readability-trailing-comma)
             }
         }
     }

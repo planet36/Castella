@@ -272,19 +272,19 @@ probe_subspace_escape(const int num_samples)
                  .stat_expectation = 7.5,
                  .random_member = random_equal_blocks,
                  .flip_within = flip_equal_blocks,
-                 .residual_stat = count_cross_block_equal_bytes},
+                 .residual_stat = count_cross_block_equal_bytes}, // NOLINT(readability-trailing-comma)
         subspace{.name = "constant-byte blocks",
                  .stat_name = "within-block equal bytes",
                  .stat_expectation = 7.5,
                  .random_member = random_constant_byte_blocks,
                  .flip_within = flip_constant_byte_blocks,
-                 .residual_stat = count_within_block_equal_bytes},
+                 .residual_stat = count_within_block_equal_bytes}, // NOLINT(readability-trailing-comma)
         subspace{.name = "symmetric matrix",
                  .stat_name = "symmetric pairs",
                  .stat_expectation = 120.0 / 256,
                  .random_member = random_symmetric,
                  .flip_within = flip_symmetric,
-                 .residual_stat = count_symmetric_pairs},
+                 .residual_stat = count_symmetric_pairs}, // NOLINT(readability-trailing-comma)
     };
 
     for (const auto& s : subspaces)
@@ -380,7 +380,7 @@ probe_round_constants()
     std::println("number of round constants: {}", std::ssize(flat));
 
     constexpr std::array<uint8_t, 16> seed_str{'e', 'x', 'p', 'a', 'n', 'd', ' ', '1',
-                                               '6', '-', 'b', 'y', 't', 'e', ' ', 'c'};
+                                               '6', '-', 'b', 'y', 't', 'e', ' ', 'c'}; // NOLINT(readability-trailing-comma)
     if (flat.front() == std::bit_cast<u128>(seed_str))
     {
         std::println("PASS: the first constant is the seed string \"expand 16-byte c\"");

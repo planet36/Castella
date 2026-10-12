@@ -150,7 +150,7 @@ public:
                                    .num_rounds = num_rounds,
                                    .input_suffix = input_suffix,
                                    .function_name = to_byte_vector(function_name),
-                                   .customization_str = to_byte_vector(customization_str)},
+                                   .customization_str = to_byte_vector(customization_str)}, // NOLINT(readability-trailing-comma)
               chunk_size_bytes,
               num_threads)
     {}

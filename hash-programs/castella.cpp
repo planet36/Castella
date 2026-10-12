@@ -301,10 +301,10 @@ print_usage()
     std::println("Examples:");
     std::println("");
 
-    std::println("  $ castella -- file1 file2");
-    std::println("  $ castella --untagged -- file1 file2 > SUMS");
+    std::println("  $ castella -- FILE1 FILE2");
+    std::println("  $ castella -- FILE1 FILE2 > SUMS");
     std::println("  $ castella --check -- SUMS");
-    std::println("  $ cat file | castella");
+    std::println("  $ cat FILE | castella --untagged");
     std::println("");
 
     std::println("The tagged format is:");

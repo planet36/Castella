@@ -182,10 +182,10 @@ print_usage()
     std::println("Examples:");
     std::println("");
 
-    std::println("  $ cch -- file1 file2");
-    std::println("  $ cch --untagged -- file1 file2 > SUMS");
+    std::println("  $ cch -- FILE1 FILE2");
+    std::println("  $ cch -- FILE1 FILE2 > SUMS");
     std::println("  $ cch --check -- SUMS");
-    std::println("  $ cat file | cch");
+    std::println("  $ cat FILE | cch --untagged");
     std::println("");
 
     std::println("The tagged format is:");

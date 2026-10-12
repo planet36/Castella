@@ -123,7 +123,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // the minimum, the castella hash program's default, a round margin, the maximum
     const std::set round_counts{Castella::NUM_ROUNDS_MIN<N>(), 6, 8,
-                                Castella::NUM_ROUNDS_MAX};
+                                Castella::NUM_ROUNDS_MAX, };
 
     for (const auto capacity_blocks : capacities)
     {

@@ -50,7 +50,7 @@ inline constexpr std::string_view program_version = "2026-07-24";
 
 inline constexpr std::string_view default_host = "localhost";
 inline constexpr int default_port = 8080;
-const spdlog::level::level_enum default_log_level = spdlog::get_level(); // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
+const spdlog::level::level_enum default_log_level = spdlog::get_level();
 
 // {{{ options
 auto port = default_port;
@@ -71,7 +71,7 @@ std::mutex cv_mtx;
 * \c std::condition_variable_any::wait_for() accepts a \c std::stop_token, but
 * \c std::condition_variable::wait_for() does not.
 */
-std::condition_variable_any cv; // NOLINT(bugprone-throwing-static-initialization,cert-err58-cpp)
+std::condition_variable_any cv;
 
 /// The number of consecutive bytes squeezed since high-quality entropy was
 /// added to the Castella service

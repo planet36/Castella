@@ -126,7 +126,7 @@ calculate_metrics_num_rounds(const int num_samples)
                 , rs_num_flipped_bits.variance()
                 , rs_num_flipped_bits.standard_deviation()
                 , rs_num_flipped_bits.skewness()
-                , rs_num_flipped_bits.kurtosis()
+                , rs_num_flipped_bits.excess_kurtosis()
                 );
     }
     std::println("");

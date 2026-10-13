@@ -91,7 +91,7 @@ calculate_metrics_aes_enc_0(const int num_samples, const int aes_num_rounds)
             , rs_num_flipped_bits.variance()
             , rs_num_flipped_bits.standard_deviation()
             , rs_num_flipped_bits.skewness()
-            , rs_num_flipped_bits.kurtosis()
+            , rs_num_flipped_bits.excess_kurtosis()
             );
 }
 

@@ -72,7 +72,7 @@ This runs the fixed tests (pinned duplex/tree KATs, constraint enforcement, sque
 ./permute-num_rounds-avalanche_matrix -n 100    # corroborating statistics
 ```
 
-In the `## N=16` table, `μ` is the mean number of output bits flipped by a one-bit input change (ideal: 1024, half the 2048-bit state), and `diff.%` is the same as a percentage.  Expect 1 round at ~3.1% (one block diffused), 2 rounds at ~49.8% but with skewed higher moments (`γ₁`, `κ` far from 0), and 3 rounds and beyond at 50.0% with `ε` < 0.1 and clean higher moments.  The avalanche-matrix program confirms per-bit uniformity.
+In the `## N=16` table, `μ` is the mean number of output bits flipped by a one-bit input change (ideal: 1024, half the 2048-bit state), and `diff.%` is the same as a percentage.  Expect 1 round at ~3.1% (one block diffused), 2 rounds at ~49.8% but with skewed higher moments (`γ₁`, `γ₂` far from 0), and 3 rounds and beyond at 50.0% with `ε` < 0.1 and clean higher moments.  The avalanche-matrix program confirms per-bit uniformity.
 
 ## 4. Trail bounds (the `R*` floors)
 

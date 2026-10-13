@@ -155,7 +155,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                  "\tσ²"     // variance
                  "\tσ"      // standard deviation
                  "\tγ₁"     // skewness
-                 "\tκ"      // kurtosis
+                 "\tγ₂"     // excess kurtosis
     );
 
     for (int aes_num_rounds = 1; aes_num_rounds <= 6; aes_num_rounds++)

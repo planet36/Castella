@@ -96,7 +96,7 @@ calculate_metrics_num_rounds(const int num_samples)
                  "\tσ²"     // variance
                  "\tσ"      // standard deviation
                  "\tγ₁"     // skewness
-                 "\tκ"      // kurtosis
+                 "\tγ₂"     // excess kurtosis
     );
 
     // number of bits in the state

@@ -189,7 +189,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                      "\tσ²"     // variance
                      "\tσ"      // standard deviation
                      "\tγ₁"     // skewness
-                     "\tκ"      // kurtosis
+                     "\tγ₂"     // excess kurtosis
         );
 
         calculate_metrics_simd_compress(simd_compress_aes_enc_r2, num_samples, 2, vary_a);

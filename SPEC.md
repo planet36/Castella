@@ -142,7 +142,7 @@ The `castella` command-line program uses `N` = `"Castella"`, default `S` = `"has
 
 ### The keyed (MAC) construction
 
-The `castella` program's `--key-file` mode follows the KMAC structure (SP 800-185 Section 4) at tree scale.  For key `K` (at least 1 byte, and short enough that `bytepad(encode_string(K), CHUNK_SIZE)` is exactly one chunk, though the program caps it further at `min(4096, CHUNK_SIZE − 10)` bytes), output length `L`, and input `X`:
+The `castella` program's `--key-file` mode follows the KMAC structure (SP 800-185 Section 4) at tree scale.  For key `K` (at least 1 byte, and short enough that `bytepad(encode_string(K), CHUNK_SIZE)` is exactly one chunk), output length `L`, and input `X`:
 
 ```
 MAC(K, X, L) = DuplexTree(C(L), num_rounds, suffix, "Castella-MAC", S, CHUNK_SIZE)
@@ -151,6 +151,8 @@ MAC(K, X, L) = DuplexTree(C(L), num_rounds, suffix, "Castella-MAC", S, CHUNK_SIZ
 ```
 
 The bytepad width is the tree chunk size (where KMAC uses the rate), so the key block is exactly chunk 0 (absorbed directly by the now-keyed final node), and `X`'s bytes keep their chunk alignment.  The function name `"Castella-MAC"` separates MACs from unkeyed digests, and the trailing `right_encode(L)` makes MACs of different output lengths unrelated (an unkeyed digest of a smaller size is a truncation of a larger one at the same capacity, but a MAC must not be).
+
+As in KMAC, the construction sets no minimum key length and leaves it to the application, which should not use a key shorter than its required security strength (SP 800-185 Section 8.4.1).  The `castella` program requires at least 32 bytes, which reaches the 256-bit key-recovery cap at its default size, and caps the key at `min(4096, CHUNK_SIZE − 10)` bytes.
 
 ## Compress-Castella (`cch`)
 
@@ -327,7 +329,7 @@ tree C=4 rounds=6 suffix=0 fn=43617374656c6c61 custom=4b4154 chunk=1024 msglen=0
 mac C=4 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 keylen=32 msglen=5000 out=32 digest=926623ac14eda57d9ac438a0fe7a367a2f2fec215723dcde0600f212a2dde965
 ```
 
-(`fn` decodes to `"Castella"`, or `"Castella-MAC"` on a `mac` line, and `custom` to `"KAT"`.)  A `mac` line is the tree of the same parameters over `bytepad(encode_string(K), chunk) || msg || right_encode(out)`, so it needs no vector format of its own beyond the key.
+(`fn` decodes to `"Castella"`, or `"Castella-MAC"` on a `mac` line, and `custom` to `"KAT"`.)  A `mac` line is the tree of the same parameters over `bytepad(encode_string(K), chunk) || msg || right_encode(out)`, so it needs no vector format of its own beyond the key.  Two of the `mac` lines in `tests/KAT.txt`, with `keylen=1` and `keylen=16`, use keys shorter than the `castella` program's 32-byte minimum, which belongs to the program and not to the MAC.
 
 **The vectors are layered, so a failure localizes.**  An `rc` line is one round constant `RC[r][aes_r][i]`, and a `permute` line is the whole 256-byte state after `P(s, rounds)` from the all-zero state (`init=zero`) or from `s[i] = i mod 256` (`init=counter`).  On both, `digest=` is that raw output rather than a digest.  They exist because every other vector depends on them: without them a wrong LFSR stride or a transposed transpose first shows as a wrong duplex digest, with this whole document in between.  The reduced-round `permute` lines are the sharper ones, because `P` uses the **last** `rounds` constants, so an implementation that takes the first ones reproduces `rounds=16` and fails every shorter vector.
 

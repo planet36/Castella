@@ -19,7 +19,7 @@ FAIL=0
 # The number of assertions this script is expected to make.  Without it, a
 # run missing an assertion would still report "0 failed" and exit 0.  Update
 # this when assertions are added or removed.
-declare -r EXPECTED_ASSERTIONS=140
+declare -r EXPECTED_ASSERTIONS=141
 
 function assert_eq_cmd_str
 {
@@ -841,8 +841,9 @@ assert_eq_cmd_str_status \
 
 # Verify the "--key-file" keyed (MAC) mode of castella.
 
-printf 'Squishee' > "${CASTELLA_TMP}/test-key1.bin" || exit
-printf 'Duff'     > "${CASTELLA_TMP}/test-key2.bin" || exit
+printf 'I hate every ape I see / From chimpan-A to chimpan-Z' > "${CASTELLA_TMP}/test-key1.bin" || exit
+printf 'Oh, my God!  I was wrong / It was Earth all along'    > "${CASTELLA_TMP}/test-key2.bin" || exit
+printf 'I love you, Dr. Zaius!'                               > "${CASTELLA_TMP}/test-key3.bin" || exit
 
 # This known answer pins the MAC construction: the bytepadded encode_string
 # of the key as chunk 0, the function name "Castella-MAC", and the trailing
@@ -850,7 +851,7 @@ printf 'Duff'     > "${CASTELLA_TMP}/test-key2.bin" || exit
 
 assert_eq_cmd_str \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field' \
-    3072378b717dd04714e99e74bc2050b82ce0ce3deff877d28bee041481cf953d
+    2b7df407383354e3cdc81291cc40a81cee5d8e9b72ec2b2aa0fc857cbc5e4f05
 
 # A keyed digest differs from the unkeyed digest.  Two different keys give two
 # different digests.
@@ -962,10 +963,15 @@ assert_eq_cmd_exit_status \
     './cch --quiet ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
     1
 
-# A missing file, and an unrecognized option, are errors for both programs.
+# A missing file and an unrecognized option are errors for both programs, and
+# a key file shorter than the minimum key size is an error for castella.
 
 assert_eq_cmd_exit_status \
     './castella --key-file=${CASTELLA_TMP}/no-such-key ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
+    1
+
+assert_eq_cmd_exit_status \
+    './castella --key-file=${CASTELLA_TMP}/test-key3.bin ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
     1
 
 assert_eq_cmd_exit_status \

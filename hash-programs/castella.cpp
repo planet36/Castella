@@ -44,6 +44,14 @@ inline constexpr std::string_view function_name = "Castella";
 /// The function name of keyed (--key-file) hashing
 inline constexpr std::string_view mac_function_name = "Castella-MAC";
 
+/// The minimum key size (in bytes)
+/**
+* The MAC that SPEC.md defines takes keys as short as 1 byte.  Like KMAC, it
+* leaves the minimum to the application (SP 800-185 Section 8.4.1).  32 bytes
+* reaches the 256-bit key-recovery cap at the default digest size.
+*/
+inline constexpr int key_size_min = 32;
+
 /// The absolute maximum key size (in bytes)
 /**
 * This is a flat cap.  A smaller limit applies at small chunk sizes, and
@@ -238,7 +246,7 @@ print_usage()
 
     std::println("  --key-file=FILE");
     std::println("                        Compute a keyed hash (a MAC).  The key is the exact");
-    std::println("                        bytes of FILE.  It is at least 1 byte, and at most the");
+    std::println("                        bytes of FILE.  It is at least {} bytes, and at most the", key_size_min);
     std::println("                        smaller of {} bytes and the chunk size minus 10.  The", key_size_max);
     std::println("                        KMAC structure is followed at tree scale.  The function");
     std::println("                        name becomes {}, the key is bytepadded to", quote_shell_always(mac_function_name));
@@ -546,6 +554,14 @@ read_key_file(const std::string& path, const int max_size_bytes)
 
     if (std::empty(key))
         errx(EXIT_FAILURE, "%s: key file is empty", path.c_str());
+
+    if (const auto key_size = std::ssize(key); key_size < key_size_min)
+    {
+        // errx exits without unwinding, so the local key must be scrubbed here.
+        key = key_buffer{}; // deallocate
+        errx(EXIT_FAILURE, "%s: key file size (%td bytes) is below the minimum (%d bytes)",
+             path.c_str(), key_size, key_size_min);
+    }
 
     return key;
 }

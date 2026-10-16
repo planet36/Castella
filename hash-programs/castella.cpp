@@ -585,10 +585,6 @@ compute_file_digest(const std::string& path,
 
     const bool keyed = !std::empty(key);
 
-    // FILE is hashed as a chunked tree, so the work can spread across
-    // num_threads CPU cores.  Streamed input parallelizes too.  The read loop
-    // in process_file feeds the tree's streaming pipeline, so worker threads
-    // hash previously read chunks while it is blocked in read().
     Castella::DuplexTree hash_obj(capacity_blocks, rounds, suffix,
                                   keyed ? mac_function_name : function_name, custom,
                                   chunk_size_bytes, num_threads);

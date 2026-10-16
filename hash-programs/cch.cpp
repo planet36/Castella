@@ -39,6 +39,10 @@ static_assert(default_digest_size_bytes <= max_digest_size_bytes);
 
 inline constexpr int default_mix_rate = compress_castella_hash<>::DEFAULT_MIX_RATE;
 
+// 0 disables periodic mixing, so the valid mix rates are the contiguous range
+// [0, MIX_RATE_MAX].
+static_assert(compress_castella_hash<>::MIX_RATE_MIN == 1);
+
 // Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = compress_castella_tree::DEFAULT_CHUNK_SIZE;
 
@@ -266,9 +270,6 @@ try
             break;
 
         case OPTION_HASH_MIX_RATE:
-            // 0 disables periodic mixing.  Otherwise the range is
-            // [MIX_RATE_MIN, MIX_RATE_MAX], and MIX_RATE_MIN is 1, so the
-            // valid values are contiguous.
             mix_rate = parse_option_int(optarg, 0, compress_castella_hash<>::MIX_RATE_MAX,
                                         "--mix-rate");
             break;
@@ -363,7 +364,6 @@ parse_tagged_line(std::string_view s, check_line_fields& cl_fields)
     if (!consume_prefix(s, ",mix-rate="))
         return false;
 
-    // The same contiguous range --mix-rate accepts (see process_options)
     if (!consume_int(s, 0, compress_castella_hash<>::MIX_RATE_MAX, cl_fields.mix_rate))
         return false;
 

@@ -98,12 +98,12 @@ print_usage()
 
     std::println("  -c, --check");
     std::println("                        Read digest lines from each FILE (or standard input) and");
-    std::println("                        verify them.  Both output formats are accepted.  A tag");
-    std::println("                        line carries the digest-relevant options itself.  An");
-    std::println("                        untagged line needs the same --chunk-size and --mix-rate");
-    std::println("                        that produced it.  The output size is inferred from the");
-    std::println("                        digest length.  Empty lines and lines starting with '#'");
-    std::println("                        are ignored.");
+    std::println("                        verify them.  Both tagged and untagged formats are");
+    std::println("                        accepted.  A tagged line carries the digest-relevant");
+    std::println("                        options itself.  An untagged line needs the same");
+    std::println("                        --chunk-size and --mix-rate that produced it.  The");
+    std::println("                        output size is inferred from the digest length.  Empty");
+    std::println("                        lines and lines starting with '#' are ignored.");
     std::println("                        (A FILE whose name contains a newline cannot be");
     std::println("                        verified.)");
 

@@ -213,13 +213,14 @@ print_usage()
 
     std::println("  -c, --check");
     std::println("                        Read digest lines from each FILE (or standard input) and");
-    std::println("                        verify them.  Both output formats are accepted.  A tag");
-    std::println("                        line carries the digest-relevant options itself.  An");
-    std::println("                        untagged line needs the same --chunk-size, --custom,");
-    std::println("                        --rounds, and --suffix that produced it.  The output");
-    std::println("                        size is inferred from the digest length.  Keyed digests");
-    std::println("                        verify only with the same --key-file.  Empty lines and");
-    std::println("                        lines starting with '#' are ignored.");
+    std::println("                        verify them.  Both tagged and untagged formats are");
+    std::println("                        accepted.  A tagged line carries the digest-relevant");
+    std::println("                        options itself.  An untagged line needs the same");
+    std::println("                        --chunk-size, --custom, --rounds, and --suffix that");
+    std::println("                        produced it.  The output size is inferred from the");
+    std::println("                        digest length.  Keyed digests verify only with the same");
+    std::println("                        --key-file.  Empty lines and lines starting with '#' are");
+    std::println("                        ignored.");
     std::println("                        (A FILE whose name contains a newline cannot be");
     std::println("                        verified.)");
 

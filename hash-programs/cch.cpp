@@ -87,11 +87,6 @@ print_usage()
     std::println("matters.");
     std::println("");
 
-    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize.  Piped input is hashed on the calling");
-    std::println("thread, because a CCH node outruns handing chunks to other cores.");
-    std::println("");
-
     std::println("Options:");
     std::println("");
 
@@ -132,7 +127,7 @@ print_usage()
     std::println("                        Specify the maximum number of worker threads that hash");
     std::println("                        chunks.  0 means one thread per available hardware");
     std::println("                        thread.  The digest does not depend on the number of");
-    std::println("                        threads.");
+    std::println("                        threads.  Only memory-mapped input uses them.");
     std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
                  compress_castella_tree::NUM_THREADS_MAX);
 
@@ -157,26 +152,6 @@ print_usage()
     std::println("                        Print each digest in the reversed style, without the");
     std::println("                        digest type.  See the examples below.");
     std::println("                        (ignored with --check)");
-    std::println("");
-
-    std::println("*CCH Algorithm Description*");
-    std::println("");
-
-    std::println("Each chunk is hashed to a chaining value by an independent CCH node, and a");
-    std::println("final CCH node hashes the chaining values.");
-    std::println("");
-
-    std::println("Within each node:");
-    std::println("The internal state is initialized with distinct per-lane constants.");
-    std::println("The mix rate is folded into it, so different RATE values produce distinct");
-    std::println("digests.");
-    std::println("Input data is absorbed into the state by a one-way compression function.");
-    std::println("The Castella permutation function mixes the state every RATE absorptions,");
-    std::println("which diffuses it fully.");
-    std::println("To finalize the hash, padding bytes are appended to the final block and");
-    std::println("absorbed by the compression function.");
-    std::println("The Castella permutation function is then applied to the state to produce");
-    std::println("the digest.");
     std::println("");
 
     std::println("Examples:");
@@ -207,7 +182,6 @@ print_usage()
     std::println("");
 
     std::println("<https://github.com/planet36/Castella>");
-    std::println("<https://en.wikipedia.org/wiki/One-way_compression_function>");
     std::println("");
 
     std::println("Report bugs to <https://github.com/planet36/Castella/issues>.");

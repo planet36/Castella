@@ -202,15 +202,6 @@ print_usage()
     std::println("use it where security matters.");
     std::println("");
 
-    std::println("In this program, the capacity of the Castella DuplexTree nodes is");
-    std::println("about 2×SIZE.");
-    std::println("");
-
-    std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");
-    std::println("Memory-mapped files parallelize best.  Piped input is also multithreaded,");
-    std::println("but the reading thread limits its throughput.");
-    std::println("");
-
     std::println("Options:");
     std::println("");
 

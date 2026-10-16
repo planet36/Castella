@@ -81,7 +81,7 @@ print_usage()
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
 
-    std::println("Compute the Compress-Castella tree hash (CCH).");
+    std::println("Compute the Compress-Castella hash (CCH).");
     std::println("CCH is a fast NON-CRYPTOGRAPHIC checksum (see SPEC.md).  Do not use it");
     std::println("where security matters.");
     std::println("If FILE is absent, or when FILE is '-', read standard input.");

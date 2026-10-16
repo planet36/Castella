@@ -195,7 +195,7 @@ print_usage()
     std::println("Usage: {} [OPTION]... [FILE]...", program_invocation_short_name);
     std::println("");
 
-    std::println("Compute the Castella tree hash.");
+    std::println("Compute the Castella hash.");
     std::println("Castella is a personal research project that has not been standardized,");
     std::println("externally reviewed, or cryptanalyzed by anyone but its author (see");
     std::println("SPEC.md).  Do not use it where security matters.");

@@ -2,8 +2,8 @@
 
 | name | purpose |
 | ---- | ------- |
-| castella.cpp | Compute the Castella tree hash of each FILE |
-| cch.cpp | Compute the Compress-Castella tree hash (CCH) of each FILE |
+| castella.cpp | Compute the Castella hash of each FILE |
+| cch.cpp | Compute the Compress-Castella hash (CCH) of each FILE |
 
 Both programs read from standard input when FILE is absent or `-`.
 

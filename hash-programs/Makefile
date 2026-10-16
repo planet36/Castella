@@ -19,8 +19,8 @@ test: all
 
 man: $(MANS)
 
-castella.1: MAN_NAME = compute the Castella tree hash
-cch.1: MAN_NAME = compute the Compress-Castella tree hash
+castella.1: MAN_NAME = compute the Castella hash
+cch.1: MAN_NAME = compute the Compress-Castella hash
 
 %.1: %
 	@command -v help2man >/dev/null || { echo 'make man: help2man is required'; exit 1; }

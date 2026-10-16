@@ -163,15 +163,9 @@ print_usage()
     std::println("  $ cat FILE | cch --untagged");
     std::println("");
 
-    std::println("The tagged format is:");
+    std::println("The tagged and untagged formats, respectively, are:");
     std::println("");
-
     std::println("  > cch (chunk-size=C,mix-rate=R) 'FILE' = digest");
-    std::println("");
-
-    std::println("The untagged format is:");
-    std::println("");
-
     std::println("  > digest  'FILE'");
     std::println("");
 

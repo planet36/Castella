@@ -307,21 +307,9 @@ print_usage()
     std::println("  $ cat FILE | castella --untagged");
     std::println("");
 
-    std::println("The tagged format is:");
+    std::println("The tagged and untagged formats, respectively, are:");
     std::println("");
-
-    std::println("  > castella (PARAMS) 'FILE' = digest");
-    std::println("");
-
-    std::println("where PARAMS is:");
-    std::println("");
-
-    std::println("  > chunk-size=C,custom=S,rounds=R,suffix=B");
-    std::println("");
-
-    std::println("The untagged format is:");
-    std::println("");
-
+    std::println("  > castella (chunk-size=C,custom=S,rounds=R,suffix=B) 'FILE' = digest");
     std::println("  > digest  'FILE'");
     std::println("");
 

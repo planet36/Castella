@@ -288,13 +288,13 @@ print_usage()
     std::println("  --tag");
     std::println("                        Print each digest in a self-describing format that");
     std::println("                        embeds the digest-relevant options, so --check can");
-    std::println("                        verify it without them.  See the examples below.");
+    std::println("                        verify it without them.  See the formats below.");
     std::println("                        (default)");
     std::println("                        (ignored with --check)");
 
     std::println("  --untagged");
     std::println("                        Print each digest in the reversed style, without the");
-    std::println("                        digest type.  See the examples below.");
+    std::println("                        digest type.  See the formats below.");
     std::println("                        (ignored with --check)");
     std::println("");
 

@@ -882,9 +882,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         // The paths are checkfiles (containing lines of digests to verify),
         // not files to hash.
-        exit_status = run_check_files(paths, parse_check_line, verify_check_line);
-
-        return exit_status;
+        return run_check_files(paths, parse_check_line, verify_check_line);
     }
 
     // Every path in this run gets the same digest size.  The round count is

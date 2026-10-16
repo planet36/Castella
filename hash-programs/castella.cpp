@@ -196,10 +196,10 @@ print_usage()
     std::println("");
 
     std::println("Compute the Castella hash.");
+    std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("Castella is a personal research project that has not been standardized,");
     std::println("externally reviewed, or cryptanalyzed by anyone but its author.  Do not");
     std::println("use it where security matters.");
-    std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
     std::println("In this program, the capacity of the Castella DuplexTree nodes is");

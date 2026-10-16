@@ -82,9 +82,9 @@ print_usage()
     std::println("");
 
     std::println("Compute the Compress-Castella hash (CCH).");
+    std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("CCH is a fast NON-CRYPTOGRAPHIC checksum.  Do not use it where security");
     std::println("matters.");
-    std::println("If FILE is absent, or when FILE is '-', read standard input.");
     std::println("");
 
     std::println("FILE is hashed as a chunked tree, so multiple CPU cores can share the work.");

@@ -555,8 +555,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     if (check_mode)
     {
-        // The paths are checkfiles (lines of digests to verify), not files
-        // to hash.
+        // The paths are checkfiles (containing lines of digests to verify),
+        // not files to hash.
         return run_check_files(paths, parse_check_line, verify_check_line);
     }
 

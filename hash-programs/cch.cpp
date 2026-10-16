@@ -32,7 +32,7 @@ inline constexpr std::string_view program_version = "2026-08-08";
 // {{{ default values for options
 inline constexpr int min_digest_size_bytes = 1;
 inline constexpr int max_digest_size_bytes =
-    compress_castella_hash<>::get_max_digest_size_bytes();
+    compress_castella_tree::get_max_digest_size_bytes();
 inline constexpr int default_digest_size_bytes = max_digest_size_bytes / 2;
 static_assert(default_digest_size_bytes >= min_digest_size_bytes);
 static_assert(default_digest_size_bytes <= max_digest_size_bytes);
@@ -346,8 +346,8 @@ struct check_line_fields final
 [[nodiscard]] bool
 is_valid_digest_size(const std::vector<std::byte>& digest) noexcept
 {
-    return (std::ssize(digest) >= 1) &&
-           (std::ssize(digest) <= compress_castella_tree::get_max_digest_size_bytes());
+    return (std::ssize(digest) >= min_digest_size_bytes) &&
+           (std::ssize(digest) <= max_digest_size_bytes);
 }
 
 /// Parse a --tag-format line (which carries its own digest-relevant options)

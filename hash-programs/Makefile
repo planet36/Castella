@@ -23,7 +23,7 @@ castella.1: MAN_NAME = compute the Castella hash
 cch.1: MAN_NAME = compute the Compress-Castella hash
 
 %.1: %
-	@command -v help2man >/dev/null || { echo 'make man: help2man is required'; exit 1; }
+	@command -v help2man >/dev/null || { echo 'make man: help2man is required' >&2; exit 1; }
 	help2man --no-info --locale=C.UTF-8 --name='$(MAN_NAME)' --output=$@ ./$<
 
 clean:

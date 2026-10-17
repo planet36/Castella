@@ -22,7 +22,7 @@
 #endif
 
 /// Perform 1 round of AES encryption with \a aes_round_key on \a data
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 aes_enc(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
@@ -33,7 +33,7 @@ aes_enc(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a aes_round_key on \a data
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 aes_enc_inv(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 {
 #if defined(__x86_64__) && defined(__AES__)
@@ -46,7 +46,7 @@ aes_enc_inv(uint8x16_t data, const uint8x16_t aes_round_key) noexcept
 #if defined(__x86_64__) && defined(__VAES__)
 
 /// There is no such intrinsic named "_mm256_aesimc_epi128"
-[[nodiscard]] static inline __m256i
+[[nodiscard]] inline __m256i
 // NOLINTNEXTLINE(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 _mm256_aesimc_epi128(__m256i data) noexcept
 {
@@ -57,14 +57,14 @@ _mm256_aesimc_epi128(__m256i data) noexcept
 }
 
 /// Perform 1 round of AES encryption with \a aes_round_key on \a data
-[[nodiscard]] static inline __m256i
+[[nodiscard]] inline __m256i
 aes_enc(__m256i data, const __m256i aes_round_key) noexcept
 {
     return _mm256_aesenc_epi128(data, aes_round_key);
 }
 
 /// Perform the inverse of 1 round of AES encryption with \a aes_round_key on \a data
-[[nodiscard]] static inline __m256i
+[[nodiscard]] inline __m256i
 aes_enc_inv(__m256i data, const __m256i aes_round_key) noexcept
 {
     return _mm256_aesdeclast_epi128(_mm256_aesimc_epi128(data ^ aes_round_key), __m256i{});
@@ -74,7 +74,7 @@ aes_enc_inv(__m256i data, const __m256i aes_round_key) noexcept
 
 /// Perform 1 round of AES encryption with a zero AES round key on \a data
 template <typename T>
-[[nodiscard]] static inline T
+[[nodiscard]] inline T
 aes_enc_0(T data) noexcept
 {
     return aes_enc(data, T{});
@@ -82,7 +82,7 @@ aes_enc_0(T data) noexcept
 
 /// Perform the inverse of 1 round of AES encryption with a zero AES round key on \a data
 template <typename T>
-[[nodiscard]] static inline T
+[[nodiscard]] inline T
 aes_enc_0_inv(T data) noexcept
 {
     return aes_enc_inv(data, T{});
@@ -93,7 +93,7 @@ aes_enc_0_inv(T data) noexcept
 /// Perform \c aes_enc_0 \a AES_NUM_ROUNDS times on each element of \a arr
 template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
-static void
+void
 aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
@@ -114,7 +114,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 
 /// Perform \c aes_enc_0 \a AES_NUM_ROUNDS times on each element of \a arr
 template <int AES_NUM_ROUNDS, size_t N>
-static void
+void
 aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
@@ -131,7 +131,7 @@ aes_enc_0_arr(simd_arr_t<N>& arr) noexcept
 /// Perform \c aes_enc_0_inv \a AES_NUM_ROUNDS times on each element of \a arr
 template <int AES_NUM_ROUNDS, size_t N>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
-static void
+void
 aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); i += 2)
@@ -152,7 +152,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 
 /// Perform \c aes_enc_0_inv \a AES_NUM_ROUNDS times on each element of \a arr
 template <int AES_NUM_ROUNDS, size_t N>
-static void
+void
 aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 {
     for (int i = 0; i < std::ssize(arr); ++i)
@@ -173,7 +173,7 @@ aes_enc_0_inv_arr(simd_arr_t<N>& arr) noexcept
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
-static void
+void
 aes_enc_arr_paircast(simd_arr_t<N>& arr,
                      const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
@@ -205,7 +205,7 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
 * broadcast to both lanes.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
                const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
@@ -229,7 +229,7 @@ aes_enc_arr_x2(simd_arr_x2_t<N>& arr,
 * broadcasts one 128-bit key to both lanes.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_arr_folded(
     simd_arr_x2_t<N>& arr,
     const std::array<simd_arr_x2_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -258,7 +258,7 @@ aes_enc_arr_folded(
 * on targets without VAES.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_arr_generic(simd_arr_t<N>& arr,
                     const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
@@ -280,7 +280,7 @@ aes_enc_arr_generic(simd_arr_t<N>& arr,
 * else.  The two are bit-identical.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_arr(simd_arr_t<N>& arr,
             const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {
@@ -307,7 +307,7 @@ aes_enc_arr(simd_arr_t<N>& arr,
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
 requires (N > 0) && ((N % 2) == 0) // N must be positive and even
-static void
+void
 aes_enc_inv_arr_paircast(
     simd_arr_t<N>& arr,
     const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -340,7 +340,7 @@ aes_enc_inv_arr_paircast(
 * one on targets without VAES.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_inv_arr_generic(
     simd_arr_t<N>& arr,
     const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
@@ -363,7 +363,7 @@ aes_enc_inv_arr_generic(
 * everywhere else.  The two are bit-identical.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>
-static void
+void
 aes_enc_inv_arr(simd_arr_t<N>& arr,
                 const std::array<simd_arr_t<M>, AES_NUM_ROUNDS>& aes_round_keys) noexcept
 {

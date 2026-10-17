@@ -14,7 +14,7 @@
 #include <cstdint>
 
 /// Broadcast \a x to all 16 \c uint8_t elements of a \c uint8x16_t
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 broadcast_u8(const uint8_t x) noexcept
 {
 #if defined(__x86_64__) && defined(__SSE2__)
@@ -25,7 +25,7 @@ broadcast_u8(const uint8_t x) noexcept
 }
 
 /// Broadcast \a x to all 8 \c uint16_t elements of a \c uint8x16_t
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 broadcast_u16(const uint16_t x) noexcept
 {
 #if defined(__x86_64__) && defined(__SSE2__)
@@ -36,7 +36,7 @@ broadcast_u16(const uint16_t x) noexcept
 }
 
 /// Broadcast \a x to all 4 \c uint32_t elements of a \c uint8x16_t
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 broadcast_u32(const uint32_t x) noexcept
 {
 #if defined(__x86_64__) && defined(__SSE2__)
@@ -47,7 +47,7 @@ broadcast_u32(const uint32_t x) noexcept
 }
 
 /// Broadcast \a x to all 2 \c uint64_t elements of a \c uint8x16_t
-[[nodiscard]] static inline uint8x16_t
+[[nodiscard]] inline uint8x16_t
 broadcast_u64(const uint64_t x) noexcept
 {
 #if defined(__x86_64__) && defined(__SSE2__)

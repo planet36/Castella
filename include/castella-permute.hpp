@@ -136,7 +136,7 @@ constexpr auto lfsr_seed = lfsr_from_bytes16("expand 16-byte c");
 * \c Castella::permute so that the round constants share no structure with it.
 */
 template <int NUM_ROUNDS>
-[[nodiscard]] static consteval auto
+[[nodiscard]] consteval auto
 create_round_constants() noexcept
 {
     static_assert(NUM_ROUNDS > 0);
@@ -206,7 +206,7 @@ using round_constants_folded_t = std::array<simd_arr_x2_t<N / 2>, AES_NUM_ROUNDS
 * identical values.
 */
 template <size_t N, int NUM_ROUNDS>
-[[nodiscard]] static consteval auto
+[[nodiscard]] consteval auto
 create_round_constants_folded() noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -251,7 +251,7 @@ inline constexpr auto round_constants_folded =
 * (tests/permute-equivalence.cpp).
 */
 template <size_t N>
-static void
+void
 permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -284,7 +284,7 @@ permute_generic(arr_blocks<N>& state, const int num_rounds) noexcept
 * 128-bit transpose stores.
 */
 template <size_t N>
-static void
+void
 permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -346,7 +346,7 @@ permute_folded(arr_blocks<N>& state, const int num_rounds) noexcept
 * bit-identical, so the choice never affects a digest.
 */
 template <size_t N>
-static void
+void
 permute(arr_blocks<N>& state, const int num_rounds) noexcept
 {
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
@@ -376,7 +376,7 @@ permute(arr_blocks<N>& state, const int num_rounds) noexcept
 * of permutation work on one core (see \c Castella::DuplexTree leaf batching).
 */
 template <size_t N>
-static void
+void
 permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));
@@ -413,7 +413,7 @@ permute_x2(arr_blocks_x2<N>& state_x2, const int num_rounds) noexcept
 * Like \c permute, the \e last \a num_rounds round constants are used.
 */
 template <size_t N>
-static void
+void
 permute_inv(arr_blocks<N>& state, const int num_rounds) noexcept
 {
     static_assert((N == 2) || (N == 4) || (N == 8) || (N == 16));

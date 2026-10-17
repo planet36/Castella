@@ -44,7 +44,7 @@ static_assert(std::endian::native == std::endian::little, "little-endian host re
 *         little-endian order, preceded by the byte width of \a x
 * \pre \a x ≥ 0
 */
-[[nodiscard]] static auto
+[[nodiscard]] auto
 left_encode(const std::integral auto x) noexcept
 {
 #if defined(DEBUG)
@@ -86,7 +86,7 @@ left_encode(const std::integral auto x) noexcept
 *         little-endian order, followed by the byte width of \a x
 * \pre \a x ≥ 0
 */
-[[nodiscard]] static auto
+[[nodiscard]] auto
 right_encode(const std::integral auto x) noexcept
 {
 #if defined(DEBUG)

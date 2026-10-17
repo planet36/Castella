@@ -20,7 +20,7 @@
 * \param b the second 128-bit SIMD value
 * \return \c true if \a a and \a b are equal, \c false otherwise
 */
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
 #if defined(__SSE4_1__)
@@ -43,7 +43,7 @@ simd128_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 * \param b the second 256-bit SIMD value
 * \return \c true if \a a and \a b are equal, \c false otherwise
 */
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
 #if defined(__x86_64__) && defined(__AVX2__)
@@ -61,7 +61,7 @@ simd256_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 #endif
 
 /// \copydoc simd128_equal(const uint8x16_t, const uint8x16_t)
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
 {
     return simd128_equal(a, b);
@@ -71,7 +71,7 @@ simd_equal(const uint8x16_t a, const uint8x16_t b) noexcept
     (defined(__aarch64__) && defined(__ARM_NEON))
 
 /// \copydoc simd256_equal(const uint8x16x2_t, const uint8x16x2_t)
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 {
     return simd256_equal(a, b);
@@ -87,7 +87,7 @@ simd_equal(const uint8x16x2_t a, const uint8x16x2_t b) noexcept
 * \warning This function stops comparing at the first mismatch, making it vulnerable to a timing attack.
 */
 template <std::size_t N>
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd128_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 {
     return std::ranges::equal(lhs, rhs, simd128_equal);
@@ -95,7 +95,7 @@ simd128_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 
 /// \copydoc simd128_arr_equal(const simd_arr_t<N>&, const simd_arr_t<N>&)
 template <std::size_t N>
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 {
     return simd128_arr_equal(lhs, rhs);
@@ -106,7 +106,7 @@ simd_arr_equal(const simd_arr_t<N>& lhs, const simd_arr_t<N>& rhs) noexcept
 * \param v the 128-bit SIMD value
 * \return \c true if all bits are zero in \a v, \c false otherwise
 */
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd128_is_zero(const uint8x16_t v) noexcept
 {
 #if defined(__SSE4_1__)
@@ -120,7 +120,7 @@ simd128_is_zero(const uint8x16_t v) noexcept
 }
 
 /// \copydoc simd128_is_zero(const uint8x16_t)
-[[nodiscard]] static inline bool
+[[nodiscard]] inline bool
 simd_is_zero(const uint8x16_t v) noexcept
 {
     return simd128_is_zero(v);

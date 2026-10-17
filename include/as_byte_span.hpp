@@ -79,8 +79,8 @@ as_byte_span(const R& container) noexcept
 * \return a <code>std::span<const std::byte></code> over \a len bytes at \a data
 * \pre \a data is not null, unless \a len is 0
 */
-[[nodiscard]] static auto
-as_byte_span(const void* data, size_t len) noexcept
+[[nodiscard]] inline auto
+as_byte_span(const void* data, std::size_t len) noexcept
 {
 #if defined(DEBUG)
     // NOLINTNEXTLINE(readability-simplify-boolean-expr)

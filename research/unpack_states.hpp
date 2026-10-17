@@ -17,7 +17,7 @@
 
 /// Unpack a lane-paired state into its two states (the inverse of \c pack_states)
 template <size_t N>
-static void
+void
 unpack_states(const Castella::arr_blocks_x2<N>& state_x2,
               Castella::arr_blocks<N>& state_a,
               Castella::arr_blocks<N>& state_b) noexcept

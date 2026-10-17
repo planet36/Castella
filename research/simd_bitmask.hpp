@@ -21,7 +21,7 @@
 * \param lo the lower 64 bits
 * \return a 128-bit SIMD value with \a hi in the upper half and \a lo in the lower half
 */
-[[nodiscard]] static constexpr uint8x16_t
+[[nodiscard]] constexpr uint8x16_t
 combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 {
     // simd_types.hpp requires a little-endian host, so the low half comes first.
@@ -37,7 +37,7 @@ combine_u64x2(const uint64_t hi, const uint64_t lo) noexcept
 * \param lo the lower 64 bits
 * \return a \c std::bitset<128> with \a hi in the upper half and \a lo in the lower half
 */
-[[nodiscard]] static inline std::bitset<128>
+[[nodiscard]] inline std::bitset<128>
 make_bitset(const uint64_t hi, const uint64_t lo) noexcept
 {
     std::bitset<128> result(hi);
@@ -51,7 +51,7 @@ make_bitset(const uint64_t hi, const uint64_t lo) noexcept
 * \param v the 128-bit SIMD value
 * \return a \c std::bitset<128> with the same bit pattern as \a v
 */
-[[nodiscard]] static inline std::bitset<128>
+[[nodiscard]] inline std::bitset<128>
 make_bitset(const uint8x16_t v) noexcept
 {
     const simd_union_t u{.v = v};

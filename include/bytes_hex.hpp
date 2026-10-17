@@ -26,7 +26,7 @@
 * \return the lowercase hexadecimal digit representing \a x
 * \pre \a x is in the interval <code>[0, 15]</code>
 */
-[[nodiscard]] static constexpr char
+[[nodiscard]] constexpr char
 encode_nibble_to_hex(const uint8_t x) noexcept
 {
 #if defined(DEBUG)
@@ -42,7 +42,7 @@ encode_nibble_to_hex(const uint8_t x) noexcept
 * \return the decoded nibble value of \a c, in the interval <code>[0, 15]</code>
 * \exception std::invalid_argument if \a c is not a hexadecimal digit
 */
-[[nodiscard]] static constexpr uint8_t
+[[nodiscard]] constexpr uint8_t
 decode_hex_to_nibble(const char c)
 {
     if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
@@ -57,7 +57,7 @@ decode_hex_to_nibble(const char c)
 * \param byte_sp the bytes to encode
 * \return a lowercase hexadecimal string representing \a byte_sp
 */
-[[nodiscard]] static std::string
+[[nodiscard]] inline std::string
 encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
 {
     const auto result_len = std::size(byte_sp) * 2;
@@ -84,7 +84,7 @@ encode_bytes_to_hex(const std::span<const std::byte> byte_sp)
 * \exception std::invalid_argument if the size of \a s is odd or \a s holds a
 *            character that is not a hexadecimal digit
 */
-[[nodiscard]] static std::vector<std::byte>
+[[nodiscard]] inline std::vector<std::byte>
 decode_hex_to_bytes(const std::string_view s)
 {
     if ((std::size(s) % 2) != 0)

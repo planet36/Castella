@@ -21,7 +21,7 @@
 * 128-bit lane and <code>state_b[i]</code> in its high 128-bit lane.
 */
 template <size_t N>
-[[nodiscard]] static Castella::arr_blocks_x2<N>
+[[nodiscard]] Castella::arr_blocks_x2<N>
 pack_states(const Castella::arr_blocks<N>& state_a,
             const Castella::arr_blocks<N>& state_b) noexcept
 {

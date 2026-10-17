@@ -27,7 +27,7 @@ character within the quotes. A single quote may not occur between single
 quotes, even when preceded by a backslash.
 </blockquote>
 */
-[[nodiscard]] static std::string
+[[nodiscard]] inline std::string
 quote_shell_always(std::string_view s)
 {
     constexpr char BACKSLASH = '\\';

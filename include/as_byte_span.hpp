@@ -37,6 +37,9 @@ f(as_byte_span(std::string{"abc"}));
 /**
 * Padding bytes within \a T are included, and their values are unspecified.
 *
+* A pointer or an iterator is rejected, because its bytes refer to data
+* elsewhere instead of holding it.
+*
 * \param x the object to view
 * \return a <code>std::span<const std::byte, sizeof(T)></code> over the object
 *         representation of \a x
@@ -57,6 +60,10 @@ as_byte_span(const T& x) noexcept
 *
 * Padding bytes within the element type are included, and their values are
 * unspecified.
+*
+* A range whose elements are pointers, iterators, or borrowed ranges is
+* rejected, because the bytes of such an element refer to data elsewhere instead
+* of holding it.
 *
 * \param container the range to view
 * \return a \c std::span of <code>const std::byte</code> over the elements of

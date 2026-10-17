@@ -19,8 +19,7 @@ make
 # equivalence-tests, permute-equivalence, and duplex-diff-fuzz.py), examples,
 # hash-programs (test-correctness.bash), and research (spec-conformance.py,
 # trail-model-crossvalidate.py, and permute-invariant-subspaces.py --self-test).
-# The two recipes that run Python need python3, and each is guarded by a check at
-# its front.
+# The two recipes that run Python need python3.
 #
 # research's `test` deliberately does NOT depend on its `all`.  The benchmarks
 # there link google-benchmark, which is why research is in EXTRA_SUBDIRS, but its

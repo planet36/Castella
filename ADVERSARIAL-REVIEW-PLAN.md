@@ -410,9 +410,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       the `*-verify` ones, so the probe binary drags that dependency into the root
       `make test` unless it gets its own rule.  The subspace search would wire in cheaply,
       since `permute-invariant-subspaces.py` needs only the standard library and runs in
-      about 13 s.  Weigh a guarded target against writing a new avalanche test.  The
-      `command -v python3` guards in `tests/` and `research/` are the existing pattern for
-      one.
+      about 13 s.  Weigh wiring it in against writing a new avalanche test.
 - [ ] **Boundary KATs.**  Confirm that KAT.txt exercises empty input, single-byte, exactly
       one chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       and `mix_rate` 0, 1, and 2048.  Add any missing.

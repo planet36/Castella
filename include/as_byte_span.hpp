@@ -55,6 +55,9 @@ as_byte_span(const T& x) noexcept
 * A string literal is an array that includes its terminating null character, so
 * <code>as_byte_span("abc")</code> has 4 bytes.
 *
+* Padding bytes within the element type are included, and their values are
+* unspecified.
+*
 * \param container the range to view
 * \return a \c std::span of <code>const std::byte</code> over the elements of
 *         \a container, with a static extent when \a container has one

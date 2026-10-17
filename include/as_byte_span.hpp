@@ -65,9 +65,9 @@ as_byte_span(const T& x) noexcept
 * rejected, because the bytes of such an element refer to data elsewhere instead
 * of holding it.
 *
-* \param container the range to view
+* \param rg the range to view
 * \return a \c std::span of <code>const std::byte</code> over the elements of
-*         \a container, with a static extent when \a container has one
+*         \a rg, with a static extent when \a rg has one
 */
 template <typename R>
 requires std::ranges::contiguous_range<const R> &&
@@ -77,9 +77,9 @@ requires std::ranges::contiguous_range<const R> &&
          (!std::input_or_output_iterator<std::ranges::range_value_t<const R>>) &&
          (!std::ranges::borrowed_range<std::ranges::range_value_t<const R>>)
 [[nodiscard]] auto
-as_byte_span(const R& container) noexcept
+as_byte_span(const R& rg) noexcept
 {
-    return std::as_bytes(std::span{container});
+    return std::as_bytes(std::span{rg});
 }
 
 /// Get a view to a region of raw memory as a span of bytes

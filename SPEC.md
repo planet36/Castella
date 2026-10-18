@@ -342,7 +342,7 @@ An implementation is **conformant** if, for the parameter sets it supports, it r
 Everything in this document is normative, including the little-endian byte order of every integer encoding.  Three things that live around it are **not**:
 
 * **Program behavior.**  The `castella` and `cch` command-line programs' defaults, option parsing, output formats, and check modes are policy, not construction.  Only the digest-relevant parameters they select (`C`, `num_rounds`, `suffix`, `N`, `S`, `CHUNK_SIZE`, and `mix_rate`) are specified here, and a conformant implementation need not offer the same defaults.
-* **Out-of-range arguments.**  `squeeze(n)` is defined for `0 ≤ n ≤ 16R` only.  The C++ `squeeze_bytes` clamps a larger `n` to the rate as a convenience.  That is outside this specification rather than an alternate contract, and an implementation may reject it instead.
+* **Out-of-range arguments.**  `squeeze(n)` is defined for `0 ≤ n ≤ 16R` only.  The C++ `squeeze_bytes` clamps an out-of-range `n` into that interval as a convenience, and `squeeze_to` clamps its buffer size the same way.  That is outside this specification rather than an alternate contract, and an implementation may reject it instead.
 * **Execution strategy.**  Thread counts, chunk-level parallelism, buffering, and the granularity of `add` calls never affect a digest (see [the tree-hashing mode](#the-tree-hashing-mode)), so they are unconstrained.
 
 ## References

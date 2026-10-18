@@ -219,7 +219,7 @@ If the unit of the capacity was _bytes_ instead of blocks, the value would have 
 
 ## License
 
-Castella is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/) (`MPL-2.0`), and every source file carries an SPDX header.
+Castella is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/) (`MPL-2.0`), and every source file except the vendored `httplib.h` carries an SPDX header.
 
 ## References
 

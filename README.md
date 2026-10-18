@@ -172,7 +172,7 @@ In real life, castella is the name of a type of sponge cake.
 
 ### Why did you choose the name <q>castella</q>?
 
-I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them, or had sponge-like quality.  I narrowed the choices to those based on sponge cake or similar desserts.  Coincidentally, a castella cake may be large and rectangular, just like the Castella state array.
+I asked ChatGPT to suggest names of food that had the word <q>sponge</q> in them, or had a sponge-like quality.  I narrowed the choices to those based on sponge cake or similar desserts.  Coincidentally, a castella cake may be large and rectangular, just like the Castella state array.
 
 ### Why <q>heavyweight</q>?
 
@@ -206,7 +206,7 @@ This project was started to satiate a curiosity about the sponge construction an
 
 The capacity (`C`) determines the rate (`R`).  The size of the input buffer is `R` blocks and it has an alignment of 1 block (i.e., 16 bytes).
 
-If the unit of the capacity was _bytes_ instead of blocks, the value would have to be a multiple of 16 anyways.
+If the unit of the capacity were _bytes_ instead of blocks, the value would have to be a multiple of 16 anyway.
 
 ## Repository Layout
 

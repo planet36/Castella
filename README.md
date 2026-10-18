@@ -91,7 +91,7 @@ See [The sponge and duplex constructions](https://keccak.team/sponge_duplex.html
 
 The duplex uses the [<q>pad10\*1</q>](https://en.wikipedia.org/wiki/SHA-3#Padding) padding rule.
 
-Input padding bytes are added before every `squeeze_bytes`, even if 0 bytes are squeezed.
+Input padding bytes are added before every `squeeze_bytes` or `squeeze_to`, even if 0 bytes are squeezed.
 
 The padding rule may be explicitly applied via the `apply_padding_rule()` member function.
 
@@ -105,6 +105,8 @@ The `squeeze_bytes` member function performs the following:
     * Typical values of _n_ are 32, 48, or 64.
     * The default value of _n_ is `get_capacity_size_bytes() / 2`.
     * An _n_ outside that interval is **clamped** into it rather than rejected, so a too-large _n_ yields `get_rate_size_bytes()` bytes and a negative _n_ yields none.  Steps 1 and 2 still happen either way, so any call advances the state.  This leniency is a convenience of the C++ API: the specification defines `squeeze(n)` only for `0 ≤ n ≤ 16R`.
+
+The `squeeze_to` member function does the same, but writes into a caller-provided buffer instead of allocating a vector.  The size of the buffer takes the place of _n_ and is clamped the same way, and any bytes past `get_rate_size_bytes()` are left untouched.
 
 ## Tree Hashing
 

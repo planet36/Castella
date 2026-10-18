@@ -212,10 +212,10 @@ If the unit of the capacity was _bytes_ instead of blocks, the value would have 
 
 | directory | contents |
 |-----------|----------|
-| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`, `castella-hash-tree.hpp`, `castella-duplex-tree.hpp`, `castella-duplex-x2.hpp`) and supporting headers |
+| `include/` | The Castella library headers (`castella-permute.hpp`, `castella-duplex.hpp`, `castella-hash-tree.hpp`, `castella-duplex-tree.hpp`, `castella-duplex-x2.hpp`), the Compress-Castella headers (`cch.hpp`, `cch-tree.hpp`, `cch-x2.hpp`), and supporting headers |
 | `examples/` | Usage examples: cSHAKE-like, KMAC-like, TupleHash-like, and ParallelHash-like operations |
 | `tests/` | Correctness tests |
-| `research/` | Programs for empirically determining optimal parameters; benchmarks |
+| `research/` | Parameter searches, the cryptanalysis evidence behind the security claims (trail search, MILP, and algebraic bounds), the spec-conformance model, and benchmarks |
 | `hash-programs/` | Command-line hash utilities (`castella` and `cch`) |
 | `http-prng-service/` | HTTP server exposing a Castella-backed PRNG via `/absorb` and `/squeeze` endpoints |
 

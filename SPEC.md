@@ -101,7 +101,7 @@ pad_and_permute()
 return s[0 .. n−1]
 ```
 
-Every squeeze, even of 0 bytes, absorbs the suffix and pads, so successive squeezes return distinct values and the duplex may keep alternating `add` and `squeeze` calls (each output depends on all prior inputs).
+Every squeeze, even of 0 bytes, absorbs the suffix and pads, so successive squeezes return fresh output and the duplex may keep alternating `add` and `squeeze` calls (each output depends on all prior inputs).
 
 ## The tree-hashing mode
 
@@ -136,7 +136,7 @@ The digest is a function of the tree geometry, the node parameters, and the inpu
 * the node's role prefix and content are absorbed with `add` after the duplex initialization.
 * `CV_LEN = 16·C` (the capacity size, twice the ~`8·C`-byte security target, so the tree's internal collision resistance never undercuts the nodes').
 * `CV_i` = the leaf's `squeeze(CV_LEN)`.
-* the digest is the final node's `squeeze(n)`, `n ≤ 16R` (successive squeezes are distinct, as for any duplex).
+* the digest is the final node's `squeeze(n)`, `n ≤ 16R` (successive squeezes return fresh output, as for any duplex).
 
 The `castella` command-line program uses `N` = `"Castella"`, default `S` = `"hash"`, default `CHUNK_SIZE` = 65536, default `suffix` = 1, and derives `C` from the requested digest size `n` (1 to 64 bytes, default 32) as the smallest even block count with `16·C ≥ 2n`.  Its default `num_rounds` is derived from `n` as well (6 for `n` ≤ 48, and 8 for `n` of 49..64), so that it always selects a claimed instance (see [the security claim](#the-security-claim)).
 

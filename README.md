@@ -34,7 +34,7 @@ An instance of a duplex can be used as a hash object or a pseudo-random number g
 
 The source code is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
 
-[SPEC.md](SPEC.md) is a standalone specification of the permutation, round constants, duplex, tree mode, MAC construction, and Compress-Castella, readable without the C++.  Its completeness is proven by [research/spec-conformance.py](research/spec-conformance.py), an independent pure-Python implementation written from the specification alone that reproduces every digest in [tests/KAT.txt](tests/KAT.txt).
+[SPEC.md](SPEC.md) is a standalone specification of the permutation, round constants, duplex, tree mode, MAC construction, and Compress-Castella, readable without the C++.  Its completeness is demonstrated by [research/spec-conformance.py](research/spec-conformance.py), an independent pure-Python implementation written from the specification alone that reproduces every digest in [tests/KAT.txt](tests/KAT.txt).
 
 SPEC.md also states the [security claims and non-claims](SPEC.md#security-claims-and-non-claims): a falsifiable flat sponge claim in the Keccak tradition, the claimed security strengths (matching the SHA-3 levels at equal capacity), the proven mode reductions, and the supporting evidence.  [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) maps every claim to the exact commands that reproduce its evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage targets for anyone who wants to attack the design.
 

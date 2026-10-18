@@ -356,3 +356,6 @@ Everything in this document is normative, including the little-endian byte order
 * G. Bertoni, J. Daemen, M. Peeters, G. Van Assche — [Sufficient conditions for sound tree and sequential hashing modes](https://eprint.iacr.org/2009/210) (the tree-soundness conditions and indifferentiability bound)
 * J. Daemen, V. Rijmen — [The Design of Rijndael (AES)](https://cs.ru.nl/~joan/papers/JDA_VRI_Rijndael_2002.pdf) (the AES round; 2-round full diffusion)
 * N. Mouha, Q. Wang, D. Gu, B. Preneel — *Differential and Linear Cryptanalysis Using Mixed-Integer Linear Programming* (Inscrypt 2011; the active-S-box model)
+* C. Boura, A. Canteaut, C. De Cannière — *Higher-Order Differential Properties of Keccak and Luffa* (FSE 2011; the degree bound for iterated S-box permutations)
+* Y. Todo, M. Morii — *Bit-Based Division Property and Application to Simon Family* (FSE 2016; the bit-based division property)
+* Z. Xiang, W. Zhang, Z. Bao, D. Lin — *Applying MILP Method to Searching Integral Distinguishers Based on Division Property for 6 Lightweight Block Ciphers* (ASIACRYPT 2016; modeling the division property for a solver)

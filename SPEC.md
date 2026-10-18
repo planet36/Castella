@@ -91,7 +91,7 @@ absorb_bytes( left_encode(256)              # the state size in bytes
 pad_and_permute()
 ```
 
-**Absorbing input:** `add(X)` = `absorb_bytes(X)`.  The duplex also offers `add_left_encoded(X)` = `absorb_bytes(encode_string(X))` and `add_right_encoded(X)` = `absorb_bytes(X || right_encode(|X|))`.
+**Absorbing input:** `add(X)` = `absorb_bytes(X)`.  The duplex also offers `add_left_encoded(X)` = `absorb_bytes(encode_string(X))` and `add_right_encoded(X)` = `absorb_bytes(X || right_encode(|X|))`, and their integer forms `add_left_encoded(x)` = `absorb_bytes(left_encode(x))` and `add_right_encoded(x)` = `absorb_bytes(right_encode(x))`.
 
 **Squeezing:** `squeeze(n)`, with `0 ≤ n ≤ 16R`:
 

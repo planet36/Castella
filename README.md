@@ -60,7 +60,7 @@ An instance of `Castella::Duplex` takes these parameters:
 | type | name | default value | constraint | description |
 |------|------|---------------|------------|-------------|
 | `int` | `capacity_blocks` | _none_ | &Element; [`Castella::Duplex::C_MIN`, `Castella::Duplex::C_MAX`] | The size (in blocks) of the capacity |
-| `int` | `num_rounds` | _none_ | &Element; [`Castella::NUM_ROUNDS_MIN`, `Castella::NUM_ROUNDS_MAX`] | The number of rounds to perform in the Castella permutation function |
+| `int` | `num_rounds` | _none_ | &Element; [`Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>()`, `Castella::NUM_ROUNDS_MAX`] | The number of rounds to perform in the Castella permutation function |
 | `int` | `input_suffix` | `0` | &Element; [0, 255] | The byte to append to the input buffer before squeezing |
 | contiguous byte range | `function_name` | _empty_ | _none_ | The function-name byte string |
 | contiguous byte range | `customization_str` | _empty_ | _none_ | The customization byte string |

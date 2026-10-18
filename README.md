@@ -125,9 +125,9 @@ All of these ratios are machine-dependent.  To reproduce them, build `research/`
 
 ## Performance
 
-<q>Heavyweight</q> does not mean slow.  On a modern x86-64 Linux system, with VAES leaf batching and multiple threads:
+<q>Heavyweight</q> does not mean slow.  On a modern x86-64 Linux system, with VAES leaf batching:
 
-* **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and some minimal-round configurations beat `b2sum`, `sha1sum`, and `md5sum`.
+* **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and even single-threaded at its default rounds beats BLAKE2b, SHA-1, and MD5 (the algorithms of `b2sum`, `sha1sum`, and `md5sum`).
 * **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **2.0×** on the same files, and single-threaded beats [XXH3](https://github.com/cyan4973/xxhash) by about 1.2×.
 
 These figures are machine-dependent, and [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash) reproduces them using [hyperfine](https://github.com/sharkdp/hyperfine).  See the [speed FAQ](#is-this-as-fast-as-b3sum) for the fuller picture.
@@ -185,7 +185,7 @@ It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.g
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, some configurations of [Castella hash](hash-programs/castella.cpp) (with minimal rounds) are faster than b2sum, sha1sum, and md5sum, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp), the same tree structure built from much faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about 2.0× on the same files, and even single-threaded it beats [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`) by about 1.2×!
+But seriously, in my testing on a modern Linux x86-64 system, [Castella hash](hash-programs/castella.cpp) at its default rounds is faster than BLAKE2b, SHA-1, and MD5 (the algorithms of b2sum, sha1sum, and md5sum) even single-threaded, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp), the same tree structure built from much faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about 2.0× on the same files, and even single-threaded it beats [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`) by about 1.2×!
 
 Don't take my word for it: these comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash), which uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 500 MiB file (hyperfine's warm-up runs make it page-cache-hot).  Run it yourself, because the results are machine-dependent.
 

@@ -60,7 +60,7 @@ UBSan recovers by default, printing a diagnostic and still exiting 0.  Set `UBSA
 
 ### Core Library (`castella-duplex.hpp`)
 
-The library is header-only.  Users include `castella-duplex.hpp`, which pulls in `castella-permute.hpp`.  The library rests on five key elements:
+Users include `castella-duplex.hpp`, which pulls in `castella-permute.hpp`.  The library rests on five key elements:
 
 - **State.**  The state is a 256-byte array of `B=16` blocks, where each block is a 16-byte `uint8x16_t` (x86 `__m128i` or ARM `uint8x16_t`).
 - **Capacity/Rate split.**  `capacity_blocks` (C) sets the inner state size, and rate R = B − C blocks form the outer (absorb/squeeze) state.

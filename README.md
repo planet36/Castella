@@ -2,7 +2,7 @@
 
 This C++ library implements a <q>heavyweight</q> permutation function using AES CPU instructions, plus a duplex/sponge, parallel tree hashing, a keyed MAC, and a PRNG on top.
 
-<q>Heavyweight</q> is the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.gov/projects/lightweight-cryptography): a wide 256-byte state and a hardware AES round function, not a small-state [ARX](https://en.wikipedia.org/wiki/Block_cipher#ARX_%28add%E2%80%93rotate%E2%80%93XOR%29) design.  It describes the design, not the speed.  The [tree hashes rival multithreaded `b3sum` on page-cache-hot files, and one beats it by about 2.0×](#is-this-as-fast-as-b3sum).
+<q>Heavyweight</q> describes [the design](#why-heavyweight), a wide 256-byte state and a hardware AES round function, not the speed.  The [tree hashes rival multithreaded `b3sum`](#performance) on page-cache-hot files.
 
 > **Status.**  Castella is a personal research project, a permutation and hash design that has not been standardized, externally reviewed, or cryptanalyzed by anyone but its author.  **Do not use it where security matters.**  See [SPEC.md](SPEC.md) and its [security claims and non-claims](SPEC.md#security-claims-and-non-claims).
 
@@ -32,7 +32,7 @@ The Castella [duplex class](include/castella-duplex.hpp) implements a customizab
 
 An instance of a duplex can be used as a hash object or a pseudo-random number generator (PRNG).
 
-The source code is liberally documented with many annotations and excerpts from the design and development of Keccak.  Refer to it for details.
+The source code is liberally annotated with excerpts from the design and development of Keccak.  Refer to it for details.
 
 [SPEC.md](SPEC.md) is a standalone specification of the permutation, round constants, duplex, tree mode, MAC construction, and Compress-Castella, readable without the C++.  Its completeness is demonstrated by [research/spec-conformance.py](research/spec-conformance.py), an independent pure-Python implementation written from the specification alone that reproduces every digest in [tests/KAT.txt](tests/KAT.txt).
 
@@ -51,7 +51,7 @@ The capacity is the security parameter: the claimed level is `64·C` bits, half 
 | 48 bytes | 6 | 768 | 192 / 384 / 384 | SHA3-384 |
 | 64 bytes | 8 | 1024 | 256 / 512 / 512 | SHA3-512 |
 
-Round counts appear nowhere in that table, because as in SHA-3 they are safety margin rather than a security parameter.  [SPEC.md](SPEC.md#security-claims-and-non-claims) derives these strengths from the claim, states which `(C, num_rounds)` instances the claim covers, and gives the margin rationale behind the round counts.
+Round counts appear nowhere in that table, because as in SHA-3 they are safety margin rather than a security parameter (see [Yes, this is Keccak!](https://keccak.team/2013/yes_this_is_keccak.html)).  [SPEC.md](SPEC.md#security-claims-and-non-claims) derives these strengths from the claim, states which `(C, num_rounds)` instances the claim covers, and gives the margin rationale behind the round counts.
 
 ### Instantiation Parameters
 
@@ -66,8 +66,6 @@ An instance of `Castella::Duplex` takes these parameters:
 | contiguous byte range | `customization_str` | _empty_ | _none_ | The customization byte string |
 
 A contiguous byte range ([`contiguous_byte_range`](include/contiguous_byte_range.hpp)) is any contiguous sized range of `std::byte` or a narrow character type, such as a `std::string_view`, a `std::span<const std::byte>`, or a `std::vector<uint8_t>`.
-
-The number of rounds determines the safety margin.  The capacity size determines the security level.  See [Yes, this is Keccak!](https://keccak.team/2013/yes_this_is_keccak.html).
 
 ### Adding/Absorbing Input
 
@@ -127,12 +125,12 @@ All of these ratios are machine-dependent.  To reproduce them, build `research/`
 
 ## Performance
 
-<q>Heavyweight</q> does not mean slow.  On a modern x86-64 Linux system, with VAES leaf batching:
+On a modern x86-64 Linux system, with VAES leaf batching:
 
 * **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and even single-threaded at its default rounds beats BLAKE2b, SHA-1, and MD5 (the algorithms of `b2sum`, `sha1sum`, and `md5sum`).
-* **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **2.0×** on the same files, and single-threaded beats [XXH3](https://github.com/cyan4973/xxhash) by about 1.2×.
+* **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **2.0×** on the same files, and single-threaded beats [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`) by about 1.2×.
 
-These figures are machine-dependent, and [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash) reproduces them using [hyperfine](https://github.com/sharkdp/hyperfine).  See the [speed FAQ](#is-this-as-fast-as-b3sum) for the fuller picture.
+These comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash).  It uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 500 MiB file, which hyperfine's warm-up runs make page-cache-hot.  The results are machine-dependent, so run it yourself.
 
 ## Dependencies
 
@@ -181,15 +179,13 @@ It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.g
 1) **A large state.**  _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
 2) **A hardware round function.**  It uses dedicated AES instructions instead of only ARX operations.
 
-<q>Heavyweight</q> describes the design, not the speed: it assumes a CPU with an AES unit and spends it freely, so the [tree hashes are fast](#is-this-as-fast-as-b3sum).
+<q>Heavyweight</q> describes the design, not the speed: it assumes a CPU with an AES unit and spends it freely, so the [tree hashes are fast](#performance).
 
 ### Is this as fast as [b3sum](https://github.com/BLAKE3-team/BLAKE3)?
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing on a modern Linux x86-64 system, [Castella hash](hash-programs/castella.cpp) at its default rounds is faster than BLAKE2b, SHA-1, and MD5 (the algorithms of b2sum, sha1sum, and md5sum) even single-threaded, and (with VAES leaf batching and multiple threads) it roughly matches fully-multithreaded `b3sum` on page-cache-hot files.  And [Compress-Castella hash](hash-programs/cch.cpp), the same tree structure built from much faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about 2.0× on the same files, and even single-threaded it beats [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`) by about 1.2×!
-
-Don't take my word for it: these comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash), which uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 500 MiB file (hyperfine's warm-up runs make it page-cache-hot).  Run it yourself, because the results are machine-dependent.
+But seriously, in my testing [Castella hash](hash-programs/castella.cpp) roughly matches fully-multithreaded `b3sum` on page-cache-hot files, and [Compress-Castella hash](hash-programs/cch.cpp) beats it!  Don't take my word for it: [Performance](#performance) has the figures and the script that reproduces them.
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 

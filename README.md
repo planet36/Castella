@@ -148,7 +148,7 @@ These figures are machine-dependent, and [hash-programs/benchmark.hash-programs.
 The top-level Makefile recurses into the subdirectories:
 
 * `make` — build the examples, the hash programs, and the tests
-* `make test` — build and run every test suite, by delegating to each subdirectory's own `test` target.  The two Python steps need `python3`
+* `make test` — build and run every test suite, by delegating to each subdirectory's own `test` target.  The Python steps need `python3`
   * `tests/`: the fixed tests, the KAT file checker, the randomized equivalence tests, the folded-vs-generic permute comparison, and the differential fuzzer
   * `examples/`: the examples
   * `hash-programs/`: the correctness script

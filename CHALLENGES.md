@@ -39,7 +39,7 @@ Castella has had no cryptanalysis by anyone other than its author.  A claim's cr
 * **Invariant subspaces.**  §10's exact search rules these out *exhaustively* for every byte-aligned subspace and every coset of one, and decides the transpose's three symmetry classes without sampling.  It does not cover a subspace that is neither byte-aligned nor one of those classes, since no feasible computation does, so an invariant subspace of that shape, or any nontrivial fixed point, is still open.
 * **Anything else unmodeled.**  Rotational and meet-in-the-middle angles have had only the light screening in §10 (structural probes), so they are wide open.  Higher-order differentials are covered only by the degree bound (§15) and the integral results above (§11).
 
-The reduced-round instances to attack are in the sections below.  The [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
+The reduced-round instances to attack are in the sections below.
 
 ## Common parameters
 
@@ -51,7 +51,8 @@ printf 'abc' | ./castella --untagged --rounds=3 --size=20 --custom=challenge -
 
 Notes for analysts:
 
-* The digest size fixes the capacity via the program's rule (smallest even `C` with `16·C ≥ 2·size`), and each family below lists the resulting `C`.
+* The digest size fixes the capacity via the program's rule (smallest even `C` with `16·C ≥ 2·size`), and each family below lists the resulting `C`.  Every size of 16 bytes or fewer gets `C` = 2.
+* An unkeyed digest never absorbs its own length, so of two sizes that share a capacity, the shorter digest is exactly the truncation of the longer one.
 * For messages no longer than one chunk (65536 bytes) the tree has no leaves, and the target is a **plain duplex**: `Duplex(C, rounds, suffix=1, N="Castella", S="challenge")` absorbing
 
   ```
@@ -82,7 +83,7 @@ printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=3,
 
 Setup check: the input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
 
-Two consequences of the size rule are worth knowing before reading anything into these.  The capacity rule gives `C` = 2 for every digest of 16 bytes or fewer, so no small-digest instance exists at the collision family's `C` = 4, and the warm-up collision runs at the preimage family's capacity instead.  And an unkeyed digest never absorbs its own length, so a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance.  `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it, and the two targets are unrelated values.  The [truncated-collision](#truncated-collision-ladder) and [truncated-preimage](#truncated-preimage-ladder) ladders are the next rungs up, and unlike these they lead to a published challenge rather than to a target of their own.
+Two consequences of the size rule (see [Common parameters](#common-parameters)) are worth knowing before reading anything into these.  No small-digest instance exists at the collision family's `C` = 4, so the warm-up collision runs at the preimage family's `C` = 2 instead.  And a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance, so `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it, and the two targets are unrelated values.  The [truncated-collision](#truncated-collision-ladder) and [truncated-preimage](#truncated-preimage-ladder) ladders are the next rungs up, and unlike these they lead to a published challenge rather than to a target of their own.
 
 ## Collision challenges
 
@@ -162,7 +163,7 @@ Setup check: the input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `90
 
 Each rung stands at all three round counts, against that round's own target prefix.  None is solved at any of them, and a submission names the round count and `k`.
 
-Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  An unkeyed digest absorbs no length, and the capacity rule leaves `C` = 2 for every size of 16 bytes or fewer, so a shorter digest of this family is exactly the truncation of its 10-byte one.  For `abc` at 3 rounds, sizes 2, 4, 6, 8, and 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10`, and `e9b6d14bd11d6f10f07a`.  The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance, while this family already sits at the smallest capacity there is.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family, and the ladder names targets that existed already rather than creating any.
+Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  This family already sits at the smallest capacity, so every shorter size keeps it and gives exactly the truncation of the 10-byte digest (see [Common parameters](#common-parameters)).  For `abc` at 3 rounds, sizes 2, 4, 6, 8, and 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10`, and `e9b6d14bd11d6f10f07a`.  The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family, and the ladder names targets that existed already rather than creating any.
 
 The `k` = 4 rung and the [warm-up preimage](#warm-up-instances) both cost 2^32 and run on the *same* instance, with the same round count and the same `C` = 2, and differ only in target.  The warm-up's `43e633d2` comes from a nothing-up-my-sleeve string naming size 4, where this rung's `a92cb2ea` is the first 4 bytes of the size-10 target.  Solving either says nothing about the other.
 

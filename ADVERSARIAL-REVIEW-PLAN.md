@@ -73,13 +73,13 @@ Define the adversary before hunting.  There are five surfaces with five adversar
 them in the code (1a–1d) and the fifth in the published evidence (1e).
 
 ### 1a.  The keyless permutation `Castella::permute` and the unkeyed hash
-- **Adversary:** a cryptanalyst with full knowledge of `P` and chosen inputs, seeking
+- **Adversary.**  A cryptanalyst with full knowledge of `P` and chosen inputs seeks
   distinguishers, collisions, or preimages below the claimed `64·C`-bit generic bound.
-- **In scope:** structural properties the MILP bound does *not* cover (the spec itself flags
-  these as uncovered).  Several of them already have a shipped screen, and where one exists
-  the job is to **audit the screen rather than rebuild it**.  Does the program test what the
-  prose says it tests, does its pass/fail actually gate, and does an independent
-  re-derivation agree?
+- **In scope.**  The structural properties the MILP bound does *not* cover are in scope, and
+  the spec itself flags them as uncovered.  Several of them already have a shipped screen,
+  and where one exists the job is to **audit the screen rather than rebuild it**.  Does the
+  program test what the prose says it tests, does its pass/fail actually gate, and does an
+  independent re-derivation agree?
   - **Symmetry**, **fixed points**, **slide**, and the round-constant properties →
     `research/permute-structural-probes.cpp`.  Its probes 2 and 3 are pass/fail (nonzero
     exit on violation).  Probe 1's tables are informational, so read them against the
@@ -90,89 +90,89 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
     byte-aligned subspace and every coset of one, superseding probe 1's sampling for that
     question.  What it cannot reach (a subspace neither byte-aligned nor in those classes)
     stays open, and the script says so itself.
-  - **Unscreened, and where a finding would be new:** rank/linearity of the transpose layer,
-    weak keys of the AES round when the "key" is a fixed public constant, and the
-    rotational and meet-in-the-middle angles `CHALLENGES.md`
-    lists as having had only light screening.
-- **Known-open, and deliberately not pursued here:** differential **clustering** above
+  - **Unscreened, and where a finding would be new.**  These are rank/linearity of the
+    transpose layer, weak keys of the AES round when the "key" is a fixed public constant,
+    and the rotational and meet-in-the-middle angles `CHALLENGES.md` lists as having had
+    only light screening.
+- **Known-open, and deliberately not pursued here.**  Differential **clustering** above
   `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists both
   among what the trail bounds do not cover, `research/README.md` calls clustering above
   `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is an
-  explicitly heuristic margin argument, not a proof.  Because they are disclosed,
-  *reporting* them is a non-finding under Section 0, and *pursuing* them belongs to
+  explicitly heuristic margin argument, not a proof.  Because they are disclosed, *reporting*
+  them is a non-finding under Section 0, and *pursuing* them belongs to
   [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).  Per the maintainer, two
   expensive searches in this direction are closed on cost: the `r` ≥ 2 clustering
   enumerations (every non-empty shell has ended `INCOMPLETE`, the longest returning 133
   trails in six hours) and the trail-ceiling descent and enumeration campaign.  Do not
   propose more of either.  What *is* in scope is any place where a claim about clustering or
   rebound is stated more strongly than that evidence supports.
-- **Out of scope (non-findings):** "no proof exists" and "3 rounds is thin," both of which
-  are disclosed.
+- **Out of scope (non-findings).**  "No proof exists" and "3 rounds is thin" are both
+  disclosed.
 
 ### 1b.  The keyed construction (`--key-file` MAC)
-- **Adversary:** can query the MAC on chosen messages and observe **timing**, and wants a
-  forgery, key recovery, or a length-extension or related-key surprise.
-- **In scope:** constant-time verification (`check_utils.hpp` compare), key material
-  **zeroization**, secret-dependent branches/table lookups (AES-NI is data-oblivious, but is
-  everything *around* it?), the KMAC framing correctness vs SP 800-185 §4 (bytepad width =
-  chunk size, `right_encode(L)` domain separation), and whether distinct-length MACs are
-  truly unrelated.
+- **Adversary.**  The adversary can query the MAC on chosen messages and observe **timing**,
+  and wants a forgery, key recovery, or a length-extension or related-key surprise.
+- **In scope.**  This covers constant-time verification (`check_utils.hpp` compare), key
+  material **zeroization**, secret-dependent branches/table lookups (AES-NI is
+  data-oblivious, but is everything *around* it?), the KMAC framing correctness vs SP
+  800-185 §4 (bytepad width = chunk size, `right_encode(L)` domain separation), and whether
+  distinct-length MACs are truly unrelated.
 
 ### 1c.  The local PRNG service (`http-prng-service`)
-- **Intended purpose (per maintainer):** a **local random pool** only.  The maintainer makes
-  **no guarantee that it is remotely reachable** and does not intend network exposure, so a
-  remote unauthenticated adversary is **not** part of its threat model.  Do not rank
+- **Intended purpose (per maintainer).**  It is a **local random pool** only.  The maintainer
+  makes **no guarantee that it is remotely reachable** and does not intend network exposure,
+  so a remote unauthenticated adversary is **not** part of its threat model.  Do not rank
   internet-exposure findings (remote DoS, remote prediction) as if exposure were supported,
   because the relevant adversary is a *local* process.
-- **In scope (local-relevant):** PRNG quality that matters even for a local pool, meaning
-  **forward secrecy / backtracking resistance** of the duplex PRNG state, reseed logic
-  (`getentropy` failure handling, reseed cadence, fork/thread state), output determinism
-  across restarts, integer/length handling of the `n`-bytes path parameter (`/squeeze/N`),
-  and memory-safety of request handling.  DoS, body caps, and timeouts are worth *noting* for
-  local robustness but are low-priority given the local-only intent.
-- **State exposure to a local reader:** recovery of the live duplex state from a core dump,
-  a `ptrace` attach, or a read of `/proc/PID/mem`.  A release build calls
+- **In scope (local-relevant).**  This covers PRNG quality that matters even for a local
+  pool, meaning **forward secrecy / backtracking resistance** of the duplex PRNG state,
+  reseed logic (`getentropy` failure handling, reseed cadence, fork/thread state), output
+  determinism across restarts, integer/length handling of the `n`-bytes path parameter
+  (`/squeeze/N`), and memory-safety of request handling.  DoS, body caps, and timeouts are
+  worth *noting* for local robustness but are low-priority given the local-only intent.
+- **State exposure to a local reader.**  This means recovery of the live duplex state from a
+  core dump, a `ptrace` attach, or a read of `/proc/PID/mem`.  A release build calls
   `disable_core_dumps()` ([include/disable_core_dumps.h](include/disable_core_dumps.h)) at
   the top of `main`, before any state exists, so the job is to audit that mitigation rather
   than rebuild it.
 
 ### 1d.  Untrusted-input parsers (CLI)
-- **Adversary:** supplies a malicious `--check` file, a crafted `--tag` line, filenames, or
-  env vars, and wants an OOB read or write, a crash, or a false "OK" verification.
-- **In scope:** `bytes_hex.hpp` (hex parse), `check_utils.hpp` (shell unquote, checkfile
-  driver), `parse_int.hpp` / env parsing, mmap of attacker-controlled files (zero-length,
-  huge, truncated during read), and the constant-time compare being used for the
-  *verification* decision.
+- **Adversary.**  The adversary supplies a malicious `--check` file, a crafted `--tag` line,
+  filenames, or env vars, and wants an OOB read or write, a crash, or a false "OK"
+  verification.
+- **In scope.**  This covers `bytes_hex.hpp` (hex parse), `check_utils.hpp` (shell unquote,
+  checkfile driver), `parse_int.hpp` / env parsing, mmap of attacker-controlled files
+  (zero-length, huge, truncated during read), and the constant-time compare being used for
+  the *verification* decision.
 
 ### 1e.  The published cryptanalytic evidence
 (`SPEC.md`'s Evidence section, `research/README.md`, `research/VERIFYING-CLAIMS.md`,
 `CHALLENGES.md`, `research/patterns/README.md`)
-- **Adversary:** the skeptical reader `CHALLENGES.md` is soliciting, meaning an external
-  cryptanalyst who reproduces the evidence before trusting the claim, and who reports a
-  mismatch as a defect in the project's credibility rather than a typo.  The secondary
-  adversary is the maintainer's future self, reading a figure whose provenance has been
-  lost.
-- **In scope:** the *provenance* of every published number, not its cryptanalytic merit.
-  `research/README.md` marks proven optima in **bold**, incumbents as `≤ n`, and bracketed
-  cells as `m … ≤ n`, and says to read that marking before using any value, because only a
-  proven optimum is a lower bound on the active S-box count, and only a lower bound yields a
-  valid DP bound.  Check three things.  Every figure quoted outside that table must carry the
-  status its source gives it.  `VERIFYING-CLAIMS.md`'s ground rule must hold (no
-  security-relevant claim anywhere in the repository's docs without a row there, or an
-  explicit *conjecture* / *evidence pending* label).  And the commands in its table must
-  still run and still print what it says they print.
-- **Why this surface earns its place:** the failure mode is documented, not hypothetical.
+- **Adversary.**  The adversary is the skeptical reader `CHALLENGES.md` is soliciting,
+  meaning an external cryptanalyst who reproduces the evidence before trusting the claim,
+  and who reports a mismatch as a defect in the project's credibility rather than a
+  typo.  The secondary adversary is the maintainer's future self, reading a figure whose
+  provenance has been lost.
+- **In scope.**  This covers the *provenance* of every published number, not its
+  cryptanalytic merit. `research/README.md` marks proven optima in **bold**, incumbents as
+  `≤ n`, and bracketed cells as `m … ≤ n`, and says to read that marking before using any
+  value, because only a proven optimum is a lower bound on the active S-box count, and only
+  a lower bound yields a valid DP bound.  Check three things.  Every figure quoted outside
+  that table must carry the status its source gives it.  `VERIFYING-CLAIMS.md`'s ground rule
+  must hold (no security-relevant claim anywhere in the repository's docs without a row
+  there, or an explicit *conjecture* / *evidence pending* label).  And the commands in its
+  table must still run and still print what it says they print.
+- **Why this surface earns its place.**  The failure mode is documented, not hypothetical.
   Three active-S-box figures (133, 225, and 243) were published as optima, were in fact
   timed-out incumbents, and were each later refuted by a cheaper solution, as was a fourth
-  incumbent, 290.
-  `research/README.md` traces the cause to a solver wrapper that reported `optimal` for any
-  run that ended holding an incumbent.  Note the direction of the error: a larger `A` means a
-  smaller `2^−6·A`, so a mislabeled figure makes the bound look **stronger** than reality.
-  A reviewer who checks status labels is re-running the one audit this project is known to
-  have failed.
-- **Out of scope (non-findings):** "the bounds cover single characteristics only," "no
-  external cryptanalysis exists," and every other gap the docs already concede, plus any
-  proposal to *extend* the analysis, which is the sibling plan's territory.
+  incumbent, 290. `research/README.md` traces the cause to a solver wrapper that reported
+  `optimal` for any run that ended holding an incumbent.  Note the direction of the error: a
+  larger `A` means a smaller `2^−6·A`, so a mislabeled figure makes the bound look
+  **stronger** than reality. A reviewer who checks status labels is re-running the one audit
+  this project is known to have failed.
+- **Out of scope (non-findings).**  These are "the bounds cover single characteristics
+  only," "no external cryptanalysis exists," and every other gap the docs already concede,
+  plus any proposal to *extend* the analysis, which is the sibling plan's territory.
 
 ---
 
@@ -440,7 +440,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
         `README.md`, `CLAUDE.md`, and `research/README.md`) are this bullet's own: the
         runbook's § 0 puts performance findings out of its scope, so no list but this one
         covers them.
-- [ ] **Gotchas to hunt for and demand documentation of:**
+- [ ] **Gotchas to hunt for, and to demand documentation of.**
   - **Little-endian everywhere** (the deliberate SP 800-185 deviation) is documented in
     SPEC.md.  Confirm that the README and examples don't imply interop with big-endian
     SP 800-185 tools.
@@ -509,7 +509,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
 
 ## 9. Method & deliverables
 
-**Execution order (roughly):**
+**Execution order (roughly).**
 1. Build clean, build an ASan/UBSan variant, and run `make test`, KAT, equivalence-tests,
    `test-correctness.bash`, and `spec-conformance.py` to establish a green baseline, noting
    what's *not* wired into CI.  **A TSan run is not part of this step.**  ASan and TSan
@@ -525,7 +525,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
 7. PRNG-service mini-pentest.
 8. Performance reproduction against `research/` benchmarks.
 
-**Deliverables:**
+**Deliverables.**
 - This plan (living document).
 - **Findings report**, grouped by severity (Section 0 taxonomy), each with surface/adversary,
   violated claim (file:line or spec §), concrete reproduction, and fix sketch.
@@ -535,7 +535,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
   the way.
 - A short **"undocumented gotchas"** list for the README/`--help`.
 
-**Ground rules (from CLAUDE.md):**
+**Ground rules (from CLAUDE.md).**
 - Verify every technical claim by compiling or running it, and never assert from memory.
 - Re-read source before analyzing it.
 - Make no branches, commits, or pushes without explicit approval.

@@ -24,6 +24,8 @@
 * The seed is printed so a failure can be reproduced.
 */
 
+// Keep these lines because they enable the library's internal assertions even
+// in a release build, where the headers would otherwise compile them out.
 #if !defined(DEBUG)
 #define DEBUG 1
 #endif

@@ -16,6 +16,8 @@
 
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
 
+// Keep these lines because they enable the library's internal assertions even
+// in a release build, where the headers would otherwise compile them out.
 #if !defined(DEBUG)
 #define DEBUG 1
 #endif

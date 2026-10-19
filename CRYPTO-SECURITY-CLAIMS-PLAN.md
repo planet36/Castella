@@ -97,11 +97,12 @@ Notes on the form of the claim:
 
 ### 2.2 Where it lives
 
-Rewrite SPEC.md's "Security claims and non-claims" into three clearly-labeled layers
-(§0): **Claim** (the flat sponge claim and the table in §3), **Proven mode reductions**
-(sponge/duplex generic bounds, tree soundness, and MAC framing, each with its short argument
-or a pointer to it), and **Evidence** (the MILP/diffusion results, with their stated
-limits).  The existing candid non-claims stay verbatim.
+**SHIPPED.**  SPEC.md's "Security claims and non-claims" has these layers now, written
+from the instruction that follows.  Rewrite SPEC.md's "Security claims and non-claims" into
+three clearly-labeled layers (§0): **Claim** (the flat sponge claim and the table in §3),
+**Proven mode reductions** (sponge/duplex generic bounds, tree soundness, and MAC framing,
+each with its short argument or a pointer to it), and **Evidence** (the MILP/diffusion
+results, with their stated limits).  The existing candid non-claims stay verbatim.
 
 ---
 
@@ -166,7 +167,7 @@ capacity ≥ `2d` and an `n = d/8`-byte digest:
 
 (`C=2` covers SHA3-224's *collision* level but falls short of its 224-bit preimage level,
 so SHA3-224 also maps to `C=4`.)  The `castella` program's `16·C ≥ 2n` rule already
-produces exactly this mapping, which is worth stating in the README.
+produces exactly this mapping, which README.md's "Capacity and Rate" section now states.
 
 ### 4.3 The round count `R*` (methodology, not a formula)
 
@@ -307,8 +308,9 @@ permutation).  The honest procedure has four steps:
    qualify it by data complexity should do so explicitly and say why, not by quietly
    reading the trigger more narrowly.
 
-The deliverable is a "Claimed instances" table in SPEC.md, giving `(C, R*, digest sizes)`
-per SHA-3 equivalence row, with the margin rationale and a statement that other
+**SHIPPED.**  SPEC.md's security claim carries the claimed-instances table, giving
+`(C, R*)` with each row's capacity and claimed level, beside the SHA-3 mapping table that
+gives the digest sizes.  It also carries the margin rationale and states that other
 parameterizations are supported by the code but **not covered by the claim**.
 
 ---

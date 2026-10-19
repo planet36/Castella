@@ -18,7 +18,7 @@ Castella has had no cryptanalysis by anyone other than its author.  A claim's cr
 * [SPEC.md](SPEC.md) — the standalone specification (permutation, round-constant LFSR, duplex, tree, MAC) and the [security claim](SPEC.md#security-claims-and-non-claims) being offered.
 * [research/spec-conformance.py](research/spec-conformance.py) — an independent pure-Python implementation, to compute and check target digests against without trusting the optimized code.
 * [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) — every existing piece of evidence with commands that reproduce it, so analysis can build on the frontier instead of re-treading it.
-* [research/](research/) — the tooling behind that evidence (MILP trail bounds, a bit-level z3 trail search, zero-sum/cube probes, structural probes, the algebraic-degree bound).
+* [research/](research/) — the tooling behind that evidence (MILP trail bounds, a bit-level z3 trail search, zero-sum/cube probes, structural probes, the algebraic-degree bound, a bit-based division-property model, and a brute-force multiplicity verifier).
 
 **Where the frontier is.**  These are the most useful places to push, cross-referenced to the evidence sections in [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md):
 

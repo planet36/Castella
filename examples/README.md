@@ -37,4 +37,4 @@ make test          # or: ./examples
 
 Every example prints its digest and checks it, so this is a test as much as a demonstration, and it is part of the repository's `make test`.  A run ends with a `31 passed, 0 failed` summary and exits nonzero if anything failed.
 
-A failing check does not stop the run.  Each mismatch is reported with its file, line, and the expected and actual digests, so one run shows all of them.  The total is also compared against `EXPECTED_CHECKS`, so a run that loses an example or stops short fails rather than silently shrinking the count.  Update that constant deliberately when adding or removing an example.
+A failing check does not stop the run.  Each failure is reported with its file and line, and with the expected and actual digests for a digest mismatch or the property's description for a property check, so one run shows all of them.  The total is also compared against `EXPECTED_CHECKS`, so a run that loses an example or stops short fails rather than silently shrinking the count.  Update that constant deliberately when adding or removing an example.

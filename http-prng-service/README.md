@@ -24,7 +24,7 @@ Run `./castella-svc -h` for help.
 
 To start the service, run `./castella-svc`.  It listens on `localhost` port 8080 by default.  Give a host as the argument to bind elsewhere, and `-p PORT` to change the port.
 
-To test the service, run `sh test-client.sh` in another terminal.
+To test the service, run `sh test-client.sh` in another terminal.  It needs `curl`, and it expects the service at the default `localhost:8080`.
 
 To stop the service, send `SIGINT`, `SIGTERM`, or `SIGHUP` to it.  (For example, press _Ctrl+C_ in the terminal where the service is running.)
 

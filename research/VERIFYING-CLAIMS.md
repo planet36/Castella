@@ -47,7 +47,7 @@ All commands run from `research/` unless noted.
 
 ## 1. The claim itself cannot be verified — only falsified
 
-The flat sponge claim is a conjecture, which no program output can establish.  Any attack on a claimed instance cheaper than the generic bound *falsifies* it, which is exactly what it is for, and [CHALLENGES.md](../CHALLENGES.md) publishes concrete reduced-round targets and the grand (claim-falsifying) challenge.  Everything below verifies the **evidence** offered in the claim's support and the **reductions** that transfer it to the modes, and none of it proves the claim.
+The flat sponge claim is a conjecture, which no program output can establish.  Any attack on a claimed instance cheaper than the generic bound *falsifies* it, which is exactly what it is for.  [CHALLENGES.md](../CHALLENGES.md) publishes concrete reduced-round targets and the grand (claim-falsifying) challenge.  Everything below verifies the **evidence** offered in the claim's support and the **reductions** that transfer it to the modes, and none of it proves the claim.
 
 ## 2. The spec, the implementation, and the KATs agree
 
@@ -57,7 +57,7 @@ The proofs and bounds are about the *specified* constructions, and this row show
 python3 spec-conformance.py     # independent pure-Python implementation of SPEC.md
 ```
 
-Expected: `../tests/KAT.txt: 91 KATs verified, 0 failed`, exit status 0, in seconds.  `make test` runs this from `research/`, and the command above is the quick check after any spec or KAT change.
+It must print `../tests/KAT.txt: 91 KATs verified, 0 failed` and exit 0, in seconds.  `make test` runs this from `research/`.  The command above is the quick check after any spec or KAT change.
 
 ```bash
 make test                       # at the repository root
@@ -129,7 +129,7 @@ plus the randomized equivalence tests in `make test`.  Each program must print a
 cd ../tests && make permute-equivalence && ./permute-equivalence
 ```
 
-Expected: `passed: 2176 comparisons of permute_folded against permute_generic` (every supported state size × every round count × 32 random states).  `make test` also runs it.  On a build without VAES it reports that `permute` *is* `permute_generic` there, so the comparison proves nothing.
+It must print `passed: 2176 comparisons of permute_folded against permute_generic` (every supported state size × every round count × 32 random states).  `make test` also runs it.  On a build without VAES it reports that `permute` *is* `permute_generic` there, so the comparison proves nothing.
 
 ## 9. The PRNG forward-secrecy non-claim
 
@@ -141,7 +141,7 @@ There is nothing to verify, because it is a non-claim, documented so nobody assu
 ./permute-structural-probes -n 10000
 ```
 
-Expected: `all pass/fail checks passed`, exit status 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds.  Probes 2 and 3 must print only PASS lines, covering the fixed-point screen, the round constants (seed value, nonzero, distinct, and no shifted predecessors), and the **slide-resistance screen**.  That screen checks that no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist.  [README.md](README.md#findings-structural-probes-of-castellapermute-2026-09-15) has the results and scope caveats.  The probes cover the transpose's natural symmetry classes, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
+It must print `all pass/fail checks passed` and exit 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds.  Probes 2 and 3 must print only PASS lines, covering the fixed-point screen, the round constants (seed value, nonzero, distinct, and no shifted predecessors), and the **slide-resistance screen**.  That screen checks that no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist.  [README.md](README.md#findings-structural-probes-of-castellapermute-2026-09-15) has the results and scope caveats.  The probes cover the transpose's natural symmetry classes, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
 
 The sampling in probe 1 is superseded, for invariant subspaces, by an exhaustive computation:
 
@@ -150,7 +150,7 @@ python3 permute-invariant-subspaces.py
 python3 permute-invariant-subspaces.py --self-test
 ```
 
-Expected: `no invariant subspace exists in any class decided here`, exit status 0 (~14 s).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labelings, a single-byte support closure of **256**, **0 of 48** on each class's `round constants lying in the class` line (one 16-block constant layer per round and AES round), and a forced closure of **2048** for all three classes.  The `[control: … 2 rounds 128]` figures beside the first two classes are the positive control.  With the round constants zeroed the two block classes *are* invariant, at dimension 128, and a control reading 2048 there would mean the closure test had no power.  The third class deliberately prints `[control: 1 round 2048, 2 rounds 2048]`, because ShiftRows and MixColumns break the symmetric-matrix class rather than the constants, so zeroing them controls nothing.  Read a 2048 as a failure only on the two block classes.  [README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over byte-aligned subspaces and every coset of one, exact but offset-sampled for the three symmetry classes, and it does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
+It must print `no invariant subspace exists in any class decided here` and exit 0 (~14 s).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labelings, a single-byte support closure of **256**, **0 of 48** on each class's `round constants lying in the class` line (one 16-block constant layer per round and AES round), and a forced closure of **2048** for all three classes.  The `[control: … 2 rounds 128]` figures beside the first two classes are the positive control.  With the round constants zeroed the two block classes *are* invariant, at dimension 128, and a control reading 2048 there would mean the closure test had no power.  The third class deliberately prints `[control: 1 round 2048, 2 rounds 2048]`, because ShiftRows and MixColumns break the symmetric-matrix class rather than the constants, so zeroing them controls nothing.  Read a 2048 as a failure only on the two block classes.  [README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over byte-aligned subspaces and every coset of one, exact but offset-sampled for the three symmetry classes, and it does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
 
 ## 11. Zero-sum (cube) probes
 
@@ -158,7 +158,7 @@ Expected: `no invariant subspace exists in any class decided here`, exit status 
 ./permute-zero_sum-probes -n 1
 ```
 
-Expected: `all pass/fail checks passed`, exit status 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums, exactly 1920 surviving bits for single-block (the positive control) and all 2048 for spread, and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19) has the results and the scope, which is black-box random cubes up to k = 16 only.
+It must print `all pass/fail checks passed` and exit 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums, exactly 1920 surviving bits for single-block (the positive control) and all 2048 for spread, and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19) has the results and the scope, which is black-box random cubes up to k = 16 only.
 
 Those rows measure **random** cubes.  A chosen, structured cube does better on both, which the bit-based division property decides rather than samples:
 
@@ -170,7 +170,7 @@ python3 permute-multiplicity-verify.py                # 4.4 s
 
 The solver runs the expectations below read (`--validate` with and without `--inverse`, `-r 1 -c byte --count`, and `-r 2 -c block --count`) and the brute-force `permute-multiplicity-verify.py --reduced 3` are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7, with their budgets.
 
-Expected: `--validate` must reproduce AES's Square distinguisher in **both** directions, `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence, since a model that proved everything balanced would satisfy the first alone.  `--validate --inverse` gates the `P⁻¹` layers the same way but **at 2 rounds, not 3**, and that asymmetry is expected.  `aes_round` is SB, SR, MC and ends on a linear layer, while `inv_aes_round` is MC⁻¹, SR⁻¹, SB⁻¹ and ends on an S-box, and a division property crosses a linear layer untouched but never survives an S-box.  Measured, AES⁻¹ is 128/128 at 1 and 2 rounds and 0/128 at 3.  "Fixing" that constant back to 3 makes the gate fail.
+`--validate` must reproduce AES's Square distinguisher in **both** directions, `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence, since a model that proved everything balanced would satisfy the first alone.  `--validate --inverse` gates the `P⁻¹` layers the same way but **at 2 rounds, not 3**, and that asymmetry is expected.  `aes_round` is SB, SR, MC and ends on a linear layer, while `inv_aes_round` is MC⁻¹, SR⁻¹, SB⁻¹ and ends on an S-box, and a division property crosses a linear layer untouched but never survives an S-box.  Measured, AES⁻¹ is 128/128 at 1 and 2 rounds and 0/128 at 3.  "Fixing" that constant back to 3 makes the gate fail.
 
 `-r 1 -c byte` must then report **all 2048 output bits balanced**, where the C++ probe's random cube of the same dimension leaves 1920.  `-r 1 --bits 7` and `-r 1 -c scattered` must both report *not* balanced, which pins the result to byte alignment rather than to cube size.  At `-r 2` the cube matters.  `byte`, `column`, `--bits 64`, and `--bits 96` are all not balanced, and `-c block --count` reports **all 2048 output bits balanced** across all 16 target blocks, a 2-round integral distinguisher with 2^128 data.  Budget ~50 min for that one.  Per-block cost ranges from ~115 s to ~700 s on an idle machine, depending on which of round 1's output bytes feeds round 2, and that ~6× spread is structural, the same busy or idle, so a block taking minutes longer than its neighbors is not stuck.  This result does not need the model either, because the README's three-step proof is exact at every step and needs no Square distinguisher.  Remember the direction: UNSAT ("balanced") proves a distinguisher, while SAT proves nothing at all, so every "not balanced" is "not provable by this model".
 
@@ -195,7 +195,7 @@ This needs [PractRand](https://pracrand.sourceforge.net/)'s `RNG_test`, an exter
 ./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
 ```
 
-Expected: `no anomalies` at every checkpoint (recorded runs: 311 test results through 16 GiB for both, ~6 s/GiB).  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19) has the findings.
+Each run must report `no anomalies` at every checkpoint (recorded runs: 311 test results through 16 GiB for both, ~6 s/GiB).  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19) has the findings.
 
 ## 13. Trail tightness and differential clustering
 
@@ -212,7 +212,7 @@ python3 trail-model-crossvalidate.py
 
 The trail runs themselves are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 3, with the per-round-count commands, their `-t` and `-M`, and the two shell levers, which [permute-trail-ceilings.bash](permute-trail-ceilings.bash) wraps together with the seed and shell offset each recorded ceiling needs.  What the output has to say is below.
 
-Expected: r=1 minimizes to weight 54 = 6·A and prints `optimal for this pattern` (the byte-level bound is exact for one round), and then the cluster enumerates 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part.  The count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall), but only because the variable ordering is deterministic.  Which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.
+At r=1 the search must minimize to weight 54 = 6·A and print `optimal for this pattern` (the byte-level bound is exact for one round), and the cluster must then enumerate 1048 characteristics with total DP 2<sup>−51.7</sup> (`complete`).  The weight 54 and the `complete` are the guaranteed part.  The count and total have reproduced exactly on rerun (same 1048, same histogram, same 2<sup>−51.66</sup>, 56 s wall), but only because the variable ordering is deterministic.  Which weight-54 differential the search lands on is a solver choice, and an earlier run under a different model found 847 summing to 2<sup>−51.8</sup>.  Expect a gain near 2 bits over the 2<sup>−54</sup> single trail.
 
 r=2 finds a realizable trail of weight 302.  The recorded ceiling is the lighter **293** a cluster shell returns on that same trail's differential (`--cluster 1 --cluster-shell -9 --weight-encoding totalizer`, ~4 min), so the bracket is [270, 293], not a solved minimum.  Bisecting the cap reaches only 294, with 292 timing out.  The 293 was first seen inside an enumeration of the already-satisfied cap-294 shell, and the runbook's one-shot probe reproduces it directly.
 
@@ -241,7 +241,7 @@ python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the AES validati
 python3 permute-degree-bound.py               # the AES echo + the Castella table
 ```
 
-Expected: the self-test passes.  It asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher (degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization and margin, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
+The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher (degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization and margin, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
 
 ## 16. Evidence pending
 

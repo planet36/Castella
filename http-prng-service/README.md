@@ -1,6 +1,6 @@
 # Castella HTTP PRNG service
 
-An HTTP server that exposes `/absorb` and `/squeeze` endpoints backed by a Castella duplex PRNG, periodically reseeded from the OS (`getentropy`).
+An HTTP server that exposes `/absorb` and `/squeeze` endpoints backed by a Castella duplex PRNG.  The pool is reseeded from the OS (`getentropy`) every 60 seconds, and sooner once 65,535 bytes have been squeezed since the last reseed.
 
 ## Trust model
 

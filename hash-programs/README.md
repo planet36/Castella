@@ -115,7 +115,7 @@ Create the test input the same way the benchmark scripts do.  The scripts themse
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 500M > /tmp/test.txt
 ```
 
-* **Comparisons against other hash programs** (the top-level README's Performance section, with `castella` against b2sum, sha1sum, md5sum, and b3sum, and `cch` against multithreaded `b3sum` and `xxhsum -H3`): `bash benchmark.hash-programs.bash`.  For a single-thread-vs.-single-thread comparison, time `./cch --num-threads=1` against `b3sum --num-threads=1` directly:
+* **Comparisons against other hash programs** (the top-level README's Performance section, with `castella` against `b3sum` and, through `cksum --algorithm`, the BLAKE2b, SHA-1, and MD5 algorithms of `b2sum`, `sha1sum`, and `md5sum`, and `cch` against multithreaded `b3sum` and `xxhsum -H3`): `bash benchmark.hash-programs.bash`.  For a single-thread-vs.-single-thread comparison, time `./cch --num-threads=1` against `b3sum --num-threads=1` directly:
 
   ```bash
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'

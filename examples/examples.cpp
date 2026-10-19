@@ -1,6 +1,10 @@
 // SPDX-FileCopyrightText: Steven Ward
 // SPDX-License-Identifier: MPL-2.0
 
+// Keep these lines.  They arm the library's internal assertions, which the
+// headers gate on DEBUG, in this translation unit.  This file's own checks do
+// not use assert, so without these lines a release build would compile every
+// library assertion out of it.
 #if !defined(DEBUG)
 #define DEBUG 1
 #endif

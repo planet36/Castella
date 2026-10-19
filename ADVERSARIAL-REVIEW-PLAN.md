@@ -354,7 +354,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       for cache-line alignment and for false sharing in the pool.
 - [ ] **`consteval` cost & duplication.**  `round_constants` (768 blocks) and per-N
       `round_constants_folded` are compile-time.  Confirm that there is no runtime init and
-      no bloat from instantiating all N.  `constexpr`-optimization opportunities per the repo's checklist.
+      no bloat from instantiating all N.  Look for `constexpr`-optimization opportunities
+      too, per the repo's checklist.
 - [ ] **Allocation in steady state.**  The streaming pool claims an allocation-free steady
       state, so verify it (e.g. with an allocation hook) rather than trusting it.
 

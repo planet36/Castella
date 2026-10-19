@@ -155,7 +155,7 @@ part (capacity/output mapping, §4.2) and a judgment-plus-evidence part (round m
 
 ### 4.2 The capacity mapping (exact)
 
-Castella capacities are `128·C` bits, `C` ∈ {2, 4, 6, 8}. Matching SHA3-`d` requires
+Castella capacities are `128·C` bits, `C` ∈ {2, 4, 6, 8}.  Matching SHA3-`d` requires
 capacity ≥ `2d` and an `n = d/8`-byte digest:
 
 | target | SHA-3 capacity | Castella | Castella capacity | claim levels (coll / pre / 2nd-pre) |
@@ -537,7 +537,6 @@ plus whatever external cryptanalysis the challenges attract.
    (§5.8).  Each lands with its reproduction commands and updates the claimed-instances
    margin rationale (§4.3) if it moves the best-attacked-rounds number.
 6. README/FAQ/--help updates last, once the SPEC.md sections are stable.
-
 
 ---
 

@@ -127,8 +127,8 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
 - **In scope (local-relevant):** PRNG quality that matters even for a local pool, meaning
   **forward secrecy / backtracking resistance** of the duplex PRNG state, reseed logic
   (`getentropy` failure handling, reseed cadence, fork/thread state), output determinism
-  across restarts, integer/length handling of the `n`-bytes query parameter, and
-  memory-safety of request handling.  DoS, body caps, and timeouts are worth *noting* for
+  across restarts, integer/length handling of the `n`-bytes path parameter (`/squeeze/N`),
+  and memory-safety of request handling.  DoS, body caps, and timeouts are worth *noting* for
   local robustness but are low-priority given the local-only intent.
 - **State exposure to a local reader:** recovery of the live duplex state from a core dump,
   a `ptrace` attach, or a read of `/proc/PID/mem`.  A release build calls

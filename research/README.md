@@ -110,7 +110,7 @@ The one open ARM question is the cch leaf pairing.  The tree's pairing opt-in is
 | 4 (192) | 5.69 / 4.19 | 3.20 / 2.69 | 2.47 / 2.15 | 1.25 / 1.17 |
 | 8 (128) | 3.93 / 2.75 | 2.17 / 1.78 | 1.64 / 1.42 | 0.83 / 0.77 |
 
-Interpretation:
+The results read as follows:
 
 * The numbers cross-check against the permutation benchmarks from the same run, where the absorb ceiling is rate bytes ÷ permutation time.  At _C_ = 4, rounds = 6, the ceiling is 192 B ÷ 52.7 ns = 3.39 GiB/s and the measured absorb is 3.20 (94%), and at rounds = 3 the same comparison gives ~87%.  Earlier runs at different absolute speeds gave the same percentages.  The buffering overhead (copy + XOR into the outer state) is a fixed per-byte cost that matters more the faster the permutation.
 * At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.64 (rounds = 3) to 1.77 (rounds = 16), arriving at the rate ratio 224:128 = 1.75 as the permutation dominates.
@@ -137,7 +137,7 @@ A full `bash run-benchmarks.bash` (pinned, default 5 repetitions, on the committ
 | x2\_broadcast\<16\> | `aes_enc_arr_x2`, key broadcast to both lanes (`permute_x2`) | 6.95 (2 states) | 68.8 GiB/s |
 | folded\<8x2\> | `aes_enc_arr_folded`, 256-bit keys, folded state (register-resident `permute`) | 2.73 | 87.6 GiB/s |
 
-Interpretation:
+The results read as follows:
 
 * The VAES pair-cast is **1.83×** the generic path on the AES stage alone, larger than the ~1.7× whole-permute gap, which the transpose dilutes.
 * folded ≈ vaes\_cast confirms that both run the same eight 256-bit AES dependency chains.  The folded `permute`'s win over the generic path comes from keeping the state in registers *across the transpose*, not from the AES stage.
@@ -160,7 +160,7 @@ The speedup **rises from rounds = 3 and then levels off near 1.7×**, because th
 
 Folding is a clear ~1.7× win at the 16-block state, the only size used outside `research/`.  `permute_folded` is instantiated for every supported _N_, and the smaller sizes gained even more when that generalization was measured, but _N_ < 16 is research-only and the benchmark no longer registers it.
 
-## Findings: the cch pair pays ~1.1×; group width is free below L2, footprint is what costs (2026-09-15)
+## Findings: the cch pair pays ~1.1×, group width is free below L2, and footprint is what costs (2026-09-15)
 
 `simd_compress-num_states-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, in two modes, either sequentially (buffer after buffer, as _N_ single-leaf hashes do) or interleaved chunk by chunk (as a grouped leaf node would).  The values are medians of 5 repetitions over a power-of-two size ladder, pinned to core 0 with random interleaving on (`bash run-benchmarks.bash`), built with `-march=x86-64-v3 -maes -mvaes`.  Speedup is interleaved ÷ sequential, and "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group.
 
@@ -270,7 +270,7 @@ The _N_ = 3 groups are not exactly equal-footprint, because a buffer is a whole 
 |  | 3 | 24.7 GiB/s | 29.6 GiB/s | 1.20× | 1.05× |
 |  | 4 | 24.7 GiB/s | 30.7 GiB/s | 1.24× | 1.09× |
 
-Interpretation:
+The results read as follows:
 
 * **The pair pays across the cache-resident range, weakest at the smallest buffers.**  One cch state runs 8 independent 3-deep VAES chains per 256-byte chunk, but each chain is serial *across* chunks, so the per-chunk critical path exceeds the throughput cost and one state leaves the AES units idle part of the time.  A second interleaved state doubles the chain count.
 
@@ -281,7 +281,7 @@ Interpretation:
 
 **On the repetition count.**  This section uses the suite default of 5 so that every findings section rests on one dated run.  The cost shows between runs, since four fixed-total rows that sat as far out as 0.95× and 1.04× in the previous run at the same count are all within 3% of the pair here.  The two conclusions that decide anything, the 16 KiB L1d loss and the 512 KiB retraction, have reproduced across runs.  But a single anomalous row in this table is more likely scatter than structure, and the filled-in ladder is what settles which.
 
-Conclusion: keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`, verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE` a 3- or 4-wide group is 1.00× and 1.02×, both inside the noise, so a second implementation would buy nothing.  Widening trends positive only for a working set already past L2, which for the tree means leaf chunks far larger than the default, and even there the win is 2–11% and mostly inside the noise of individual rows.  The L1d loss at 16 KiB is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
+The conclusion is to keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`, verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE` a 3- or 4-wide group is 1.00× and 1.02×, both inside the noise, so a second implementation would buy nothing.  Widening trends positive only for a working set already past L2, which for the tree means leaf chunks far larger than the default, and even there the win is 2–11% and mostly inside the noise of individual rows.  The L1d loss at 16 KiB is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
 
 ## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
 
@@ -302,7 +302,7 @@ The pairing win exists because **VAES halves the chain count**.  With 256-bit `v
 
 The register-spilling account of the AVX2-no-VAES column's losses (16 ymm registers holding two 8-register states with nothing to spare) was refuted for VAES codegen by the fixed-total control, and nothing here tests it for 128-bit codegen, which has a different register budget.  The conclusion rests on the *DRAM-vs-cache* contrast, which is large and appears in both columns, not on the individual interior rows.
 
-Conclusion: the VAES guard on the cch pairing opt-in is correct and stays, because no cache-resident regime in either non-VAES column shows the ~1.1× the VAES build gets.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark to check their machine, and a re-run on the current ladder in both modes would put the interior rows back on firm ground.
+The conclusion is that the VAES guard on the cch pairing opt-in is correct and stays, because no cache-resident regime in either non-VAES column shows the ~1.1× the VAES build gets.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark to check their machine, and a re-run on the current ladder in both modes would put the interior rows back on firm ground.
 
 ## Findings: structural probes of `Castella::permute` (2026-09-15)
 
@@ -355,7 +355,7 @@ Conclusions drawn from the skeleton would understate diffusion.  Every section o
 | 1 | 1920 | 2048 |
 | 2–16 | 0 | 0 |
 
-Interpretation:
+The results read as follows:
 
 * Both 1-round rows are **exact structural zero-sum distinguishers of the 1-round permutation**, and both have complete explanations.  In the single-block case, one round cannot spread a block beyond one byte per output block, so the 15 unvaried input blocks leave exactly 15 × 128 = 1920 output bits constant.  That is the predicted value, so this row doubles as the harness's positive control.  In the spread case, one round is nonlinear only block-locally and the transpose is linear.  So for any cube spanning 2+ blocks, each block sees its own sub-cube of values an even number of times, every block's XOR-sum cancels, and all 2048 bits vanish.
 * From **2 rounds on, nothing survives**, meaning no zero-sum property distinguishable by random black-box cubes up to k = 16.  That is consistent with the diffusion measurements (49.8% avalanche at 2 rounds, full at 3).  Any surviving bit at 3+ rounds is a FAIL (a distinguisher of the reduced-round permutation) and exits nonzero.  **Read that row as "random cubes up to k = 16", which is what it measures, and not as "no 2-round zero-sum".**  Structured cubes do better on both rows.  The next section gives a **2-round** integral distinguisher over all 2048 bits, reachable only with a byte-aligned cube on a whole block, which no sampling at these dimensions could have found.
@@ -434,11 +434,11 @@ A run takes ~9 s at `-n 1`, dominated by the k = 16 column (2 placements × 16 r
 
 **Scope, and where the model stops.**  The technique decides the cube it is given and says nothing about cubes it is not given, and a SAT is never evidence of absence.  Inside-out zero-sums, which run `P` and `P⁻¹` from a middle state, were uncovered until 2026-08-04 and are now the section's longest result, above.
 
-At _r_ = 3 forward, the sparse construction still builds (18 live blocks, 864 S-boxes, 55,616 variables, ~130–165 s).  **Its first check resolves, given enough time, and the answer is SAT.**  With the single-block cube, output bit 0 of block 0 is *not* provably balanced, so **this model finds no full 2048-bit zero-sum at 3 rounds for that cube**.  The query needed **~6 200 s of solve**, against the 600 s an earlier run gave it.  This is the weak half of the dichotomy, because a SAT bounds the *technique*, never the permutation.  So 3 rounds is **not refuted**, and only the full-state zero-sum for this cube under this model is excluded.
+At _r_ = 3 forward, the sparse construction still builds (18 live blocks, 864 S-boxes, 55,616 variables, ~130–165 s).  **Its first check resolves, given enough time, and the answer is SAT.**  With the single-block cube, output bit 0 of block 0 is *not* provably balanced, so **this model finds no full 2048-bit zero-sum at 3 rounds for that cube**.  The query needed **~6200 s of solve**, against the 600 s an earlier run gave it.  This is the weak half of the dichotomy, because a SAT bounds the *technique*, never the permutation.  So 3 rounds is **not refuted**, and only the full-state zero-sum for this cube under this model is excluded.
 
 The larger `two-blocks` cube, an *easier* balancedness target, **also returns SAT** (2^256, 19 live blocks, 912 S-boxes, ~2 h 19 m).  So both forward cubes are answered at _r_ = 3 and the one-directional forward route looks exhausted there, which is what motivated the inside-out construction above.  Partial balance on other output bits stays open at _r_ = 3 forward, because the scan stops at the first SAT unless `--count` is passed.
 
-The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is cheap and proving none exists (UNSAT) is what costs, and the UNSAT side carries every positive result above.  The 3-round SAT taking 6 200 s shows how little that asymmetry guarantees at this width.
+The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is cheap and proving none exists (UNSAT) is what costs, and the UNSAT side carries every positive result above.  The 3-round SAT taking 6200 s shows how little that asymmetry guarantees at this width.
 
 ## Findings: PractRand statistical smoke test of the duplex PRNG (2026-07-19)
 
@@ -594,10 +594,10 @@ A bracket needs a **proven** _A_ for its floor, and every round count in the tab
 |-----|-----------|-----------------------------------|--------------------|------------------|------------------------------|
 | 1 | 3 | **9** (solved) | 2<sup>−54</sup> | **2<sup>−54</sup>** | closed — 54, proven optimal for its pattern |
 | 2 | 6 | **45** (solved) | 2<sup>−270</sup> | **2<sup>−293</sup>** | [270, 293] |
-| 3 | 9 | **129** (solved; was ~~133~~) | 2<sup>−774</sup> | 2<sup>−823</sup> | [774, 823] — ceiling from a shell enumeration at the descent's own cap |
-| 4 | 12 | **165** (solved; was ~~225~~) | 2<sup>−990</sup> | 2<sup>−1123</sup> | [990, 1123] — ceiling from a shell enumeration at the descent's own cap |
-| 5 | 15 | **234** (solved; was ~~243~~) | 2<sup>−1404</sup> | 2<sup>−1602</sup> | [1404, 1602] — from an imported MILP pattern; stage A still finds none; ceiling from a shell enumeration |
-| 6 | 18 | **270** (solved; was ~~290~~) | 2<sup>−1620</sup> | 2<sup>−1856</sup> | [1620, 1856] — imported pattern, descent then enumeration, as at _r_ = 5 |
+| 3 | 9 | **129** (solved, was ~~133~~) | 2<sup>−774</sup> | 2<sup>−823</sup> | [774, 823] — ceiling from a shell enumeration at the descent's own cap |
+| 4 | 12 | **165** (solved, was ~~225~~) | 2<sup>−990</sup> | 2<sup>−1123</sup> | [990, 1123] — ceiling from a shell enumeration at the descent's own cap |
+| 5 | 15 | **234** (solved, was ~~243~~) | 2<sup>−1404</sup> | 2<sup>−1602</sup> | [1404, 1602] — from an imported MILP pattern, which stage A still cannot find, with the ceiling from a shell enumeration |
+| 6 | 18 | **270** (solved, was ~~290~~) | 2<sup>−1620</sup> | 2<sup>−1856</sup> | [1620, 1856] — imported pattern, descent then enumeration, as at _r_ = 5 |
 | 7 | 21 | **354** (solved) | 2<sup>−2124</sup> | 2<sup>−2447</sup> | [2124, 2447] — imported pattern, descent then enumeration, as at _r_ = 5 |
 | 8 | 24 | **390** (solved) | 2<sup>−2340</sup> | 2<sup>−2699</sup> | [2340, 2699] — imported pattern, descent then enumeration, as at _r_ = 5 |
 
@@ -625,7 +625,7 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   The four UNSAT ends are *completed* refutations, returning in 87–141 s, and the two dashes are 900 s timeouts.  So this differential's own lightest characteristic lies in **[286, 293]**, and 293 is the ceiling for the round count.  Like every reported trail it is re-propagated in Python and checked transition by transition against the DDT, so it is a genuine characteristic rather than a solver artifact, and the program's output says so.
 
-  **The 293 arrived by a third route.**  The bisection above reaches 294 and stalls, because cap 292 times out.  The 293 came from an *enumeration* that asked the shell at cap 294 for 500 trails rather than one.  It never finished (133 trails in 21 701 s, `INCOMPLETE`, so no clustering figure), but it returned **five characteristics at weight 293** against 128 at the cap.  A one-shot probe at cap 293 confirms it directly in **225 s**, and that probe is the reproducible command.
+  **The 293 arrived by a third route.**  The bisection above reaches 294 and stalls, because cap 292 times out.  The 293 came from an *enumeration* that asked the shell at cap 294 for 500 trails rather than one.  It never finished (133 trails in 21,701 s, `INCOMPLETE`, so no clustering figure), but it returned **five characteristics at weight 293** against 128 at the cap.  A one-shot probe at cap 293 confirms it directly in **225 s**, and that probe is the reproducible command.
 
   The lesson generalizes past this cell.  A probe that asks for one trail accepts the first assignment the solver offers, and z3 offers the heaviest the bound allows, so asking the *same* bound for many trails reaches lighter ones than tightening the bound does.  The 293 sat inside a shell the bisection had already satisfied.
 
@@ -652,7 +652,7 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   A wider sweep, `--patterns 32` over fresh seeds 8–16 (nine processes, ~5.5 h wall), produced a further **288 realizable trails**, the lightest weight **841** at seed 11, pattern 13.  It used fresh seeds because stage A enumerates from the first pattern each time, so re-running a known seed spends 16 patterns of repeated work to reach 16 new ones.  Across both sweeps **416 trails** stand at this round count, spanning 841–903.
 
-  **A shell descent, not a sweep, then took the ceiling below 841.**  Pinning seed 11 pattern 13's own input/output differential and re-asking for a lighter characteristic (`--cluster 1 --cluster-shell K`, with `K` driven negative) walked it down through 840, 838, 834, 829, 827, and 825 to **824**, each DDT-verified.  Below that the descent stops hard.  Caps 823, 821, 820, 819, 817, and 816 all returned `unknown`, 820 after the full 14 400 s, while cap 791 came back UNSAT with the shell **complete**, so this differential provably admits nothing lighter than 792.
+  **A shell descent, not a sweep, then took the ceiling below 841.**  Pinning seed 11 pattern 13's own input/output differential and re-asking for a lighter characteristic (`--cluster 1 --cluster-shell K`, with `K` driven negative) walked it down through 840, 838, 834, 829, 827, and 825 to **824**, each DDT-verified.  Below that the descent stops hard.  Caps 823, 821, 820, 819, 817, and 816 all returned `unknown`, 820 after the full 14,400 s, while cap 791 came back UNSAT with the shell **complete**, so this differential provably admits nothing lighter than 792.
 
   **A shell _enumeration_ at the descent's own cap then produced a weight-823 characteristic, the current ceiling.**  This is the cleanest demonstration in this document of what a timeout is worth.  The descent had asked cap 823 directly, twice, and got `unknown` both times, yet a trail of exactly that weight existed all along, and re-asking the *already satisfied* cap 824 for more answers found it as one of five.  The boundary is now (821, 823], and 822 has never been asked.
 
@@ -663,9 +663,9 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   The corrected bracket is **[990, 1123]**.  Its floor is from the solved _A_(4) = 165 (it read 828, from the superadditive _A_(1) + _A_(3) = 138, until that cell was closed).  Its ceiling is from a shell enumeration at the cap a descent had reached, over a trail the seed sweep found.  That sweep (`--patterns 16 --random-seed 0`–`7`, ~40 min wall) produced 35 trails, five of them tied at **1151**.
 
-  Pinning seed 2 pattern 11's differential then reached 1150 in 7.3 s, 1140 in 26 s of solving, and **1125** in 2 954 s, while caps 1115, 1100, 1070, and 1030 returned `unknown` and cap 990, the idealized floor itself, came back UNSAT with the shell **complete**.  The most informative failure is cap 1115, which timed out where 1125 succeeded.  **Enumerating the satisfied 1125 shell then returned seven trails at 1123, 1124, and 1125, so the ceiling is 1123** and the boundary is (1115, 1123].
+  Pinning seed 2 pattern 11's differential then reached 1150 in 7.3 s, 1140 in 26 s of solving, and **1125** in 2954 s, while caps 1115, 1100, 1070, and 1030 returned `unknown` and cap 990, the idealized floor itself, came back UNSAT with the shell **complete**.  The most informative failure is cap 1115, which timed out where 1125 succeeded.  **Enumerating the satisfied 1125 shell then returned seven trails at 1123, 1124, and 1125, so the ceiling is 1123** and the boundary is (1115, 1123].
 
-  A plain `--patterns 8` sweep had reached 1153 (1154, **1153**, 1153), and it reached only **3 of the 8 patterns requested**.  Stage A found the first three in 50 s, 45 s, and 16 s and then could not produce a *fourth* distinct 165-box pattern within 600 s.  Each enumerated pattern adds a blocking clause over all 3 072 activity variables, and forbidding three assignments while still satisfying `PbEq(·, 165)` gets expensive fast at this width, so `--patterns N` is an upper request, not a promise.
+  A plain `--patterns 8` sweep had reached 1153 (1154, **1153**, 1153), and it reached only **3 of the 8 patterns requested**.  Stage A found the first three in 50 s, 45 s, and 16 s and then could not produce a *fourth* distinct 165-box pattern within 600 s.  Each enumerated pattern adds a blocking clause over all 3072 activity variables, and forbidding three assignments while still satisfying `PbEq(·, 165)` gets expensive fast at this width, so `--patterns N` is an upper request, not a promise.
 
   **The seed sweep shows that stage A, not the weight search, limits _r_ = 4.**  Seven of the eight seeds hit a stage-A timeout, reaching 3, 4, 14, 0, 4, 2, 3, and 6 patterns, so one seed found fourteen and another none at all.  Yet all 35 trails landed in the 5-bit band 1151–1155, against a 63-bit spread at _r_ = 3, so *more seeds* would buy very little here.
 
@@ -681,7 +681,7 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   **A smaller `-A` does not help either.**  At _r_ = 3 and _r_ = 4, asking for the right smaller target (`-A 129`, `-A 165`) turned an intractable search into a few seconds of solving.  Here five targets spanning the whole plausible window (`-A` 180, 195, 210, 225, and 240, straddling the superadditive floor of 174 and the incumbent 243) ran in parallel at `-t 900`, and **all five gave up in stage A at exactly 900 s**, indistinguishably from 243.  So the wall does not move with the cardinality's *value*, and `--encoding` cannot be the variable, since it only affects stage B.  Peak memory was 323 MB, but only because the run never reached stage B.
 
-  **Nor does the cardinality encoding.**  `PbEq` over 3 840 activity variables was the obvious suspect, a pseudo-Boolean that barely propagates where a totalizer would, so the totalizer was built and tried.  Stage A at _A_ = 234 still gave up, `unknown: timeout` at 3 000 s after a 125 s model build, peaking at 1.04 GiB.  The same swap makes stage A **slower** on the patterns it already solves:
+  **Nor does the cardinality encoding.**  `PbEq` over 3840 activity variables was the obvious suspect, a pseudo-Boolean that barely propagates where a totalizer would, so the totalizer was built and tried.  Stage A at _A_ = 234 still gave up, `unknown: timeout` at 3000 s after a 125 s model build, peaking at 1.04 GiB.  The same swap makes stage A **slower** on the patterns it already solves:
 
   | _r_ | stage A, `pb` (build + solve) | stage A, `totalizer` (build + solve) |
   |-----|-------------------------------|--------------------------------------|
@@ -694,7 +694,7 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   **What the wall _is_ sensitive to is width.**  The same _r_ = 5 search at _N_ = 2 and _N_ = 4, both at *proven* targets (_A_ = 101 and 114), returns an activity pattern in **0.3 s and 0.6 s** and a verified characteristic within 11 s more, giving the brackets [606, 705] and [684, 791] tabulated above.  Five Castella rounds is therefore not intrinsically beyond stage A, but 16 blocks is.
 
-  The `PbEq` constraint spans 15 S-box layers × 256 bytes = 3 840 booleans at _N_ = 16 against 480 at _N_ = 2 (measured, not counted by hand), and the transpose couples all of them, so the cardinality constraint has no local structure to exploit.  Alongside _r_ = 4, where stage A clears the same constraint three times and then stalls on the fourth, this looks like one continuous difficulty in width and depth rather than a cliff at _r_ = 5.
+  The `PbEq` constraint spans 15 S-box layers × 256 bytes = 3840 booleans at _N_ = 16 against 480 at _N_ = 2 (measured, not counted by hand), and the transpose couples all of them, so the cardinality constraint has no local structure to exploit.  Alongside _r_ = 4, where stage A clears the same constraint three times and then stalls on the fourth, this looks like one continuous difficulty in width and depth rather than a cliff at _r_ = 5.
 
   **Resolution: import the pattern instead of searching for it.**  The MILP was solving the *same* combinatorial question all along, and HiGHS closes _A_(5) = 234 in **639 s**.  `permute-min-active-sboxes.py --dump-pattern` writes that solved activity pattern out, and `permute-trail-search.py --pattern-file` instantiates it, skipping stage A entirely.  The result is the **first _r_ = 5 characteristic at _N_ = 16**, weight **1633**, for a bracket of **[1404, 1633]**, a proven optimum at the lower end and a DDT-verified characteristic at the upper.  A shell descent over that same trail and an enumeration of the shell that descent stopped in have since tightened it to **[1404, 1602]**.
 
@@ -710,7 +710,7 @@ These were the first bracketed _r_ = 5 results at any width.  They bound the nar
 
   **Each descent stopped at a satisfied cap, and enumerating that cap then bought a little more.**  Each cap named here is the lightest that came back `sat`.  The caps just below it that returned `unknown` bound nothing mathematically but show where to spend the next hour.  At _r_ = 5 the descent went 1633 → **1603** at _K_ = −30 and then stalled, cap 1593 timing out (as did 1573 and 1513).  At _r_ = 6 it reached **1857** at _K_ = −30, with caps 1842, 1827, and 1797 timing out.  At _r_ = 7 it stepped 2473 → 2463 → 2453 → **2448** at _K_ = −25, with cap 2423 timing out.  At _r_ = 8 it stepped 2725 → 2715 → **2705** at _K_ = −20, with cap 2685 timing out in a separate probe on 2026-08-06.
 
-  **Enumerating each of those satisfied caps, rather than probing below it, gave up something lighter every time**: 1602, 1856, 2447, and 2699.  So the boundaries are **(1593, 1602]**, **(1842, 1856]**, **(2423, 2447]**, and **(2685, 2699]**, and the ceilings in the table above are the enumerations', not the descents'.  Read the timed-out ends as the _r_ = 3 bullet above does.  Cap 824 timed out at 3600 s and then solved in 1387 s at 14400 s, and cap 823 timed out twice, once with the full 14 400 s, before an enumeration of the shell above it realized it.  A timed-out cap at these depths is as likely to be a budget artifact as a wall.
+  **Enumerating each of those satisfied caps, rather than probing below it, gave up something lighter every time**: 1602, 1856, 2447, and 2699.  So the boundaries are **(1593, 1602]**, **(1842, 1856]**, **(2423, 2447]**, and **(2685, 2699]**, and the ceilings in the table above are the enumerations', not the descents'.  Read the timed-out ends as the _r_ = 3 bullet above does.  Cap 824 timed out at 3600 s and then solved in 1387 s at 14,400 s, and cap 823 timed out twice, once with the full 14,400 s, before an enumeration of the shell above it realized it.  A timed-out cap at these depths is as likely to be a budget artifact as a wall.
 
   **Underneath each boundary is a proven-empty region.**  Asking these same differentials for the *idealized floor itself* returns UNSAT with the shell **complete**, at caps 1620, 2124, and 2340 for _r_ = 6, 7, and 8, joining 791, 990, and 1404 at _r_ = 3, 4, and 5.  So nothing lighter than 1621, 2125, and 2341 realizes them.  Those are the only **proven** statements the bit-level search produces at this width, every other result here being a found trail or a timeout, and they are cheap, each of the three returning in well under an hour on an imported pattern with no stage A.
 
@@ -749,7 +749,7 @@ It is a data point, not a proof of the differential-hull bound.  The maximum exp
 
 At _r_ = 2 the totalizer rescued the shell, the one place it earned its keep.  Under the `pb` weight bound, _K_ = 0, 4, and 8 each returned **zero** trails in 900 s, missing even the weight-302 trail that provably satisfies the constraints, so the bound made the instance harder rather than easier.  With `--weight-encoding totalizer` the shells return trails, and working the cap downward, first by bisection and then by enumerating one shell, took the ceiling to 293 (see the _r_ = 2 bullet).
 
-**It still gives no clustering figure, but one of the two obstacles was only the solver's shape.**  Every shell at _r_ = 2 that *contains* anything reports `INCOMPLETE`.  The run finds its one trail and then times out on the next `check()`, at 900 s and again at 3 600 s on the same instance, while the shells that complete are exactly the **empty** ones, capped below the differential's minimum and refuted in about two minutes, four times over.
+**It still gives no clustering figure, but one of the two obstacles was only the solver's shape.**  Every shell at _r_ = 2 that *contains* anything reports `INCOMPLETE`.  The run finds its one trail and then times out on the next `check()`, at 900 s and again at 3600 s on the same instance, while the shells that complete are exactly the **empty** ones, capped below the differential's minimum and refuted in about two minutes, four times over.
 
 That looks like an intrinsic asymmetry, with proving a shell empty easy and exhausting a non-empty one hard, precisely backwards for a DP sum, where every term is needed.  **It is not intrinsic.**  A controlled A/B at cap 296 over the same pattern and the same pinned differential, differing only in whether the solver is reused between trails, separates the two:
 
@@ -760,13 +760,13 @@ That looks like an intrinsic asymmetry, with proving a shell empty easy and exha
 
 The two solvers are identical until the first trail is excluded, so at trail 2 they face the same logical problem, one blocking clause with nothing else changed.  One cannot solve it inside its 900 s limit, while the other averages 61 s per trail end to end, model rebuild included.  The clauses and phase saving accumulated while finding trail _k_ point into the region that trail _k_'s own blocking clause then excludes, and z3 does not discard them, so rebuilding the model is the thing that works, not overhead.  This inverts the usual incremental-SMT assumption, which is why `--fresh-instances` is a flag rather than the default.
 
-The flag is sound and complete, not merely faster, and _r_ = 1 is where that is checkable, because the enumeration closes there and a complete enumeration is order-independent.  The two shapes agree exactly, with the same 1048 characteristics, the same histogram, and the same 2<sup>−51.66</sup>, each ending in UNSAT.  That run also prices the flag at **530×** (7 576 s against 14.3 s), so it is strictly worse wherever the incremental solver copes and is the only thing that works where it does not.
+The flag is sound and complete, not merely faster, and _r_ = 1 is where that is checkable, because the enumeration closes there and a complete enumeration is order-independent.  The two shapes agree exactly, with the same 1048 characteristics, the same histogram, and the same 2<sup>−51.66</sup>, each ending in UNSAT.  That run also prices the flag at **530×** (7576 s against 14.3 s), so it is strictly worse wherever the incremental solver copes and is the only thing that works where it does not.
 
 **The _r_ = 2 minimization failure resolves the same way.**  That bullet concluded, from runs that differed in several ways at once, that how the bound was presented separated a stalling minimization from a completing shell probe.  The A/B here changes exactly one thing and reproduces the effect, so the mechanism is measured for both: **presenting a constraint to a fresh solver beats adding it to a solver that has already searched under its negation**, whether the constraint is a weight bound or a blocking clause.
 
 **What remains unbounded is the count, not the rate.**  Enumeration costs about 60 s per trail at cap 296 and about 163 s at cap 294, but no run has indicated where a shell ends, and a shell has to be exhausted for its sum to mean anything.  The longest attempt, 500 trails requested at cap 294 with six hours given, returned **133** and stopped on the clock.  A partial enumeration is worth nothing rather than a fraction of something.
 
-At cap 296 all eight trails came back at weight **296**, and at cap 294, 128 of the 133 came back at **294**, in both cases the cap, although lighter characteristics provably realize the same differential.  z3 returns the heaviest assignment the bound allows, so the light terms that dominate the sum come out last, and a run stopped at 90 % under-weights the result by an unknown margin.
+At cap 296 all eight trails came back at weight **296**, and at cap 294, 128 of the 133 came back at **294**, in both cases the cap, although lighter characteristics provably realize the same differential.  z3 returns the heaviest assignment the bound allows, so the light terms that dominate the sum come out last, and a run stopped at 90% under-weights the result by an unknown margin.
 
 **Clustering above _r_ = 1 therefore remains the one adverse-direction gap in this evidence.**  The gain is about 2 bits at _r_ = 1, no non-empty shell above it has been closed, and nothing measures how the gain grows.
 
@@ -783,7 +783,7 @@ The cap-294 run is nonetheless where the round count's **293** ceiling came from
 | 7 | 2448 | 9 | 2447:2, 2448:7 | 2448 → **2447** |
 | 8 | 2705 | 5 | 2699:1, 2702:1, 2704:1, 2705:2 | 2705 → **2699** |
 
-Three things in that table are worth more than the 1–6 bits each.  **The yield beat what _r_ = 2 predicted.**  There, 128 of 133 trails sat on the cap and only 5 fell below, about 4 %, while here 1 of 5, 4 of 7, 1 of 2, 3 of 7, 2 of 9, and 3 of 5 did.  **The best trail arrived _last_ at three of the six**, since _r_ = 3, _r_ = 5, and _r_ = 8 were each still improving when the clock stopped them, which looked budget-limited.
+Three things in that table are worth more than the 1–6 bits each.  **The yield beat what _r_ = 2 predicted.**  There, 128 of 133 trails sat on the cap and only 5 fell below, about 4%, while here 1 of 5, 4 of 7, 1 of 2, 3 of 7, 2 of 9, and 3 of 5 did.  **The best trail arrived _last_ at three of the six**, since _r_ = 3, _r_ = 5, and _r_ = 8 were each still improving when the clock stopped them, which looked budget-limited.
 
 **A 2026-08-08 re-run showed they were not.**  All six were re-run, _r_ = 3, 5, and 8 at a doubled 8 h budget and _r_ = 4, 6, and 7 at the original 4 h, and **not one ceiling moved**.  The longer runs returned 8, 5, and 10 trails whose best weights were 823, 1602, and 2699, exactly the figures already held, and the best no longer arrives last at _r_ = 3 or _r_ = 8 (trail 5 of 8, and 5 of 10, where only _r_ = 5 still ends on its best).
 
@@ -793,7 +793,7 @@ These differentials sit far above their floors (236 bits at _r_ = 6 against 23 a
 
 **Every one of the six hit the 4 h limit with the shell `INCOMPLETE`**, which costs a ceiling nothing, since a found trail stands however the run ends.  But it means the `DP(differential | pattern)` figure each run prints on its way out bounds nothing.  Those figures are 2<sup>−821.42</sup>, 2<sup>−1121.30</sup>, 2<sup>−1601.42</sup>, 2<sup>−1853.68</sup>, 2<sup>−2444.54</sup>, and 2<sup>−2698.75</sup>, listed only so they are recognizable as the figures to discard.
 
-**And the cost per trail grows sharply with depth.**  _r_ = 5 returned its two at 2 470 s and 15 273 s (the budget is checked between trails, so a call already running can finish past it), against nine inside the same budget at _r_ = 7, so a 4 h budget buys single digits above _r_ = 5 rather than the ~44 that _r_ = 6's ~325 s/trail suggested.
+**And the cost per trail grows sharply with depth.**  _r_ = 5 returned its two at 2470 s and 15,273 s (the budget is checked between trails, so a call already running can finish past it), against nine inside the same budget at _r_ = 7, so a 4 h budget buys single digits above _r_ = 5 rather than the ~44 that _r_ = 6's ~325 s/trail suggested.
 
 ### Scope
 
@@ -823,8 +823,6 @@ python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, 
 
 **Everything else lives in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 3**: the per-round-count trail commands with their `-t`, `-M`, and measured timings, the `--random-seed` sweeps, and the shell descent and shell enumeration that every ceiling from _r_ = 3 to _r_ = 8 rests on.  [permute-trail-ceilings.bash](permute-trail-ceilings.bash) wraps both levers and carries the recipe table (pattern source, winning z3 seed, and shell offset _K_), without which only two of the six ceilings reproduce.  The notes below say what the results mean, not how to re-run them.
 
-Notes:
-
 * `--encoding rows` is the default and the right choice for everything.  It is *required* for the _r_ = 1 minimization and the cluster enumeration, which are refutation-heavy and where `witness` returns `unknown`.  It is also the faster route to a first trail at _r_ ≥ 2, by roughly two orders of magnitude, and at _r_ = 4 it is the only encoding that has found a trail at all.  `witness` is still worth a run when a *different* trail through the same pattern is wanted, since which trail a run lands on is solver luck.  Neither encoding finishes the minimization at _r_ ≥ 2.
 * `-t` is the per-solver-call time limit.  No minimization has ever finished at _r_ ≥ 2 on this machine.  _r_ = 2 returns `unknown` under `witness` to 60 min, `rows` to 30 min, and a totalizer weight bound to 30 min, and _r_ = 3 and _r_ = 4 each returned `unknown: canceled` after 1200 s, leaving their first-pattern weights of 903 and 1154 standing.
 
@@ -837,9 +835,9 @@ Notes:
 
   Use `--cluster 1` for a descent probe, since without it a satisfied probe spends a whole `-t` on a second `check()` nobody asked for.  Once the descent stalls, re-ask its last satisfied cap for many trails with `--fresh-instances`.  **That last step is not optional polish.**  It paid at all six round counts, and at _r_ = 3 it produced a weight-823 characteristic in a shell whose cap 823 had been probed directly and timed out twice.
 * `-M` caps memory per solver call, in MB.  Exceeding it ends that call with `unknown` and the reason `max. memory exceeded`, which the run reports and carries on from, instead of the process being OOM-killed, so set it for anything long enough to be worth losing.  The `unknown` reason distinguishes this from a time limit, which reports `timeout` (or `canceled` when it lands inside the minimization loop).
-* `-A` overrides the target active-S-box count.  The default comes from two tables in the script: `PROVEN_MIN_ACTIVE` (converged MILP optima, where 6·_A_ really is a floor) and `UNPROVEN_MIN_ACTIVE` (best known incumbents, where it is not).  The startup line tells you which applies, and both must stay in sync with the MILP tables above — including if `AES_NUM_ROUNDS` ever changes.
+* `-A` overrides the target active-S-box count.  The default comes from two tables in the script: `PROVEN_MIN_ACTIVE` (converged MILP optima, where 6·_A_ really is a floor) and `UNPROVEN_MIN_ACTIVE` (best known incumbents, where it is not).  The startup line tells you which applies, and both must stay in sync with the MILP tables above, including if `AES_NUM_ROUNDS` ever changes.
 * **The target matters more than the time limit.**  `-A` is not a tuning knob but the question being asked.  At _r_ = 3 the search finds a trail against `-A 129` in 0.7 s of stage A, yet asking for `-A 120` times out after 900 s, and at _r_ = 4 `-A 165` succeeds in 34 s while `-A 150` times out after 900 s.  Exact cardinality is easy with slack and intractable near the true minimum, so these probes are good at establishing <q>≤ _X_</q> and useless at establishing <q>> _X_</q>.
-* **Use `--fresh-instances` for any `--cluster` above _r_ = 1 that asks for more than one trail, and never at _r_ = 1.**  The default accumulates blocking clauses in one solver, which is what stalls the enumeration at _r_ = 2 (1 trail against 8 over the same budget).  But the rebuild costs a full model build per trail, so at _r_ = 1, where the incremental solver is untroubled, the same enumeration goes from 14 s to 7 576 s for an identical answer.  It is inert on a single-trail descent probe (`--cluster 1`), which has no second trail for the rebuild to pay for.
+* **Use `--fresh-instances` for any `--cluster` above _r_ = 1 that asks for more than one trail, and never at _r_ = 1.**  The default accumulates blocking clauses in one solver, which is what stalls the enumeration at _r_ = 2 (1 trail against 8 over the same budget).  But the rebuild costs a full model build per trail, so at _r_ = 1, where the incremental solver is untroubled, the same enumeration goes from 14 s to 7576 s for an identical answer.  It is inert on a single-trail descent probe (`--cluster 1`), which has no second trail for the rebuild to pay for.
 * **Watch the weights the enumeration reports as it runs, not just the histogram at the end.**  Trails come back at the *cap* of the shell rather than at its minimum, so a progress line stuck at the cap means the dominant light terms have not arrived.  Since those come out last, a stopped enumeration is no answer at all, not a partial one.  Only `complete`/`shell COMPLETE` licenses a DP figure.
 * Raw solver logs are not kept, so the tables above are the record, as in the other findings sections.
 

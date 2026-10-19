@@ -433,9 +433,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       - For the **cryptanalytic** figures (trail bounds, ceilings and brackets, and the `R*`
         policy and its margin term), the target list is
         [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md) § 8, which is
-        maintained alongside the runs that produce them.  Audit against that list rather
-        than against a copy here.  This bullet used to carry its own, and it went stale,
-        omitting `CRYPTO-SECURITY-CLAIMS-PLAN.md` after that file became a sweep target.
+        maintained alongside the runs that produce them.  Audit against that list rather than
+        against a copy here.
       - The **throughput** figures (in `hash-programs/README.md`, which owns them, and in
         `README.md`, `CLAUDE.md`, and `research/README.md`) are this bullet's own: the
         runbook's § 0 puts performance findings out of its scope, so no list but this one

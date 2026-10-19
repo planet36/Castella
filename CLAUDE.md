@@ -179,6 +179,14 @@ Before asserting a technical claim, confirm it from the source, a compile, or a 
 
 `COMMENT-STYLE.md` holds the prose rules for code comments, doc blocks, and commit messages.  Read it before writing any of the three.
 
+The code follows three conventions that a reviewer could otherwise mistake for inconsistency:
+
+- **Signed arithmetic, unsigned bits.**  Use signed integers for arithmetic and unsigned ones for bit manipulation, with `size_t` only where it cannot be avoided.  A mix of the three follows this rule and is not drift.
+- **Fixed-width data members where layout matters.**  Prefer fixed-width types (`int32_t`, `uint16_t`, and so on) for data members whose padding and packing are important, since their widths set the object's size and layout.
+- **A `true` bool return status means failure.**  A C-style function returning a `bool` status returns `true` on failure, so it can later widen to an errno.  Predicates are the exception, returning `true` for yes.
+
+New code leans toward parentheses for non-list construction, as in `Castella::Duplex d(c, r)`, and toward braces when a list of values is given, such as an array of constants or an initializer list.  Aggregates with designated initializers keep their braces.  These are mild preferences, not rules, so existing code is not converted to them and a review does not flag them.
+
 ## Build / Makefile
 
 Do not change build flags (e.g., `-std`) or other configuration based on unverified documentation.  Confirm the current value and justification before altering one.

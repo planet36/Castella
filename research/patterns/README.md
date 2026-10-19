@@ -14,9 +14,9 @@ here to regenerate the _r_ = 5 to 8 ceilings.
 | file | _r_ | _A_(_r_) | status | HiGHS solve time |
 |------|-----|----------|--------|------------------|
 | `pat-r5.json` | 5 | 234 | proven optimal | 639 s |
-| `pat-r6.json` | 6 | 270 | proven optimal | 1 585 s |
-| `pat-r7.json` | 7 | 354 | proven optimal | 7 257 s |
-| `pat-r8.json` | 8 | 390 | proven optimal | 14 050 s |
+| `pat-r6.json` | 6 | 270 | proven optimal | 1585 s |
+| `pat-r7.json` | 7 | 354 | proven optimal | 7257 s |
+| `pat-r8.json` | 8 | 390 | proven optimal | 14,050 s |
 
 There are no files for _r_ ≤ 4, because stage A of the trail search finds its
 own patterns there, in under a second at _r_ = 3 and about half a minute at

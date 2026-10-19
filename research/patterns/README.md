@@ -38,10 +38,12 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json \
 ## Regenerating
 
 ```bash
-# PuLP needs the venv in RE-DERIVATION-RUNBOOK.md § 1.  HiGHS runs
-# single-core despite --threads, so these can run concurrently at no cost.
+# PuLP needs the venv in RE-DERIVATION-RUNBOOK.md § 1.  One run writes all four
+# files, and each round count replaces the '{r}' in the path.  HiGHS runs
+# single-core despite --threads, so one process per round count, run
+# concurrently, costs nothing over this sequential form.
 ~/.venvs/pulp/bin/python3 permute-min-active-sboxes.py \
-    --min-rounds 6 -r 6 -t 21600 --dump-pattern patterns/pat-r6.json
+    --min-rounds 5 -r 8 -t 21600 --dump-pattern 'patterns/pat-r{r}.json'
 ```
 
 Give `-t` room above the solve times in the table, because the 600 s default

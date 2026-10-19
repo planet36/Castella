@@ -215,3 +215,8 @@ Never "programme", in any sense.
 **15. Use the serial comma** before the final conjunction.
 
 **16. Never write "load-bearing".**  Name the actual dependency instead.
+
+**17. Write numbers in one format.**  A number of four digits stands plain, and
+one of five or more digits takes a comma before each group of three, as in 6200
+and 14,400.  A percentage takes no space before its sign.  A number that is
+code, such as a command-line argument or a literal, stays as the code spells it.

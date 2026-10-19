@@ -9,9 +9,11 @@ Every *cryptanalytic* figure quoted in [SPEC.md](../SPEC.md)'s Evidence section,
 [README.md](README.md)'s findings, and in
 [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) comes out of a program in this directory or in
 `tests/`.  This runbook says which program, what to run, how long it takes, and what the
-output should say.  README.md's *performance* findings are the one class it leaves out
-(§0).  VERIFYING-CLAIMS.md maps each *claim* to the evidence a skeptical reader should
-check, and this runbook is for whoever has to *refresh* the figures.
+output should say.
+
+README.md's *performance* findings are the one class it leaves out (§0).
+VERIFYING-CLAIMS.md maps each *claim* to the evidence a skeptical reader should check, and
+this runbook is for whoever has to *refresh* the figures.
 
 It was extracted from
 [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md), where it was § 10.
@@ -33,9 +35,11 @@ measured between 2026-08-04 and 2026-08-08.  §7's are from the runs recorded in
 VERIFYING-CLAIMS.md, with the sub-minute ones re-measured on 2026-08-09.
 
 **Budgets here span seconds to six hours**, with §2's `-t 21600` cells and §3's four-hour
-shell probes at the long end.  The two solvers also spend `-t` differently.  In
-`permute-min-active-sboxes.py` it is the limit **per round count**, so solve one cell at a
-time with `--min-rounds R -r R` when the budget matters.  `permute-trail-search.py` has no
+shell probes at the long end.
+
+The two solvers also spend `-t` differently.  In `permute-min-active-sboxes.py` it is the
+limit **per round count**, so solve one cell at a time with `--min-rounds R -r R` when the
+budget matters.  `permute-trail-search.py` has no
 `--min-rounds`, and there `-t` is the limit per solver **call** (stage A, stage B, and each
 `--cluster` check get one apiece), so wall time is a multiple of it.
 `--cluster-time-limit` bounds the enumeration separately.
@@ -59,9 +63,10 @@ re-derive.
 **One class is missing on purpose.**  README.md's *performance* findings (Duplex
 throughput, the folded permute, and the interleaved cch pair) come from the compiled
 `*-benchmark.cpp` and `*-verify.cpp` programs, driven by `run-benchmarks.bash` and
-`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`).  They
-measure speed rather than support a security claim, so they need an otherwise idle machine
-and the core pinning `run-benchmarks.bash` does, not a solver budget.  That is why the
+`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`).
+
+They measure speed rather than support a security claim, so they need an otherwise idle
+machine and the core pinning `run-benchmarks.bash` does, not a solver budget.  That is why the
 `nice -n 19` rule exempts them, and why nothing in this file should run during one.
 
 | program | figures it owns | where |
@@ -220,7 +225,9 @@ python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --encoding rows \
 
 # r = 2 is the one round count whose recorded ceiling is NOT what its command above
 # prints.  That search returns 302, and the recorded ceiling is 293, which the shell
-# machinery of r >= 3 found by a different route.  A bisection of the cap over that
+# machinery of r >= 3 found by a different route.
+#
+# A bisection of the cap over that
 # trail's own differential reached 294, and enumerating the cap-294 shell (500 trails,
 # 6 h, INCOMPLETE) turned up five at 293.  Rather than re-run either, confirm the 293
 # directly with this one-shot probe, in ~4 min and 320 MB:
@@ -243,10 +250,11 @@ python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M
 # 8-pattern runs above stop at 891 and 1153.  Sweep --random-seed as parallel processes
 # and take the lightest.  Raise --patterns only with FRESH seeds, because stage A
 # enumerates from pattern 1 every run, so a swept seed repeats all of it before reaching
-# anything new.  Budget by elapsed time, not by the printed per-pattern solve times.
-# Those cover check() alone, and the untimed model build before each is the larger
-# share (~100 s per pattern at r = 3 against a printed ~8 s).  Keep each batch inside
-# the 8-process cap.
+# anything new.
+#
+# Budget by elapsed time, not by the printed per-pattern solve times.  Those cover
+# check() alone, and the untimed model build before each is the larger share (~100 s per
+# pattern at r = 3 against a printed ~8 s).  Keep each batch inside the 8-process cap.
 for K in 0 1 2 3 4 5 6 7; do    # r = 4, ~40 min wall: five trails tie at 1151
     python3 permute-trail-search.py -r 4 -A 165 --patterns 16 --random-seed "$K" \
         --no-minimize -t 600 -M 1200 > "r4-seed$K.txt" &
@@ -266,11 +274,14 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 
 # N=16 at r>=5 needs its pattern from the MILP, since stage A still returns none at
 # r=5 (2026-08-04) and was skipped rather than retried at r=6..8.  THE FOUR
-# PATTERNS ARE ALREADY COMMITTED as patterns/pat-r5.json ..
-# pat-r8.json (see patterns/README.md).  The --pattern-file lines run straight off a
-# clean checkout, and the --dump-pattern lines are the REFRESH, not a prerequisite.
-# Run those only when the MILP model itself has changed.  They overwrite tracked files,
-# so review that diff like any other, and they cost ~6.5 h of MILP for the set.
+# PATTERNS ARE ALREADY COMMITTED as patterns/pat-r5.json .. pat-r8.json (see
+# patterns/README.md).
+#
+# The --pattern-file lines run straight off a clean checkout, and the --dump-pattern
+# lines are the REFRESH, not a prerequisite.  Run those only when the MILP model itself
+# has changed.  They overwrite tracked files, so review that diff like any other, and
+# they cost ~6.5 h of MILP for the set.
+#
 # Afterwards check `proven_optimal` in each file.  Only `true` licenses 6*A as a floor,
 # and the 600 s default -t silently yields an incumbent at every one of these cells.
 <pulp> permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
@@ -318,12 +329,13 @@ bash permute-trail-ceilings.bash -n -e 6          # print the command instead of
 python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 1387 s
 python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
 # The other four have exactly this shape, with the seed and K from their row of the
-# table.  r = 4's descent took 2954 s.  Those two lines are the runs as they happened,
-# so their budgets differ from the script's defaults (-t and --cluster-time-limit
-# 14400, -M 2500, overridable by TIME_LIMIT and MEM).  The recipe itself is identical,
-# and the script records that it reproduces the table trail for trail at those
-# defaults.  Check with `bash permute-trail-ceilings.bash -n -d 3` rather than assuming
-# either is stale.
+# table.  r = 4's descent took 2954 s.
+#
+# Those two lines are the runs as they happened, so their budgets differ from the
+# script's defaults (-t and --cluster-time-limit 14400, -M 2500, overridable by
+# TIME_LIMIT and MEM).  The recipe itself is identical, and the script records that it
+# reproduces the table trail for trail at those defaults.  Check with
+# `bash permute-trail-ceilings.bash -n -d 3` rather than assuming either is stale.
 #
 # A negative shell returning UNSAT is COMPLETE for that differential.  A timeout is
 # `unknown` and bounds nothing, and some timeouts are budget artifacts rather than
@@ -333,7 +345,9 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # ceilings.  Use the same command with --cluster 500 --fresh-instances -t 14400.  A
 # --cluster 1 probe takes z3's first answer, which is the heaviest its bound allows, so
 # asking an ALREADY-SATISFIED cap for many trails reaches lighter ones than probing
-# below it.  It improved all six: 824 -> 823, 1125 -> 1123, 1603 -> 1602,
+# below it.
+#
+# It improved all six: 824 -> 823, 1125 -> 1123, 1603 -> 1602,
 # 1857 -> 1856, 2448 -> 2447, 2705 -> 2699.  r = 3 is the case to cite.  Its cap 823 had
 # timed out TWICE, once at the full 14,400 s, and the 824 shell then yielded a weight-823
 # trail, so `unknown` is never evidence of absence.
@@ -421,8 +435,9 @@ documented number depends on it.
 what the 2026-08-01/02 re-derivation was about.  The rest of the evidence base is not
 optional to re-derive.  **The diffusion floor is one of the two inputs to every `R*`, and
 the 3-round inside-out zero-sum anchors the `+ 3` margin term**
-([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3 step 3).  A
-refresh that skips this section leaves the shipped round counts resting on figures nobody
+([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3 step 3).
+
+A refresh that skips this section leaves the shipped round counts resting on figures nobody
 re-checked.  §1 already has the cheap members, and this section has the rest, with the
 budgets they want.
 

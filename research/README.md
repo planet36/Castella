@@ -817,6 +817,8 @@ Memory scales with `-t` as well as with _r_.  The minimization loop adds a tight
 
 The short `rows` runs peaked at 276 MB (_r_ = 2), 583 MB (_r_ = 3, on the old 133-box pattern), and 892 MB (_r_ = 4, on the old 225-box pattern).  That last is the same instance that cost `witness` 6.38 GiB, so the encoding choice bounds memory as decisively as it bounds time.  The _r_ = 1 cluster enumeration is the cheapest of the set at 99 MB.  All four figures are peak resident set from `/usr/bin/time -v`, measured 2026-08-01.
 
+The two _r_ = 2 figures above disagree.  The encoding comparison gives the 40 s `--no-minimize` run 270 MB, while the list of short `rows` runs gives it 276 MB, and no log survives to say which is right.  A re-measurement on 2026-10-18, with z3 4.16.0, peaked at 291 MiB (297,764 KiB) in 38 s, matching neither.
+
 ```bash
 python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, <1 s
 ```

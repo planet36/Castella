@@ -208,7 +208,7 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 ```bash
 cd research
 python3 permute-trail-search.py -r 1 --patterns 1 -t 600 --cluster 5000            # 56 s,  99 MB; weight 54 proven + cluster 1048 / 2^-51.66
-python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # 38 s, 276 MB; weight 302
+python3 permute-trail-search.py -r 2 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # 38 s, 291 MiB (2026-10-18); weight 302
 python3 permute-trail-search.py -r 3 --patterns 1 -t 600 --no-minimize --print-trail -M 4000  # weight 903 against A=129
 python3 permute-trail-search.py -r 4 --patterns 1 -t 900 --no-minimize --print-trail -M 4000  # weight 1154 against A=165
 python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000    # 55m, stage A times out — no result

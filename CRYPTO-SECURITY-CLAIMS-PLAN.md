@@ -175,18 +175,16 @@ No round count can be *calculated* to "equal" SHA-3, because SHA-3's own margin 
 conjectural (24 rounds vs. best practical collision attacks reaching ~6 rounds of the
 permutation).  The honest procedure has four steps:
 
-1. **Floor from proven trail bounds.**  From the MILP table (research/README.md, `N=16`,
-   `a=3`), a claimed level of `b` bits needs every differential characteristic below
-   ~2^−2b, i.e. 6·A ≥ 2b.  **Every input to this step is now a solved optimum through
-   r = 8**, which covers every shipped round count: A = 9, 45, 129, 165, 234, 270, 354,
-   and 390 at r = 1…8.  Above that, superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because
-   `P` is a bijection) composes solved values with each other.
-
-   So 6·A ≥ 2b is reached at **r=2** for b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495,
-   **r=5** for b ≤ 702, **r=6** for b ≤ 810, **r=7** for b ≤ 1062, and **r=8** for
-   b ≤ 1170.  That puts the 128-, 256-, and 512-bit floors at r = 2, 3, and 5 respectively.
-   For linear trails, correlation ≤ 2^−3·A gives the same round floors.  These are necessary
-   conditions only (single characteristics, with no clustering or structural coverage).
+1. **Floor from proven trail bounds.**  A claimed level of `b` bits needs every differential
+   characteristic below ~2^−2b, i.e. 6·A ≥ 2b, with `A` from the MILP table
+   (research/README.md, `N=16`, `a=3`).  **Every input is now a solved optimum through
+   r = 8**: A = 9, 45, 129, 165, 234, 270, 354, and 390 at r = 1…8, and superadditivity
+   (`A(a+b) ≥ A(a)+A(b)`) composes them beyond.  So 6·A ≥ 2b is reached at **r=2** for
+   b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495, **r=5** for b ≤ 702, **r=6** for
+   b ≤ 810, **r=7** for b ≤ 1062, and **r=8** for b ≤ 1170, putting the 128-, 256-, and
+   512-bit floors at r = 2, 3, and 5.  Linear trails (correlation ≤ 2^−3·A) give the same
+   floors.  These are necessary conditions only (single characteristics, with no clustering
+   or structural coverage).
 
    The 512-bit floor of r=5 is now settled from both sides and cannot move.  Four rounds
    support exactly 495 bits, 17 short of 512, and `A(4) = 165` is a converged optimum, not

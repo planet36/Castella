@@ -143,8 +143,8 @@ against the system one and so also needs `highs` installed.
 
 **Read the `status` column on every row.**  Only `optimal` is a lower bound and hence a
 security bound.  `NOT proven` is an incumbent, which bounds the minimum from *above*, and
-four figures recorded from incumbents (A(16,3) = 133, A(16,4) = 225, A(16,5) = 243,
-A(16,6) = 290) have since been refuted.  Re-verification is **one-directional**, so a re-run
+four figures recorded from incumbents (at N=16, A(3) = 133, A(4) = 225, A(5) = 243, and
+A(6) = 290) have since been refuted.  Re-verification is **one-directional**, so a re-run
 *below* the recorded value refutes it and one *above* proves nothing.
 
 **Use HiGHS, not CBC.**  It is the largest lever in this runbook.  CBC never proved N=16

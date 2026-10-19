@@ -55,8 +55,8 @@ See [tests.cpp](tests.cpp).  It counts its checks and fails unless the total mat
 * Verify that the output matches the expected result (a known-answer test)
 * Test constraint violations
 * Test the same constraints on `Castella::DuplexX2`, on builds where it exists (x86-64 with VAES)
-* Test an input size that is greater than the outer state.
-    * Ensure that when the input is split into chunks, it results in the same digest as if the data was added in one chunk.
+* Test an input size that is greater than the outer state
+    * Ensure that when the input is split into chunks, it results in the same digest as if the data were added in one chunk
 * Test the raw-data overloads with a null pointer and a zero length against the same calls with an empty span
 
 #### `Castella::DuplexTree`

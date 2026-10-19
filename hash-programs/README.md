@@ -46,7 +46,7 @@ Run `--help` for full option descriptions.  `make man`, run in this directory be
 * out-of-range option values, `--quiet` without `--check`, a missing file, an unrecognized option, and a key file shorter than 32 bytes are all rejected, and
 * the keyed mode works: a pinned MAC value, keyed ≠ unkeyed, per-key distinctness, thread and I/O invariance, a size-16 MAC that is not a prefix of the size-32 one, and verification failing with the wrong key or no key.
 
-The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
+The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one 256-byte compression block, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
 
 Reading from standard input, both piped and redirected, must produce the same output as reading from a file.
 

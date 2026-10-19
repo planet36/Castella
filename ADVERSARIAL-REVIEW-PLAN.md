@@ -55,11 +55,11 @@ Two properties of this project drive the whole plan:
 
 | Severity | Meaning in this project's context |
 |----------|-----------------------------------|
-| **Critical** | Memory-unsafety/UB reachable from untrusted input; a security claim the docs *do* make is broken; digest depends on something the spec says it must not (e.g. thread count). |
-| **High** | Spec ⇄ implementation divergence that changes a digest or breaks domain separation; a defect in the keyed-MAC or PRNG-service security posture; missing constant-time where secrets flow. |
-| **Medium** | Correctness bug not reachable in default configs; performance defect leaving significant measured throughput on the table; testable claim with no test. |
+| **Critical** | Memory-unsafety/UB reachable from untrusted input, a security claim the docs *do* make being broken, or a digest that depends on something the spec says it must not (e.g. thread count). |
+| **High** | Spec ⇄ implementation divergence that changes a digest or breaks domain separation, a defect in the keyed-MAC or PRNG-service security posture, or missing constant-time where secrets flow. |
+| **Medium** | Correctness bug not reachable in default configs, performance defect leaving significant measured throughput on the table, or testable claim with no test. |
 | **Low** | Clarity/simplicity, redundant code, minor doc gaps, style. |
-| **Info / Non-finding** | Already disclosed in SPEC.md's non-claims; out-of-scope portability. |
+| **Info / Non-finding** | Already disclosed in SPEC.md's non-claims, or out-of-scope portability. |
 
 Each finding must carry the surface and adversary, the claim it violates (with file:line or
 spec section), a **concrete reproduction or trail** (not "could be"), a severity, and a fix

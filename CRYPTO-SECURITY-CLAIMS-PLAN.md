@@ -265,10 +265,10 @@ permutation).  The honest procedure has four steps:
 
    **The thinnest margin in this table is not `C` = 8 but `C` = 6's floor.**  That row
    needs `A(3) ≥ 128` and gets **129**, so it clears by one S-box, 6 bits out of the 768
-   the level requires.  `C` = 6 is the only row where `2b/6` is an integer exactly, which
-   is why, since the other three round up and clear by 2, 43, and 63 boxes.  One box lower
-   still, at `A(3)` = 127, this row's trail floor would be r=4 and its `R*` 7 rather than
-   the shipped 6.
+   the level requires.  `C` = 6 is the only row where `2b/6` is an integer exactly.  The
+   other three round up, so they clear by 2, 43, and 63 boxes.  One box lower still, at
+   `A(3)` = 127, this row's trail floor would be r=4 and its `R*` 7 rather than the
+   shipped 6.
 
    This is safe, because `A(3) = 129` is now proven by two independent solvers, but it is
    the tightest quantity in the whole analysis, and it is *derived* rather than chosen.

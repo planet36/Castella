@@ -56,7 +56,8 @@ activity pattern as nested booleans.
 **It is one optimum, not the optimum.**  The MILP has no way today to enumerate
 the other patterns achieving the same _A_, so no one has ever looked at a second
 minimal pattern at these depths, and the ceilings resting on them are upper
-bounds of unknown tightness.  See the Scope note in [../README.md](../README.md).
+bounds of unknown tightness.  See the trail-search
+[Scope note](../README.md#scope) in the research README.
 
 The two programs are independent models of the same permutation, so the loader
 does not trust the file.  It rechecks shape, S-box count, and geometry, and then

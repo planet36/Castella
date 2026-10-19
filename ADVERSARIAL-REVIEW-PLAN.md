@@ -347,15 +347,15 @@ The project is performance-obsessed (folded VAES path, x2 pairing, streaming pip
 review perf against *measured* numbers, using the existing `research/` benchmarks.  Do not
 assert perf claims from reading code (per the repo's own accuracy rule).
 
-- [ ] **Validate the headline claims** with the repo's own benchmarks on the current machine,
-      pinning with `taskset -c 0` and taking medians as `research/README.md` does, since the
-      env is a VM.  The claims are the folded permute's speedup at N=16, `Duplex` absorb
-      throughput per core, the x2 pairing's pinned gain, and `cch` against multithreaded and
-      single-threaded `b3sum`.  Take each target figure from the document that owns it
-      (`research/README.md` for the permute, absorb, and pairing figures, and
-      `hash-programs/README.md` for the `b3sum` comparison) rather than from this file, which
-      is not where any of them is maintained and would only become one more copy to sweep.
-      Report as reproduced / not-reproduced with numbers, not adjectives.
+- [ ] **Validate the headline claims** with the repo's own benchmarks on the current
+      machine, pinning with `taskset -c 0` and taking medians as `research/README.md` does,
+      since the env is a VM.  The claims are the folded permute's speedup at N=16, `Duplex`
+      absorb throughput per core, the x2 pairing's pinned gain, and `cch` against
+      multithreaded and single-threaded `b3sum`.  Take each target figure from the document
+      that owns it (`research/README.md` for the permute, absorb, and pairing figures, and
+      `hash-programs/README.md` for the `b3sum` comparison) rather than from this file.
+      This file maintains none of them, and quoting it would only make one more copy to
+      sweep.  Report as reproduced / not-reproduced with numbers, not adjectives.
 - [ ] **Store-forwarding / register residency.**  The folded path's raison d'être is avoiding
       256-bit-load-over-128-bit-store stalls, so spot-check the generated asm (or perf
       counters) to confirm that the ymm state actually stays register-resident across

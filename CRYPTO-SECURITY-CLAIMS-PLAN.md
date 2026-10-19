@@ -181,7 +181,7 @@ permutation).  The honest procedure has four steps:
    r = 8**: A = 9, 45, 129, 165, 234, 270, 354, and 390 at r = 1…8, and superadditivity
    (`A(a+b) ≥ A(a)+A(b)`) composes them beyond.  So 6·A ≥ 2b is reached at **r=2** for
    b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495, **r=5** for b ≤ 702, **r=6** for
-   b ≤ 810, **r=7** for b ≤ 1062, and **r=8** for b ≤ 1170, putting the 128-, 256-, and
+   b ≤ 810, **r=7** for b ≤ 1062, and **r=8** for b ≤ 1170.  That puts the 128-, 256-, and
    512-bit floors at r = 2, 3, and 5.  Linear trails (correlation ≤ 2^−3·A) give the same
    floors.  These are necessary conditions only (single characteristics, with no clustering
    or structural coverage).

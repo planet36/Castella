@@ -38,7 +38,7 @@ A *program* is one generated unit of work, constructor parameters plus a call se
 * `python3 duplex-diff-fuzz.py` verifies the default 200 programs (329 squeezes, ~1.6 s), with a nonzero exit status on any divergence.
 * `python3 duplex-diff-fuzz.py -n 5000 --seed 0x1234` runs a longer, different sweep.
 
-The deepest sweep run to date found no divergence: `-n 400000 --seed 0x1` verified **639 947 squeezes** in 40 min (2026-08-02).  Throughput is ~150 programs/s and scales linearly, so size a sweep from that.  Memory grows with the run and reached 1.5 GB at 400 k programs.
+The deepest sweep run to date found no divergence: `-n 400000 --seed 0x1` verified **639,947 squeezes** in 40 min (2026-08-02).  Throughput is ~150 programs/s and scales linearly, so size a sweep from that.  Memory grows with the run and reached 1.5 GB at 400,000 programs.
 
 The fuzzer avoids, rather than models, one `Castella::Duplex` convenience the specification does not describe, because it is C++ API behavior rather than digest behavior.  `squeeze_bytes(n)` clamps *n* where the model raises on an out-of-range value.
 

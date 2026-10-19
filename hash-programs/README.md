@@ -13,7 +13,7 @@ Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped inp
 
 On x86-64 with VAES, both programs also hash leaf chunks two at a time per thread.  `castella` packs two duplex states into the two 128-bit lanes of ymm registers, and `cch` interleaves two nodes' compression chains in one loop, since a lone cch node is latency-bound.  Every single-state Castella permutation also runs register-resident in a folded ymm representation.  Like the thread count, none of this ever affects the digest.
 
-The default output format (`--tag`) is a line for each FILE that embeds the digest-relevant options, in the BSD style of `cksum`.  `--size` is inferred from the digest length:
+The default output format (`--tag`) is a line for each FILE that embeds the digest-relevant options, in the BSD style of `cksum`.  The line carries no `--size`, which is inferred from the digest length.  The two programs' lines look like this:
 
     castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) 'FILE' = digest
     cch (chunk-size=65536,mix-rate=256) 'FILE' = digest

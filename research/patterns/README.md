@@ -66,6 +66,6 @@ bounds of unknown tightness.  See the trail-search
 The two programs are independent models of the same permutation, so the loader
 does not trust the file.  It rechecks shape, S-box count, and geometry, and then
 requires the pattern to be `sat` against stage A's own constraints before
-instantiating it.  That check would catch a disagreement between the two, and
-it costs about 0.5 s, against the 900 s stage A spends failing to find a pattern
-it can verify that fast.
+instantiating it.  The research README's
+[trail-search findings](../README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19)
+say what that check catches and costs.

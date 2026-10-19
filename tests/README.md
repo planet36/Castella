@@ -46,7 +46,7 @@ The fuzzer avoids, rather than models, one `Castella::Duplex` convenience the sp
 
 See [tests.cpp](tests.cpp).  It counts its checks and fails unless the total matches `EXPECTED_CHECKS`, so a deleted test cannot pass quietly.
 
-### `Castella::Duplex`
+#### `Castella::Duplex`
 
 * Test that the default number of bytes to squeeze is `hash_obj.get_capacity_size_bytes() / 2`
 * Test that successive squeezes are distinct
@@ -59,7 +59,7 @@ See [tests.cpp](tests.cpp).  It counts its checks and fails unless the total mat
     * Ensure that when the input is split into chunks, it results in the same digest as if the data was added in one chunk.
 * Test the raw-data overloads with a null pointer and a zero length against the same calls with an empty span
 
-### `Castella::DuplexTree`
+#### `Castella::DuplexTree`
 
 * Test that the default number of bytes to squeeze is `tree.get_capacity_size_bytes() / 2`
 * Test that the digest does not depend on the granularity of the `add()` calls

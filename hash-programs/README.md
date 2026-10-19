@@ -127,7 +127,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt' 'b3sum --num-threads=1 /tmp/test.txt'
   ```
 
-* **Per-core whole-program throughput**, the ~14 GiB/s per core `cch` figure, which this document is the home of (throughput = file size ÷ mean time):
+* **Per-core whole-program throughput**, the ~14 GiB/s per core `cch` figure, which this document is the home of (throughput = file size ÷ mean time, last measured 2026-10-08 with the command below):
 
   ```bash
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt'

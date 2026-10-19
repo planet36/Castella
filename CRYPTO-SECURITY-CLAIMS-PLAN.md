@@ -290,10 +290,12 @@ permutation).  The honest procedure has four steps:
    The decision is not a claim that more rounds would be worthless.  It is that nothing in
    the present evidence obliges them, and the cost is high.  `num_rounds` is absorbed into
    the duplex initialization string, so **changing a shipped `R*` changes every digest at
-   that capacity**, which makes it a format decision, not only a margin one.
-   `tests/KAT.txt`, the pinned KATs in `tests/tests.cpp`,
-   `hash-programs/test-correctness.bash`'s hardcoded digests, SPEC.md's claimed-instances
-   table, and the `--help` texts all move with it.
+   that capacity**, which makes it a format decision, not only a margin
+   one.  `tests/KAT.txt`, the pinned digests in `tests/tests.cpp` and
+   `hash-programs/test-correctness.bash`, `castella.cpp`'s `num_rounds_claimed_*`
+   constants, and the `--help` texts all move with it, as does every document on the
+   [runbook's § 8
+   list](research/RE-DERIVATION-RUNBOOK.md#8-where-a-refreshed-figure-has-to-land).
 
    **What would reopen it is evidence, not preference.**  That evidence is the revision
    trigger published in SPEC.md and CHALLENGES.md, under which a distinguisher reaching 4

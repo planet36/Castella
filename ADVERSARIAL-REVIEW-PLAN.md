@@ -92,7 +92,7 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
     stays open, and the script says so itself.
   - **Unscreened, and where a finding would be new:** rank/linearity of the transpose layer,
     weak keys of the AES round when the "key" is a fixed public constant, and the
-    rotational, higher-order-differential, and meet-in-the-middle angles `CHALLENGES.md`
+    rotational and meet-in-the-middle angles `CHALLENGES.md`
     lists as having had only light screening.
 - **Known-open, and deliberately not pursued here:** differential **clustering** above
   `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists both

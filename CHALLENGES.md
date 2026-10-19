@@ -37,7 +37,7 @@ Castella has had no cryptanalysis by anyone other than its author.  A claim's cr
   * *The forward direction alone* still does not reach 3 rounds in the model.  That check resolves to SAT for both the single-block and `two-blocks` cubes, ruling out a full 2048-bit zero-sum there while proving nothing about `P` itself, since SAT bounds only the model.  The two-directional construction above is what reaches 3.  Partial balance on other output bits is untried in either direction.
 * **Rebound.**  §14 is an explicitly heuristic *margin argument*, not a proof: an actual rebound (or other inbound/outbound) distinguisher covering more rounds than it concedes would re-open the round-count margin.
 * **Invariant subspaces.**  §10's exact search rules these out *exhaustively* for every byte-aligned subspace and every coset of one, and decides the transpose's three symmetry classes without sampling.  It does not cover a subspace that is neither byte-aligned nor one of those classes, since no feasible computation does, so an invariant subspace of that shape, or any nontrivial fixed point, is still open.
-* **Anything else unmodeled.**  Rotational, higher-order-differential, and meet-in-the-middle angles have had only the light screening in §10 (structural probes), so they are wide open.
+* **Anything else unmodeled.**  Rotational and meet-in-the-middle angles have had only the light screening in §10 (structural probes), so they are wide open.  Higher-order differentials are covered only by the degree bound (§15) and the integral results above (§11).
 
 The reduced-round instances to attack are in the sections below.  The [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 

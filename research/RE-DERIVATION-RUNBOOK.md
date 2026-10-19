@@ -252,7 +252,7 @@ python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M
 # Budget by elapsed time, not by the printed per-pattern solve times.  Those cover
 # check() alone, and the untimed model build before each is the larger share (~100 s per
 # pattern at r = 3 against a printed ~8 s).  Keep each batch inside the 8-process cap.
-for K in 0 1 2 3 4 5 6 7; do    # r = 4, ~40 min wall: five trails tie at 1151
+for K in 0 1 2 3 4 5 6 7; do    # r = 4, ~50 min wall: five trails tie at 1151
     python3 permute-trail-search.py -r 4 -A 165 --patterns 16 --random-seed "$K" \
         --no-minimize -t 600 -M 1200 > "r4-seed$K.txt" &
 done; wait

@@ -272,15 +272,9 @@ permutation).  The honest procedure has four steps:
    shipped 6.
 
    This is safe, because `A(3) = 129` is now proven by two independent solvers, but it is
-   the tightest quantity in the whole analysis, and it is *derived* rather than chosen.
-   **It is now stated in SPEC.md's margin rationale too**, which is where a reader of the
-   claim will meet it.  This paragraph used to add that nothing else said so.
-
-   *Two arithmetic errors, corrected 2026-08-09 when it was carried across.*  The
-   counterfactual read "had `A(3)` come in at 128", which still clears.  The requirement is
-   `A ≥ 128`, so 128 meets it with no slack rather than failing it.  And the `R*` it named
-   was 8, which was the answer under the `2 ×` floor rule this step abandoned.  Under
-   `floor + 3` a trail floor of 4 gives 7.
+   the tightest quantity in the whole analysis, and it is *derived* rather than
+   chosen.  **It is now stated in SPEC.md's margin rationale too**, which is where a reader
+   of the claim will meet it.
 
    **DECIDED 2026-08-08: `R*` stays 6/6/6/8 and will not be raised.**  A standing intent
    recorded here on 2026-08-03, to revisit the shipped values upward at every capacity

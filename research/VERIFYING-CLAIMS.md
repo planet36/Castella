@@ -5,7 +5,7 @@ SPDX-License-Identifier: MPL-2.0
 
 # Verifying the security claims
 
-This is the guide for a skeptical user who wants to reproduce every piece of evidence behind the [security claims in SPEC.md](../SPEC.md#security-claims-and-non-claims).  [README.md](README.md) in this directory holds the models, caveats, and full result tables, and this file holds the mapping **claim → evidence → how to read the output**.  When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) is the procedure, with the commands and the budgets each run wants.  This file writes out a command only when it is cheap enough to run on the spot.  For the solver-backed evidence (§4, §5, §13) it gives the expected result and the rules for reading it, and cites the runbook section that produces it.
+This is the guide for a skeptical user who wants to reproduce every piece of evidence behind the [security claims in SPEC.md](../SPEC.md#security-claims-and-non-claims).  [README.md](README.md) in this directory holds the models, caveats, and full result tables, and this file holds the mapping **claim → evidence → how to read the output**.  When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) is the procedure, with the commands and the budgets each run wants.  This file writes out a command only when it is cheap enough to run on the spot.  For the solver-backed evidence (§4, §5, §11, §13) it gives the expected result and the rules for reading it, and cites the runbook section that produces it.
 
 **No security-relevant claim may appear in this repository's documentation without a row in the table below.**  Each row is either backed by commands that reproduce its evidence or explicitly labeled a *conjecture* (supported by evidence, never provable) or *evidence pending*.
 
@@ -164,14 +164,11 @@ Those rows measure **random** cubes.  A chosen, structured cube does better on b
 
 ```bash
 python3 permute-division-property.py --self-test
-python3 permute-division-property.py --validate             # ~17 min
-python3 permute-division-property.py --validate --inverse   # ~13 min
-python3 permute-division-property.py -r 1 -c byte --count   # ~7 min
-python3 permute-division-property.py -r 2 -c block --count
 python3 permute-multiplicity-verify.py --self-test     # 6 s
 python3 permute-multiplicity-verify.py                # 4.4 s
-python3 permute-multiplicity-verify.py --reduced 3    # ~35 min
 ```
+
+The solver runs the expectations below read (`--validate` with and without `--inverse`, `-r 1 -c byte --count`, and `-r 2 -c block --count`) and the brute-force `permute-multiplicity-verify.py --reduced 3` are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7, with their budgets.
 
 Expected: `--validate` must reproduce AES's Square distinguisher in **both** directions, `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence, since a model that proved everything balanced would satisfy the first alone.  `--validate --inverse` gates the `P⁻¹` layers the same way but **at 2 rounds, not 3**, and that asymmetry is expected.  `aes_round` is SB, SR, MC and ends on a linear layer, while `inv_aes_round` is MC⁻¹, SR⁻¹, SB⁻¹ and ends on an S-box, and a division property crosses a linear layer untouched but never survives an S-box.  Measured, AES⁻¹ is 128/128 at 1 and 2 rounds and 0/128 at 3.  "Fixing" that constant back to 3 makes the gate fail.
 

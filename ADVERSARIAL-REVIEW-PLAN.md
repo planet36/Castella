@@ -157,7 +157,7 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   typo.  The secondary adversary is the maintainer's future self, reading a figure whose
   provenance has been lost.
 - **In scope.**  This covers the *provenance* of every published number, not its
-  cryptanalytic merit. `research/README.md` marks proven optima in **bold**, incumbents as
+  cryptanalytic merit.  `research/README.md` marks proven optima in **bold**, incumbents as
   `≤ n`, and bracketed cells as `m … ≤ n`, and says to read that marking before using any
   value, because only a proven optimum is a lower bound on the active S-box count, and only
   a lower bound yields a valid DP bound.
@@ -170,10 +170,10 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
 - **Why this surface earns its place.**  The failure mode is documented, not hypothetical.
   Three active-S-box figures (133, 225, and 243) were published as optima, were in fact
   timed-out incumbents, and were each later refuted by a cheaper solution, as was a fourth
-  incumbent, 290. `research/README.md` traces the cause to a solver wrapper that reported
+  incumbent, 290.  `research/README.md` traces the cause to a solver wrapper that reported
   `optimal` for any run that ended holding an incumbent.  Note the direction of the error: a
   larger `A` means a smaller `2^−6·A`, so a mislabeled figure makes the bound look
-  **stronger** than reality. A reviewer who checks status labels is re-running the one audit
+  **stronger** than reality.  A reviewer who checks status labels is re-running the one audit
   this project is known to have failed.
 - **Out of scope (non-findings).**  These are "the bounds cover single characteristics
   only," "no external cryptanalysis exists," and every other gap the docs already concede,

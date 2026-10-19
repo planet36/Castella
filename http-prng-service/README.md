@@ -22,7 +22,7 @@ Run `make` to build the service.
 
 Run `./castella-svc -h` for help.
 
-To start the service, run `./castella-svc`.
+To start the service, run `./castella-svc`.  It listens on `localhost` port 8080 by default.  Give a host as the argument to bind elsewhere, and `-p PORT` to change the port.
 
 To test the service, run `sh test-client.sh` in another terminal.
 

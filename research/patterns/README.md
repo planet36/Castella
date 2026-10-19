@@ -8,6 +8,8 @@ They are committed because **every trail-search ceiling from _r_ = 5 up is a
 characteristic through one of these four patterns**, and regenerating the set
 costs about 6.5 hours of MILP.  Without them the _r_ ≥ 5 half of the bracket
 table in [../README.md](../README.md) does not reproduce from a clean checkout.
+[permute-trail-ceilings.bash](../permute-trail-ceilings.bash) reads them from
+here to regenerate the _r_ = 5 to 8 ceilings.
 
 | file | _r_ | _A_(_r_) | status | HiGHS solve time |
 |------|-----|----------|--------|------------------|

@@ -93,7 +93,7 @@ Only rows whose status is `optimal` are valid bounds, and `NOT proven` is an upp
 
 ## 5. Three AES rounds per Castella round
 
-Both comparison columns are solver runs too, in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 2's Table 2, ~1.5 h for the set.  Expect `a` = 4 to follow exactly 25·r and to report `NOT proven` from r=3 on (the status column again).  Expect `a` = 2 to prove through r=3 (5, 25, and 105 against `a` = 3's 9, 45, and 129), with incumbents above that, where r=4, 5, and 6 each run out the full `-t`.
+Both comparison columns are solver runs too, in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 2's Table 2, ~4 h for the set in sequence, or about an hour with the seven runs in parallel.  Expect `a` = 4 to follow exactly 25·r and to report `NOT proven` from r=3 on (the status column again).  Expect `a` = 2 to prove through r=3 (5, 25, and 105 against `a` = 3's 9, 45, and 129), with incumbents above that, where r=4, 5, and 6 each run out the full `-t`.
 
 The two comparisons rest on different things, and only one of them is proven.
 

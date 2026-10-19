@@ -231,16 +231,15 @@ then attack it.
       computes the same function as the one it replaced.  Establish what it does and does not
       cover before judging where it belongs.
 
-      `research/permute_inv-verify.cpp` runs it over zero, all-distinct-byte, and random
-      states for every N and every round count, and also asserts
-      `permute(state) != state`.  `permute_inv` is defined in `castella-permute.hpp` but
-      called by nothing outside `research/`.
+  `research/permute_inv-verify.cpp` runs it over zero, all-distinct-byte, and random states
+  for every N and every round count, and also asserts `permute(state) != state`.
+  `permute_inv` is defined in `castella-permute.hpp` but called by nothing outside
+  `research/`.
 
-      The folded-vs-generic equality it argues indirectly is checked *directly* in
-      `make test` by `tests/permute-equivalence.cpp`, which runs both paths in one build
-      with no KAT as intermediary.  Section 6's question, whether the round trip should be a
-      first-class test, is therefore about a property of a function no shipped digest path
-      calls.
+  The folded-vs-generic equality it argues indirectly is checked *directly* in `make test`
+  by `tests/permute-equivalence.cpp`, which runs both paths in one build with no KAT as
+  intermediary.  Section 6's question, whether the round trip should be a first-class test,
+  is therefore about a property of a function no shipped digest path calls.
 
 ### 2b.  Duplex / sponge (`castella-duplex.hpp`)
 - [ ] **Padding (pad10\*1).**  The one-byte-of-space edge case (`0x81`), padding applied before
@@ -417,12 +416,11 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       weakens `P`.  It is not wired in, though, since `make test` runs neither it nor the
       exact subspace search (only the latter's `--self-test`).
 
-      The probe does not wire in cheaply.  Research's Makefile puts google-benchmark in
-      `LDLIBS` for every binary but the `*-verify` ones, so the probe binary drags that
-      dependency into the root `make test` unless it gets its own rule.  The subspace search
-      would wire in cheaply, since `permute-invariant-subspaces.py` needs only the standard
-      library and runs in about 13 s.  Weigh wiring it in against writing a new avalanche
-      test.
+  The probe does not wire in cheaply.  Research's Makefile puts google-benchmark in `LDLIBS`
+  for every binary but the `*-verify` ones, so the probe binary drags that dependency into
+  the root `make test` unless it gets its own rule.  The subspace search would wire in
+  cheaply, since `permute-invariant-subspaces.py` needs only the standard library and runs
+  in about 13 s.  Weigh wiring it in against writing a new avalanche test.
 - [ ] **Boundary KATs.**  Confirm that KAT.txt exercises empty input, single-byte, exactly
       one chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       and `mix_rate` 0, 1, and 2048.  Add any missing.

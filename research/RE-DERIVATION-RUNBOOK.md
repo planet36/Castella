@@ -197,10 +197,6 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 2 -r 2 -t 900  # 1m,  PROVEN 50
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 3 -r 4 -t 1650 # 55m, incumbents 75, 100
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 4 --min-rounds 5 -r 5 -t 3300 # 55m, incumbent 125
-
-# r = 6 alone.  Under CBC on 2026-08-02 it ran 55m in 606 MB and stopped at incumbent
-# 290 with a dual bound of 13, below the superadditive floor of 258.  HiGHS proves 270.
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 6 -r 6 -t 3300
 ```
 
 ## 3. Bit-level trail search
@@ -474,26 +470,10 @@ python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 ./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from 3 AES rounds; instant
 ```
 
-Four traps in that set have each cost time once already:
-
-* **`--validate --inverse` gates at 2 rounds, not 3, and that is correct.**  `inv_aes_round`
-  ends on an S-box where `aes_round` ends on a linear layer, and a division property
-  crosses a linear layer untouched but never survives an S-box.  "Fixing" the constant back
-  to 3 makes the gate fail.
-* **`--inside-out` reports no zero-sum at `2 1` even though one exists.**  A `block` cube's
-  backward half spreads over all 16 blocks, and the sparse pruning collapses it to one byte,
-  where balance over 2^8 is far harder to prove than over 2^128.  The reach comes from
-  `permute-multiplicity-verify.py`, not from the model.  The `0 1` run above is the
-  regression test for the bug behind the retracted 4-round figure.  The two halves must be
-  propagated over *one* middle-state cube, transposed for the backward half.
-* **`-r 2 -c block --count` is slow per block, not stuck.**  Per-block cost ranges ~115 s to
-  ~700 s depending on which of round 1's output bytes feeds round 2.  The ~6× spread is
-  structural and measures the same on a busy machine as on an idle one.
-* **`--reduced 3` is worth its 35 minutes precisely because it should change nothing.**  It
-  is the control on the reduced-width reach table.  The four S-box controls inside the
-  script are what make the argument capable of failing.  One of them (254 odd preimage
-  counts) must *break* the zero-sum, and if it ever passes, the failure is in the test
-  rather than in `P`.
+[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) § 11 describes four traps in that set that have
+each cost time once already.  They are the inverse gate at 2 rounds, `--inside-out 2 1`
+reporting no zero-sum where one exists, the slow per-block cost of `-r 2 -c block --count`,
+and `--reduced 3` as a control that should change nothing.
 
 ## 8. Where a refreshed figure has to land
 

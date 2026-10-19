@@ -607,6 +607,8 @@ it states the conclusion the figure was supporting.
 | [CHALLENGES.md](../CHALLENGES.md) | the published bracket table and the round counts each challenge is set at |
 | [patterns/README.md](patterns/README.md) | `A(r)`, the solve times, and each pattern's `proven_optimal` |
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
+| [hash-programs/README.md](../hash-programs/README.md) | the default `--rounds=6` in its sample digest line and its benchmark claims |
+| [hash-programs/castella.cpp](../hash-programs/castella.cpp) | `num_rounds_claimed_small` and `num_rounds_claimed_large`, and the `--help` text built on them, which make `R*` = 6/8 and the size-48 split the program's default rounds |
 | [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy as instructions that get acted on, so a stale value there is worse than a stale sentence |
 
 Two of those bite in particular.  A changed ceiling or floor moves the brackets **and** the

@@ -62,8 +62,20 @@ carries across is that a file settles on one ending, not which ending it is.
 
 ## Paragraphs
 
-**6. Keep a paragraph to about five lines.**  Past that, split it into two
-paragraphs or cut it down.  A wall of text is not thorough, it is unread.
+**6. Keep a paragraph to one topic.**  A wall of text is not thorough, it is
+unread.  Settle the sentences under rule 1 first, because splitting a paragraph
+of run-on sentences only spreads them out.
+
+Look closer at a paragraph past about 100 words or five sentences, counting
+rendered words rather than source lines, since wrapping varies from file to
+file.  Neither number is an automatic split.  Split where the topic, the step,
+or the audience changes, and open each new paragraph with the sentence that
+states its point.
+
+A sequence of steps or parallel items written as prose is a list, so make it
+one.  Keep an example or a caveat with the claim it qualifies.  A single idea
+stays in one paragraph even when it runs long, and if it runs too long, cut it
+rather than split it.  A split changes paragraph breaks, not wording.
 
 **7. Put two spaces after a sentence-ending period.**  That holds in code
 comments, doc blocks, commit messages, and documentation files alike, markdown

@@ -353,12 +353,12 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 `-A` is the question being asked, not a tuning knob.  At r = 3 the search solves `-A 129`
 in 0.7 s but times out on `-A 120` after 900 s, and at r = 4 `-A 165` takes 34 s while
 `-A 150` times out.  These probes establish "≤ X" well and "> X" not at all.  That is why
-the r = 4 bisection (§5 item 5) returned nothing usable, and why five smaller targets at
-r = 5 (item 2) did not unstick that round count.  **`-A` is a lever only where the true
+the r = 4 target bisection and the five smaller targets at r = 5 (both in README.md's
+trail-search results) returned nothing usable.  **`-A` is a lever only where the true
 minimum is within reach of the search, not a difficulty dial.**
 
 The z3 runs are single-threaded, so on 8 cores several `-A` values can be probed in
-parallel.  Items 2 and 5 ran that way, five and four at a time under `-M 1200` each, with
+parallel.  Those two ran that way, five and four at a time under `-M 1200` each, with
 total resident memory near 2 GB.  Read results **from the output files**, not from a
 runner's progress reporting, because a probe that has printed nothing may still be inside
 its stage-A budget.
@@ -374,109 +374,23 @@ It runs ~150 programs/s, linear in `-n`.  Memory grows with the run and reached 
 structurally cannot: split adds, both `*_encoded` entry points, explicit padding, and
 successive squeezes.
 
-## 5. The queued additions — all run as of 2026-08-02
+## 5. The queued follow-up runs of 2026-08-02
 
-Items 1–6 have been run, and each entry records what it returned.  Item 7 stays unrun on
-purpose.  They are in the order queued, by what would most change the documentation.
+The re-derivation queued six follow-up runs, and all six were run in August 2026.
+[README.md](README.md) records what each returned.  The CBC dual-bound runs, the `gapAbs`
+closure of r = 3, and the CBC r = 6 bracket are in its MILP conclusions.  The smaller `-A`
+targets and narrow widths at r = 5, the minimization null result, the `--patterns 8`
+sweeps, and the r = 4 target bisection are in its trail-search results.  Their commands
+are in §2 and §3.
 
-1. ~~`-v` on an unproven MILP cell~~ — **done at r=3 and r=4 on 2026-08-02, which changed
-   the r=3 bounds and settled r=4 the other way.**  At r=3 the dual bound reached 126.630 at
-   55 min and 127.554 at 90 min, a 1% gap, and that led to **closing r=3 outright**.  The
-   objective is a sum of binary variables and so integral, so the incumbent is optimal as
-   soon as the dual bound passes incumbent − 1.  Passing `gapAbs=0.99` lets CBC stop there,
-   and it proved **A(3) = 129** in 72 minutes where it had failed in 90 without it.  The
-   script now always passes it.
-
-   At r=4, 90 minutes reached only 93.883, a 76% gap and *weaker* than the 138
-   superadditivity gives for free, so the solver contributes nothing at that round count.
-
-   **Where a solve is out of reach, neither remaining source dominates.**  Superadditivity
-   strengthens as r grows, because it composes an increasingly good A(3) with A(1).  CBC
-   weakens, since each round adds layers to a relaxation already struggling.  Record both
-   and take the max.  The script reports only its own instance's bound, so at r=4 under CBC
-   it printed `A in [94, 165]` while the superadditive floor was the larger 138.  HiGHS has
-   since solved A(4) = 165.
-
-   The run taught three lessons, all carried into §6.  An unchanged incumbent says nothing
-   about whether more time would prove a cell, because proving is a dual-side question.
-   The dual bound is worth recording from any timed-out run, since it is valid whether or
-   not the gap closes.  And the bound moves in **discrete jumps** (flat for thousands of
-   nodes, then a step when a cut round lands), so two consecutive samples predict nothing
-   and only the endpoint is worth reading.
-2. ~~`permute-trail-search.py -r 5` with a smaller `-A`~~ — **done 2026-08-02, and the
-   hypothesis is refuted.**  Five targets straddling the window (`-A` 180, 195, 210, 225,
-   and 240, against a superadditive floor of 174 and an incumbent of 243) were run in
-   parallel at `-t 900`.  All five gave up in stage A at exactly 900 s, indistinguishably
-   from 243.  So the wall does not move with the cardinality's value, and `--encoding`
-   cannot be the variable either, since it only affects stage B.
-
-   **But the same search works at narrower states, which localizes the obstacle.**  At
-   `-N 2` and `-N 4`, both at *proven* targets (101 and 114), stage A returns in 0.3 s and
-   0.6 s, and the run brackets those permutations at **[606, 705]** and **[684, 791]**.
-   Those were the first bracketed r = 5 results at any width, and both have sound floors.
-   Five rounds is not intrinsically beyond stage A, but 16 blocks is.
-
-   N = 16 has been bracketed too since 2026-08-04, at **[1404, 1602]**, by importing the
-   MILP's pattern via `--dump-pattern` / `--pattern-file` rather than by stage A ever
-   finding one.  r = 6, 7, and 8 followed by the same route on 2026-08-05, at
-   **[1620, 1856]**, **[2124, 2447]**, and **[2340, 2699]**.  Those four ceilings read 1633,
-   1887, 2473, and 2725 as first found.  A weight-shell descent over each winning trail took
-   30, 30, 25, and 20 bits off them on 2026-08-06, and enumerating the shell each descent
-   stalled in took a further 1, 1, 1, and 6 on 2026-08-07, all without changing the pattern
-   or the seed.
-
-   The `PbEq` constraint spans 3 840 booleans at N = 16 against 480 at N = 2 (measured), all
-   coupled by the transpose.  At r = 4 stage A clears the same constraint three times and
-   then stalls on a fourth.  Read together, the two show one continuous difficulty in width
-   and depth, not a cliff at r = 5.
-3. ~~Minimization at r = 3 and r = 4~~ — **done 2026-08-02, with a null result that
-   inverts the flag advice.**  Both returned `unknown: canceled` after 1200 s, leaving 903
-   and 1154 standing, so "minimization never completes" now holds at three round counts.
-   The useful finding is the cost comparison.  Given ~20 min each on the same r = 3
-   instance, minimizing pattern 1 moved the ceiling **0 bits** while item 4's sweep moved it
-   **12**.
-
-   **Spend a ceiling budget on the shell descent first, then on `--patterns`.**  On
-   2026-08-06, descending one trail's weight shell moved every round count from r = 3 to
-   r = 8 by 17 to 30 bits, against the 5 bits r = 3's 5.5-hour nine-seed `--patterns 32`
-   sweep had bought.  The two levers vary different axes.  A sweep changes *which*
-   differential is examined, and the shell asks for a lighter characteristic inside the one
-   already in hand, so run the sweep first and descend its winner.
-4. ~~`--patterns 8` at r = 3 and r = 4~~ — **done 2026-08-02, and both ceilings
-   improved.**  At r = 3 all 8 patterns are realizable (903, 903, 901, 895, **891**, 902,
-   901, and 897, in 19 min and 865 MB), so realizability is not a quirk of the first
-   pattern, and the ceiling drops 903 → **891**.  At r = 4 only **3 of 8** patterns were
-   reachable.  Stage A found the first three in 50 s, 45 s, and 16 s, and then could not
-   produce a fourth distinct 165-box pattern in 600 s.  They gave 1154, **1153**, and 1153,
-   for a ceiling of **1153**.  `--patterns N` is an upper request, not a promise.
-5. ~~A bisection between A = 129 and A = 165 at r = 4~~ — **done 2026-08-02, with a null
-   result.**  `-A` 140, 150, 155, and 160 all timed out in stage A at 900 s.  This narrows
-   nothing, because a stage-A timeout is `unknown`, not UNSAT, so it cannot push a floor up,
-   and `A(4) ≤ 165` stands.  The only readable signal is where the cliff sits: 165 returns a
-   pattern in 50 s, and everything from 160 down returns nothing in 900 s.
-6. ~~`-N 16 -a 3 --min-rounds 6 -r 6`~~ — **done 2026-08-02, first as a bracket and then
-   as a solve.**  Under CBC it took 55 min and 606 MB and ended `NOT proven` at incumbent
-   **290**, with a dual bound of **13**.  The dual bound is worthless at this depth, a 96% gap
-   against 76% at r = 4 and 1% at r = 3.  But the incumbent caps A(6) from above and
-   superadditivity supplies `A(6) ≥ A(3) + A(3) = 258`, so **A(6) ∈ [258, 290]** and
-   DP ≤ 2^−1548.  That is the *narrowest* relative bracket above r = 3 (12%, against 20% at
-   r = 4 and 40% at r = 5) because it composes the solved A(3) with itself instead of
-   padding with A(1).
-
-   The run also shows that incumbent quality is not monotone in difficulty.  This machine's
-   r = 5 run reached only 293, while this strictly harder r = 6 run reached 290.
-
-   **HiGHS superseded all of this hours later**, proving `A(6) = 270` in 1585 s and so
-   refuting the 290 incumbent.  The CBC figures stay because the contrast is the lesson.  A
-   96% duality gap was read as the problem being hard, and the fault was the solver (§2).
-7. **`hash-programs/plot-results.py`** — excluded from the 2026-08 re-derivation because it
-   is a viewer, not a measurement, and requires first generating CSVs with the
-   `benchmark.*.bash` scripts.  No documented number depends on it.
+`hash-programs/plot-results.py` stays out of the re-derivation on purpose.  It is a viewer,
+not a measurement, it needs CSVs from the `benchmark.*.bash` scripts first, and no
+documented number depends on it.
 
 ## 6. Resource notes
 
-* **Memory was not the constraint on the runs in §1–§5, but it is one on the shell probes
-  in §3.**  Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB (the
+* **Memory was not the constraint on the 2026-08-01/02 runs, but it is one on the shell
+  probes in §3.**  Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB (the
   fuzzer), and no solver run exceeded 892 MB, against the 7.7 GiB the machine had then.
   (That 892 MB was an r = 4 `rows` probe on the since-withdrawn 225-box pattern, not a
   command in this file.)  Two things have changed since.
@@ -493,28 +407,17 @@ purpose.  They are in the order queued, by what would most change the documentat
   not reach, since z3 is single-threaded and 7 of 8 cores idle during every trail search.
   For the shell block itself, RAM decides the process count, and the ceiling recipes were
   sized against it.
-* **Measure the gap before lengthening a time limit.**  The incumbent is a poor guide.  At
-  N=16 r=4 it was unchanged between 1800 s and 3300 s, and at N=8 r=4 between 600 s and
-  3300 s, which reads as exhaustion.  But the incumbent is the *primal* side, and proving is
-  a dual-side question.  The `-v` run at r=3 made the difference concrete.  Its incumbent
-  was likewise flat at 129 from 15 min onward, while its dual bound climbed 12.6 → 71.4 →
-  93.1 → 103.5 → 110.3 → 126.6.
-* **The endgame is much slower than the approach.**  That same r=3 dual bound advanced at
-  ~3.45 per 5 min through 55 min, then only 0.92 over the next 35, a ~26× collapse that left
-  a 90-minute run 1.45 units short of closing.  A linear extrapolation through the last mile
-  of a duality gap will be optimistic, so budget accordingly, or accept the dual bound as
-  the deliverable rather than the closed gap.
-* **But before any of that, change solver.**  Both bullets above reason about spending time
-  on CBC, and a five-minute `pip install highspy` overtook both, because HiGHS closes that
-  same r=3 instance in 16 s and r=4, r=5, and r=6 besides.  The reasoning still holds for
-  whichever solver is genuinely the best available, and CBC was not it.  Treat "the dual
-  bound has stalled" as ambiguous between *this problem is hard* and *this solver is weak*,
-  and settle that cheaply before budgeting hours.
+* **Change solver before lengthening a time limit, and measure the gap before either.**  An
+  unchanged incumbent says nothing about whether more time would prove a cell, because
+  proving is a dual-side question.  A dual bound is worth recording from any timed-out run,
+  but it moves in discrete jumps and slows sharply near the end, so extrapolating it is
+  optimistic.
 
-  No cell at N=16, a=3 is open any more.  r=7 and r=8 looked stalled under HiGHS at a 2 h
-  limit, with gaps of 9% and 28%, and both closed proven-optimal given 6 h (354 at 7257 s
-  and 390 at 14050 s).  That is §2's warning again: a duality gap is not a progress bar.
-  Above r=8 nothing has been attempted, so superadditivity remains the only source there.
+  HiGHS closed in seconds what CBC could not close in hours, so treat a stalled dual bound
+  as ambiguous between a hard problem and a weak solver, and settle that cheaply before
+  budgeting hours.  [README.md](README.md#conclusions) has the measurements.  No cell at
+  N=16, a=3 is open any more, and above r=8 nothing has been attempted, so superadditivity
+  remains the only source there.
 
 ## 7. Diffusion, structural, algebraic and statistical evidence
 

@@ -98,14 +98,17 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists both
   among what the trail bounds do not cover, `research/README.md` calls clustering above
   `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is an
-  explicitly heuristic margin argument, not a proof.  Because they are disclosed, *reporting*
-  them is a non-finding under Section 0, and *pursuing* them belongs to
-  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).  Per the maintainer, two
-  expensive searches in this direction are closed on cost: the `r` ≥ 2 clustering
-  enumerations (every non-empty shell has ended `INCOMPLETE`, the longest returning 133
-  trails in six hours) and the trail-ceiling descent and enumeration campaign.  Do not
-  propose more of either.  What *is* in scope is any place where a claim about clustering or
-  rebound is stated more strongly than that evidence supports.
+  explicitly heuristic margin argument, not a proof.
+
+  Because they are disclosed, *reporting* them is a non-finding under Section 0, and
+  *pursuing* them belongs to
+  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).
+
+  Per the maintainer, two expensive searches in this direction are closed on cost: the
+  `r` ≥ 2 clustering enumerations (every non-empty shell has ended `INCOMPLETE`, the longest
+  returning 133 trails in six hours) and the trail-ceiling descent and enumeration
+  campaign.  Do not propose more of either.  What *is* in scope is any place where a claim
+  about clustering or rebound is stated more strongly than that evidence supports.
 - **Out of scope (non-findings).**  "No proof exists" and "3 rounds is thin" are both
   disclosed.
 
@@ -157,11 +160,13 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   cryptanalytic merit. `research/README.md` marks proven optima in **bold**, incumbents as
   `≤ n`, and bracketed cells as `m … ≤ n`, and says to read that marking before using any
   value, because only a proven optimum is a lower bound on the active S-box count, and only
-  a lower bound yields a valid DP bound.  Check three things.  Every figure quoted outside
-  that table must carry the status its source gives it.  `VERIFYING-CLAIMS.md`'s ground rule
-  must hold (no security-relevant claim anywhere in the repository's docs without a row
-  there, or an explicit *conjecture* / *evidence pending* label).  And the commands in its
-  table must still run and still print what it says they print.
+  a lower bound yields a valid DP bound.
+
+  Check three things.  Every figure quoted outside that table must carry the status its
+  source gives it.  `VERIFYING-CLAIMS.md`'s ground rule must hold (no security-relevant claim
+  anywhere in the repository's docs without a row there, or an explicit *conjecture* /
+  *evidence pending* label).  And the commands in its table must still run and still print
+  what it says they print.
 - **Why this surface earns its place.**  The failure mode is documented, not hypothetical.
   Three active-S-box figures (133, 225, and 243) were published as optima, were in fact
   timed-out incumbents, and were each later refuted by a cheaper solution, as was a fourth
@@ -220,18 +225,22 @@ then attack it.
 - [ ] **AES-round-count rationale.**  Reproduce the "4 AES rounds admits the hourglass trail"
       claim at least at the level of the MILP model in `research/`.  Confirm that the code's
       `AES_NUM_ROUNDS = 3` matches the spec and the constants table shape.
-- [ ] **Inverse permutation.**  Round-trip `permute_inv ∘ permute == id` across all N and all
-      `num_rounds`, and specifically that the folded forward path inverts under the
+- [ ] **Inverse permutation.**  Round-trip `permute_inv ∘ permute == id` across all N and
+      all `num_rounds`, and specifically that the folded forward path inverts under the
       *generic* inverse, because that round trip is the argument that the folded path
-      computes the same function as the one it replaced.  Establish what it does and does
-      not cover before judging where it belongs.  `research/permute_inv-verify.cpp` runs it
-      over zero, all-distinct-byte, and random states for every N and every round count, and
-      also asserts `permute(state) != state`.  `permute_inv` is defined in
-      `castella-permute.hpp` but called by nothing outside `research/`.  The
-      folded-vs-generic equality it argues indirectly is checked *directly* in `make test`
-      by `tests/permute-equivalence.cpp`, which runs both paths in one build with no KAT as
-      intermediary.  Section 6's question, whether the round trip should be a first-class
-      test, is therefore about a property of a function no shipped digest path calls.
+      computes the same function as the one it replaced.  Establish what it does and does not
+      cover before judging where it belongs.
+
+      `research/permute_inv-verify.cpp` runs it over zero, all-distinct-byte, and random
+      states for every N and every round count, and also asserts
+      `permute(state) != state`.  `permute_inv` is defined in `castella-permute.hpp` but
+      called by nothing outside `research/`.
+
+      The folded-vs-generic equality it argues indirectly is checked *directly* in
+      `make test` by `tests/permute-equivalence.cpp`, which runs both paths in one build
+      with no KAT as intermediary.  Section 6's question, whether the round trip should be a
+      first-class test, is therefore about a property of a function no shipped digest path
+      calls.
 
 ### 2b.  Duplex / sponge (`castella-duplex.hpp`)
 - [ ] **Padding (pad10\*1).**  The one-byte-of-space edge case (`0x81`), padding applied before
@@ -406,12 +415,14 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       `research/permute-structural-probes.cpp` exits nonzero on any violation of its
       fixed-point, round-constant, and slide screens, so it can gate a change that silently
       weakens `P`.  It is not wired in, though, since `make test` runs neither it nor the
-      exact subspace search (only the latter's `--self-test`).  The probe does not wire in
-      cheaply.  Research's Makefile puts google-benchmark in `LDLIBS` for every binary but
-      the `*-verify` ones, so the probe binary drags that dependency into the root
-      `make test` unless it gets its own rule.  The subspace search would wire in cheaply,
-      since `permute-invariant-subspaces.py` needs only the standard library and runs in
-      about 13 s.  Weigh wiring it in against writing a new avalanche test.
+      exact subspace search (only the latter's `--self-test`).
+
+      The probe does not wire in cheaply.  Research's Makefile puts google-benchmark in
+      `LDLIBS` for every binary but the `*-verify` ones, so the probe binary drags that
+      dependency into the root `make test` unless it gets its own rule.  The subspace search
+      would wire in cheaply, since `permute-invariant-subspaces.py` needs only the standard
+      library and runs in about 13 s.  Weigh wiring it in against writing a new avalanche
+      test.
 - [ ] **Boundary KATs.**  Confirm that KAT.txt exercises empty input, single-byte, exactly
       one chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       and `mix_rate` 0, 1, and 2048.  Add any missing.
@@ -498,12 +509,14 @@ assert perf claims from reading code (per the repo's own accuracy rule).
    `research/VERIFYING-CLAIMS.md` is already a ledger for the *security* claims, and it
    carries a ground rule: no security-relevant claim may appear in the repository's
    documentation without a row there, or an explicit *conjecture* / *evidence pending*
-   label.  The adversarial job is to test that rule, not restate it.  Find a security claim
-   in `SPEC.md`, `README.md`, or `CHALLENGES.md` with no row, or a row whose commands no
-   longer reproduce what it promises.  The ledger that does **not** exist covers everything
-   else: the implementation, performance, API, and CLI claims in `README.md`, `CLAUDE.md`,
-   the subdirectory READMEs, and the `--help` output.  Build that one, marking each claim
-   verified / refuted / untestable.
+   label.  The adversarial job is to test that rule, not restate it.  Find a security claim in
+   `SPEC.md`, `README.md`, or `CHALLENGES.md` with no row, or a row whose commands no longer
+   reproduce what it promises.
+
+   The ledger that does **not** exist covers everything else: the implementation,
+   performance, API, and CLI claims in `README.md`, `CLAUDE.md`, the subdirectory READMEs,
+   and the `--help` output.  Build that one, marking each claim verified / refuted /
+   untestable.
 
 ---
 

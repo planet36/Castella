@@ -145,6 +145,6 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
 * **The 64 KiB default `--chunk-size` of both programs**: `bash benchmark.castella.chunk-size.bash` and `bash benchmark.cch.chunk-size.bash`, then `python3 plot-results.py --xlog` on each resulting CSV.  The defaults were chosen from 512 MiB runs (`FILE_SIZE=512M`), in which throughput plateaus above roughly 64 KiB for both programs, and 64 KiB keeps small files parallelizable.
 
-  The multithreaded-scaling figure for `cch`, ~63 GiB/s, comes from the same runs.  `castella-hash-tree.hpp`'s `DEFAULT_CHUNK_SIZE` comment cites these runs for the *shape* (throughput plateaus, and cch's best multithreaded scaling was also at 64 KiB) but quotes no throughput, so both figures live here and nowhere else.
+  The multithreaded-scaling figure for `cch`, ~63 GiB/s, comes from the same runs.  `castella-hash-tree.hpp`'s `DEFAULT_CHUNK_SIZE` comment cites these runs for the *shape* (throughput plateaus, and cch's best multithreaded scaling was also at 64 KiB) but quotes no throughput, so this figure and the ~14 GiB/s per-core one above live here and nowhere else.
 
 * **Permutation- and node-level claims** (folded register-resident permute ~1.7×, `permute_x2` ~1.7×, cch pairing ~1.1×, VAES vs. generic AES stage): `bash run-benchmarks.bash` in [research/](../research/), with findings and methodology recorded in [research/README.md](../research/README.md).

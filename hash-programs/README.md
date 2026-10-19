@@ -36,13 +36,19 @@ Run `--help` for full option descriptions.  `make man`, run in this directory be
 
 * `--no-mmap` produces output identical to the default mmap mode,
 * `--num-threads` never changes a digest, in any I/O mode,
-* distinct `--mix-rate` and `--chunk-size` values produce distinct digests,
-* `--check` verifies both output formats and fails corrupted or malformed lines with a nonzero exit status, and
+* the default `--rounds` is 6 up to `--size=48` and 8 above it,
+* distinct `--custom`, `--rounds`, `--size`, `--suffix`, `--mix-rate`, and `--chunk-size` values produce distinct digests,
+* several FILE arguments, `-` among them, are hashed independently in argument order, and an unreadable one does not stop the rest,
+* the last of `--tag` and `--untagged` wins,
+* `--check` verifies both output formats and fails corrupted or malformed lines with a nonzero exit status,
+* out-of-range option values, `--quiet` without `--check`, a missing file, an unrecognized option, and a key file shorter than 32 bytes are all rejected, and
 * the keyed mode works: a pinned MAC value, keyed ≠ unkeyed, per-key distinctness, thread and I/O invariance, a size-16 MAC that is not a prefix of the size-32 one, and verification failing with the wrong key or no key.
 
 The input data files span several sizes (the size is in the file name) chosen to exercise boundary conditions: empty input, input smaller than one chunk, input at the default first-mix boundary, input that is not a multiple of any internal block size, and input that is a multiple of all of them.
 
 Reading from standard input, both piped and redirected, must produce the same output as reading from a file.
+
+The script counts its assertions and fails unless the total matches `EXPECTED_ASSERTIONS`, so a deleted assertion cannot pass quietly.
 
 ## Benchmark scripts
 

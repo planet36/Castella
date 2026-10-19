@@ -561,7 +561,7 @@ python3 permute-division-property.py --inside-out 0 1 -c block   # ~48 s; MUST s
 python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 
-# Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 min per
+# Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 s per
 # stream.
 ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
 ./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB

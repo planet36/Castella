@@ -184,7 +184,7 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 
 # r = 7 and r = 8 close too, but need well over 2 h.  Budget 6 h and walk away.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 21600 # PROVEN 354 (7257 s)
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 21600 # PROVEN 390 (14050 s)
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 21600 # PROVEN 390 (14,050 s)
 # Both were first run at -t 7200 and reported gaps of 9% and 28%.  r=7 needed 7257 s,
 # so it was cut off 57 SECONDS before closing.  A duality gap is not a progress bar, so
 # do not infer remaining time from it.
@@ -277,7 +277,7 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
 # The same two commands at r = 6, 7, and 8 (2026-08-05).  Raise -t past the MILP's own
-# solve times of 1585 s, 7257 s, and 14050 s, since the 600 s default cuts all three
+# solve times of 1585 s, 7257 s, and 14,050 s, since the 600 s default cuts all three
 # off.  The '{r}' in --dump-pattern is required when solving more than one round count,
 # and each round count replaces it.  HiGHS uses one core on this model, so running the
 # three round counts as concurrent processes costs nothing over this sequential form.
@@ -327,7 +327,7 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 #
 # A negative shell returning UNSAT is COMPLETE for that differential.  A timeout is
 # `unknown` and bounds nothing, and some timeouts are budget artifacts rather than
-# walls: r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14400.
+# walls: r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14,400 s.
 #
 # THEN ENUMERATE THE SHELL THE DESCENT STALLED IN, which produces the recorded
 # ceilings.  Use the same command with --cluster 500 --fresh-instances -t 14400.  A
@@ -335,11 +335,11 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # asking an ALREADY-SATISFIED cap for many trails reaches lighter ones than probing
 # below it.  It improved all six: 824 -> 823, 1125 -> 1123, 1603 -> 1602,
 # 1857 -> 1856, 2448 -> 2447, 2705 -> 2699.  r = 3 is the case to cite.  Its cap 823 had
-# timed out TWICE, once at the full 14400 s, and the 824 shell then yielded a weight-823
+# timed out TWICE, once at the full 14,400 s, and the 824 shell then yielded a weight-823
 # trail, so `unknown` is never evidence of absence.
 #
 # Give r = 5 -M 4000.  At 2500 it ends `unknown: max. memory exceeded` after ONE trail,
-# 8628 s into its 14400 s, so it is memory-bound rather than time-bound.
+# 8628 s into its 14,400 s, so it is memory-bound rather than time-bound.
 #
 # All six ended INCOMPLETE, which costs a ceiling nothing but voids their DP sums.
 # Three returned their best trail last, which looked budget-limited, but re-running all
@@ -362,11 +362,11 @@ its stage-A budget.
 ## 4. Deep differential fuzz
 
 ```bash
-python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 639947 squeezes
+python3 tests/duplex-diff-fuzz.py -n 400000 --seed 0x1   # 40 min, 1.5 GB, 639,947 squeezes
 ```
 
 It runs ~150 programs/s, linear in `-n`.  Memory grows with the run and reached 1.5 GB at
-400 k, so the 40 minutes bound a sweep here rather than the 15 GiB.  It covers what KAT.txt
+400,000, so the 40 minutes bound a sweep here rather than the 15 GiB.  It covers what KAT.txt
 structurally cannot: split adds, both `*_encoded` entry points, explicit padding, and
 successive squeezes.
 

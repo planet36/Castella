@@ -337,11 +337,12 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    proven optimal), diffusion round counts, avalanche-matrix statistics, the a=3 vs. a=4
    hourglass rationale.  Already reproducible (research/README.md gives exact commands).
 
-   **DONE**, and the MILP has moved a long way since.  A(r) is a converged optimum at
-   every r = 1…8, covering every shipped round count (§4.3 step 1).  The a=3 vs. a=2 half
-   of the hourglass rationale is the one part that did *not* survive re-derivation, and
-   SPEC.md now says so.  It rested on figures at 4 and 6 rounds that are respectively
-   refuted and unconfirmed.
+   **DONE**, and the MILP has moved a long way since.  A(r) is a converged optimum at every
+   r = 1…8, covering every shipped round count (§4.3 step 1).  Of the a=3 vs. a=2
+   comparison, only the equal-AES-budget form did *not* survive re-derivation, since it
+   rested on figures at 4 and 6 rounds that are respectively refuted and unconfirmed.  The
+   equal-transpose form is proven through r = 3 (9, 45, and 129 against 5, 25, and 105),
+   and SPEC.md states both.
 2. **Trail tightness (new):** the MILP is a lower bound; find *actual* best
    characteristics with a SAT/SMT or bit-level MILP search (e.g. a CryptoSMT-style model
    of 3 AES rounds + transpose) to see how far real trails sit above the byte-level bound.

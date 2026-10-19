@@ -34,6 +34,10 @@ To stop the service, send `SIGINT`, `SIGTERM`, or `SIGHUP` to it.  (For example,
 * `GET /squeeze` returns 48 bytes (half the capacity) as `application/octet-stream`.
 * `GET /squeeze/N` returns N bytes instead, clamped to the range 0 to 160 (the rate).  An N that does not parse as an integer falls back to the default 48 bytes rather than failing.
 
+## Configuration
+
+[config.h](config.h) sets the duplex parameters (6 capacity blocks, 8 rounds, suffix 1, and the customization string), the two reseed triggers, and the size of each reseed.  Changing any of them takes a rebuild.
+
 ## External file
 
 [httplib.h](https://raw.githubusercontent.com/yhirose/cpp-httplib/refs/heads/master/httplib.h) is an external dependency ([cpp-httplib](https://github.com/yhirose/cpp-httplib)) that is **committed to this repository** and updated in-tree as upstream changes.  The Makefile downloads it from the GitHub repo only as a fallback when the file is missing.  Because it is tracked, it is normally restored with `git checkout -- http-prng-service/httplib.h` rather than re-downloaded.

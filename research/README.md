@@ -99,7 +99,7 @@ The one open ARM question is the cch leaf pairing.  The tree's pairing opt-in is
 Interpretation:
 
 * The numbers cross-check against the permutation benchmarks from the same run, where the absorb ceiling is rate bytes ÷ permutation time.  At _C_ = 4, rounds = 6, the ceiling is 192 B ÷ 52.7 ns = 3.39 GiB/s and the measured absorb is 3.20 (94%), and at rounds = 3 the same comparison gives ~87%.  Earlier runs at different absolute speeds gave the same percentages.  The buffering overhead (copy + XOR into the outer state) is a fixed per-byte cost that matters more the faster the permutation.
-* At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.64 (rounds = 3) to 1.76 (rounds = 16), arriving at the rate ratio 224:128 = 1.75 as the permutation dominates.
+* At fixed rounds, throughput tracks the rate: the _C_ = 2 : _C_ = 8 absorb ratio grows from 1.64 (rounds = 3) to 1.77 (rounds = 16), arriving at the rate ratio 224:128 = 1.75 as the permutation dominates.
 * The "~3.2 GiB/s per core" absorb figure quoted in the top-level README comes from this run's 3.20 GiB/s at _C_ = 4, rounds = 6 (the castella hash program's defaults).  Absolute figures wander between sessions on this machine (the three 2026 runs of this benchmark put it at 3.25, 3.18, and 3.20), so the figure is quoted rounded and the ratios are the stable part.
 * Squeeze is 70–94% of absorb at the same parameters (converging as rounds grow): every `squeeze_to` pads and absorbs the near-empty input buffer, permutes, and copies the rate bytes out.
 

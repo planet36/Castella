@@ -513,13 +513,13 @@ non-cryptographic checksum.
 
 ## 9. Execution order
 
-**Steps 1–4 and 6 are complete, and step 5 ran to the end of what is planned.**  All six
+**Steps 1–4 and 6 are complete, and step 5 ran to the end of what is planned.**  All five
 analyses it lists were built (§5), each with its reproduction commands.  One of them, the
 algebraic/integral family, did move the best-known-reach number and did update the margin
 rationale, exactly as the step anticipated: `R*` = floor + 3 is anchored to the 3-round
 inside-out zero-sum.  What is left is not a next step in this order but the standing
-maintenance in [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md), plus
-whatever external cryptanalysis the challenges attract.
+maintenance in [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md),
+plus whatever external cryptanalysis the challenges attract.
 
 1. Write the claim + strengths + SHA-3 mapping + claimed-instances sections into SPEC.md
    (§2–4) — pure writing, unblocks everything else.  *(smallest useful milestone)*

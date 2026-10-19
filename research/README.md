@@ -49,6 +49,20 @@ The following programs use [Google benchmark](https://github.com/google/benchmar
 | simd\_compress-num\_states-benchmark.cpp | Probe whether advancing 2, 3, or 4 `compress_castella_hash` states interleaved on one thread beats hashing them sequentially (the "cch leaf pairing" design question, and whether a wider group would pay) |
 | squeeze\_bytes-benchmark.cpp | Benchmark alternative implementations of `squeeze_bytes` |
 
+## Shared headers
+
+These headers serve only the programs above, which is why they live here rather than in `include/`.
+
+| name | purpose |
+| ---- | ------- |
+| get\_num\_threads.hpp | Read each benchmark's thread count from the `NUM_THREADS` environment variable (default 1, and 0 means one per hardware thread) |
+| pack\_states.hpp | Pack two states into a lane-paired state, the layout of `Castella::permute_x2` |
+| unpack\_states.hpp | Unpack a lane-paired state into its two states (the inverse of `pack_states`) |
+| running\_stats.hpp | Running mean and sample variance, for the diffusion and probe programs |
+| simd\_bitmask.hpp | Convert between 128-bit SIMD values and `std::bitset<128>`, and the single-bit masks for every bit position |
+| simd\_equal.hpp | Test whether two SIMD values are equal |
+| simd\_popcount.hpp | Count the 1-bits of SIMD values |
+
 ## Usage
 
 Run these commands:
@@ -71,7 +85,7 @@ The trail search requires Python 3 and the [z3](https://github.com/Z3Prover/z3) 
 * `python3 permute-degree-bound.py --help`
 * `python3 permute-degree-bound.py --self-test`
 
-Raw benchmark results are saved in a folder named `results`.
+Raw benchmark results are saved in a folder named `results`, and `run-benchmarks.bash` summarizes each one with `process-benchmark-result.sh`, which extracts the median rows and sorts them by time.
 
 `run-benchmarks.bash` pins each benchmark to core 0 and defaults to 5 repetitions, which `BENCHMARK_REPS=…` overrides.  Each findings section below states the count its own run used, so read the ratios within a section, not across them.  The exception is the 2026-07-10 non-VAES section, which records no repetition count.
 

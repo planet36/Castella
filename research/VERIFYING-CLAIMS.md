@@ -182,7 +182,9 @@ python3 permute-multiplicity-verify.py                # 4.4 s
 
 The solver runs the expectations below read (`--validate` with and without `--inverse`, `-r 1 -c byte --count`, and `-r 2 -c block --count`) and the brute-force `permute-multiplicity-verify.py --reduced 3` are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7, with their budgets.
 
-`--validate` must reproduce AES's Square distinguisher in **both** directions, `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence, since a model that proved everything balanced would satisfy the first alone.  `--validate --inverse` gates the `P⁻¹` layers the same way but **at 2 rounds, not 3**, and that asymmetry is expected.  `aes_round` is SB, SR, MC and ends on a linear layer, while `inv_aes_round` is MC⁻¹, SR⁻¹, SB⁻¹ and ends on an S-box, and a division property crosses a linear layer untouched but never survives an S-box.  Measured, AES⁻¹ is 128/128 at 1 and 2 rounds and 0/128 at 3.  "Fixing" that constant back to 3 makes the gate fail.
+`--validate` must reproduce AES's Square distinguisher in **both** directions, `128/128 balanced` at 3 rounds and a reachable bit at 4.  Only the pair is evidence, since a model that proved everything balanced would satisfy the first alone.
+
+`--validate --inverse` gates the `P⁻¹` layers the same way but **at 2 rounds, not 3**, and that asymmetry is expected.  `aes_round` is SB, SR, MC and ends on a linear layer, while `inv_aes_round` is MC⁻¹, SR⁻¹, SB⁻¹ and ends on an S-box, and a division property crosses a linear layer untouched but never survives an S-box.  Measured, AES⁻¹ is 128/128 at 1 and 2 rounds and 0/128 at 3.  "Fixing" that constant back to 3 makes the gate fail.
 
 `-r 1 -c byte` must then report **all 2048 output bits balanced**, where the C++ probe's random cube of the same dimension leaves 1920.  `-r 1 --bits 7` and `-r 1 -c scattered` must both report *not* balanced, which pins the result to byte alignment rather than to cube size.
 
@@ -198,7 +200,14 @@ This result does not need the model either, because the README's three-step proo
 
 Part B then sets the argument aside and sums actual XORs at reduced width, where a full-block cube is enumerable.  The reach table must come out **identical at `--reduced 2` and `--reduced 3`**, which is the point of paying 35 min for the second.  A row cube gives forward 2 / backward 1, a column 1 / 2, and a diagonal 1 / 1, so the best inside-out reach from one cube is **3**, from a row or a column.
 
-Four controls must all hold.  The round constants must be irrelevant (balanced with them on and with them zeroed).  A random bijective S-box must still balance, so the argument really does not use AES.  A **non-bijective 2-to-1** S-box must still balance, so the mechanism is the *parity* of the multiplicity, not bijectivity.  And an S-box with one collision and one unreachable value (254 odd preimage counts) must break the zero-sum at a single round.  That last control is what makes the test capable of failing at all, so if it ever passes, the failure is in the test.
+Four controls must all hold:
+
+* The round constants must be irrelevant (balanced with them on and with them zeroed).
+* A random bijective S-box must still balance, so the argument really does not use AES.
+* A **non-bijective 2-to-1** S-box must still balance, so the mechanism is the *parity* of the multiplicity, not bijectivity.
+* An S-box with one collision and one unreachable value (254 odd preimage counts) must break the zero-sum at a single round.
+
+That last control is what makes the test capable of failing at all, so if it ever passes, the failure is in the test.
 
 [README.md](README.md#findings-bit-based-division-property-of-castellapermute-2026-08-03) has the results, the structural proof behind the 2-round case, and the scope.  The 1-round case is also checkable without the model at all, from 2^8 states, since XORing the permutation over one varying byte zeroes the whole 2048-bit output.
 
@@ -240,7 +249,9 @@ Three properties of the result matter here.  **The third step is not optional po
 
 **Seeds are worth little.**  The sweeps spanned only 1633–1638, 1887–1890, 2473–2478, and 2725–2729, 3–5 bits against the 18–31 the shell then bought.  And **all six enumerations ended `INCOMPLETE`**, which costs a ceiling nothing but means none of their `DP(differential | pattern)` sums may be quoted.  Three returned their best trail last, which looked like a budget limit, yet re-running all six on 2026-08-08, three at double the budget, moved **not one ceiling**, so do not expect a longer run to.
 
-From r=5 up the activity pattern is imported rather than searched, because stage A has never returned one at that width and r = 5, and it was skipped rather than retried at r = 6, 7, and 8.  **Do not re-solve those four patterns to check a ceiling, because they are committed** as `patterns/pat-r5.json` … `pat-r8.json` ([patterns/README.md](patterns/README.md)).  The trail-search commands run straight off a clean checkout, and without those files the r ≥ 5 half of the bracket table does not reproduce at all.  Re-deriving the set costs ~6.5 h of MILP and is a *refresh* rather than a verification, which is the runbook's job.
+From r=5 up the activity pattern is imported rather than searched, because stage A has never returned one at that width and r = 5, and it was skipped rather than retried at r = 6, 7, and 8.
+
+**Do not re-solve those four patterns to check a ceiling, because they are committed** as `patterns/pat-r5.json` … `pat-r8.json` ([patterns/README.md](patterns/README.md)).  The trail-search commands run straight off a clean checkout, and without those files the r ≥ 5 half of the bracket table does not reproduce at all.  Re-deriving the set costs ~6.5 h of MILP and is a *refresh* rather than a verification, which is the runbook's job.
 
 Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314, and 315, and the 416 r=3 trails ranged 841–903, 21 of the first 128 landing on exactly 903), so only r = 1's result, a proven minimum, is guaranteed to reproduce from a single run, and the recorded ceilings come from the recipe above.  Dropping `--no-minimize` shows the other side of that, because the minimization reports `unknown` however long it is given.
 
@@ -273,7 +284,9 @@ This is an **upper** bound on degree, which bounds the distinguisher's reach and
 
 Two items are pending: trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima, and the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.
 
-The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the 3-round inside-out zero-sum.  Read the reach as **≥ 3 with no upper bound claimed**, because §15's 2.67 caps only a *degree-based* construction.  Forward alone, r = 3 is **not refuted**.  Both the single-block cube (~6200 s of solve) and the larger `two-blocks` cube (2^256 data, ~2 h 19 m) return **SAT**, which excludes only a *full* 2048-bit zero-sum for those cubes and, being the weak direction, says nothing about `P`.  Partial balance on output bits past the first stays untried, since the scan stops at the first SAT unless `--count` is passed.
+The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the 3-round inside-out zero-sum.  Read the reach as **≥ 3 with no upper bound claimed**, because §15's 2.67 caps only a *degree-based* construction.
+
+Forward alone, r = 3 is **not refuted**.  Both the single-block cube (~6200 s of solve) and the larger `two-blocks` cube (2^256 data, ~2 h 19 m) return **SAT**, which excludes only a *full* 2048-bit zero-sum for those cubes and, being the weak direction, says nothing about `P`.  Partial balance on output bits past the first stays untried, since the scan stops at the first SAT unless `--count` is passed.
 
 The MILP floor is no longer pending at any shipped round count.  A(r) is a converged optimum from r = 1 to r = 8 (9, 45, 129, 165, 234, 270, 354, and 390), closed under HiGHS after CBC had stalled (§4).  Superadditivity survives only above r = 8.
 

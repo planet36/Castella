@@ -16,15 +16,18 @@ C++, security, testing, and documentation.  The reviewer plays attacker: the goa
 > the little-endian `static_assert`s, or the "x86/ARM AESENC are bit-identical" spec claim),
 > verifying that the assumption holds on the *supported* targets is in scope.
 
-> **Scope note on cryptanalysis.**  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md)
-> owns cryptanalytic strength (collisions, preimages, distinguishers, and trail bounds) and
-> names *this* file as the owner of everything else.  So **do not open a cryptanalysis front
-> here**, because proposing new attacks or deeper searches belongs to that plan, not this
-> one.  What is in scope is the **integrity of what has already been published** about that
-> work: whether a figure's provenance is what the surrounding text says it is, whether the
+> **Scope note on cryptanalysis.**
+> [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md) owns cryptanalytic
+> strength (collisions, preimages, distinguishers, and trail bounds) and names *this* file
+> as the owner of everything else.  So **do not open a cryptanalysis front here**, because
+> proposing new attacks or deeper searches belongs to that plan, not this one.
+>
+> What is in scope is the **integrity of what has already been published** about that work:
+> whether a figure's provenance is what the surrounding text says it is, whether the
 > recorded commands still reproduce it, and whether a figure repeated in several documents
 > agrees in all of them.  That is the same remit as every other claim in Section 0, and it
-> just happens to land on files whose subject is cryptanalysis.  Section 1e gives the surface.
+> just happens to land on files whose subject is cryptanalysis.  Section 1e gives the
+> surface.
 
 ---
 
@@ -193,15 +196,16 @@ then attack it.
       uses `round_constants_folded<N>`, so verify that the folded table is a faithful
       reordering (it is *derived* consteval, but prove the derivation, e.g. a static test
       that unfolds it).
-- [ ] **LFSR generator.**  Re-derive the 768 constants independently (Python), and check that
-      all are distinct and nonzero, that none is a bitwise shift of its predecessor, and that
-      the period argument (2^128−1 coprime to stride) actually holds for stride 128.  Confirm
-      `RC[0][0][0]` equals the seed string exactly.  Check `lfsr_from_bytes16` endianness
-      matches the spec's "L0 = bytes 0–7."  Probe 3 of
-      `research/permute-structural-probes.cpp` already asserts first-constant-=-seed,
-      distinctness, nonzeroness, and no-shift-of-predecessor, so those four are an audit of
-      an existing assertion.  The independent re-derivation is still worth doing, since the
-      point of a second implementation is not trusting the first.
+- [ ] **LFSR generator.**  Re-derive the 768 constants independently (Python), and check
+      that all are distinct and nonzero, that none is a bitwise shift of its predecessor,
+      and that the period argument (2^128−1 coprime to stride) actually holds for stride
+      128.  Confirm `RC[0][0][0]` equals the seed string exactly.  Check `lfsr_from_bytes16`
+      endianness matches the spec's "L0 = bytes 0–7."
+
+  Probe 3 of `research/permute-structural-probes.cpp` already asserts first-constant-=-seed,
+  distinctness, nonzeroness, and no-shift-of-predecessor, so those four are an audit of an
+  existing assertion.  The independent re-derivation is still worth doing, since the point
+  of a second implementation is not trusting the first.
 - [ ] **Symmetry / invariant subspaces.**  Does an all-equal-blocks state, or a
       row/column-symmetric state, stay in a low-dimensional subspace under `P`?  The
       transpose maps block↔byte symmetries.  Verify that the round constants break them,

@@ -142,7 +142,7 @@ The inverse overloads are not measured.  `permute_inv` is the only caller of `ae
 | 8 | 119 ns | 69.8 ns | 1.71× |
 | 16 | 237 ns | 140 ns | 1.69× |
 
-The speedup **grows with the round count**, because the fold and unfold at the boundaries are a fixed cost amortized over more register-resident rounds.  That is why rounds = 3 gives 1.64× and everything above it 1.68–1.71×.  The win itself comes from the generic path round-tripping the state through memory every round and paying a store-to-load-forwarding stall, where a 256-bit AES load spans two 128-bit transpose stores.
+The speedup **rises from rounds = 3 and then levels off near 1.7×**, because the fold and unfold at the boundaries are a fixed cost amortized over more register-resident rounds.  That is why rounds = 3 gives 1.64× and everything above it 1.68–1.71×.  The win itself comes from the generic path round-tripping the state through memory every round and paying a store-to-load-forwarding stall, where a 256-bit AES load spans two 128-bit transpose stores.
 
 Folding is a clear ~1.7× win at the 16-block state, the only size used outside `research/`.  `permute_folded` is instantiated for every supported _N_, and the smaller sizes gained even more when that generalization was measured, but _N_ < 16 is research-only and the benchmark no longer registers it.
 

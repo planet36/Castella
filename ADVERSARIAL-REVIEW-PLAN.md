@@ -207,10 +207,10 @@ then attack it.
       re-run that agrees with it adds nothing.
 - [ ] **Slide / self-similarity.**  With distinct per-round constants the rounds should
       differ.  Confirm that no two rounds share a constant set, and that `last(n)` selection
-      can't create a slid pair for any supported `n`.  The probes' slide screen covers the first half
-      exactly (no whole-round shift relates two rounds' constants by a fixed XOR difference,
-      over the full 16-round schedule).  The `last(n)` question is the part it does not
-      answer.
+      can't create a slid pair for any supported `n`.  The probes' slide screen covers the
+      first half exactly (no whole-round shift relates two rounds' constants by a fixed XOR
+      difference, over the full 16-round schedule).  The `last(n)` question is the part it
+      does not answer.
 - [ ] **Transpose as a linear layer.**  It's a byte permutation (involution).  Confirm it is
       exactly its own inverse as the inverse permutation assumes, and that branch number /
       diffusion arguments in the spec aren't undercut by it being a *permutation* (no
@@ -258,10 +258,10 @@ then attack it.
       decodings produce the same byte stream given **fixed** `CV_LEN`?  Check that the role
       byte truly separates the leaf and final domains and that the leaf index pins position.
 - [ ] **The 255/256 leaf-index width fallback.**  `left_encode(i)` changes width at i=256,
-      and the paired-leaf path falls back to two singles when widths differ.  Verify (a) the *digest* is
-      identical regardless of pairing (execution-only), and (b) no index near the width
-      boundary breaks decodability.  Adversarial input lengths straddling chunk 255/256 are the
-      test case.
+      and the paired-leaf path falls back to two singles when widths differ.  Verify (a) the
+      *digest* is identical regardless of pairing (execution-only), and (b) no index near
+      the width boundary breaks decodability.  Adversarial input lengths straddling chunk
+      255/256 are the test case.
 - [ ] **Thread/split independence, the invariant every parallel path depends on.**  SPEC.md
       and CLAUDE.md both insist the digest never depends on `num_threads`, leaf compute
       order, or `add()` granularity.  This is the highest-value property to *try to break*:

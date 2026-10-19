@@ -98,13 +98,11 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
     and the rotational and meet-in-the-middle angles `CHALLENGES.md` lists as having had
     only light screening.
 - **Known-open, and deliberately not pursued here.**  Differential **clustering** above
-  `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists both
-  among what the trail bounds do not cover, `research/README.md` calls clustering above
+  `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists
+  both among what the trail bounds do not cover, `research/README.md` calls clustering above
   `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is an
-  explicitly heuristic margin argument, not a proof.
-
-  Because they are disclosed, *reporting* them is a non-finding under Section 0, and
-  *pursuing* them belongs to
+  explicitly heuristic margin argument, not a proof.  Because they are disclosed,
+  *reporting* them is a non-finding under Section 0, and *pursuing* them belongs to
   [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).
 
   Per the maintainer, two expensive searches in this direction are closed on cost: the
@@ -165,11 +163,13 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   value, because only a proven optimum is a lower bound on the active S-box count, and only
   a lower bound yields a valid DP bound.
 
-  Check three things.  Every figure quoted outside that table must carry the status its
-  source gives it.  `VERIFYING-CLAIMS.md`'s ground rule must hold (no security-relevant claim
-  anywhere in the repository's docs without a row there, or an explicit *conjecture* /
-  *evidence pending* label).  And the commands in its table must still run and still print
-  what it says they print.
+  Check three things:
+
+  * Every figure quoted outside that table must carry the status its source gives it.
+  * `VERIFYING-CLAIMS.md`'s ground rule must hold (no security-relevant claim anywhere in
+    the repository's docs without a row there, or an explicit *conjecture* / *evidence
+    pending* label).
+  * The commands in its table must still run and still print what it says they print.
 - **Why this surface earns its place.**  The failure mode is documented, not hypothetical.
   Three active-S-box figures (133, 225, and 243) were published as optima, were in fact
   timed-out incumbents, and were each later refuted by a cheaper solution, as was a fourth
@@ -238,12 +238,10 @@ then attack it.
   `research/permute_inv-verify.cpp` runs it over zero, all-distinct-byte, and random states
   for every N and every round count, and also asserts `permute(state) != state`.
   `permute_inv` is defined in `castella-permute.hpp` but called by nothing outside
-  `research/`.
-
-  The folded-vs-generic equality it argues indirectly is checked *directly* in `make test`
-  by `tests/permute-equivalence.cpp`, which runs both paths in one build with no KAT as
-  intermediary.  Section 6's question, whether the round trip should be a first-class test,
-  is therefore about a property of a function no shipped digest path calls.
+  `research/`.  The folded-vs-generic equality it argues indirectly is checked *directly* in
+  `make test` by `tests/permute-equivalence.cpp`, which runs both paths in one build with no
+  KAT as intermediary.  Section 6's question, whether the round trip should be a first-class
+  test, is therefore about a property of a function no shipped digest path calls.
 
 ### 2b.  Duplex / sponge (`castella-duplex.hpp`)
 - [ ] **Padding (pad10\*1).**  The one-byte-of-space edge case (`0x81`), padding applied before

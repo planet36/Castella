@@ -27,9 +27,7 @@ The digest of a tree hash is a function of the node parameters, tree geometry, a
 
 ### `permute-equivalence`
 
-`Castella::permute` dispatches to `Castella::permute_folded` (the folded, register-resident implementation, x86-64 with VAES only) or to `Castella::permute_generic` (everywhere else).  The two must be bit-identical, or every digest here would depend on which path the build selected.
-
-The KATs guard that only transitively, since a folded build reproduces the KATs the pure-Python model produces, but no KAT compares the two paths directly.  This program does, over random states, for every supported state size (2, 4, 8, and 16 blocks) and every round count from 0 to `NUM_ROUNDS_MAX`.  The seed is printed, and can be passed as an argument, so failures reproduce.
+`Castella::permute` dispatches to `Castella::permute_folded` (the folded, register-resident implementation, x86-64 with VAES only) or to `Castella::permute_generic` (everywhere else).  The two must be bit-identical, or every digest here would depend on which path the build selected.  The KATs guard that only transitively, since a folded build reproduces the KATs the pure-Python model produces, but no KAT compares the two paths directly.  This program does, over random states, for every supported state size (2, 4, 8, and 16 blocks) and every round count from 0 to `NUM_ROUNDS_MAX`.  The seed is printed, and can be passed as an argument, so failures reproduce.
 
 A build without the folded path (no VAES, or not x86-64) still runs it, but `permute` *is* `permute_generic` there, so the comparison is a tautology.  The program says which case it is rather than claiming coverage it does not have.
 
@@ -37,9 +35,7 @@ A build without the folded path (no VAES, or not x86-64) still runs it, but `per
 
 Every `duplex` line in KAT.txt has the same shape (construct, one `add`, one `squeeze`), so the KAT file pins the algorithm but leaves most of the `Castella::Duplex` API untouched.  This fuzzer covers the rest.
 
-It generates random programs of `add` / `add_left_encoded` / `add_right_encoded` / `apply_padding_rule` / `squeeze_bytes` calls over random constructor parameters, covering both the byte-string and the integer forms of the two encoded adds.  It replays each one against the `Duplex` in [research/spec-conformance.py](../research/spec-conformance.py), imported directly so there is no second copy of the model to drift, and diffs every squeeze against `duplex-diff-driver`, which interprets the same script.
-
-Split and streamed adds, both encoding entry points (no KAT drives either), explicit padding, and successive squeezes are all reachable only this way.
+It generates random programs of `add` / `add_left_encoded` / `add_right_encoded` / `apply_padding_rule` / `squeeze_bytes` calls over random constructor parameters, covering both the byte-string and the integer forms of the two encoded adds.  It replays each one against the `Duplex` in [research/spec-conformance.py](../research/spec-conformance.py), imported directly so there is no second copy of the model to drift, and diffs every squeeze against `duplex-diff-driver`, which interprets the same script.  Split and streamed adds, both encoding entry points (no KAT drives either), explicit padding, and successive squeezes are all reachable only this way.
 
 A *program* is one generated unit of work, constructor parameters plus a call sequence ending in at least one squeeze.  It yields as many comparisons as it has squeezes, which is why the summary counts both.  The whole run is batched through one driver process, because the pure-Python model is the slow side.  `make test` runs it at the default seed and program count, and `--seed` explores new programs, as a SEED argument does for `equivalence-tests`.
 

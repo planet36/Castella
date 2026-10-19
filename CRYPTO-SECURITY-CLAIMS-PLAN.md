@@ -182,14 +182,11 @@ permutation).  The honest procedure has four steps:
    and 390 at r = 1…8.  Above that, superadditivity (`A(a+b) ≥ A(a)+A(b)`, valid because
    `P` is a bijection) composes solved values with each other.
 
-   So 6·A ≥ 2b is reached at **r=2** for b ≤ 135, **r=3** for b ≤ 387, **r=4** for
-   b ≤ 495, **r=5** for b ≤ 702, **r=6** for b ≤ 810, **r=7** for b ≤ 1062, and **r=8**
-   for b ≤ 1170.  That puts the 128-, 256-, and 512-bit floors at r = 2, 3, and 5
-   respectively.
-
-   For linear trails, correlation ≤ 2^−3·A gives the same round floors.  These are
-   necessary conditions only (single characteristics, with no clustering or structural
-   coverage).
+   So 6·A ≥ 2b is reached at **r=2** for b ≤ 135, **r=3** for b ≤ 387, **r=4** for b ≤ 495,
+   **r=5** for b ≤ 702, **r=6** for b ≤ 810, **r=7** for b ≤ 1062, and **r=8** for
+   b ≤ 1170.  That puts the 128-, 256-, and 512-bit floors at r = 2, 3, and 5 respectively.
+   For linear trails, correlation ≤ 2^−3·A gives the same round floors.  These are necessary
+   conditions only (single characteristics, with no clustering or structural coverage).
 
    The 512-bit floor of r=5 is now settled from both sides and cannot move.  Four rounds
    support exactly 495 bits, 17 short of 512, and `A(4) = 165` is a converged optimum, not
@@ -220,19 +217,16 @@ permutation).  The honest procedure has four steps:
    *Why additive rather than the ratio policy this step used to propose* (`R* ≥ 2× the
    highest round count reached by any known attack or distinguisher stronger than
    generic`).  A ratio makes the absolute margin scale with whatever it multiplies, so
-   anchoring on the trail floor, as step 4 did, gives more protection to the capacity
-   whose bound is weaker, which is backwards.  Attacks advance round by round.
+   anchoring on the trail floor, as step 4 did, gives more protection to the capacity whose
+   bound is weaker, which is backwards.  Attacks advance round by round.  Note the old
+   example policy in this step was never the problem: at a known reach of 3 it demands
+   `R* ≥ 6`, which every shipped row already met.  The `C=8` exception came from step 4
+   applying `2×` to the *floor* instead.
 
-   Note the old example policy in this step was never the problem: at a known reach of 3
-   it demands `R* ≥ 6`, which every shipped row already met.  The `C=8` exception came from
-   step 4 applying `2×` to the *floor* instead.
-
-   *The comparison with Keccak that this step used to make is not like-for-like.*
-   Keccak's ~3–4× is against practical attacks reaching ~6 rounds, while the 3 here is a
-   2^128-data distinguisher on `P`, not a break of the sponge.  It cuts both ways, and
-   SPEC.md now says so.
-
-   There are no practical attacks on Castella at any round count to measure from, but
+   *The comparison with Keccak that this step used to make is not like-for-like.*  Keccak's
+   ~3–4× is against practical attacks reaching ~6 rounds, while the 3 here is a 2^128-data
+   distinguisher on `P`, not a break of the sponge.  It cuts both ways, and SPEC.md now says
+   so.  There are no practical attacks on Castella at any round count to measure from, but
    zero-sums reach full-round Keccak-`f`, so Keccak would score zero margin under the rule
    adopted here.  Do not present the 2.00×/2.67× ratios as comparable to a SHA-3 figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances*.
@@ -249,13 +243,11 @@ permutation).  The honest procedure has four steps:
    | 8 | 512 | 171 | **r=5** | r=5 | 8 | **+3** | **2.67×** |
 
    *How it was decided, since the reasoning is easy to lose.*  The prior framing here was
-   that a margin policy "has to say what it measures, and the two natural answers
-   disagree."
-
+   that a margin policy "has to say what it measures, and the two natural answers disagree."
    Writing `L(r) = 3·A(r)` for the largest level `r` rounds support, the shipped rows give
    margins **in bits** of 6.33× / 3.16× / 2.11× / **2.29×** (so `C`=8 is the
-   second-*strongest* row and `C`=6 the weakest).  Margins **in rounds** are 2.00× / 2.00×
-   / 2.00× / **1.60×** (so `C`=8 is the only row below policy).  Those figures are still
+   second-*strongest* row and `C`=6 the weakest).  Margins **in rounds** are 2.00× / 2.00× /
+   2.00× / **1.60×** (so `C`=8 is the only row below policy).  Those figures are still
    correct, and every `L(R*)` in them is a solved optimum.
 
    **Adopting the bits reading was rejected anyway**, on two grounds.  It is the metric
@@ -291,14 +283,12 @@ permutation).  The honest procedure has four steps:
    settled, since every row meets the adopted policy and none is an exception.
 
    The decision is not a claim that more rounds would be worthless.  It is that nothing in
-   the present evidence obliges them, and the cost is high.
-
-   `num_rounds` is absorbed into the duplex initialization string, so **changing a shipped
-   `R*` changes every digest at that capacity**, which makes it a format decision, not
-   only a margin one.  `tests/KAT.txt`, the pinned digests in `tests/tests.cpp` and
-   `hash-programs/test-correctness.bash`, `castella.cpp`'s `num_rounds_claimed_*`
-   constants, and the `--help` texts all move with it, as does every document on the
-   [runbook's § 8
+   the present evidence obliges them, and the cost is high.  `num_rounds` is absorbed into
+   the duplex initialization string, so **changing a shipped `R*` changes every digest at
+   that capacity**, which makes it a format decision, not only a margin one.
+   `tests/KAT.txt`, the pinned digests in `tests/tests.cpp` and
+   `hash-programs/test-correctness.bash`, `castella.cpp`'s `num_rounds_claimed_*` constants,
+   and the `--help` texts all move with it, as does every document on the [runbook's § 8
    list](research/RE-DERIVATION-RUNBOOK.md#8-where-a-refreshed-figure-has-to-land).
 
    **What would reopen it is evidence, not preference.**  That evidence is the revision
@@ -309,12 +299,10 @@ permutation).  The honest procedure has four steps:
    **One property of the trigger is worth stating rather than discovering later: it bounds
    reach, not data complexity.**  A 4-round distinguisher needing 2^256 data would oblige
    the same digest change as a practical one, even though the flat claim already concedes
-   `P` is not a random permutation.
-
-   That is deliberate conservatism, since the anchor is meant to track what is
-   *structurally* known about `P`.  A future revision that wants to qualify it by data
-   complexity should do so explicitly and say why, not by quietly reading the trigger more
-   narrowly.
+   `P` is not a random permutation.  That is deliberate conservatism, since the anchor is
+   meant to track what is *structurally* known about `P`.  A future revision that wants to
+   qualify it by data complexity should do so explicitly and say why, not by quietly reading
+   the trigger more narrowly.
 
 **SHIPPED.**  SPEC.md's security claim carries the claimed-instances table, giving
 `(C, R*)` with each row's capacity and claimed level, beside the SHA-3 mapping table that
@@ -359,28 +347,25 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    of 3 AES rounds + transpose) to see how far real trails sit above the byte-level bound.
    Closes the "relaxation gap" caveat.
 
-   **DONE** in `research/permute-trail-search.py`, with VERIFYING-CLAIMS § 13 and the
-   result tables in research/README.md.  Every round count r = 1…8 is bracketed at both
-   ends, and at r = 1 the bound is *proven tight* (a real characteristic attains 6·A
-   exactly).
-
-   The relaxation gap is therefore measured rather than closed: real trails sit 23 bits
-   above the floor at r = 2 and 236 at r = 6, and no ceiling above r = 1 is a proven
-   minimum.  Those above r = 4 each rest on a single imported MILP pattern.  That is the
-   residual caveat, disclosed in VERIFYING-CLAIMS § 16 and covered by the closure above.
+   **DONE** in `research/permute-trail-search.py`, with VERIFYING-CLAIMS § 13 and the result
+   tables in research/README.md.  Every round count r = 1…8 is bracketed at both ends, and
+   at r = 1 the bound is *proven tight* (a real characteristic attains 6·A exactly).  The
+   relaxation gap is therefore measured rather than closed: real trails sit 23 bits above
+   the floor at r = 2 and 236 at r = 6, and no ceiling above r = 1 is a proven minimum.
+   Those above r = 4 each rest on a single imported MILP pattern.  That is the residual
+   caveat, disclosed in VERIFYING-CLAIMS § 16 and covered by the closure above.
 3. **Differential clustering (new):** estimate the number of characteristics sharing an
    input/output difference over 2–4 rounds (the known weak spot of single-trail bounds,
    flagged in SPEC.md itself).
 
    **DONE at r = 1, and that is the only round count where it produced a number.**  The
    1-round optimum's full differential enumerates to 1048 characteristics, raising its
-   probability from 2^−54 to 2^−51.7, so first-order clustering costs about 2 bits, which
-   is immaterial against the per-two-round floor.
-
-   Above r = 1 every shell enumeration ran out of clock `INCOMPLETE`, so the
-   `DP(differential | pattern)` figures they print bound nothing and are recorded only as
-   figures to discard (research/README.md).  A clustering *estimate* at 2–4 rounds
-   therefore does not exist, and obtaining one is inside the closed line above.
+   probability from 2^−54 to 2^−51.7, so first-order clustering costs about 2 bits, which is
+   immaterial against the per-two-round floor.  Above r = 1 every shell enumeration ran out
+   of clock `INCOMPLETE`, so the `DP(differential | pattern)` figures they print bound
+   nothing and are recorded only as figures to discard (research/README.md).  A clustering
+   *estimate* at 2–4 rounds therefore does not exist, and obtaining one is inside the closed
+   line above.
 4. **Structural distinguishers (new; overlap with ADVERSARIAL-REVIEW-PLAN.md §1a/2a —
    execute once, report in both):** invariant subspaces and symmetric-state propagation
    (do the round constants break the transpose's block↔byte symmetry — test, don't
@@ -403,17 +388,14 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
 
    **DONE, and this is the item that ended up carrying the margin policy.**  The degree
    bound (`permute-degree-bound.py`) saturates by 2 rounds, capping a *degree-based*
-   zero-sum at ≈ 2.67 rounds.
-
-   The cube work went further: random-cube probes (`permute-zero_sum-probes.cpp`), then a
-   bit-based division-property model for *chosen* cubes (`permute-division-property.py`)
-   giving a 1-round byte-aligned distinguisher and a 2-round integral distinguisher at
-   2^128 data, and finally the even-multiplicity argument
-   (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**.
-
-   That 3 is the longest known reach against `P`, and it is what `R*` = floor + 3 is
-   anchored to (§4.3 step 3).  So this item is not merely evidence beside the claim but an
-   input to the shipped parameters (VERIFYING-CLAIMS § 11 and § 15).
+   zero-sum at ≈ 2.67 rounds.  The cube work went further: random-cube probes
+   (`permute-zero_sum-probes.cpp`), then a bit-based division-property model for *chosen*
+   cubes (`permute-division-property.py`) giving a 1-round byte-aligned distinguisher and a
+   2-round integral distinguisher at 2^128 data, and finally the even-multiplicity argument
+   (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**.  That
+   3 is the longest known reach against `P`, and it is what `R*` = floor + 3 is anchored to
+   (§4.3 step 3).  So this item is not merely evidence beside the claim but an input to the
+   shipped parameters (VERIFYING-CLAIMS § 11 and § 15).
 6. **Duplex-PRNG mode note (new, cheap):** the sponge-PRNG papers require *state
    forgetting* for backtracking resistance; the duplex as implemented does not zero the
    outer state after squeezing.  Document that forward secrecy is **not** claimed for PRNG

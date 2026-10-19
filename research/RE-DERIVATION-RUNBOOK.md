@@ -6,14 +6,12 @@ SPDX-License-Identifier: MPL-2.0
 # Re-deriving the cryptanalysis figures (the standing procedure)
 
 Every *cryptanalytic* figure quoted in [SPEC.md](../SPEC.md)'s Evidence section, in
-[README.md](README.md)'s findings, and in
-[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) comes out of a program in this directory or in
-`tests/`.  This runbook says which program, what to run, how long it takes, and what the
-output should say.
-
-README.md's *performance* findings are the one class it leaves out (§0).
-VERIFYING-CLAIMS.md maps each *claim* to the evidence a skeptical reader should check, and
-this runbook is for whoever has to *refresh* the figures.
+[README.md](README.md)'s findings, and in [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) comes
+out of a program in this directory or in `tests/`.  This runbook says which program, what to
+run, how long it takes, and what the output should say.  README.md's *performance* findings
+are the one class it leaves out (§0).  VERIFYING-CLAIMS.md maps each *claim* to the evidence
+a skeptical reader should check, and this runbook is for whoever has to *refresh* the
+figures.
 
 It was extracted from
 [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md), where it was § 10.
@@ -60,14 +58,13 @@ holds the batch to four on a 15 GiB machine.
 A figure whose program is missing from this table is a figure nobody knows how to
 re-derive.
 
-**One class is missing on purpose.**  README.md's *performance* findings (Duplex
-throughput, the folded permute, and the interleaved cch pair) come from the compiled
-`*-benchmark.cpp` and `*-verify.cpp` programs, driven by `run-benchmarks.bash` and
-`run-research.sh` (README.md's Usage section, which also gives `BENCHMARK_REPS`).
-
-They measure speed rather than support a security claim, so they need an otherwise idle
-machine and the core pinning `run-benchmarks.bash` does, not a solver budget.  That is why the
-`nice -n 19` rule exempts them, and why nothing in this file should run during one.
+**One class is missing on purpose.**  README.md's *performance* findings (Duplex throughput,
+the folded permute, and the interleaved cch pair) come from the compiled `*-benchmark.cpp`
+and `*-verify.cpp` programs, driven by `run-benchmarks.bash` and `run-research.sh`
+(README.md's Usage section, which also gives `BENCHMARK_REPS`).  They measure speed rather
+than support a security claim, so they need an otherwise idle machine and the core pinning
+`run-benchmarks.bash` does, not a solver budget.  That is why the `nice -n 19` rule exempts
+them, and why nothing in this file should run during one.
 
 | program | figures it owns | where |
 |---|---|---|
@@ -435,9 +432,8 @@ documented number depends on it.
 what the 2026-08-01/02 re-derivation was about.  The rest of the evidence base is not
 optional to re-derive.  **The diffusion floor is one of the two inputs to every `R*`, and
 the 3-round inside-out zero-sum anchors the `+ 3` margin term**
-([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3 step 3).
-
-A refresh that skips this section leaves the shipped round counts resting on figures nobody
+([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3 step 3).  A
+refresh that skips this section leaves the shipped round counts resting on figures nobody
 re-checked.  §1 already has the cheap members, and this section has the rest, with the
 budgets they want.
 

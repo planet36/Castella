@@ -245,17 +245,19 @@ The single-pattern runs return weight 903 at r=3 and 1154 at r=4, real character
 
 None of the six ceilings is what a single trail-search run prints.  Each is the end of three steps: a `--random-seed` sweep for a good trail, a descent of that trail's own weight shell, and an enumeration of the last shell the descent satisfied.  Those took r=3 and r=4 from 841 and 1151 through 824 and 1125 to **823** and **1123**, and r=5 through r=8 from 1633, 1887, 2473, and 2725 through 1603, 1857, 2448, and 2705 to **1602**, **1856**, **2447**, and **2699**.  [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 3 has the step-by-step recipe and the seed and shell offset each ceiling needs.
 
-Three properties of the result matter here.  **The third step is not optional polish.**  At r=3 the descent asked cap 823 directly and timed out twice, once with the full 14,400 s, and the enumeration of the satisfied 824 shell then returned a weight-823 trail.
+Three properties of the result matter here:
 
-**Seeds are worth little.**  The sweeps spanned only 1633–1638, 1887–1890, 2473–2478, and 2725–2729, 3–5 bits against the 18–31 the shell then bought.  And **all six enumerations ended `INCOMPLETE`**, which costs a ceiling nothing but means none of their `DP(differential | pattern)` sums may be quoted.  Three returned their best trail last, which looked like a budget limit, yet re-running all six on 2026-08-08, three at double the budget, moved **not one ceiling**, so do not expect a longer run to.
+* **The third step is not optional polish.**  At r=3 the descent asked cap 823 directly and timed out twice, once with the full 14,400 s, and the enumeration of the satisfied 824 shell then returned a weight-823 trail.
+* **Seeds are worth little.**  The sweeps spanned only 1633–1638, 1887–1890, 2473–2478, and 2725–2729, 3–5 bits against the 18–31 the shell then bought.
+* **All six enumerations ended `INCOMPLETE`**, which costs a ceiling nothing but means none of their `DP(differential | pattern)` sums may be quoted.  Three returned their best trail last, which looked like a budget limit, yet re-running all six on 2026-08-08, three at double the budget, moved **not one ceiling**, so do not expect a longer run to.
 
 From r=5 up the activity pattern is imported rather than searched, because stage A has never returned one at that width and r = 5, and it was skipped rather than retried at r = 6, 7, and 8.
 
 **Do not re-solve those four patterns to check a ceiling, because they are committed** as `patterns/pat-r5.json` … `pat-r8.json` ([patterns/README.md](patterns/README.md)).  The trail-search commands run straight off a clean checkout, and without those files the r ≥ 5 half of the bracket table does not reproduce at all.  Re-deriving the set costs ~6.5 h of MILP and is a *refresh* rather than a verification, which is the runbook's job.
 
-Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314, and 315, and the 416 r=3 trails ranged 841–903, 21 of the first 128 landing on exactly 903), so only r = 1's result, a proven minimum, is guaranteed to reproduce from a single run, and the recorded ceilings come from the recipe above.  Dropping `--no-minimize` shows the other side of that, because the minimization reports `unknown` however long it is given.
+Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302, 313, 314, and 315, and the 416 r=3 trails ranged 841–903, 21 of the first 128 landing on exactly 903), so only r = 1's result, a proven minimum, is guaranteed to reproduce from a single run, and the recorded ceilings come from the recipe above.
 
-At r=2 that was measured three ways (`witness` to 60 min, `rows` to 30 min, and a totalizer weight bound to 30 min), at r=3 and r=4 it returns `unknown: canceled` after 1200 s each, leaving 903 and 1154 standing, and across the r=3 seed sweep 31 further attempts at 600 s each yielded 0 improvements.  That is *why* every ceiling above r=1 is a ceiling rather than a minimum.  Budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.
+Dropping `--no-minimize` shows the other side of that, because the minimization reports `unknown` however long it is given.  At r=2 that was measured three ways (`witness` to 60 min, `rows` to 30 min, and a totalizer weight bound to 30 min), at r=3 and r=4 it returns `unknown: canceled` after 1200 s each, leaving 903 and 1154 standing, and across the r=3 seed sweep 31 further attempts at 600 s each yielded 0 improvements.  That is *why* every ceiling above r=1 is a ceiling rather than a minimum.  Budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.
 
 The tightness and clustering results remain conservative for the claim, since where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270.  [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19) has the results, the encoding-choice lesson, and the scope.
 
@@ -276,9 +278,7 @@ python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the AES validati
 python3 permute-degree-bound.py               # the AES echo + the Castella table
 ```
 
-The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher (degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.
-
-This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization and margin, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
+The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher (degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization and margin, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
 
 ## 16. Evidence pending
 

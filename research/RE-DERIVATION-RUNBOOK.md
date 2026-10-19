@@ -393,8 +393,9 @@ purpose.  They are in the order queued, by what would most change the documentat
    **Where a solve is out of reach, neither remaining source dominates.**  Superadditivity
    strengthens as r grows, because it composes an increasingly good A(3) with A(1).  CBC
    weakens, since each round adds layers to a relaxation already struggling.  Record both
-   and take the max.  The script reports only its own instance's bound, so at r=4 it prints
-   `A in [94, 165]` while the documented floor is the larger 138.
+   and take the max.  The script reports only its own instance's bound, so at r=4 under CBC
+   it printed `A in [94, 165]` while the superadditive floor was the larger 138.  HiGHS has
+   since solved A(4) = 165.
 
    The run taught three lessons, all carried into §6.  An unchanged incumbent says nothing
    about whether more time would prove a cell, because proving is a dual-side question.

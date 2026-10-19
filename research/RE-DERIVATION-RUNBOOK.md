@@ -518,6 +518,6 @@ everywhere, because only `optimal` is a security bound.
 **This table is the only list of these targets.**
 [ADVERSARIAL-REVIEW-PLAN.md](../ADVERSARIAL-REVIEW-PLAN.md) § 7 keeps the same requirement
 as a standing audit item but defers to this table, because the copy it once carried fell a
-document behind.  What § 7 does own is the throughput figures (`README.md`, `CLAUDE.md`,
-`research/README.md`), which §0 excludes from this file.  Add a new carrier here, not
-there.
+document behind.  What § 7 does own is the throughput figures (`hash-programs/README.md`,
+`README.md`, `CLAUDE.md`, and `research/README.md`), which §0 excludes from this file.  Add
+a new carrier here, not there.

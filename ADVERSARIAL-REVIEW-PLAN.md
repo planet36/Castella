@@ -436,9 +436,10 @@ assert perf claims from reading code (per the repo's own accuracy rule).
         maintained alongside the runs that produce them.  Audit against that list rather
         than against a copy here.  This bullet used to carry its own, and it went stale,
         omitting `CRYPTO-SECURITY-CLAIMS-PLAN.md` after that file became a sweep target.
-      - The **throughput** figures (`README.md`, `CLAUDE.md`, `research/README.md`) are this
-        bullet's own: the runbook's § 0 puts performance findings out of its scope, so no
-        list but this one covers them.
+      - The **throughput** figures (in `hash-programs/README.md`, which owns them, and in
+        `README.md`, `CLAUDE.md`, and `research/README.md`) are this bullet's own: the
+        runbook's § 0 puts performance findings out of its scope, so no list but this one
+        covers them.
 - [ ] **Gotchas to hunt for and demand documentation of:**
   - **Little-endian everywhere** (the deliberate SP 800-185 deviation) is documented in
     SPEC.md.  Confirm that the README and examples don't imply interop with big-endian

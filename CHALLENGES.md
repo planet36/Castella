@@ -7,7 +7,7 @@ SPDX-License-Identifier: MPL-2.0
 
 The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers instances with `num_rounds ≥ R*` (6, or 8 at `C` = 8).  The instances below are **deliberately unclaimed** reduced-round targets, published to invite cryptanalysis in the style of the [Keccak crunchy crypto contest](https://keccak.team/crunchy_contest.html), because a claim nobody has tried to break is worth little.  Solving a challenge is a welcome research result, not a break of any claimed instance.  The [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 
-This is a personal research project, so there are no prizes, only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues), and [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-09, with solutions to be recorded in this file).
+This is a personal research project, so there are no prizes, only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues).  [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-09, with solutions to be recorded in this file).
 
 ## Invitation to external cryptanalysts
 
@@ -15,19 +15,25 @@ Castella has had no cryptanalysis by anyone other than its author.  A claim's cr
 
 **Start here.**  The design is fully specified and reproducible without reading the AES-NI C++:
 
-* [SPEC.md](SPEC.md) — the standalone specification (permutation, round-constant LFSR, duplex, tree, MAC) and the [security claim](SPEC.md#security-claims-and-non-claims) being offered.
-* [research/spec-conformance.py](research/spec-conformance.py) — an independent pure-Python implementation, to compute and check target digests against without trusting the optimized code.
-* [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) — every existing piece of evidence with commands that reproduce it, so analysis can build on the frontier instead of re-treading it.
-* [research/](research/) — the tooling behind that evidence (MILP trail bounds, a bit-level z3 trail search, zero-sum/cube probes, structural probes, the algebraic-degree bound, a bit-based division-property model, and a brute-force multiplicity verifier).
+* [SPEC.md](SPEC.md) is the standalone specification (permutation, round-constant LFSR, duplex, tree, MAC) and states the [security claim](SPEC.md#security-claims-and-non-claims) being offered.
+* [research/spec-conformance.py](research/spec-conformance.py) is an independent pure-Python implementation, to compute and check target digests against without trusting the optimized code.
+* [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md) gives every existing piece of evidence with commands that reproduce it, so analysis can build on the frontier instead of re-treading it.
+* [research/](research/) holds the tooling behind that evidence (MILP trail bounds, a bit-level z3 trail search, zero-sum/cube probes, structural probes, the algebraic-degree bound, a bit-based division-property model, and a brute-force multiplicity verifier).
 
 **Where the frontier is.**  These are the most useful places to push, cross-referenced to the evidence sections in [research/VERIFYING-CLAIMS.md](research/VERIFYING-CLAIMS.md):
 
 * **Differential trails.**  The MILP side is closed for every shipped round count, since A(r) is a converged optimum from r = 1 to r = 8 at N = 16 (9, 45, 129, 165, 234, 270, 354, and 390), so superadditivity now supplies floors only above r = 8 (§4).  **The whole opening is on the trail-search side**, where every ceiling is a found characteristic rather than a proven minimum.
-  * *Where the brackets stand.*  Real-trail tightness is settled only at r = 1 (weight 54, proven optimal for its pattern).  r = 2 is bracketed **[270, 293]**, r = 3 **[774, 823]**, r = 4 **[990, 1123]**, r = 5 **[1404, 1602]**, r = 6 **[1620, 1856]**, r = 7 **[2124, 2447]**, and r = 8 **[2340, 2699]** (§13, §16), so every shipped round count has both ends.  **The widest opening is at r = 8**, spanning 359 bits, with r = 7's 323 and r = 6's 236 behind it.  Every one of these ceilings has been through a shell descent and then a shell enumeration, so the widths are comparable, and the width still grows smoothly with r.  The deepest round counts are the loosest simply because there is more trail to be wrong about.
+  * *Where the brackets stand.*  Real-trail tightness is settled only at r = 1 (weight 54, proven optimal for its pattern).  r = 2 is bracketed **[270, 293]**, r = 3 **[774, 823]**, r = 4 **[990, 1123]**, r = 5 **[1404, 1602]**, r = 6 **[1620, 1856]**, r = 7 **[2124, 2447]**, and r = 8 **[2340, 2699]** (§13, §16), so every shipped round count has both ends.
+
+    **The widest opening is at r = 8**, spanning 359 bits, with r = 7's 323 and r = 6's 236 behind it.  Every one of these ceilings has been through a shell descent and then a shell enumeration, so the widths are comparable.  The width still grows smoothly with r.  The deepest round counts are the loosest simply because there is more trail to be wrong about.
   * *Published bounds here have been wrong before.*  Figures of A = 133 and 225 (brackets [798, 928] and [1350, 1573]) stood here until 2026-08-02 and were **wrong**.  They were timed-out incumbents recorded as optima, refuted by cheaper patterns carrying real characteristics of weight 903 and 1154, the latter below the old bracket's own lower endpoint.  Treat any published bound here as re-checkable, and check the `status` column.
-  * *What blocks a lighter trail.*  At r = 5 the search stalls in *stage A*, unable to produce an activity pattern in 55 min, so bit-level instantiation is not the part that needs beating.  What needs beating is the pattern search, either with a better one or by obtaining a pattern some other way.  **The second of those produced every bracket from r = 5 up.**  The MILP already solves A(5) = 234 through A(8) = 390, so its pattern is now exported and instantiated directly (`--dump-pattern` / `--pattern-file`), and the bit level realized each one in 7–14 s.  Stage A itself is no better than it was, which leaves the opening here open.  Beating 1602, 1856, 2447, or 2699 means a *lighter* trail, and each imported pattern is one of possibly many achieving the same S-box count.
+  * *What blocks a lighter trail.*  At r = 5 the search stalls in *stage A*, unable to produce an activity pattern in 55 min, so bit-level instantiation is not the part that needs beating.  What needs beating is the pattern search, either with a better one or by obtaining a pattern some other way.
+
+    **The second of those produced every bracket from r = 5 up.**  The MILP already solves A(5) = 234 through A(8) = 390, so its pattern is now exported and instantiated directly (`--dump-pattern` / `--pattern-file`).  The bit level realized each one in 7–14 s.  Stage A itself is no better than it was, which leaves the opening here open.  Beating 1602, 1856, 2447, or 2699 means a *lighter* trail, and each imported pattern is one of possibly many achieving the same S-box count.
   * **That is the concrete opening.**  The MILP cannot enumerate alternate optima today, so no one has ever looked at a second minimal pattern at these depths, and seed sweeps over the one pattern are close to exhausted (eleven or twelve seeds bought 0 bits at r = 6 and 2 at r = 7).
-  * *Which levers are spent, and which are not.*  That exhaustion is a fact about *seeds*, not about the ceilings.  Descending the weight shell of a trail a sweep had already found took r = 5, 6, 7, and 8 down by 30, 30, 25, and 20 bits without a new pattern.  *Enumerating* the shell each descent stalled in, by re-asking its last satisfied cap for many trails rather than probing below it, then paid a further 1, 1, 1, and 6.  So the two levers are not substitutes, and seeds running out says nothing about how much slack is left under the trail they settled on.  **Nor is the shell exhausted**, since all six enumerations ended `INCOMPLETE`, so nothing rules out lighter characteristics inside them.  Simply spending longer is not the way in, though, because all six were re-run on 2026-08-08, three of them at double the budget, and not one ceiling moved.
+  * *Which levers are spent, and which are not.*  That exhaustion is a fact about *seeds*, not about the ceilings.  Descending the weight shell of a trail a sweep had already found took r = 5, 6, 7, and 8 down by 30, 30, 25, and 20 bits without a new pattern.  *Enumerating* the shell each descent stalled in, by re-asking its last satisfied cap for many trails rather than probing below it, then paid a further 1, 1, 1, and 6.
+
+    So the two levers are not substitutes, and seeds running out says nothing about how much slack is left under the trail they settled on.  **Nor is the shell exhausted**, since all six enumerations ended `INCOMPLETE`, so nothing rules out lighter characteristics inside them.  Simply spending longer is not the way in, though, because all six were re-run on 2026-08-08, three of them at double the budget, and not one ceiling moved.
   * *What has been tried against stage A.*  Five things have been tried against stage A and none moved it: more time, a different activity target, a narrower state (which works, but only bounds the narrow variants), a totalizer cardinality encoding (which made stage A measurably *slower* everywhere it could still be measured), and eight z3 random seeds.  All eight seeds gave up at exactly the same 900 s, so the failure is structural rather than search luck.
 * **Algebraic / integral.**  The algebraic-degree *upper* bound puts degree-based zero-sums at ≈ 2.67 of the 6 default rounds (§15), which caps a *degree-based* construction only and not the true reach.  A bit-based division-property model gives an explicit **2-round** one-directional integral distinguisher with 2^128 data.  From a middle state, the even-multiplicity counting behind it gives an **inside-out zero-sum over 3 rounds**, over one 2^128 cube filling a block, with `P` forward 2 and `P⁻¹` backward 1, both ends balanced on all 2048 bits (§11).
   * **The reach is ≥ 3 rounds with no upper bound claimed, and the bar moves with it.  Beating the current analysis needs an integral or cube distinguisher reaching ≥ 4 rounds**, since 3 is held by the author's own construction.
@@ -36,7 +42,7 @@ Castella has had no cryptanalysis by anyone other than its author.  A claim's cr
   * *What the 3 rests on.*  It rests on an *even multiplicity*, not bijectivity and not a Square-style property.  A deliberately 2-to-1 round map preserves the zero-sum, while one with odd preimage counts destroys it, so the construction is structurally simple and needs 2^128 data.  A cleverer 4-round construction is plausibly easier than the round count suggests.
   * *The forward direction alone* still does not reach 3 rounds in the model.  That check resolves to SAT for both the single-block and `two-blocks` cubes, ruling out a full 2048-bit zero-sum there while proving nothing about `P` itself, since SAT bounds only the model.  The two-directional construction above is what reaches 3.  Partial balance on other output bits is untried in either direction.
 * **Rebound.**  §14 is an explicitly heuristic *margin argument*, not a proof: an actual rebound (or other inbound/outbound) distinguisher covering more rounds than it concedes would re-open the round-count margin.
-* **Invariant subspaces.**  §10's exact search rules these out *exhaustively* for every byte-aligned subspace and every coset of one, and decides the transpose's three symmetry classes without sampling.  It does not cover a subspace that is neither byte-aligned nor one of those classes, since no feasible computation does, so an invariant subspace of that shape, or any nontrivial fixed point, is still open.
+* **Invariant subspaces.**  §10's exact search rules these out *exhaustively* for every byte-aligned subspace and every coset of one, and decides the transpose's three symmetry classes without sampling.  It does not cover a subspace that is neither byte-aligned nor one of those classes, since no feasible computation does.  An invariant subspace of that shape, or any nontrivial fixed point, is still open.
 * **Anything else unmodeled.**  Rotational and meet-in-the-middle angles have had only the light screening in §10 (structural probes), so they are wide open.  Higher-order differentials are covered only by the degree bound (§15) and the integral results above (§11).
 
 The reduced-round instances to attack are in the sections below.
@@ -49,7 +55,7 @@ Every instance is the `castella` tree hash ([hash-programs/](hash-programs/)) wi
 printf 'abc' | ./castella --untagged --rounds=3 --size=20 --custom=challenge -
 ```
 
-Notes for analysts:
+Analysts should note the following:
 
 * The digest size fixes the capacity via the program's rule (smallest even `C` with `16·C ≥ 2·size`), and each family below lists the resulting `C`.  Every size of 16 bytes or fewer gets `C` = 2.
 * An unkeyed digest never absorbs its own length, so of two sizes that share a capacity, the shorter digest is exactly the truncation of the longer one.
@@ -65,7 +71,7 @@ Notes for analysts:
 
 ## Warm-up instances
 
-Digest size 4 bytes (`C` = 2, capacity 256 bits): generic collision cost 2^16, generic preimage cost 2^32.  These are the entry rungs, small enough that a laptop finishes one.  They exist so that a setup can be exercised end to end (the recipe above, the CLI options, the verification steps, and the submission format) before effort goes into the 2^80 families below.
+These instances have a 4-byte digest (`C` = 2, capacity 256 bits), with a generic collision cost of 2^16 and a generic preimage cost of 2^32.  They are the entry rungs, small enough that a laptop finishes one.  They exist so that a setup can be exercised end to end (the recipe above, the CLI options, the verification steps, and the submission format) before effort goes into the 2^80 families below.
 
 **Solving one is not cryptanalysis and will be recorded as what it is.**  The costs above come from the output length, not from the round reduction: SPEC.md's strengths table caps a 4-byte digest at min(4·n, 64·C) = 2^16 and min(8·n, 64·C) = 2^32 at *any* round count, claimed ones included.  A warm-up therefore falls to brute force alone and says nothing about the design.  Only 3 rounds is listed, because a generic search costs the same at every round count.
 
@@ -81,13 +87,15 @@ printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=3,
 | sha256sum | cut -c1-8
 ```
 
-Setup check: the input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
+**Setup check.**  The input `abc` must hash to `e9b6d14b`.  Solutions are verified by the same procedure as the sections below, with this instance's options.
 
-Two consequences of the size rule (see [Common parameters](#common-parameters)) are worth knowing before reading anything into these.  No small-digest instance exists at the collision family's `C` = 4, so the warm-up collision runs at the preimage family's `C` = 2 instead.  And a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance, so `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.  A warm-up is therefore a truncated-digest result, not a partial solution to the family below it, and the two targets are unrelated values.  The [truncated-collision](#truncated-collision-ladder) and [truncated-preimage](#truncated-preimage-ladder) ladders are the next rungs up, and unlike these they lead to a published challenge rather than to a target of their own.
+Two consequences of the size rule (see [Common parameters](#common-parameters)) are worth knowing before reading anything into these.  No small-digest instance exists at the collision family's `C` = 4, so the warm-up collision runs at the preimage family's `C` = 2 instead.  And a 4-byte digest is exactly the first 4 bytes of the 10-byte one from the same instance, so `abc` gives `e9b6d14b` here and `e9b6d14bd11d6f10f07a` in the preimage family.
+
+A warm-up is therefore a truncated-digest result, not a partial solution to the family below it, and the two targets are unrelated values.  The [truncated-collision](#truncated-collision-ladder) and [truncated-preimage](#truncated-preimage-ladder) ladders are the next rungs up.  Unlike these, they lead to a published challenge rather than to a target of their own.
 
 ## Collision challenges
 
-Digest size 20 bytes (`C` = 4, capacity 512 bits): generic collision cost 2^80.  **Task:** exhibit two distinct byte strings with the same digest under the instance.
+These instances have a 20-byte digest (`C` = 4, capacity 512 bits) and a generic collision cost of 2^80.  **Task.**  Exhibit two distinct byte strings with the same digest under the instance.
 
 | challenge | command | status |
 |-----------|---------|--------|
@@ -95,7 +103,7 @@ Digest size 20 bytes (`C` = 4, capacity 512 bits): generic collision cost 2^80. 
 | collision, 4 rounds | `castella --rounds=4 --size=20 --custom=challenge` | unsolved |
 | collision, 5 rounds | `castella --rounds=5 --size=20 --custom=challenge` | unsolved |
 
-Setup check: the input `abc` (3 bytes, no newline) must hash to
+**Setup check.**  The input `abc` (3 bytes, no newline) must hash to
 
 ```
 rounds=3: da47210e7e8699e490a2e93020692400ae131967
@@ -130,7 +138,7 @@ What a rung is worth depends on how it was reached.  Brute force at its generic 
 
 ## Preimage challenges
 
-Digest size 10 bytes (`C` = 2, capacity 256 bits): generic preimage cost 2^80.  **Task:** exhibit any byte string whose digest equals the target.
+These instances have a 10-byte digest (`C` = 2, capacity 256 bits) and a generic preimage cost of 2^80.  **Task.**  Exhibit any byte string whose digest equals the target.
 
 | challenge | command | target digest | status |
 |-----------|---------|---------------|--------|
@@ -147,7 +155,7 @@ for r in 3 4 5; do
 done
 ```
 
-Setup check: the input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `908ca791534f60426a6f` (4 rounds), and `cb22cd306810fdf91db0` (5 rounds).
+**Setup check.**  The input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `908ca791534f60426a6f` (4 rounds), and `cb22cd306810fdf91db0` (5 rounds).
 
 ### Truncated-preimage ladder
 
@@ -163,7 +171,9 @@ Setup check: the input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `90
 
 Each rung stands at all three round counts, against that round's own target prefix.  None is solved at any of them, and a submission names the round count and `k`.
 
-Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  This family already sits at the smallest capacity, so every shorter size keeps it and gives exactly the truncation of the 10-byte digest (see [Common parameters](#common-parameters)).  For `abc` at 3 rounds, sizes 2, 4, 6, 8, and 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10`, and `e9b6d14bd11d6f10f07a`.  The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family, and the ladder names targets that existed already rather than creating any.
+Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  This family already sits at the smallest capacity, so every shorter size keeps it and gives exactly the truncation of the 10-byte digest (see [Common parameters](#common-parameters)).  For `abc` at 3 rounds, sizes 2, 4, 6, 8, and 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10`, and `e9b6d14bd11d6f10f07a`.
+
+The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family.  The ladder names targets that existed already rather than creating any.
 
 The `k` = 4 rung and the [warm-up preimage](#warm-up-instances) both cost 2^32 and run on the *same* instance, with the same round count and the same `C` = 2, and differ only in target.  The warm-up's `43e633d2` comes from a nothing-up-my-sleeve string naming size 4, where this rung's `a92cb2ea` is the first 4 bytes of the size-10 target.  Solving either says nothing about the other.
 
@@ -192,4 +202,4 @@ Every claim is checked against a clean build of this repository and independentl
 
 ## Non-goals
 
-Compress-Castella (`cch`) digests are out of scope.  No collision or preimage resistance is claimed for them (see SPEC.md's non-claims), and its independent lanes cap collision resistance at roughly 2^68 whatever the digest length, so a `cch` collision would confirm that disclaimer rather than break anything.  Implementation attacks (memory safety, timing, and parsers) are also out of scope here, and [ADVERSARIAL-REVIEW-PLAN.md](ADVERSARIAL-REVIEW-PLAN.md) covers them.
+Compress-Castella (`cch`) digests are out of scope.  No collision or preimage resistance is claimed for them (see SPEC.md's non-claims).  Their independent lanes cap collision resistance at roughly 2^68 whatever the digest length, so a `cch` collision would confirm that disclaimer rather than break anything.  Implementation attacks (memory safety, timing, and parsers) are also out of scope here, and [ADVERSARIAL-REVIEW-PLAN.md](ADVERSARIAL-REVIEW-PLAN.md) covers them.

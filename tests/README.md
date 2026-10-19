@@ -44,7 +44,7 @@ The fuzzer avoids, rather than models, one `Castella::Duplex` convenience the sp
 
 ### `tests`
 
-See [tests.cpp](tests.cpp).
+See [tests.cpp](tests.cpp).  It counts its checks and fails unless the total matches `EXPECTED_CHECKS`, so a deleted test cannot pass quietly.
 
 ### `Castella::Duplex`
 
@@ -54,8 +54,10 @@ See [tests.cpp](tests.cpp).
 * Test the clamping of the input parameter of `squeeze_bytes`
 * Verify that the output matches the expected result (a known-answer test)
 * Test constraint violations
+* Test the same constraints on `Castella::DuplexX2`, on builds where it exists (x86-64 with VAES)
 * Test an input size that is greater than the outer state.
     * Ensure that when the input is split into chunks, it results in the same digest as if the data was added in one chunk.
+* Test the raw-data overloads with a null pointer and a zero length against the same calls with an empty span
 
 ### `Castella::DuplexTree`
 
@@ -64,6 +66,9 @@ See [tests.cpp](tests.cpp).
 * Test that input lengths at the chunk boundaries produce pairwise-distinct digests
 * Test that the chunk size is digest-relevant
 * Test that the number of threads NEVER affects the digest
+* Test the parallel bulk path against the sequential reference at 2, 4, and automatic thread counts
+* Test piecewise adds through the streaming pipeline and the transient-worker path against the one-shot digest
+* Test that destroying an unfinalized tree while its worker pool is running neither hangs nor crashes
 * Test that `DuplexTree` and `Duplex` digests are unrelated for the same parameters and input
 * Test that successive squeezes are distinct, and that `add()` after finalization throws
 * Test constraint violations

@@ -36,9 +36,9 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json \
 ## Regenerating
 
 ```bash
-# PuLP is not in the system Python here, so this uses the venv.  HiGHS runs
+# PuLP needs the venv in RE-DERIVATION-RUNBOOK.md § 1.  HiGHS runs
 # single-core despite --threads, so these can run concurrently at no cost.
-/home/sdw/.venvs/pulp/bin/python permute-min-active-sboxes.py \
+~/.venvs/pulp/bin/python3 permute-min-active-sboxes.py \
     --min-rounds 6 -r 6 -t 21600 --dump-pattern patterns/pat-r6.json
 ```
 

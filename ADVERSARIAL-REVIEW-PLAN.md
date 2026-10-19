@@ -381,8 +381,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       machinery with optional detected policies (`HAS_PAIRED_LEAF`, `USE_STREAMING_POOL`).
       Assess whether the compile-time policy detection is over-engineered for two
       instantiations, and whether the two code paths (batch vs streaming pool) could be
-      unified or are justified by the measured wins.  Flag genuinely dead/unused branches
-      (but `simd_load16`'s overloads are intentionally reserved, so do not flag them).
+      unified or are justified by the measured wins.  Flag genuinely dead/unused branches,
+      except those Section 10 records as deliberate.
 - [ ] **Error handling.**  `std::expected` in parse paths, constructor constraint violations
       (do they throw or UB?), preconditions expressed as `assert` (only under `-DDEBUG`) vs
       enforced.  A precondition that's only an assert is an undocumented gotcha if it is
@@ -553,3 +553,35 @@ assert perf claims from reading code (per the repo's own accuracy rule).
 - Re-read source before analyzing it.
 - Make no branches, commits, or pushes without explicit approval.
 - Keep any added comments concise and accurate.
+
+## 10. Closed by decision — do not re-propose
+
+These are review findings the maintainer considered and declined, recorded here so they
+are not raised again.  Each entry is a decision about the current code, not a defect left
+open.  Re-raise one only with new evidence, such as a measured failure or a change to the
+code it names.  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md) § 10 is
+the same kind of register for the cryptanalysis.
+
+| closed | when | where | what was decided |
+|---|---|---|---|
+| `cert-dcl03-c` warnings | 2026-10-12 | `.clang-tidy` (`cert-*`) | They fire on runtime `assert`s and are false positives.  Neither suppress them nor "fix" the asserts. |
+| Dropping `-Wno-unused-function` | 2026-10-17 | `config.mk` | It stays.  Free functions in `.cpp` files stay `static`, and C++ headers use `inline`. |
+| The negated assert in `as_byte_span` | 2026-10-17 | `include/as_byte_span.hpp` | It keeps its form and its `NOLINTNEXTLINE`, rather than the De Morgan form. |
+| Unused `using namespace std::literals;` | 2026-08-14 | every `main` | It is a default kept in every `main`, used or not. |
+| `[[maybe_unused]]` on used `argc`/`argv` | 2026-08-01 | every `main` | Every `main` has the same signature, whether or not it reads its arguments. |
+| Callerless `simd_load16` and signed `byte_width` | 2026-07-09, 2026-09-03 | `include/simd_load.hpp`, `include/byte_width.hpp` | Both are reserved for planned use, not dead code. |
+| The saturating-add branches in `castella-svc` | 2026-08-16 | `http-prng-service/castella-svc.cpp` | They stay, though neither compiles at `-std=c++23`.  The fallback cannot overflow, because the entropy thread resets the counter at 65535. |
+| `default: break;` in `NUM_ROUNDS_MIN` | 2026-08-15 | `include/castella-permute.hpp` | No `std::unreachable()`.  The function is `consteval`, so a `requires` clause and switch that drift apart already fail to compile, as was tested. |
+| `zeroize_` wiping `capacity()` | 2026-08-15 | `include/castella-hash-tree.hpp` | Wiping `capacity()` rather than `size()` is the point.  Wiping only `size()` would leave a longer previous chunk's plaintext in a recycled slot. |
+| A string literal absorbing its NUL | 2026-09-15 | `include/castella-duplex.hpp` | It is documented on the overloads.  A deleted char-array overload would also reject `char buf[16]`, so none is added. |
+| Throwing on a negative argument to the encode family | 2026-09-03 | `include/encode.hpp` | A negative value is a caller bug.  `\pre x ≥ 0` is checked by a DEBUG assert only, with no throw and no second assert on the public `add_*_encoded`. |
+| Narrowing `in_range` and `narrow_cast` | 2026-09-11 | `include/in_range.hpp`, `include/narrow_cast.hpp` | They keep `std::integral`.  Their `std::cmp_*` calls already reject `bool` and plain `char` with a libstdc++ `static_assert`. |
+| `std::string_view` for message labels | 2026-09-15 | `include/parse_int.hpp`, `research/simd_compress-num_states-benchmark.cpp` | Message-label parameters such as `option_name` and `unit` stay `const char*`. |
+| The author printed twice by `--version` | 2026-10-12 | `hash-programs/castella.cpp`, `hash-programs/cch.cpp` | Both lines (Copyright and Written by) feed help2man's AUTHOR section. |
+| The DEBUG preamble in the benchmarks | 2026-08-14 | `research/*-benchmark.cpp` | A benchmark never defines `DEBUG` or undefines `NDEBUG`, since it must measure the release build. |
+| A TSan build variant | 2026-08-15 | `make test-san` | `test-san` stays ASan+UBSan.  TSan is clean on the pool, so run it ad hoc unless a race is found or the pool is reworked. |
+| `set -o pipefail` in `process-benchmark-result.sh` | 2026-08-15 | `research/process-benchmark-result.sh` | The script runs under `/usr/bin/sh`, and dash rejects the option. |
+| Raising `BENCHMARK_REPS` | 2026-08-12 | `research/run-benchmarks.bash` | It stays at 5, one count for every benchmark, read as a median.  Report a noisy row as inside the noise. |
+| A KAT vector for `permute_inv` | 2026-08-09 | `tests/KAT.txt` | P⁻¹ is determined by P and cannot change a digest. |
+| Sharing code with, or speeding up, `spec-conformance.py` | 2026-07-31, 2026-08-02 | `research/spec-conformance.py` | No code shared with the C++, no vectorizing, and no pypy or python-cryptography.  Its independence from the C++ is the point. |
+| A lower round count for tree leaves | 2026-10-12 | both tree hashes | Leaves run the final node's round count.  For castella a leaf collision is a tree collision, and for cch the gain is at most about 2.7%. |

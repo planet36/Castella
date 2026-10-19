@@ -125,7 +125,7 @@ Each of these owns something this file only summarizes, so go to the owner befor
 | `SPEC.md` | the normative specification, the security claims, and the claimed `(C, R*)` instances |
 | `CHALLENGES.md` | the published challenge digests, and the bracket table each challenge is set against |
 | `CRYPTO-SECURITY-CLAIMS-PLAN.md` | how the claims were arrived at: the capacity mapping and the `R*` methodology |
-| `ADVERSARIAL-REVIEW-PLAN.md` | the review's per-surface threat models and its standing audit items |
+| `ADVERSARIAL-REVIEW-PLAN.md` | the review's per-surface threat models, its standing audit items, and the register of declined findings |
 | `research/README.md` | the cryptanalysis program inventory, the models and their caveats, and every result table |
 | `research/VERIFYING-CLAIMS.md` | claim → evidence → command, with the expected output and how to read it |
 | `research/RE-DERIVATION-RUNBOOK.md` | the standing procedure for re-deriving those figures, with budgets |
@@ -186,6 +186,8 @@ Do not change build flags (e.g., `-std`) or other configuration based on unverif
 ## Code Review Checklist
 
 When reviewing C/C++ code, check for memory leaks, include audit issues, API consistency, constexpr optimization opportunities, performance, documentation, security issues, and README accuracy.
+
+`ADVERSARIAL-REVIEW-PLAN.md` § 10 lists findings already considered and declined, so check it before reporting one.
 
 ## Key Constraints
 

@@ -277,7 +277,7 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 # so review that diff like any other, and they cost ~6.5 h of MILP for the set.
 # Afterwards check `proven_optimal` in each file.  Only `true` licenses 6*A as a floor,
 # and the 600 s default -t silently yields an incumbent at every one of these cells.
-python3 permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
+<pulp> permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
 python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
 # The same two commands at r = 6, 7, and 8 (2026-08-05).  Raise -t past the MILP's own
@@ -285,7 +285,7 @@ python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-mi
 # off.  The '{r}' in --dump-pattern is required when solving more than one round count,
 # and each round count replaces it.  HiGHS uses one core on this model, so running the
 # three round counts as concurrent processes costs nothing over this sequential form.
-python3 permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'patterns/pat-r{r}.json'
+<pulp> permute-min-active-sboxes.py --min-rounds 6 -r 8 -t 21600 --dump-pattern 'patterns/pat-r{r}.json'
 python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --no-minimize --random-seed 2 -M 3500   # 4m; trail 1887
 python3 permute-trail-search.py -r 7 --pattern-file patterns/pat-r7.json --no-minimize --random-seed 8 -M 3500   # 4m; trail 2473
 python3 permute-trail-search.py -r 8 --pattern-file patterns/pat-r8.json --no-minimize --random-seed 1 -M 3500   # 5m; trail 2725

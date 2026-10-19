@@ -365,9 +365,9 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    probability from 2^−54 to 2^−51.7, so first-order clustering costs about 2 bits, which
    is immaterial against the per-two-round floor.  Above r = 1 every shell enumeration ran
    out of clock `INCOMPLETE`, so the `DP(differential | pattern)` figures they print bound
-   nothing and are recorded only as figures to discard (RE-DERIVATION-RUNBOOK.md § 3).  A
-   clustering *estimate* at 2–4 rounds therefore does not exist, and obtaining one is
-   inside the closed line above.
+   nothing and are recorded only as figures to discard (research/README.md).  A clustering
+   *estimate* at 2–4 rounds therefore does not exist, and obtaining one is inside the
+   closed line above.
 4. **Structural distinguishers (new; overlap with ADVERSARIAL-REVIEW-PLAN.md §1a/2a —
    execute once, report in both):** invariant subspaces and symmetric-state propagation
    (do the round constants break the transpose's block↔byte symmetry — test, don't

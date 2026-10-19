@@ -129,7 +129,7 @@ Interpretation:
 * folded ≈ vaes\_cast confirms that both run the same eight 256-bit AES dependency chains.  The folded `permute`'s win over the generic path comes from keeping the state in registers *across the transpose*, not from the AES stage.
 * x2\_broadcast is slower per byte than vaes\_cast (3.48 ns per state vs. 2.68) because each key needs a `vbroadcasti128` load-and-duplicate where the pair-cast and folded variants load their key tables directly.
 
-The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` (unguarded, so it runs on every target) already round-trips it for every state size and round count.  `permute_inv` takes the VAES path, not the generic one.
+The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` (unguarded, so it runs on every target) already round-trips it for every state size and round count.  Its AES stage, `aes_enc_inv_arr`, takes the VAES pair-cast path, although `permute_inv` itself stays unfolded.
 
 ## Findings: the folded permute wins at _N_ = 16 (2026-09-15)
 

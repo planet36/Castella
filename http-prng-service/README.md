@@ -4,7 +4,7 @@ An HTTP server that exposes `/absorb` and `/squeeze` endpoints backed by a Caste
 
 ## Trust model
 
-The service is **one shared pool with no caller isolation**.  Every client of the port reads and writes the same duplex state: `/absorb` mutates the state that other callers' `/squeeze` requests later draw from, and nothing distinguishes one caller from another.  This is by design for a local pool.  It is not a per-caller randomness source like `getrandom(2)` or `/dev/urandom`, and it is not multi-tenant.
+The service is **one shared pool with no caller isolation**.  Every client of the port reads and writes the same duplex state, and nothing distinguishes one caller from another.  `/absorb` mutates the state that other callers' `/squeeze` requests later draw from.  This is by design for a local pool.  It is not a per-caller randomness source like `getrandom(2)` or `/dev/urandom`, and it is not multi-tenant.
 
 The default `HOST` keeps it on the loopback interface.  Bind it elsewhere only if every process that can reach that address is trusted.
 

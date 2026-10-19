@@ -115,7 +115,7 @@ These claims were last verified against a full run on 2026-07-18, with the unifi
 * The default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower).
 * The 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input.  For `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned.
 
-Create the test input the same way the benchmark scripts do.  The scripts themselves no longer use this path.  Each run generates its input in a private `mktemp` directory and removes that directory on exit, so a script can neither collide with a concurrent run nor disturb a `/tmp/test.txt` of your own:
+Create the test input the same way the benchmark scripts do.  The scripts themselves generate theirs in a private `mktemp` directory, which they remove on exit, so a script can neither collide with a concurrent run nor disturb a `/tmp/test.txt` of your own:
 
 ```bash
 yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --bytes 500M > /tmp/test.txt
@@ -135,7 +135,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
   `taskset` pins the run to one core, matching the per-core claim.  `research/simd_compress-num_states-benchmark` measures node-level throughput instead, one hash state with no tree (see [research/README.md](../research/README.md)).
 
-* **"Memory-mapped files parallelize best" and "the reading thread limits throughput"**: `bash benchmark.threads.bash` sweeps `--num-threads` (overridden by `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads.  `castella --no-mmap` and piped input flatten once the single reading thread is the bottleneck, at about 2 threads with VAES leaf pairing.  `cch --no-mmap` and piped input ignore extra threads entirely, because streamed cch input hashes inline by design.  Plot any of the CSVs with `python plot-results.py --xlog results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`, using `--xlog` because the default thread counts are powers of 2 up to `nproc`.
+* **"Memory-mapped files parallelize best" and "the reading thread limits throughput"**: `bash benchmark.threads.bash` sweeps `--num-threads` (overridden by `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads, while the streamed modes behave as the 2026-07-18 list above records.  Plot any of the CSVs with `python plot-results.py --xlog results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`, using `--xlog` because the default thread counts are powers of 2 up to `nproc`.
 
 * **The 64 KiB default `--chunk-size` of both programs**: `bash benchmark.castella.chunk-size.bash` and `bash benchmark.cch.chunk-size.bash`, then `python plot-results.py --xlog` on each resulting CSV.  The defaults were chosen from 512 MiB runs (`FILE_SIZE=512M`), in which throughput plateaus above roughly 64 KiB for both programs, and 64 KiB keeps small files parallelizable.  The multithreaded-scaling figure for `cch`, ~63 GiB/s, comes from the same runs.  `castella-hash-tree.hpp`'s `DEFAULT_CHUNK_SIZE` comment cites these runs for the *shape* (throughput plateaus, and cch's best multithreaded scaling was also at 64 KiB) but quotes no throughput, so both figures live here and nowhere else.
 

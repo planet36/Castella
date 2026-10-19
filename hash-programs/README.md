@@ -137,7 +137,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
   taskset -c 0 hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 './cch --num-threads=1 /tmp/test.txt'
   ```
 
-  `taskset` pins the run to one core, matching the per-core claim.  `research/simd_compress-num_states-benchmark` measures node-level throughput instead, one hash state with no tree (see [research/README.md](../research/README.md)).
+  `taskset` pins the run to one core, matching the per-core claim.  `research/simd_compress-num_states-benchmark` measures node-level throughput instead, per hash state and with no tree (see [research/README.md](../research/README.md)).
 
 * **"Memory-mapped files parallelize best" and "the reading thread limits throughput"**: `bash benchmark.threads.bash` sweeps `--num-threads` (overridden by `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads, while the streamed modes behave as the 2026-07-18 list above records.
 

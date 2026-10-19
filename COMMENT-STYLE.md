@@ -32,7 +32,8 @@ those reads as well.
 **3. Colons introduce lists and explanations.**  A colon before a real list is
 correct, and so is one whose second half explains the clause before it.  What
 sits before the colon should be a clause rather than a bare noun phrase used as
-a label.
+a label.  A bold run-in label is such a noun phrase, so it ends with a period,
+as each rule's title here does, and the text after it is a full sentence.
 
 **4. Dashes set off a parenthetical or land a closing clause.**  A pair of
 dashes around a parenthetical is acceptable, and real parentheses are usually

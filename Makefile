@@ -45,13 +45,13 @@ clean:
 ifneq ($(strip $(DEPS) $(BINS)),)
 	@$(RM) --verbose -- $(DEPS) $(BINS)
 endif
-	for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
+	@for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 
 lint:
 ifneq ($(strip $(SRCS)),)
 	-clang-tidy --quiet $(SRCS) -- $(LINT_CPPFLAGS) $(LINT_CXXFLAGS)
 endif
-	-for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
+	-@for dir in $(SUBDIRS) $(EXTRA_SUBDIRS); do $(MAKE) -C $$dir $@; done
 
 # https://www.gnu.org/software/make/manual/make.html#Phony-Targets
 .PHONY: all everything test test-san clean lint $(SUBDIRS) $(EXTRA_SUBDIRS)

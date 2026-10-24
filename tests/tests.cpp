@@ -144,7 +144,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
             static_assert((capacity_blocks % 2) != 0);
             constexpr int num_rounds = 6;
 
@@ -598,9 +598,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 // The tree constructor builds the final node, so a bad Duplex
                 // parameter throws from the tree constructor rather than from
                 // the first add()
-                constexpr int bad_capacity_blocks = Castella::Duplex::C_MIN + 1; // C is odd
+                constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
 
-                Castella::DuplexTree tree(bad_capacity_blocks, num_rounds, input_suffix,
+                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                           function_name, customization_str, chunk_size);
 
                 return 1; // unreachable

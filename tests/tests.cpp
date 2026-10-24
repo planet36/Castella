@@ -142,6 +142,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
+        // Each test below isolates one check.  The two out-of-range capacities
+        // are even, so removing a C range check cannot be masked by the "C is
+        // odd" check catching them anyway.
+
         try
         {
             constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
@@ -161,7 +165,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 1; // C < C_MIN
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C < C_MIN
+            static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
@@ -177,7 +182,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 1; // C > C_MAX
+            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C > C_MAX
+            static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,

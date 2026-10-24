@@ -75,5 +75,5 @@ See [tests.cpp](tests.cpp).  It counts its checks and fails unless the total mat
 * Test that destroying an unfinalized tree while its worker pool is running neither hangs nor crashes
 * Test that `DuplexTree` and `Duplex` digests are unrelated for the same parameters and input
 * Test that successive squeezes are distinct, and that `add()` after finalization throws
-* Test constraint violations
 * Verify that the output matches the expected result (a known-answer test that must never change)
+* Test constraint violations

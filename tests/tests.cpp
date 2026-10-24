@@ -259,11 +259,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         // Each value below isolates one check.  The two out-of-range capacities
         // are even, so removing a C range check cannot be masked by the "C is
         // odd" check catching them anyway.
-        static_assert(((Castella::Duplex::C_MIN + 1) % 2) != 0); // odd
+        static_assert(((Castella::Duplex::C_MIN | 1) % 2) != 0); // odd
         static_assert(((Castella::Duplex::C_MIN - 2) % 2) == 0);
         static_assert(((Castella::Duplex::C_MAX + 2) % 2) == 0);
 
-        if (!expect_invalid(Castella::Duplex::C_MIN + 1, good_num_rounds) ||
+        if (!expect_invalid(Castella::Duplex::C_MIN | 1, good_num_rounds) ||
             !expect_invalid(Castella::Duplex::C_MIN - 2, good_num_rounds) ||
             !expect_invalid(Castella::Duplex::C_MAX + 2, good_num_rounds) ||
             !expect_invalid(good_capacity_blocks,

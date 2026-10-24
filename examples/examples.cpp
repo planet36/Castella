@@ -317,7 +317,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add_right_encoded(num_bytes_to_squeeze)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -353,7 +353,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add_right_encoded(num_bytes_to_squeeze)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -389,7 +389,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(0))
+                                      .add_right_encoded(0)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -425,7 +425,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .add_left_encoded(K)  // encode_string
                                       .apply_padding_rule() // bytepad
                                       .add(X)
-                                      .add(right_encode(0))
+                                      .add_right_encoded(0)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -476,7 +476,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_left_encoded(X[0]) // encode_string
                                       .add_left_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add_right_encoded(num_bytes_to_squeeze)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -484,7 +484,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_left_encoded(Y[0]) // encode_string
                 .add_left_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add_right_encoded(num_bytes_to_squeeze)
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -531,7 +531,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_left_encoded(X[0]) // encode_string
                                       .add_left_encoded(X[1]) // encode_string
-                                      .add(right_encode(num_bytes_to_squeeze))
+                                      .add_right_encoded(num_bytes_to_squeeze)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -539,7 +539,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_left_encoded(Y[0]) // encode_string
                 .add_left_encoded(Y[1]) // encode_string
-                .add(right_encode(num_bytes_to_squeeze))
+                .add_right_encoded(num_bytes_to_squeeze)
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -586,7 +586,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_left_encoded(X[0]) // encode_string
                                       .add_left_encoded(X[1]) // encode_string
-                                      .add(right_encode(0))
+                                      .add_right_encoded(0)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -594,7 +594,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_left_encoded(Y[0]) // encode_string
                 .add_left_encoded(Y[1]) // encode_string
-                .add(right_encode(0))
+                .add_right_encoded(0)
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
@@ -641,7 +641,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                    function_name, customization_str)
                                       .add_left_encoded(X[0]) // encode_string
                                       .add_left_encoded(X[1]) // encode_string
-                                      .add(right_encode(0))
+                                      .add_right_encoded(0)
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const auto digest_bytes_2 =
@@ -649,7 +649,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                              customization_str)
                 .add_left_encoded(Y[0]) // encode_string
                 .add_left_encoded(Y[1]) // encode_string
-                .add(right_encode(0))
+                .add_right_encoded(0)
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =

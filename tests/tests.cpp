@@ -234,43 +234,91 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "test";
 
-        constexpr int good_num_rounds = 6;
-        constexpr int good_capacity_blocks = 4;
-
-        const auto expect_invalid = [&](const int capacity_blocks, const int num_rounds)
-        {
-            try
-            {
-                Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
-                                            function_name, customization_str);
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                ++num_checks;
-                std::println("std::invalid_argument: {}", ex.what());
-                return true;
-            }
-
-            std::println(stderr, "FAILED: DuplexX2(C={}, NUM_ROUNDS={}) did not throw",
-                         capacity_blocks, num_rounds);
-            return false;
-        };
-
-        // Each value below isolates one check.  The two out-of-range capacities
+        // Each test below isolates one check.  The two out-of-range capacities
         // are even, so removing a C range check cannot be masked by the "C is
         // odd" check catching them anyway.
-        static_assert(((Castella::Duplex::C_MIN | 1) % 2) != 0); // odd
-        static_assert(((Castella::Duplex::C_MIN - 2) % 2) == 0);
-        static_assert(((Castella::Duplex::C_MAX + 2) % 2) == 0);
 
-        if (!expect_invalid(Castella::Duplex::C_MIN | 1, good_num_rounds) ||
-            !expect_invalid(Castella::Duplex::C_MIN - 2, good_num_rounds) ||
-            !expect_invalid(Castella::Duplex::C_MAX + 2, good_num_rounds) ||
-            !expect_invalid(good_capacity_blocks,
-                            Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1) ||
-            !expect_invalid(good_capacity_blocks, Castella::NUM_ROUNDS_MAX + 1))
+        try
         {
-            return 1;
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
+            static_assert((capacity_blocks % 2) != 0);
+            constexpr int num_rounds = 6;
+
+            Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C < C_MIN
+            static_assert((capacity_blocks % 2) == 0);
+            constexpr int num_rounds = 6;
+
+            Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C > C_MAX
+            static_assert((capacity_blocks % 2) == 0);
+            constexpr int num_rounds = 6;
+
+            Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
+
+            Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
+
+            Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
+                                        function_name, customization_str);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
         }
     }
 #endif

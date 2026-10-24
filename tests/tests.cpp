@@ -545,74 +545,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
 
         {
-            // Test constraint violations
-            try
-            {
-                constexpr int bad_chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN - 1;
-
-                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, bad_chunk_size);
-
-                return 1; // unreachable
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                ++num_checks;
-                std::println("std::invalid_argument: {}", ex.what());
-            }
-
-            try
-            {
-                constexpr int bad_num_threads = -1;
-
-                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, chunk_size,
-                                          bad_num_threads);
-
-                return 1; // unreachable
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                ++num_checks;
-                std::println("std::invalid_argument: {}", ex.what());
-            }
-
-            try
-            {
-                constexpr int bad_num_threads = Castella::DuplexTree::NUM_THREADS_MAX + 1;
-
-                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, chunk_size,
-                                          bad_num_threads);
-
-                return 1; // unreachable
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                ++num_checks;
-                std::println("std::invalid_argument: {}", ex.what());
-            }
-
-            try
-            {
-                // The tree constructor builds the final node, so a bad Duplex
-                // parameter throws from the tree constructor rather than from
-                // the first add()
-                constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
-
-                Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
-                                          function_name, customization_str, chunk_size);
-
-                return 1; // unreachable
-            }
-            catch (const std::invalid_argument& ex)
-            {
-                ++num_checks;
-                std::println("std::invalid_argument: {}", ex.what());
-            }
-        }
-
-        {
             // The parallel bulk path against the sequential reference.  64 full
             // chunks is well past the batch path's threshold of
             // 2 * MIN_LEAF_CHUNKS_PER_WORKER, so 2, 4, and auto threads each
@@ -722,6 +654,93 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                          quote_shell_always("tree test"), result);
 
             CHECK(result == expected_result);
+        }
+    }
+
+    {
+        // Test DuplexTree constraint violations
+        constexpr int input_suffix = 0;
+        constexpr std::string_view function_name = "Castella";
+        constexpr std::string_view customization_str = "test";
+
+        try
+        {
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = 6;
+            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN - 1; // CHUNK_SIZE < CHUNK_SIZE_MIN
+            constexpr int num_threads = 1;
+
+            Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                      function_name, customization_str, chunk_size,
+                                      num_threads);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = 6;
+            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
+            constexpr int num_threads = -1; // NUM_THREADS < 0
+
+            Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                      function_name, customization_str, chunk_size,
+                                      num_threads);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            constexpr int capacity_blocks = 4;
+            constexpr int num_rounds = 6;
+            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
+            constexpr int num_threads = Castella::DuplexTree::NUM_THREADS_MAX + 1; // NUM_THREADS > NUM_THREADS_MAX
+
+            Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                      function_name, customization_str, chunk_size,
+                                      num_threads);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
+        }
+
+        try
+        {
+            // The tree constructor builds the final node, so a bad Duplex
+            // parameter throws from the tree constructor rather than from
+            // the first add()
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN | 1; // C is odd
+            static_assert((capacity_blocks % 2) != 0);
+            constexpr int num_rounds = 6;
+            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
+            constexpr int num_threads = 1;
+
+            Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                      function_name, customization_str, chunk_size,
+                                      num_threads);
+
+            return 1; // unreachable
+        }
+        catch (const std::invalid_argument& ex)
+        {
+            ++num_checks;
+            std::println("std::invalid_argument: {}", ex.what());
         }
     }
 

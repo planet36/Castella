@@ -165,7 +165,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C < C_MIN
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C is too small
             static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
@@ -182,7 +182,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C > C_MAX
+            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C is too large
             static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
@@ -200,7 +200,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             constexpr int capacity_blocks = 4;
-            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // num_rounds is too small
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -216,7 +216,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             constexpr int capacity_blocks = 4;
-            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // num_rounds is too large
 
             Castella::Duplex hash_obj(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str);
@@ -263,7 +263,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C < C_MIN
+            constexpr int capacity_blocks = Castella::Duplex::C_MIN - 2; // C is too small
             static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
@@ -280,7 +280,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         try
         {
-            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C > C_MAX
+            constexpr int capacity_blocks = Castella::Duplex::C_MAX + 2; // C is too large
             static_assert((capacity_blocks % 2) == 0);
             constexpr int num_rounds = 6;
 
@@ -298,7 +298,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             constexpr int capacity_blocks = 4;
-            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // NUM_ROUNDS < NUM_ROUNDS_MIN
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>() - 1; // num_rounds is too small
 
             Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
                                         function_name, customization_str);
@@ -314,7 +314,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         try
         {
             constexpr int capacity_blocks = 4;
-            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // NUM_ROUNDS > NUM_ROUNDS_MAX
+            constexpr int num_rounds = Castella::NUM_ROUNDS_MAX + 1; // num_rounds is too large
 
             Castella::DuplexX2 hash_obj(capacity_blocks, num_rounds, input_suffix,
                                         function_name, customization_str);
@@ -721,7 +721,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         {
             constexpr int capacity_blocks = 4;
             constexpr int num_rounds = 6;
-            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN - 1; // CHUNK_SIZE < CHUNK_SIZE_MIN
+            constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN - 1; // chunk_size is too small
             constexpr int num_threads = 1;
 
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
@@ -741,7 +741,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             constexpr int capacity_blocks = 4;
             constexpr int num_rounds = 6;
             constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
-            constexpr int num_threads = -1; // NUM_THREADS < 0
+            constexpr int num_threads = -1; // num_threads is too small
 
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str, chunk_size,
@@ -760,7 +760,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             constexpr int capacity_blocks = 4;
             constexpr int num_rounds = 6;
             constexpr int chunk_size = Castella::DuplexTree::CHUNK_SIZE_MIN;
-            constexpr int num_threads = Castella::DuplexTree::NUM_THREADS_MAX + 1; // NUM_THREADS > NUM_THREADS_MAX
+            constexpr int num_threads = Castella::DuplexTree::NUM_THREADS_MAX + 1; // num_threads is too large
 
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str, chunk_size,

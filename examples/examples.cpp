@@ -449,6 +449,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     * </blockquote>
     */
 
+    // Both tuples split one string, one character apart, so their
+    // concatenations are the same bytes and only the length encoding tells
+    // them apart.
+    constexpr std::array<std::string_view, 2> tuple_X{"They taste", " like burning!"};
+    constexpr std::array<std::string_view, 2> tuple_Y{"They taste ", "like burning!"};
+
+    static_assert(tuple_X != tuple_Y);
+    static_assert(std::ranges::equal(tuple_X | std::views::join, tuple_Y | std::views::join));
+
     {
         /*
         * TupleHash128(X, L, S):
@@ -462,8 +471,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 256; // bits
-        constexpr std::array<std::string_view, 2> X{"abc", "d"};
-        constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
+        constexpr auto X = tuple_X;
+        constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
@@ -488,10 +497,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "7637a9012cb4ae31f3debfd26623f6a978614922943da6baa4a6b94f5ee0f37b";
+            "1dbe3fdd2a7c48b0d892c31a6b6a4c3db1d64f52b9c4ab393e09e19291fb7a30";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "7410b89abfaf8132f472b9c2234772e1cce9a5517cc335af9e815649e748f1cc";
+            "0795e028bfcaa62c4ccbfa9053f8c9254c9ab1ec60f361fa6feb6a54fb839528";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -517,8 +526,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 512; // bits
-        constexpr std::array<std::string_view, 2> X{"abc", "d"};
-        constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
+        constexpr auto X = tuple_X;
+        constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
@@ -543,10 +552,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "32fd46839331528c6430146e634ab43dfbc9f7b2edbe0b30f8bee51600a44ad2b0030d5ca5c536899de56677ab170ff0aa0d7752a98a7e049079160c8d8c3fa2";
+            "b58849fc3a9240cf0e06a193625ed938430995f7fa3e93fffc614c475cf5bd7c1c6628f6c738ab07b46d6c90be7dd990cbfb76942ada096f86e1ddbe8f3cc217";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "1efec402c1c731c0c5b5f20b13e31c9b1f1d7821f21ee37e639c45f5f0878723207422ae6b53e7596c2aae08d6a1d7e77fc0929eea538593de62ad4b99477629";
+            "c9b87f4765e1293b72c9177ea5521bbb22fbea57b6032064f7077dd1526bb82a219ff586b23d4ef4109e88bd117bc630104e15f8fd95b1250f61cad9538a705c";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -572,8 +581,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 256; // bits
-        constexpr std::array<std::string_view, 2> X{"abc", "d"};
-        constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
+        constexpr auto X = tuple_X;
+        constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
@@ -598,10 +607,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "60b67ea3bd85a720ff98743b8d0d0e7f01bac01adcf330aa46f6760aa1a23345";
+            "22719907aa44b6f54347eed642b3923379194c1797ca05e36623639ae01f83d0";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "97e8a11435d72cbcd3b8da5891381c068587a09cbfbfbeb20cae71a73cde6404";
+            "9ea8ee310d71c52a4c8a4b365e8d26e9a650cb022b52169f7e2bdc5190eb943c";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -627,8 +636,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         */
 
         constexpr int L = 512; // bits
-        constexpr std::array<std::string_view, 2> X{"abc", "d"};
-        constexpr std::array<std::string_view, 2> Y{"ab", "cd"};
+        constexpr auto X = tuple_X;
+        constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
         constexpr int num_rounds = 6;
@@ -653,10 +662,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "4bd71ef88cd71b31303180e870a61e9c539e09cd8c3eda3d9c1eeffbf992c8c5fbf56f58c67fab36b22fbf207495d271e56649e0aa8a6d1cb99fcdab8d9d5b92";
+            "3b2cc2b5094cd48a61bad27c4105c9f409535e2ce20f9e72df37c94ffc6dfffaa4108aca87d2f952f86d742237396395da69d51a5ce245b337d6cf506934b791";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "b9d603a92229969b6ff77272462904350620bc52ad21248319fb7a55089bd99a5d6ee3b7268168a6d4670508a163a6695a03499129ca3893f09ca09ea0f0e0c9";
+            "4db78d3ca4acc0e84945e39ea5378bb2bb20bd9ab6e01f3910b0434e5835f66461b564fedf5a51b9edeb11f011c3a142c5054c83b622fd18548b71ee7a86e1a5";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),

@@ -36,7 +36,7 @@ make test          # or: ./examples
 
 Every example prints its digest and checks it, so this is a test as much as a demonstration.  It is part of the repository's `make test`.  A run ends with a `31 passed, 0 failed` summary and exits nonzero if anything failed.
 
-Beyond their digests, the TupleHash-like and ParallelHash-like examples each check the property their construction exists for.  The four TupleHash-like ones check that the same bytes split into a different tuple (`"abc", "d"` against `"ab", "cd"`) give a different digest, and the ParallelHash128-like and ParallelHash256-like ones that a different block size does.  The two ParallelHashXOF-like ones check instead that a shorter output is a prefix of a longer one.
+Beyond their digests, the TupleHash-like and ParallelHash-like examples each check the property their construction exists for.  The four TupleHash-like ones check that the same bytes split into a different tuple (`"They taste", " like burning!"` against `"They taste ", "like burning!"`) give a different digest, and the ParallelHash128-like and ParallelHash256-like ones that a different block size does.  The two ParallelHashXOF-like ones check instead that a shorter output is a prefix of a longer one.
 
 A failing check does not stop the run.  Each failure is reported with its file and line, and with the expected and actual digests for a digest mismatch or the property's description for a property check, so one run shows all of them.  The total is also compared against `EXPECTED_CHECKS`, so a run that loses an example or stops short fails rather than silently shrinking the count.  Update that constant deliberately when adding or removing an example.
 

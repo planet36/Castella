@@ -14,7 +14,7 @@ the rules below are about where that line falls.
 Write the rules into the first draft.  A comment that needs a rewrite pass to
 satisfy them was written wrong.
 
-A letter on a rule number marks a sub-case of the rule it follows.
+A letter on a rule number marks a sub-case of the rule with that number.
 
 ## Sentences
 
@@ -205,7 +205,7 @@ convention, it wins, and rules 12 and 22a record the two cases that arise.
 
 The Doxygen behavior described below was checked against version 1.18.0.
 
-**22. The brief goes on `///` lines above the block.**  Write the brief as
+**22. Write a short brief on `///` lines above the block.**  Put the brief on
 `///` immediately above the `/** ... */` block, and let the block hold only the
 detail.  Do not use `\brief` inside the block.  A declaration whose brief says
 everything needs no block at all.

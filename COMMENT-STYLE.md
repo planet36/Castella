@@ -70,6 +70,9 @@ than split it.  A split changes paragraph breaks, not wording.
 
 ## Punctuation
 
+The marks that join clauses into one sentence are under Sentences, and this
+section holds the rest.
+
 **7. Put two spaces after a sentence-ending period.**  That holds in code
 comments, doc blocks, commit messages, and documentation files alike, Markdown
 included.  An abbreviation such as "vs." takes one space, since no sentence
@@ -79,10 +82,10 @@ Do not bulk-convert a file you are not otherwise editing.  Any line you do
 modify comes back with two spaces.
 
 **8. Put punctuation inside quotation marks only when it belongs to the quoted
-text.**  Rule 17 asks for American spelling, not the American habit of putting
-every period and comma inside.  Quoted text in code and commit messages is
-usually literal, such as a commit subject, an error message, or a command, and
-a mark added inside the quotes reads as part of it.
+text.**  American spelling does not bring with it the American habit of
+putting every period and comma inside.  Quoted text in code and commit messages
+is usually literal, such as a commit subject, an error message, or a command,
+and a mark added inside the quotes reads as part of it.
 
 **9. Use the serial comma.**  Put a comma before the final conjunction in a
 list of three or more.

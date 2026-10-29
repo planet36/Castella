@@ -407,8 +407,8 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    distinguishers on reduced rounds — the standard Keccak-style distinguisher families.
 
    **DONE, and this is the item that ended up carrying the margin policy.**  The degree
-   bound (`permute-degree-bound.py`) saturates by 2 rounds, capping a *degree-based*
-   zero-sum at ≈ 2.67 rounds.  The cube work went further: random-cube probes
+   bound (`permute-degree-bound.py`) allows a *degree-based* zero-sum 4 rounds inside-out,
+   at about 2^2044 data.  The cube work went further: random-cube probes
    (`permute-zero_sum-probes.cpp`), then a bit-based division-property model for *chosen*
    cubes (`permute-division-property.py`) giving a 1-round byte-aligned distinguisher and a
    2-round integral distinguisher at 2^128 data, and finally the even-multiplicity argument

@@ -25,7 +25,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself) | executable | §10 |
-| 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives a 3-round inside-out zero-sum | executable | §11 |
+| 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight, r=2 through r=8 bracketed on solved floors) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
@@ -192,9 +192,13 @@ This result does not need the model either, because the README's three-step proo
 
 **At 1 round, a half whose cube reaches beyond the target's block is decided without solving.**  A `block` cube's backward half puts one byte of the cube in every block, so the other 120 cube bits cannot reach any one target, and each value of the target's inputs repeats 2^120 times.  No division trail can carry those bits, so **`--inside-out 0 1 -c block` must report a zero-sum in under a second**, every block marked `120 cube bits cannot reach it`.  `--inside-out 2 1 -c block` then certifies the 3-round zero-sum at the cost of its forward half, the `-r 2 -c block` scan above.
 
+**Through the sponge interface the reach is 2, the figure SPEC.md's margin counts.**  `--sponge 2 -r 1` must report a balanced rate bit without solving, and `--sponge 2 -r 2` must report one by solving, block 0 bit 0, in about 3.5 min.  Both follow from the `block` cube, which lies in the rate, so a failure means the sponge geometry is wrong.  `--self-test` checks that geometry against the transpose.
+
 `permute-multiplicity-verify.py` checks the argument those results rest on, and it must exit 0.  Its Part A decides the premises on the real 16×16 state against `spec-conformance.py`.  One round is the transpose of a block-local AES phase (200 random states), and a block-0 cube moves exactly 16 of the 256 output bytes, all at byte 0.  The block map is a bijection (the S-box is a permutation, and `aesenc`'s post-SubBytes tail is F2-affine of **rank 128/128**, where the rank is exact and only the affinity is sampled).  The multiplicity is 2^120 and even, and the 1-round byte cube zeroes all 256 output bytes exhaustively over its 2^8 states.
 
 Part B then sets the argument aside and sums actual XORs at reduced width, where a full-block cube is enumerable.  The reach table must come out **identical at `--reduced 2` and `--reduced 3`**, which is the point of paying 35 min for the second.  A row cube gives forward 2 / backward 1, a column 1 / 2, and a diagonal 1 / 1, so the best inside-out reach from one cube is **3**, from a row or a column.
+
+`--rowcol --skip-full-width` (388 s) adds a `rowcol` row, which must read forward 2 / backward 2, an inside-out reach of **4**.  `./permute-zero_sum-analog-verify` (92 s, or 5 s with `-q`) checks row ∪ column and every block's AES diagonal exhaustively on a 4-bit-cell analog that keeps ShiftRows.  It must end `passed:` with every construction a zero-sum and every control not.
 
 Four controls must all hold:
 
@@ -270,19 +274,19 @@ The quantitative inputs are `A(1) = 9`, `A(2) = 45`, `A(3) = 129`, and `A(4) = 1
 The degree of `P` governs higher-order / integral / zero-sum distinguishers.  This bound is computed from the AES S-box's measured coordinate-product degrees and needs no solver or package.
 
 ```bash
-python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the AES validation
+python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the pinned bounds
 python3 permute-degree-bound.py               # the AES echo + the Castella table
 ```
 
-The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and that the same recursion reproduces AES's 3-round Square distinguisher (degree < 127 through round 3, full at round 4).  The Castella table shows the degree upper bound reaching the maximum 2047 by 2 rounds, so a Boura–Canteaut zero-sum reaches at most ≈ 2.67 of the 6 default rounds.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization and margin, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
+The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's values on AES-128 (< 127 through round 4, full at round 5) and on Castella.  The Castella table shows the degree upper bound at 2043 after 2 rounds and full at 3, so a Boura–Canteaut zero-sum reaches at most 4 of the 6 default rounds, 2 each way.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
 
 ## 16. Evidence pending
 
 Two items are pending: trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima, and the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.
 
-The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the 3-round inside-out zero-sum.  Read the reach as **≥ 3 with no upper bound claimed**, because §15's 2.67 caps only a *degree-based* construction.
+The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the 4-round inside-out zero-sums.  Read the reach as **≥ 4 with no upper bound claimed**, because §15's 4 caps only a *degree-based* construction.  The sponge reach, the figure SPEC.md's margin counts, is 2.
 
-Forward alone, r = 3 is **not refuted**.  Both the single-block cube (~6200 s of solve) and the larger `two-blocks` cube (2^256 data, ~2 h 19 m) return **SAT**, which excludes only a *full* 2048-bit zero-sum for those cubes and, being the weak direction, says nothing about `P`.  Partial balance on output bits past the first stays untried, since the scan stops at the first SAT unless `--count` is passed.
+Forward alone, r = 3 is **not refuted**.  Both the single-block cube (~6200 s of solve) and the larger `two-blocks` cube (2^256 data, ~2 h 19 m) return **SAT**, which excludes only a *full* 2048-bit zero-sum for those cubes and, being the weak direction, says nothing about `P`.  Partial balance on output bits past the first stays untried, since the scan stops at the first SAT unless `--count` is passed.  `--sponge 2 -r 3` asks the same of the largest cube a duplex caller controls, and is open.
 
 The MILP floor is no longer pending at any shipped round count.  A(r) is a converged optimum from r = 1 to r = 8 (9, 45, 129, 165, 234, 270, 354, and 390), closed under HiGHS after CBC had stalled (§4).  Superadditivity survives only above r = 8.
 

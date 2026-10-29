@@ -74,13 +74,14 @@ them, and why nothing in this file should run during one.
 | `research/permute-trail-ceilings.bash` | regenerates the recorded r = 3…8 ceilings from the two shell levers | §3 |
 | `research/trail-model-crossvalidate.py` | no figure (it checks the trail model against the KAT-verified one) | §1 |
 | `tests/duplex-diff-fuzz.py` | no figure (it fuzzes the Duplex API differentially against the spec model) | §1, §4 |
-| `research/permute-num_rounds.cpp`, `research/permute-num_rounds-avalanche_matrix.cpp` | the **diffusion floor of 3 rounds**, one of the two inputs to every `R*` | §7 |
+| `research/permute-num_rounds.cpp`, `research/permute-num_rounds-avalanche_matrix.cpp` | the **diffusion floor of 3 rounds**, one of the three inputs to every `R*` | §7 |
 | `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §1, §7 |
 | `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …) | §1, §7 |
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
-| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers | §7 |
-| `research/permute-multiplicity-verify.py` | the **3-round inside-out zero-sum**, the anchor of `R*` = floor + 3 | §1, §7 |
-| `research/permute-degree-bound.py` | degree saturation by 2 rounds, and degree-based zero-sum reach ≈ 2.67 rounds | §1 |
+| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, and the **sponge reach of 2**, an input to every `R*` (`--sponge`) | §1, §7 |
+| `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
+| `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums, exhaustively on a 4-bit-cell analog | §7 |
+| `research/permute-degree-bound.py` | the degree bound (2043 after 2 rounds), and degree-based zero-sum reach 4 rounds | §1 |
 | `research/duplex-prng-stream.cpp` + PractRand | the statistical smoke test (16 GiB, no anomalies) | §7 |
 | `research/simd_compress_aes_enc-num_rounds.cpp` | cch's per-input diffusion figure (~50% at 3 AES rounds), the evidence for a non-claim | §7 |
 
@@ -103,12 +104,12 @@ free -h                                                       # -M is per proces
 | Command | Purpose | Expected |
 |---|---|---|
 | `python3 research/spec-conformance.py` | SPEC.md is complete and unambiguous, because an independent from-the-spec model reproduces every KAT | `91 KATs verified, 0 failed`, 4.2 s |
-| `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the AES Square-distinguisher validation | `self-test OK` |
-| `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 8 AES rounds = 2.67 Castella rounds |
+| `python3 research/permute-degree-bound.py --self-test` | S-box δ_i, γ = 7, and the pinned bound values on AES-128 and Castella | `self-test OK` |
+| `python3 research/permute-degree-bound.py` | The algebraic-degree table quoted in SPEC.md | zero-sum reach 6 + 6 = 12 AES rounds = 4.00 Castella rounds |
 | `python3 research/permute-trail-search.py --self-test` | S-box/DDT/aesenc model checks | `self-test OK` |
 | `python3 research/permute-division-property.py --self-test` | division-property model checks | `self-test: OK`, 0.4 s |
 | `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
-| `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out … 3 round(s), not 4`, 4.4 s |
+| `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out, best over the 3 cubes measured (row, col, diag): 3 round(s)`, 4.4 s |
 | `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
 | `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
@@ -430,8 +431,8 @@ documented number depends on it.
 
 §1–§6 cover the trail line (the MILP floors and the bit-level ceilings), because that is
 what the 2026-08-01/02 re-derivation was about.  The rest of the evidence base is not
-optional to re-derive.  **The diffusion floor is one of the two inputs to every `R*`, and
-the 3-round inside-out zero-sum anchors the `+ 3` margin term**
+optional to re-derive.  **The diffusion floor and the sponge reach are inputs to every
+`R*`, and full diffusion also sizes the `+ 3` margin term**
 ([CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 4.3 step 3).  A
 refresh that skips this section leaves the shipped round counts resting on figures nobody
 re-checked.  §1 already has the cheap members, and this section has the rest, with the
@@ -466,11 +467,17 @@ python3 permute-division-property.py -r 1 -c byte --count  # ~7 min; all 2048 bi
 python3 permute-division-property.py -r 2 -c block --count # ~50 min; the 2^128 distinguisher
 python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST report a zero-sum
 
-# The margin anchor.  Part A checks the premises on the real state.  Part B
+# The sponge reach.  C = 2 decides every capacity.  r = 2 MUST report a balanced
+# rate bit, which the block cube already implies.  r = 3 is not yet budgeted.
+python3 permute-division-property.py --sponge 2 -r 2  # 3 m 17 s, 2.3 GB peak
+
+# The inside-out zero-sums.  Part A checks the premises on the real state.  Part B
 # brute-forces the reach at reduced width, and its table must be IDENTICAL at
-# --reduced 2 and 3.
+# --reduced 2 and 3.  --rowcol adds the 4-round cube, at --reduced 2 only.
 python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
+python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
+./permute-zero_sum-analog-verify                  # 92 s; -q skips the 2^32 cases, 5 s
 
 # Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 s per
 # stream.

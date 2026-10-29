@@ -468,7 +468,9 @@ python3 permute-division-property.py -r 2 -c block --count # ~50 min; the 2^128 
 python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST report a zero-sum
 
 # The sponge reach.  C = 2 decides every capacity.  r = 2 MUST report a balanced
-# rate bit, which the block cube already implies.  r = 3 is not yet budgeted.
+# rate bit, which the block cube already implies.  Do not run r = 3 as a scan.  One
+# bit builds in 206 s, peaks at 5.6 GB, and did not resolve within 1 h (2026-10-29),
+# and a verdict needs all 1792 rate bits.
 python3 permute-division-property.py --sponge 2 -r 2  # 3 m 17 s, 2.3 GB peak
 
 # The inside-out zero-sums.  Part A checks the premises on the real state.  Part B

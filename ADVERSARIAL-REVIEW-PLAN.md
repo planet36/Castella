@@ -90,9 +90,10 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
     16-round schedule, but rules out only the constant-schedule route to a slide.
   - **Invariant subspaces** → `research/permute-invariant-subspaces.py`, which decides the
     transpose's three symmetry classes without sampling and is exhaustive over every
-    byte-aligned subspace and every coset of one, superseding probe 1's sampling for that
-    question.  What it cannot reach (a subspace neither byte-aligned nor in those classes)
-    stays open, and the script says so itself.
+    byte-aligned subspace that each layer maps onto a coset of itself, at every coset,
+    superseding probe 1's sampling for that question.  What it cannot reach (a subspace
+    neither byte-aligned nor in those classes, or a byte-aligned one invariant only across
+    a whole round) stays open, and the script says so itself.
   - **Unscreened, and where a finding would be new.**  These are rank/linearity of the
     transpose layer, weak keys of the AES round when the "key" is a fixed public constant,
     and the rotational and meet-in-the-middle angles `CHALLENGES.md` lists as having had

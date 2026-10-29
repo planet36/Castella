@@ -377,9 +377,10 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    `permute-structural-probes.cpp` covers symmetry-class escape, the fixed-point screen,
    the round-constant properties, and the slide/affine-self-similarity
    screen.  `permute-invariant-subspaces.py` replaces its sampling with an *exhaustive*
-   search over byte-aligned subspaces at every coset (VERIFYING-CLAIMS § 10).  The rebound
-   sketch became a written margin argument rather than a program (§ 14 there,
-   research/README.md for the derivation).
+   search over the byte-aligned subspaces that every layer maps onto a coset of
+   themselves, at every coset (VERIFYING-CLAIMS § 10).  The rebound sketch became a
+   written margin argument rather than a program (§ 14 there, research/README.md for the
+   derivation).
 5. **Algebraic properties (new):** degree growth of `P` over rounds (the AES S-box is
    degree 7; estimate rounds until degree saturates 2048 bits), zero-sum/cube
    distinguishers on reduced rounds — the standard Keccak-style distinguisher families.

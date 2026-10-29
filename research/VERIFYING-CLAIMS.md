@@ -24,7 +24,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
-| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace) | executable | §10 |
+| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself) | executable | §10 |
 | 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives a 3-round inside-out zero-sum | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight, r=2 through r=8 bracketed on solved floors) and first-order differential clustering | executable (solver) | §13 |
@@ -158,7 +158,7 @@ It must print `no invariant subspace exists in any class decided here` and exit 
 
 The `[control: … 2 rounds 128]` figures beside the first two classes are the positive control.  With the round constants zeroed the two block classes *are* invariant, at dimension 128, and a control reading 2048 there would mean the closure test had no power.  The third class deliberately prints `[control: 1 round 2048, 2 rounds 2048]`, because ShiftRows and MixColumns break the symmetric-matrix class rather than the constants, so zeroing them controls nothing.  Read a 2048 as a failure only on the two block classes.
 
-[README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over byte-aligned subspaces and every coset of one, exact but offset-sampled for the three symmetry classes, and it does not cover subspaces that are neither.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
+[README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over the byte-aligned subspaces that every layer maps onto a coset of themselves, and every coset of one, exact but offset-sampled for the three symmetry classes, and it does not cover subspaces that are neither.  A byte-aligned subspace invariant under `P` but not layer by layer is not covered either, and trivial 2-point ones exist for any permutation of this width.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
 
 ## 11. Zero-sum (cube) probes
 

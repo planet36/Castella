@@ -76,7 +76,7 @@ them, and why nothing in this file should run during one.
 | `tests/duplex-diff-fuzz.py` | no figure (it fuzzes the Duplex API differentially against the spec model) | §1, §4 |
 | `research/permute-num_rounds.cpp`, `research/permute-num_rounds-avalanche_matrix.cpp` | the **diffusion floor of 3 rounds**, one of the two inputs to every `R*` | §7 |
 | `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §1, §7 |
-| `research/permute-invariant-subspaces.py` | the exhaustive byte-aligned invariant-subspace census (690,880 / 85 / 0 …) | §1, §7 |
+| `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …) | §1, §7 |
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
 | `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers | §7 |
 | `research/permute-multiplicity-verify.py` | the **3-round inside-out zero-sum**, the anchor of `R*` = floor + 3 | §1, §7 |
@@ -110,7 +110,7 @@ free -h                                                       # -M is per proces
 | `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
 | `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out … 3 round(s), not 4`, 4.4 s |
 | `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
-| `python3 research/permute-invariant-subspaces.py` | the exhaustive byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
+| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time, beside the C++ and spec-conformance.py.  This compares its difference propagation with the KAT-verified one at r = 1..6, and `make -C research test` also runs it | `240 state pairs verified, 0 failed`, 0.8 s |

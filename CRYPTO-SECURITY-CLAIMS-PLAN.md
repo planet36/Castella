@@ -202,15 +202,30 @@ permutation).  The honest procedure has four steps:
    fixed the floor there permanently.
 2. **Floor from diffusion.**  Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
-3. **Margin against the unknown.  RESOLVED 2026-08-08, and the adopted policy is
-   `R* = max(diffusion floor, trail floor) + 3`**, additive in rounds, where the `+ 3` is
-   the longest reach of any known distinguisher against `P` (the inside-out zero-sum).  It
-   reproduces all four shipped round counts (6/6/6/8) with no exceptional row, and nothing
-   shipped changed when it was adopted.
+3. **Margin against the unknown.  RESOLVED 2026-08-08 and AMENDED 2026-10-29.  The policy
+   is now `R* = max(diffusion floor, trail floor, sponge reach) + 3`**, additive in rounds,
+   with the `+ 3` a fixed margin sized by full bit diffusion.  The sponge reach is the
+   longest reach of any known distinguisher through the sponge interface, currently 2.  The
+   policy reproduces all four shipped round counts (6/6/6/8) with no exceptional row, and
+   nothing shipped changed when it was adopted or when it was amended.
 
-   It is written up in SPEC.md's margin rationale, including the disclosures
-   below.  Re-evaluate as §5 produces results: a distinguisher at 4 rounds obliges
-   `floor + 4` = 7/7/7/9.
+   It is written up in SPEC.md's margin rationale, including the disclosures below.
+   Re-evaluate as results arrive.  A sponge-interface distinguisher reaching `k` rounds
+   obliges `R*` ≥ `k` + 3, so one reaching 4 rounds obliges 7 at `C` = 2, 4, and 6.
+
+   *What the amendment changed, and why.*  As adopted, the `+ 3` was the longest reach of
+   any known distinguisher against `P`, then the 3-round inside-out zero-sum, counted by
+   reach alone and including middle-state constructions.  On 2026-10-28 a 4-round
+   inside-out zero-sum was found (row ∪ column, 2^248), which under that wording obliged
+   7/7/7/9.  The maintainer judged that it leaves the duplex secure, for the reason that
+   keeps Keccak-`f`'s full-round zero-sums from bearing on SHA-3, and amended the policy
+   openly instead of honoring the trigger as written.
+
+   Two further changes came with it.  The margin no longer tracks a measured reach, since
+   the reach it tracked stopped counting, and is sized instead by full diffusion, which
+   also gives 3.  And `C` = 8 now moves only once the sponge reach passes its trail floor
+   of 5, where the old trigger raised it to 9 at any 4-round distinguisher.  SPEC.md
+   records all three changes.
 
    *Why additive rather than the ratio policy this step used to propose* (`R* ≥ 2× the
    highest round count reached by any known attack or distinguisher stronger than
@@ -222,23 +237,23 @@ permutation).  The honest procedure has four steps:
    applying `2×` to the *floor* instead.
 
    *The comparison with Keccak that this step used to make is not like-for-like.*  Keccak's
-   ~3–4× is against practical attacks reaching ~6 rounds, while the 3 here is a 2^128-data
-   distinguisher on `P`, not a break of the sponge.  It cuts both ways, and SPEC.md now says
-   so.  There are no practical attacks on Castella at any round count to measure from, but
-   zero-sums reach full-round Keccak-`f`, so Keccak would score zero margin under the rule
-   adopted here.  Do not present the 2.00×/2.67× ratios as comparable to a SHA-3 figure.
+   ~3–4× is against practical attacks reaching ~6 rounds, while the sponge reach of 2 here
+   is a 2^128-data distinguisher, not a break of the sponge.  It cuts both ways, and SPEC.md
+   now says so.  There are no practical attacks on Castella at any round count to measure
+   from, but the sponge reach counts a distinguisher of any cost.  Zero-sums reach
+   full-round Keccak-`f`, and Keccak's claim declines to count them, as this one now does.
+   Do not present any ratio of `R*` to a reach as comparable to a SHA-3 figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances*.
    This is **done, and the margin question that hung over this step is CLOSED (2026-08-08).
    The round counts stay at 6/6/6/8 and the rationale was rewritten** under step 3's adopted
-   policy `R* = binding floor + 3`.  `C=8` is no longer an exception to anything, and at
-   2.67× the known distinguisher reach it is the *widest* margin of the four rows.
+   policy `R* = binding floor + 3`.  `C=8` is no longer an exception to anything.
 
-   | `C` | claimed `b` | needs `A ≥` | trail floor | binding floor | shipped `R*` | `R*` − floor | ÷ known reach (3) |
+   | `C` | claimed `b` | needs `A ≥` | trail floor | sponge reach | binding floor | shipped `R*` | `R*` − floor |
    |---|---|---|---|---|---|---|---|
-   | 2 | 128 | 43 | r=2 | r=3 (diffusion) | 6 | **+3** | 2.00× |
-   | 4 | 256 | 86 | r=3 | r=3 | 6 | **+3** | 2.00× |
-   | 6 | 384 | 128 | r=3 | r=3 | 6 | **+3** | 2.00× |
-   | 8 | 512 | 171 | **r=5** | r=5 | 8 | **+3** | **2.67×** |
+   | 2 | 128 | 43 | r=2 | r=2 | r=3 (diffusion) | 6 | **+3** |
+   | 4 | 256 | 86 | r=3 | r=2 | r=3 | 6 | **+3** |
+   | 6 | 384 | 128 | r=3 | r=2 | r=3 | 6 | **+3** |
+   | 8 | 512 | 171 | **r=5** | r=2 | r=5 | 8 | **+3** |
 
    *How it was decided, since the reasoning is easy to lose.*  The prior framing here was
    that a margin policy "has to say what it measures, and the two natural answers disagree."
@@ -259,9 +274,9 @@ permutation).  The honest procedure has four steps:
 
    * that the `+ 3` rule was recognized *after* the round counts were chosen
    * that it replaced a `2 ×` floor rule, and why that rule was defective
-   * that the anchor is a *known* reach with no upper bound claimed on the true one
-   * the resulting revision trigger, `floor + 4` = 7/7/7/9 if a 4-round distinguisher
-     appears
+   * that the sponge reach is a *known* reach with no upper bound claimed on the true one
+   * the commitment, `R*` ≥ `k` + 3 for a `k`-round sponge-interface distinguisher
+   * the 2026-10-29 amendment, and the result that prompted it
 
    **The thinnest margin in this table is not `C` = 8 but `C` = 6's floor.**  That row
    needs `A(3) ≥ 128` and gets **129**, so it clears by one S-box, 6 bits out of the 768
@@ -289,23 +304,24 @@ permutation).  The honest procedure has four steps:
    and the `--help` texts all move with it, as does every document on the [runbook's § 8
    list](research/RE-DERIVATION-RUNBOOK.md#8-where-a-refreshed-figure-has-to-land).
 
-   **What would reopen it is evidence, not preference.**  That evidence is the revision
-   trigger published in SPEC.md and CHALLENGES.md, under which a distinguisher reaching 4
-   rounds obliges `floor + 4` = 7/7/7/9.  At that point `C` = 6 deserves the first look,
-   for the floor reason in the paragraph above, not `C` = 8.
+   **What would reopen it is evidence, not preference.**  That evidence is the commitment
+   published in SPEC.md and CHALLENGES.md, under which a sponge-interface distinguisher
+   reaching 4 rounds obliges `R*` = 7 at `C` = 2, 4, and 6.  At that point `C` = 6
+   deserves the first look, for the floor reason in the paragraph above, not `C` = 8.
 
-   **One property of the trigger is worth stating rather than discovering later: it bounds
-   reach, not data complexity.**  A 4-round distinguisher needing 2^256 data would oblige
-   the same digest change as a practical one, even though the flat claim already concedes
-   `P` is not a random permutation.  That is deliberate conservatism, since the anchor is
-   meant to track what is *structurally* known about `P`.  A future revision that wants to
-   qualify it by data complexity should do so explicitly and say why, not by quietly reading
-   the trigger more narrowly.
+   **One property of the commitment is worth stating rather than discovering later: it
+   bounds reach, not data complexity.**  A 4-round sponge-interface distinguisher needing
+   2^1776 queries would oblige the same digest change as a practical one.  That is
+   deliberate conservatism.  A future revision that wants to qualify it further should do
+   so explicitly and say why, as the 2026-10-29 amendment did, not by quietly reading it
+   more narrowly.
 
    **What counts as a distinguisher for the margin was agreed on 2026-10-29**, and SPEC.md's
    margin rationale states the definition.  The trail search forced the question.  Its
    characteristics are lighter than the 2048-bit state through r = 6, so under the
-   reach-alone reading they would have put the longest known reach at 6 rounds.
+   reach-alone reading they would have put the longest known reach at 6 rounds.  Later
+   the same day the definition was narrowed to properties reachable through the sponge
+   interface (step 3).
 
 **SHIPPED.**  SPEC.md's security claim carries the claimed-instances table, giving
 `(C, R*)` with each row's capacity and claimed level, beside the SHA-3 mapping table that
@@ -396,10 +412,12 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    (`permute-zero_sum-probes.cpp`), then a bit-based division-property model for *chosen*
    cubes (`permute-division-property.py`) giving a 1-round byte-aligned distinguisher and a
    2-round integral distinguisher at 2^128 data, and finally the even-multiplicity argument
-   (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**.  That
-   3 is the longest known reach against `P`, and it is what `R*` = floor + 3 is anchored to
-   (§4.3 step 3).  So this item is not merely evidence beside the claim but an input to the
-   shipped parameters (VERIFYING-CLAIMS § 11 and § 15).
+   (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**, which
+   a 2026-10-28 review extended to 4 (row ∪ column, 2^248).  The 2-round distinguisher's
+   cube fits in the rate, so it sets the sponge reach, and that is the input this item
+   gives `R*` (§4.3 step 3).  So this item is not merely evidence beside the claim but an
+   input to the shipped parameters (VERIFYING-CLAIMS § 11 and § 15).  The inside-out
+   zero-sums characterize `P` and move nothing.
 6. **Duplex-PRNG mode note (new, cheap):** the sponge-PRNG papers require *state
    forgetting* for backtracking resistance; the duplex as implemented does not zero the
    outer state after squeezing.  Document that forward secrecy is **not** claimed for PRNG
@@ -523,8 +541,8 @@ non-cryptographic checksum.
 **Steps 1–4 and 6 are complete, and step 5 ran to the end of what is planned.**  All five
 analyses it lists were built (§5), each with its reproduction commands.  One of them, the
 algebraic/integral family, did move the best-known-reach number and did update the margin
-rationale, exactly as the step anticipated: `R*` = floor + 3 is anchored to the 3-round
-inside-out zero-sum.
+rationale, exactly as the step anticipated.  It supplies the sponge reach of 2 that enters
+`R*`, and its 4-round inside-out zero-sum prompted the 2026-10-29 amendment (§4.3 step 3).
 
 What is left is not a next step in this order but the standing maintenance in
 [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md), plus whatever
@@ -555,17 +573,19 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 
 | closed | when | what was decided |
 |---|---|---|
-| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity.  A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled: every row meets `floor + 3` and none is an exception.  Only the published trigger reopens it — see below. |
+| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity.  A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled: every row meets `floor + 3` and none is an exception.  Only the published commitment reopens it — see below. |
 | The "margin in bits" metric | 2026-08-08 | Rejected on the merits, not on the answer it gave.  It is the metric that happens to flatter the row under question, and doubling a *differential* bound buys nothing against the rebound, integral and algebraic attacks the margin exists to cover.  The rounds metric stays. |
 | Pushing the trail-search **ceilings** further | 2026-08-08 | The whole line: more seeds, more patterns, deeper shells, enumerating alternate MILP optima above r = 4.  The last batch re-ran all six ceilings, three at double the budget, and moved none.  Every round count through r = 8 is bracketed on a solved floor, so a tighter ceiling buys characterization, not margin. |
 | `A(9)` and beyond | 2026-08-08 | Dropped on scope.  The shipped round counts are 6 and 8, so r ≤ 8 covers them; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
 | Differential clustering at r ≥ 2 | 2026-08-07 | The r = 2 cluster enumeration was judged not worth its cost, and the shell enumerations that would supply the figures elsewhere are inside the closed ceiling line.  So first-order clustering is measured at r = 1 only (≈ 2 bits), and the gap is disclosed rather than queued (§5.3). |
 | Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive: 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. |
 
-**What reopens the first entry, and only it, is the published revision trigger.**  A
-distinguisher reaching 4 rounds obliges `R*` = floor + 4, i.e. 7/7/7/9.  It is stated in
-SPEC.md and CHALLENGES.md, it asks about *reach* rather than cost, and if it fires, `C` = 6
-is the row to examine first (§4.3, and now SPEC.md's margin rationale).
+**What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface
+distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3, so 4 rounds obliges 7 at `C` = 2,
+4, and 6, and 6 rounds obliges 9 at `C` = 8.  It is stated in SPEC.md and CHALLENGES.md, it
+asks about *reach* rather than cost, and if it fires, `C` = 6 is the row to examine first
+(§4.3, and now SPEC.md's margin rationale).  Under the 2026-10-29 amendment an inside-out
+zero-sum on `P` alone reopens nothing (§4.3 step 3).
 
 **One gap is unmodeled rather than closed.**  Rebound attacks are covered by a reasoned
 margin argument, not by a search.  The argument grants the attacker a free maximal-reach

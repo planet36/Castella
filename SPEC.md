@@ -197,50 +197,62 @@ It covers **only** the instances listed here.  Reduced-round instances are expli
 
 An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.
 
-**Margin rationale.**  `R*` = max(diffusion floor, trail floor) **+ 3**.  The two floors are the round counts below which the claim is already refutable from evidence in hand, and the `+ 3` is the margin against everything they do not model.  The diffusion floor is 3 rounds (full bit diffusion, see Evidence).
+**Margin rationale.**  `R*` = max(diffusion floor, trail floor, sponge reach) **+ 3**.  The two floors are the fewest rounds that evidence in hand supports, and the sponge reach is the most rounds that any known distinguisher through the duplex covers.  The largest of the three is the binding floor, and the `+ 3` is the margin against everything the three do not model.
+
+The diffusion floor is the fewest rounds after which a one-bit input change flips each output bit with probability 1/2, as measured, which is 3 for the 16-block state (Evidence).  The sponge reach is 2 at present, under the definition below, from the 2-round distinguisher under Evidence.
 
 The trail floor is the smallest round count whose proven per-characteristic bound `2^(−6A)` is at most `2^(−2b)` for claimed level `b`.  That is twice the exponent of the generic bound, as headroom for the trail clustering the model does not cover.  So `r` rounds support levels `b` ≤ 3·A(r), which from the `A` values under Evidence means 2 rounds cover `b` ≤ 135, 3 rounds `b` ≤ 387, 4 rounds `b` ≤ 495, and 5 rounds `b` ≤ 702.
 
-**The margin term is 3 rounds because 3 is the longest reach of any distinguisher known against `P`** (the inside-out zero-sum in the Evidence section), so every claimed instance carries one full known-attack reach of margin above the round count at which the differential bound alone becomes sufficient.
+**The margin term is 3 rounds, the number full bit diffusion takes.**  Every claimed instance therefore carries a full diffusion's worth of rounds beyond its binding floor, which an attack reaching that floor must still be carried through.  That is a rationale, not a bound, since nothing proves an attack gains less than 3 rounds there.
 
-| `C` | claimed `b` | trail floor | diffusion floor | binding floor | `R*` | `R*` ÷ known reach |
-|-----|-------------|-------------|-----------------|---------------|------|--------------------|
-| 2 | 128 | 2 | 3 | 3 | 6 | 2.00× |
-| 4 | 256 | 3 | 3 | 3 | 6 | 2.00× |
-| 6 | 384 | 3 | 3 | 3 | 6 | 2.00× |
-| 8 | 512 | **5** | 3 | 5 | 8 | **2.67×** |
+Full diffusion here is the statistical measure the diffusion floor uses, not the structural one, under which every output bit already depends on every input bit after 2 rounds.  The margin is fixed, so a new result can move a floor or the sponge reach but never the margin.
 
-The rule applies uniformly.  No row is an exception, and every row carries the same 3-round margin, `C` = 8 included.  (By the ratio column it is the *widest* of the four rather than the narrowest, which is the shape the `2 ×` rule this replaced got backwards.  But the ratio is bookkeeping, not the rule, for the reason given below under *Additive rather than multiplicative*.)
+| `C` | claimed `b` | trail floor | diffusion floor | sponge reach | binding floor | `R*` |
+|-----|-------------|-------------|-----------------|--------------|---------------|------|
+| 2 | 128 | 2 | 3 | 2 | 3 | 6 |
+| 4 | 256 | 3 | 3 | 2 | 3 | 6 |
+| 6 | 384 | 3 | 3 | 2 | 3 | 6 |
+| 8 | 512 | **5** | 3 | 2 | 5 | 8 |
+
+The rule applies uniformly.  No row is an exception, and every row carries the same 3-round margin, `C` = 8 included.
 
 When `--rounds` is not given, the `castella` program derives it from the digest size via the same capacity rule the digest itself uses, giving 6 rounds for digests up to 48 bytes (`C` ≤ 6) and 8 for 49..64 bytes (`C` = 8).  So **its out-of-box instances are claimed at every capacity**, including a 512-bit-level digest.  An explicit `--rounds` overrides the derivation and can select an unclaimed instance.
 
 #### How the margin rationale was arrived at
 
-The claim above, its two tables, and the `R*` rule are the whole of what is claimed.  Everything in this subsection is the account of how those numbers came to be, including where earlier revisions of them were wrong.  It is kept here, rather than left to a planning document, because a reader deciding how much to trust the claim needs it, but nothing below changes a parameter.  Seven things should be visible rather than left implicit.
+The claim above, its two tables, and the `R*` rule are the whole of what is claimed.  Everything in this subsection is the account of how those numbers came to be, including where earlier revisions of them were wrong.  It is kept here, rather than left to a planning document, because a reader deciding how much to trust the claim needs it, but nothing below changes a parameter.  What follows should be visible rather than left implicit.
 
 **The additive form was recognized after the fact.**  The round counts were fixed first, and `R*` = floor + 3 is the rule that turned out to describe all four of them.  It is offered as an accurate account of the shipped parameters, not as a derivation that produced them.
 
-**Additive rather than multiplicative, deliberately.**  A ratio policy (`R*` = 2 × floor) makes the absolute margin grow with the floor, so a capacity whose differential bound is *weaker* would receive *more* protection against the attacks that bound does not cover.  That is backwards: unknown attacks advance round by round, so the margin that matters is a round count, not a multiple.  It is also why the margin is anchored on the best known attack reach rather than on the trail floor.  The floor is a property of one bound, and the margin exists to cover the techniques that bound says nothing about.
+**Additive rather than multiplicative, deliberately.**  A ratio policy (`R*` = 2 × floor) makes the absolute margin grow with the floor, so a capacity whose differential bound is *weaker* would receive *more* protection against the attacks that bound does not cover.  That is backwards: unknown attacks advance round by round, so the margin that matters is a round count, not a multiple.  It is also why the margin is sized by diffusion, a property of `P` as a whole, rather than by a floor, since it exists to cover the techniques the floors say nothing about.
 
 **This replaced a `2 ×` floor rule under which `C` = 8 was a documented exception**, at 1.6× its floor where the other rows were 2×.  That exception was an artifact of the rule, not of the parameters.  It appeared when `A(4)` = 225, a timed-out solver incumbent mislabeled as an optimum, was refuted and the 512-bit trail floor moved from 4 rounds to 5, leaving `R*` = 8 unchanged but its stated justification behind.
 
 `A(4)` = 165 is now a converged optimum, so `6·A(4)` = 990 < 1024 and 4 rounds cannot reach the 512-bit level however the search is continued.  The floor of 5 is settled from both sides and cannot move again.  Under the rule above the shipped 8 needs no exception, and no round count changed when the rule did.
 
-**The tightest quantity in this rationale is not a margin but `C` = 6's trail floor.**  It is the only row where `2b/6` lands exactly on an integer, so it needs `A(3) ≥ 128`.  It gets **129**, clearing by one active S-box (6 bits of characteristic probability), where the other rows round up and clear by 2, 43, and 63.  At `A(3)` = 127 its trail floor would be 4 rounds and its `R*` 7.  Nothing here is unsound, since `A(3)` = 129 is a converged optimum and the deepest cell both MILP solvers close independently.  But it is the figure most exposed to being *derived* rather than chosen, so if the revision trigger below fires, look at `C` = 6 first, not `C` = 8.
+**The tightest quantity in this rationale is not a margin but `C` = 6's trail floor.**  It is the only row where `2b/6` lands exactly on an integer, so it needs `A(3) ≥ 128`.  It gets **129**, clearing by one active S-box (6 bits of characteristic probability), where the other rows round up and clear by 2, 43, and 63.  At `A(3)` = 127 its trail floor would be 4 rounds and its `R*` 7.  Nothing here is unsound, since `A(3)` = 129 is a converged optimum and the deepest cell both MILP solvers close independently.  But it is the figure most exposed to being *derived* rather than chosen, so if the commitment below ever fires, look at `C` = 6 first, not `C` = 8.
 
-**On comparison with SHA-3's margin, which is not like-for-like in either direction.**  Keccak ships 24 rounds against practical attacks reaching roughly 6, a ratio near 4×.  That is wider than the 2.00× above, and a young design with no external analysis has no business claiming a thinner margin than a scrutinized one.  Two things make the ratios incomparable as stated, and they point opposite ways.
+**On comparison with SHA-3's margin, which is not like-for-like in either direction.**  Keccak ships 24 rounds against practical attacks reaching roughly 6, a ratio near 4×.  That is wider than the 3× of 6 rounds over a sponge reach of 2, and a young design with no external analysis has no business claiming a thinner margin than a scrutinized one.  Two things make the ratios incomparable as stated, and they point opposite ways.
 
-Against Castella there are no practical attacks at *any* round count to measure from, so the 3 anchoring the table is a distinguisher on `P` requiring 2^128 data, not a break of the sponge.  Measured against attacks of the kind Keccak's 6 refers to, the margin here is the whole round count.
+Against Castella there are no practical attacks at *any* round count to measure from, so the sponge reach of 2 is a distinguisher requiring 2^128 data, not a break of the sponge.  Measured against attacks of the kind Keccak's 6 refers to, the margin here is the whole round count.
 
-But permutation distinguishers are also the more conservative anchor.  Zero-sums reach *full-round* Keccak-`f` (see Evidence), so Keccak's 24 rounds would score no margin at all under the rule used here.  Keccak's claim declines to count them, as this one does.  The ratio column above should therefore be read as this design's own bookkeeping against its own best result, not as a figure comparable with a published SHA-3 number.
+But a distinguisher of any cost is also the more conservative anchor, since Keccak's 6 counts only attacks of practical cost.  Zero-sums on the permutation alone reach *full-round* Keccak-`f` (see Evidence), and Keccak's claim declines to count them, as this one now does.  The ratios should therefore be read as this design's own bookkeeping against its own best result, not as figures comparable with a published SHA-3 number.
 
-**The margin term is tied to a moving quantity, and that is the honest weak point.**  3 rounds is the longest *known* reach.  No upper bound on integral reach is claimed anywhere in this document, so the true reach may be longer.
+**What the margin counts was amended on 2026-10-29.**  Until then the margin was the longest reach of any distinguisher known against `P`, counted by reach alone, including one starting from a middle state the sponge never exposes.  A 4-round inside-out zero-sum on `P` was then found (Evidence), and under that wording it obliged `R*` = 7 / 7 / 7 / 9.
 
-The commitment this creates is concrete: **a distinguisher reaching 4 rounds obliges `R*` = floor + 4, i.e. 7 / 7 / 7 / 9** for `C` = 2 / 4 / 6 / 8, and reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md), whose stated bar for beating the current analysis is exactly an integral distinguisher at ≥ 4 rounds).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
+The policy was amended instead, for the reason that keeps Keccak-`f`'s full-round zero-sums from bearing on SHA-3.  A property that needs a chosen middle state, or the whole state on output, is not available to anyone using the duplex.  The amendment is recorded here because it was made after the result it excludes, and a reader should weigh it knowing that.
 
-**The trigger asks about reach alone**, meaning how many rounds a technique sees through, not what it costs to run.  A distinguisher needing 2^256 data, or one starting from a middle state the sponge never exposes, counts in full.  This is not an oversight: the 3 rounds anchoring the rule has both properties already (2^128 data, from a middle state), so admitting only cheaper or more accessible results would void the policy's own basis.  There is no practical attack on any round count to anchor on instead.  The consequence is deliberate and strict, and is recorded here so that it is not narrowed later by argument: **an unusable 4-round distinguisher obliges the same round-count change as a practical one.**
+Two other things changed with it.  The margin is now sized by full diffusion rather than by the known reach, which was also 3 when the rule was set, so no round count moved.  And `C` = 8 now moves only once the sponge reach passes its trail floor of 5, where the old trigger raised it to 9 at any 4-round distinguisher.
 
-**What counts as a distinguisher here.**  For the margin, a distinguisher is a structural property of `P` that holds with certainty for every choice of the round constants, such as an integral or zero-sum property.  Generic properties that every concrete permutation has, such as efficient invertibility, do not count.  Neither do probabilistic differential and linear properties, which the trail floor bounds against each claimed level instead, so a characteristic lighter than the 2048-bit state does not move the margin.
+**What counts as a distinguisher.**  A distinguisher counts toward the sponge reach when it is a structural property that holds with certainty for every choice of the round constants, such as an integral or zero-sum property, and is reachable through the sponge interface.  Reachable means that its inputs enter only by XOR into the rate of a state the duplex itself reached, so the capacity is never chosen, and that it reads only the rate.  The capacity may be known, as in unkeyed hashing, or secret, as in the MAC.
+
+Three kinds of property do not count.  Generic properties that every concrete permutation has, such as efficient invertibility, say nothing about this one.  Probabilistic differential and linear properties are bounded against each claimed level by the trail floor instead.  And properties of `P` alone, the inside-out zero-sums included, stay in the Evidence section as characterization.
+
+**The sponge reach is counted by reach alone**, meaning how many rounds a property sees through, not what it costs.  A sponge-interface distinguisher needing 2^1776 queries counts in full, as a practical one would.  The amendment narrowed which properties count, not how they are weighed.
+
+**The sponge reach can move, and the margin cannot.**  The sponge reach of 2 is the longest *known*, from the 2-round integral distinguisher under Evidence, whose cube fills one block of the rate.  No upper bound on it is claimed.
+
+**A sponge-interface distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity.**  The sponge reach enters the binding floor, so a result that lengthens it raises `R*` directly.  At the current floors, 4 rounds obliges 7 at `C` = 2, 4, and 6, and 6 rounds obliges 9 at `C` = 8.  Reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md)).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
 
 ### Security strengths (generic bounds)
 

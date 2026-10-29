@@ -27,12 +27,16 @@ Write the permutation as an alternation of affine layers and S-box layers:
 
     x -> SR -> S -> MC -> (+rc) -> SR -> S -> MC -> (+rc) -> ... -> T
 
-A subspace U with offset a is invariant when every layer maps the current
-coset of U onto a coset of U.  Affine layers translate cosets, so their
-condition is on the linear part, and the S-box layer's condition is the hard
-one.
-The two are analyzed separately below, and the S-box condition turns out to
-be so restrictive that it decides the whole byte-aligned case on its own.
+Sections 1-3 decide *layer-wise* invariance, where every layer maps the
+current coset of a subspace U onto a coset of U.  That is sufficient for U to
+be invariant under a round, but not necessary.  A round needs only its
+composite to return U, and between S-box layers the coset may pass through
+other subspaces, as a subspace trail does.
+
+Affine layers translate cosets, so their condition is on the linear part, and
+the S-box layer's condition is the hard one.  The two are analyzed
+separately below, and the S-box condition turns out to be so restrictive that
+it decides the whole layer-wise byte-aligned case on its own.
 
 Sections
 --------
@@ -46,8 +50,9 @@ Sections
    dimension 3 confirms the lift.
 
 2. MixColumns compatibility of 1-dimensional local subspaces (exhaustive).
-   Section 1 leaves only dimensions 0, 1, and 8 available to a byte-aligned
-   subspace.  Dimension 1 survives the S-box for some directions, and this
+   Section 1 leaves only dimensions 0, 1, and 8 available to a layer-wise
+   invariant byte-aligned subspace.  Dimension 1 survives the S-box for some
+   directions, and this
    section decides whether any of them survives MixColumns.
 
 3. Byte-support closure (exhaustive over all 2^256 supports).  With
@@ -78,9 +83,19 @@ diffusion.  Every section here keeps the S-box layers where they are.
 
 Scope
 -----
-Sections 1-3 are exhaustive over the byte-aligned class, meaning every
-subspace that is a direct sum of per-byte subspaces, and over every coset of
-one, since the S-box census quantifies over all 256 offsets per byte.
+Sections 1-3 are exhaustive over the layer-wise invariant byte-aligned class,
+meaning every direct sum of per-byte subspaces that each layer maps onto a
+coset of itself, and over every coset of one, since the S-box census
+quantifies over all 256 offsets per byte.  Section 3 alone holds without the
+layer-wise condition, because a support propagates through the whole round
+without cancellation.
+
+A byte-aligned subspace invariant under `P` but not layer by layer is not
+covered, and some certainly exist.  A 2-point coset {x, x^d} with d on one
+byte is invariant exactly when P(x)^P(x^d) = d, and a random permutation of
+this width has about 2^15 such cosets.  They are trivial and cannot be found
+in practice, but they make "no byte-aligned invariant subspace" false as an
+unqualified statement.
 
 Sections 4-5 cover named non-byte-aligned classes.  They are exact for each
 coset tested, but the offsets are sampled, so they are a screen over offsets
@@ -568,8 +583,8 @@ def report_sbox_census() -> list[str]:
     if c["same_dir2"] or c["good3"]:
         failures.append("section 1: an affine subspace of dimension >= 2 "
                         "survives the S-box")
-    print("  => a byte-aligned invariant subspace has local dimension "
-          "0, 1 or 8")
+    print("  => a layer-wise invariant byte-aligned subspace has local "
+          "dimension 0, 1 or 8")
     return failures
 
 
@@ -582,7 +597,8 @@ def report_mixcolumns() -> list[str]:
     if cols:
         failures.append("section 2: MixColumns preserves a 1-dimensional "
                         "local labeling")
-    print("  => local dimension 1 is impossible; only 0 and 8 remain")
+    print("  => layer-wise, local dimension 1 is impossible; only 0 and 8 "
+          "remain")
     return failures
 
 
@@ -680,9 +696,13 @@ def report_closure(bases: dict[str, list[int]], args) -> list[str]:
 def print_conclusion() -> None:
     """The synthesis of the five sections."""
     print("== conclusion")
-    print("  Sections 1-3 are exhaustive.  Castella::permute has NO invariant")
-    print("  subspace that is a direct sum of per-byte subspaces, at any")
-    print("  coset, other than the whole space and a single point.")
+    print("  Sections 1-3 are exhaustive over the layer-wise invariant")
+    print("  byte-aligned class.  Castella::permute has NO direct sum of")
+    print("  per-byte subspaces that every layer maps onto a coset of itself,")
+    print("  at any coset, other than the whole space and a single point.")
+    print("  Invariance under P itself needs less, so trivial")
+    print("  byte-aligned invariant pairs {x, x^d} are not excluded, and a")
+    print("  random permutation of this width has about 2^15 of them.")
     print("  Section 4 shows what the round constants actually do, and that")
     print("  it is not decoration.  ShiftRows, MixColumns, and the S-box")
     print("  layer preserve 'equal blocks' and 'constant blocks', and the")

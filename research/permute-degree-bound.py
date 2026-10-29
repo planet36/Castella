@@ -13,19 +13,28 @@ higher-order / zero-sum distinguisher can reach.
 
 The bound
 ---------
-For a substitution layer of parallel b-bit S-boxes over F_2^n and any prior
-function G, one S-box layer raises the degree by at most
+Two bounds on one S-box layer S are combined.  For S made of parallel b-bit
+S-boxes over F_2^n and any function G applied after it, the
+Boura-Canteaut-De Canniere (BCD) bound is
 
-    deg(layer o G) <= n - (n - deg(G)) / gamma,
+    deg(G o S) <= n - (n - deg(G)) / gamma,
     gamma = max_{1 <= i <= b-1} (b - i) / (b - delta_i),
 
 where delta_i is the maximal algebraic degree of the product of any i output
 coordinates of one S-box.  delta_i is computed here from the actual AES
 S-box (and its inverse) by the Mobius transform, so gamma is not taken on
-faith.  The linear layers of Castella (MixColumns, ShiftRows, the transpose)
-and the affine round-constant additions preserve degree, so the bound is
-applied once per AES round; one Castella round is AES_NUM_ROUNDS = 3 such
-layers.
+faith.  Peeling off the first of r S-box layers bounds them in terms of the
+other r - 1.
+
+The second bound is deg(S o G) <= delta_1 * deg(G), since every S-box output
+coordinate is a polynomial of degree delta_1 in its inputs.  Peeling off the
+last layer instead bounds r layers by delta_1 times the bound for r - 1.  It
+is the tighter of the two for the first few layers, and the recursion takes
+the smaller at every step.
+
+The linear layers of Castella (MixColumns, ShiftRows, the transpose) and the
+affine round-constant additions preserve degree, so the bound is applied once
+per AES round.  One Castella round is AES_NUM_ROUNDS = 3 such layers.
 
 Direction and interpretation
 ----------------------------
@@ -37,11 +46,10 @@ Boura-Canteaut zero-sum built from the middle covers r_fwd + r_bwd rounds
 whenever the forward degree over r_fwd rounds and the inverse degree over
 r_bwd rounds are both <= n-2.
 
-So the round at which this bound reaches n-1 is where the degree-based
-distinguisher construction stops.  That is an upper bound on the
-construction's reach, not a proof that no distinguisher exists beyond it.
-Proving that needs a degree lower bound or a division property, which is out
-of scope here.
+So the round at which this bound reaches n-1 is where it stops certifying the
+construction.  That is how far this bound carries it, not a proof that no
+distinguisher exists beyond it.  Proving that needs a degree lower bound or a
+division property, which is out of scope here.
 
 For the flat sponge claim this is characterization rather than a claim
 requirement.  Castella concedes that P is not a random permutation, as
@@ -50,12 +58,13 @@ its chi layer has degree 2.  The point of interest is how SHORT the reach is.
 The AES S-box degree of 7 is far higher than chi's 2, so the reach is a few
 rounds rather than near-full.
 
-Validation
-----------
-Run on AES itself, at n=128 with the same S-box, the bound must reproduce the
-known integral-distinguisher reach, the Square distinguisher's degree < 127
-through 3 rounds and full degree at round 4.  --self-test checks this and the
-S-box delta_i values.
+Self-test
+---------
+--self-test checks the S-box delta_i values and pins the recursion's values
+on AES-128 (n=128, one S-box layer per round) and on Castella.  On AES-128
+the bound stays below 127 through 4 rounds and is full at round 5.  The pinned
+values are the two bounds' own arithmetic, so a change to either bound moves
+them.  They are not checked against an external AES result.
 
 Usage
 -----
@@ -138,12 +147,16 @@ def gamma_of(delta: list[int]) -> float:
 
 def degree_after_layers(n: int, gamma: float, sbox_deg: int,
                         num_layers: int) -> list[int]:
-    """Per-layer upper bound on deg, starting from a single S-box layer."""
+    """Per-layer upper bound on deg, starting from a single S-box layer.
+
+    Each step takes the smaller of the multiplicative bound and BCD's, as the
+    module docstring derives.
+    """
     bounds = []
     d = min(sbox_deg, n - 1)  # first S-box layer: degree = S-box degree
     bounds.append(d)
     for _ in range(1, num_layers):
-        d = min(n - 1, floor(n - (n - d) / gamma))
+        d = min(n - 1, sbox_deg * d, floor(n - (n - d) / gamma))
         bounds.append(d)
     return bounds
 
@@ -168,11 +181,11 @@ AES_NUM_ROUNDS = 3  # AES rounds per Castella round (Castella::AES_NUM_ROUNDS)
 
 
 class SelfTestError(Exception):
-    """An S-box degree or the AES validation disagrees with a known value."""
+    """An S-box degree or a pinned bound disagrees with its expected value."""
 
 
 def run_self_test() -> list[int]:
-    """Validate the S-box degrees and the known AES integral distinguisher.
+    """Check the S-box degrees, and pin the recursion on AES-128 and Castella.
 
     Returns the forward delta_i, so the caller need not recompute them.
 
@@ -204,18 +217,14 @@ def run_self_test() -> list[int]:
           f"inverse S-box gamma must match the forward gamma, got "
           f"{gamma_of(d_inv)} against {gamma_of(d_fwd)}")
 
-    # AES-128 validation.  The classic integral (Square) distinguisher covers
-    # 3 rounds, so the degree must be < 127 through round 3 and reach 127 at
-    # round 4.
-    aes = degree_after_layers(128, 7.0, d_fwd[1], 6)
-    check(aes[2] < 127,
-          f"AES round-3 degree bound must be < 127 (distinguisher), "
-          f"got {aes[2]}")
-    check(aes[3] >= 127,
-          f"AES round-4 degree bound must reach 127, got {aes[3]}")
-    check(zero_sum_reach_layers(aes, 128) == 3,
-          "AES zero-sum reach must be 3 rounds (matches the Square "
-          f"distinguisher), got {zero_sum_reach_layers(aes, 128)}")
+    # The recursion's own values.  A change to either bound, or to how the two
+    # are combined, moves them.
+    for n, layers, want in ((128, 6, [7, 49, 116, 126, 127, 127]),
+                            (2048, 9, [7, 49, 343, 1804, 2013, 2043, 2047,
+                                       2047, 2047])):
+        got = degree_after_layers(n, 7.0, d_fwd[1], layers)
+        check(got == want,
+              f"degree bounds by layer at n={n} must be {want}, got {got}")
     return d_fwd
 
 
@@ -225,7 +234,8 @@ def main() -> None:
         description="Algebraic-degree upper bound for Castella::permute "
                     "(Boura-Canteaut-De Canniere)")
     parser.add_argument("--self-test", action="store_true",
-                        help="run the S-box and AES-validation checks and exit")
+                        help="run the S-box checks and the pinned bounds, "
+                             "and exit")
     args = parser.parse_args()
 
     delta = run_self_test()
@@ -238,12 +248,12 @@ def main() -> None:
     print(f"gamma = max_i (B-i)/(B-delta_i) = {gamma:g}")
     print()
 
-    # Validation echo (AES-128, same S-box).
+    # The same recursion on AES-128, with the same S-box.
     aes = degree_after_layers(128, gamma, delta[1], 6)
-    print("Validation on AES-128 (n=128, one S-box layer per round):")
+    print("AES-128 (n=128, one S-box layer per round):")
     print(f"  degree bound by round: {aes}")
-    print(f"  zero-sum / integral reach: {zero_sum_reach_layers(aes, 128)} "
-          f"rounds (known Square distinguisher: 3) -- OK")
+    print(f"  degree-based zero-sum reach: {zero_sum_reach_layers(aes, 128)} "
+          f"rounds")
     print()
 
     # Castella: n = 2048 bits, AES_NUM_ROUNDS S-box layers per Castella round.
@@ -261,14 +271,16 @@ def main() -> None:
 
     reach_layers = zero_sum_reach_layers(layers, n)
     reach_rounds = reach_layers / AES_NUM_ROUNDS
-    total_reach_layers = 2 * reach_layers   # forward + inverse (same gamma)
+    total_reach_layers = 2 * reach_layers   # forward + inverse (same delta_i)
     print()
     print(f"Forward degree < {n - 1} through {reach_layers} AES layers "
           f"(= {reach_rounds:.2f} Castella rounds).")
-    print("The inverse S-box has the same delta_i and gamma, so a "
-          "Boura-Canteaut zero-sum built from the middle reaches at most")
+    print("The inverse S-box has the same delta_i, so the same bounds hold "
+          "for P^-1, and a Boura-Canteaut zero-sum built from the middle "
+          "reaches")
     print(f"  {reach_layers} + {reach_layers} = {total_reach_layers} AES rounds "
-          f"= {total_reach_layers / AES_NUM_ROUNDS:.2f} Castella rounds.")
+          f"= {total_reach_layers / AES_NUM_ROUNDS:.2f} Castella rounds, "
+          f"past which this bound certifies nothing.")
     print(f"Default permutation: 6 Castella rounds = {AES_NUM_ROUNDS * 6} AES "
           f"rounds.  Higher-capacity instances run 8.")
     print("This bounds the degree-based distinguisher construction only.  It "

@@ -11,8 +11,9 @@ model's wiring.  The results it produced are explained by a hand proof.
 Over a full-block cube round 1 is a bijection on that block, the transpose
 hands every block one active byte, each of whose 256 values therefore repeats
 2^120 times, and 2^120 is even, so the XOR-sum vanishes.  That argument never
-mentions AES, which is why it was also applied to `P^-1`, and the two halves
-were once composed into a 4-round inside-out zero-sum.
+mentions AES, which is why it was also applied to `P^-1`.  Composing the two
+halves once gave a 4-round figure that had to be retracted, because they had
+been run on different cubes.
 
 This program checks the argument itself, two ways that fail independently.
 
@@ -61,21 +62,24 @@ so cannot be enumerated.
 
 What the two parts found
 ------------------------
-The forward 2-round result is confirmed on both counts.  The 4-round
-inside-out figure is **refuted**.  It needed one cube whose two ends both
-balance, but the two halves were run on different cubes.  The solver's
+The forward 2-round result is confirmed on both counts.  A 4-round inside-out
+figure was retracted on 2026-08-04.  It needed one cube whose two ends both
+balance, but the two halves had been run on different cubes.  The solver's
 backward mode takes its cube in post-transpose coordinates (documented in
 build_trail), so `--inside-out 2 2 -c block`, before inside_out transposed the
 cube, gave the forward half a *row* of the byte matrix and the backward half a
-*column*, and no state has both.
+*column*.
 
 Measured per cube at N = 2 and N = 3, a row reaches forward 2 and backward 1,
-and a column forward 1 and backward 2.  Either way the inside-out reach is
-3.
+and a column forward 1 and backward 2, so each reaches 3.  The cube that
+fills both, block 0 plus byte 0 of every block, serves the forward half as a
+row and the backward half as a column.  `--rowcol` measures it, at
+256^(2N-1) states, so at N = 2 only.
 
 Usage
 -----
   python3 permute-multiplicity-verify.py            # Part A + N = 2
+  python3 permute-multiplicity-verify.py --rowcol   # adds the rowcol cube
   python3 permute-multiplicity-verify.py --reduced 3
   python3 permute-multiplicity-verify.py --self-test
 
@@ -572,12 +576,19 @@ def cube_states(n: int, kind: str, base: list[int]):
     half.
     `col` is byte 0 of every block, the transpose image of a row, which is
     what `-c block` names once the backward half's dropped leading transpose
-    is undone.  `diag` is a third 256^N cube that is neither.
+    is undone.  `diag` is a third 256^N cube that is neither.  `rowcol` is the
+    union of a row and a column, which share byte 0 of block 0, so it has
+    256^(2N-1) states.
     """
-    for vals in itertools.product(range(256), repeat=n):
+    width = 2 * n - 1 if kind == "rowcol" else n
+    for vals in itertools.product(range(256), repeat=width):
         st = list(base)
         if kind == "row":
             st[0] = pack(vals)
+        elif kind == "rowcol":
+            st[0] = pack(vals[:n])
+            for i in range(1, n):
+                st[i] = (st[i] & ~0xFF) | vals[n + i - 1]
         elif kind == "col":
             for i in range(n):
                 st[i] = (st[i] & ~0xFF) | vals[i]
@@ -668,8 +679,9 @@ def reach_table(red: Reduced, base: list[int], max_r: int,
     return out
 
 
-def part_b(n: int, seed: int, max_r: int) -> int:
-    """The conclusion, brute-forced over an enumerable cube."""
+def part_b(n: int, seed: int, max_r: int,
+           kinds: tuple[str, ...] = CUBE_KINDS) -> int:
+    """The conclusion, brute-forced over enumerable cubes."""
     states = 256 ** n
     print(f"== Part B: brute force at reduced width N = {n} "
           f"({n} blocks x {n} bytes, cube = 256^{n} = {states} states)")
@@ -682,18 +694,22 @@ def part_b(n: int, seed: int, max_r: int) -> int:
                 f"the reduced permutation does not round-trip at r = {r}")
     print("  round trip forward/backward, r = 1..3: OK")
     check_multiplicity_histogram(red, base)
-    table = reach_table(red, base, max_r)
+    table = reach_table(red, base, max_r, kinds)
     print()
     print("  cube          forward  backward  inside-out reach")
     for kind, (f, b) in table.items():
         print(f"  {kind:12s}  {f:>7}  {b:>8}  {f + b:>16}")
     best = max(f + b for f, b in table.values())
-    print(f"  [B2] best inside-out reach from any ONE cube: "
+    print(f"  [B2] best inside-out reach over the cubes measured: "
           f"{best} round(s) [{time.time() - t0:.0f} s]")
     if table["row"][0] < 2:
         raise VerificationError(
             "the forward 2-round zero-sum does not hold at reduced width, "
             "so the even-multiplicity argument is wrong")
+    if "rowcol" in table and min(table["rowcol"]) < 2:
+        raise VerificationError(
+            f"the rowcol cube reaches {table['rowcol']} (forward, backward), "
+            f"where the even-multiplicity argument gives 2 each way")
     return best
 
 
@@ -802,6 +818,17 @@ def self_test() -> None:
                     raise VerificationError(
                         f"memoization changed the verdict at {kind} "
                         f"{direction} r={r}")
+
+    # The rowcol cube must move block 0 and byte 0 of block 1, and nothing
+    # else.  Its first 2^17 states already move all three of those bytes.
+    moved = {(i, k) for st in itertools.islice(cube_states(2, "rowcol", base),
+                                               1 << 17)
+             for i in range(2) for k in range(2)
+             if unpack(st[i], 2)[k] != unpack(base[i], 2)[k]}
+    if moved != {(0, 0), (0, 1), (1, 0)}:
+        raise VerificationError(
+            f"the rowcol cube moves (block, byte) {sorted(moved)}, expected "
+            f"block 0 and byte 0 of block 1")
     print("self-test: OK")
 
 
@@ -822,6 +849,9 @@ def main() -> None:
                     help="skip Part A")
     ap.add_argument("--skip-reduced", action="store_true",
                     help="skip Part B")
+    ap.add_argument("--rowcol", action="store_true",
+                    help="also measure the rowcol cube in Part B, which has "
+                         "256^(2N-1) states, so N = 2 only")
     ap.add_argument("--self-test", action="store_true",
                     help="check this program's own pieces and exit")
     args = ap.parse_args()
@@ -835,24 +865,31 @@ def main() -> None:
     if not 1 <= args.rounds <= 6:
         print("--rounds must be in 1..6", file=sys.stderr)
         sys.exit(2)
+    if args.rowcol and args.reduced != 2:
+        print("--rowcol needs --reduced 2, since the cube has 256^(2N-1) "
+              "states", file=sys.stderr)
+        sys.exit(2)
+    kinds = CUBE_KINDS + ("rowcol",) if args.rowcol else CUBE_KINDS
 
     if not args.skip_full_width:
         part_a(args.seed)
         print()
     if not args.skip_reduced:
-        best = part_b(args.reduced, args.seed, args.rounds)
+        best = part_b(args.reduced, args.seed, args.rounds, kinds)
         print()
         part_b_controls(args.seed)
         print()
         print("== Verdict")
         print(f"  forward 2-round zero-sum: CONFIRMED (premises A1-A5, and "
               f"brute-forced at N = {args.reduced})")
-        print(f"  inside-out, best over the {len(CUBE_KINDS)} cubes measured: "
-              f"{best} round(s), not 4.  The retracted 4-round figure summed "
-              f"two halves over different cubes (A7).  The argument cannot "
-              f"reach 4 from one cube either, since forward 2 needs the cube "
-              f"to fill a row and backward 2 needs it to fill a column.  This "
-              f"does not claim that no cube anywhere reaches 4.")
+        print(f"  inside-out, best over the {len(kinds)} cubes measured "
+              f"({', '.join(kinds)}): {best} round(s).  The 4-round figure "
+              f"retracted on 2026-08-04 summed two halves over different "
+              f"cubes (A7).")
+        if not args.rowcol:
+            print("  Not measured: the rowcol cube, which fills a row for "
+                  "the forward half and a column for the backward half.  "
+                  "--rowcol measures it.")
 
 
 if __name__ == "__main__":

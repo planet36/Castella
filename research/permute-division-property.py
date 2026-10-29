@@ -97,13 +97,19 @@ transpose past it), so `inside_out` transposes the cube for the backward
 half.  Without that the same bit-set names a row of the byte matrix
 forward and a column backward, two different sets of states whose round
 counts cannot be added.  A revision before 2026-08-04 did exactly that and
-reported a 4-round zero-sum that does not exist.
+reported a 4-round zero-sum for the `block` cube, which has none.
 
 A 1-round half decides the `block` cube without solving.  Its backward half
 puts one byte of the cube in every block, so 120 cube bits cannot reach any
 one target block, and `trivially_balanced` reports all 16 balanced.
 `--inside-out 2 1 -c block` therefore certifies the 3-round zero-sum at the
 cost of its forward half, the `-r 2 -c block` scan.
+
+The `rowcol` cube is block 0 plus byte 0 of every other block, the middle
+state of a 4-round zero-sum.  Both of its halves are 2 rounds, which drop no
+cube bit, so `--inside-out 2 2 -c rowcol` decides it by solving.  Budget many
+hours, since round 1 has all 16 blocks live.  One output bit took 1199 s
+forward and 599 s backward.
 
 Usage
 -----
@@ -114,6 +120,7 @@ Usage
   python3 permute-division-property.py --rounds 1 --cube byte --count
   python3 permute-division-property.py --rounds 2 --cube block --inverse
   python3 permute-division-property.py --inside-out 2 1 --cube block
+  python3 permute-division-property.py --inside-out 2 2 --cube rowcol
 
 It needs z3 and otherwise only the standard library.
 """
@@ -783,6 +790,7 @@ def self_test_trivially_balanced() -> None:
         (column, 0, 1, "120 cube bits cannot reach it"),
         (column, 7, 1, "120 cube bits cannot reach it"),
         (column, 0, 2, None),
+        (CUBES["rowcol"](), 3, 2, None),
     )
     for cube, target, rounds, want in cases:
         got = trivially_balanced(cube, target, rounds)
@@ -790,6 +798,11 @@ def self_test_trivially_balanced() -> None:
             raise SelfTestError(
                 f"trivially_balanced({len(cube)}-bit cube, block {target}, "
                 f"{rounds} round(s)) is {got!r}, expected {want!r}")
+    rowcol = CUBES["rowcol"]()
+    if len(rowcol) != 248 or transpose_cube_bits(rowcol) != rowcol:
+        raise SelfTestError(
+            "the rowcol cube must be the 248 bits of block 0 and byte 0 of "
+            "every block, which the transpose fixes")
 
 
 def self_test_cube_transpose() -> None:
@@ -893,6 +906,10 @@ CUBES = {
                        for k in range(8)},
     "block": lambda: set(range(BLOCK_BITS)),
     "two-blocks": lambda: set(range(2 * BLOCK_BITS)),
+    # Block 0 plus byte 0 of every block, a row and a column of the byte
+    # matrix, so it serves both halves of an inside-out zero-sum.
+    "rowcol": lambda: set(range(BLOCK_BITS)) | {
+        blk * BLOCK_BITS + k for blk in range(N_BLOCKS) for k in range(8)},
 }
 
 

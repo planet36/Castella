@@ -240,6 +240,8 @@ The commitment this creates is concrete: **a distinguisher reaching 4 rounds obl
 
 **The trigger asks about reach alone**, meaning how many rounds a technique sees through, not what it costs to run.  A distinguisher needing 2^256 data, or one starting from a middle state the sponge never exposes, counts in full.  This is not an oversight: the 3 rounds anchoring the rule has both properties already (2^128 data, from a middle state), so admitting only cheaper or more accessible results would void the policy's own basis.  There is no practical attack on any round count to anchor on instead.  The consequence is deliberate and strict, and is recorded here so that it is not narrowed later by argument: **an unusable 4-round distinguisher obliges the same round-count change as a practical one.**
 
+**What counts as a distinguisher here.**  For the margin, a distinguisher is a structural property of `P` that holds with certainty for every choice of the round constants, such as an integral or zero-sum property.  Generic properties that every concrete permutation has, such as efficient invertibility, do not count.  Neither do probabilistic differential and linear properties, which the trail floor bounds against each claimed level instead, so a characteristic lighter than the 2048-bit state does not move the margin.
+
 ### Security strengths (generic bounds)
 
 These follow arithmetically from the claim, because they are the random-sponge generic bounds, which the claim asserts cannot be beaten.  For an `n`-byte digest at capacity `C` blocks, with MAC key `K` and MAC output length `L` bytes (all strengths in bits):

@@ -302,6 +302,11 @@ permutation).  The honest procedure has four steps:
    qualify it by data complexity should do so explicitly and say why, not by quietly reading
    the trigger more narrowly.
 
+   **What counts as a distinguisher for the margin was agreed on 2026-10-29**, and SPEC.md's
+   margin rationale states the definition.  The trail search forced the question.  Its
+   characteristics are lighter than the 2048-bit state through r = 6, so under the
+   reach-alone reading they would have put the longest known reach at 6 rounds.
+
 **SHIPPED.**  SPEC.md's security claim carries the claimed-instances table, giving
 `(C, R*)` with each row's capacity and claimed level, beside the SHA-3 mapping table that
 gives the digest sizes.  It also carries the margin rationale and states that other

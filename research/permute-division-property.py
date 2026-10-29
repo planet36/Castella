@@ -517,19 +517,34 @@ def transpose_state(m: Model, outs: dict[int, list[z3.BoolRef]],
 # ------------------------------------------------------------- the queries
 
 
-def scan_block(m: Model, out: list[z3.BoolRef],
+def check_bit(m: Model, out: list[z3.BoolRef], blk: int,
+              off: int) -> z3.CheckSatResult:
+    """Decide one output bit and print its verdict as soon as it lands.
+
+    Printing each bit as it is decided keeps every verdict already paid for
+    when a long scan is killed or crashes.
+    """
+    t0 = time.time()
+    res = m.s.check(*[out[i] if i == off else z3.Not(out[i])
+                      for i in range(BLOCK_BITS)])
+    verdict = ("balanced" if res == z3.unsat
+               else "not balanced" if res == z3.sat else "unknown (timeout)")
+    print(f"  block {blk} bit {off}: {verdict} [{time.time() - t0:.0f} s]",
+          flush=True)
+    return res
+
+
+def scan_block(m: Model, out: list[z3.BoolRef], blk: int,
                count: bool) -> tuple[int, int, int]:
-    """Check all 128 offsets of one target block.
+    """Check all 128 offsets of target block `blk`.
 
     Returns (balanced, unknown, stopped_at).  stopped_at is the offset that
-    ended the scan early, or -1 if it ran to the end.  The caller reports it,
-    since only the caller knows the block and round count.
+    ended the scan early, or -1 if it ran to the end.  The caller says why it
+    stopped, since only the caller knows the round count.
     """
     balanced = unknown = 0
     for off in range(BLOCK_BITS):
-        assumptions = [out[i] if i == off else z3.Not(out[i])
-                       for i in range(BLOCK_BITS)]
-        res = m.s.check(*assumptions)
+        res = check_bit(m, out, blk, off)
         if res == z3.unsat:
             balanced += 1
         elif res == z3.unknown:
@@ -569,19 +584,19 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
                   f"{m.n_sboxes} S-boxes, built in {time.time() - t0:.1f} s",
                   flush=True)
             reported = True
-        n_bal, n_unk, stopped = scan_block(m, out, count)
+        n_bal, n_unk, stopped = scan_block(m, out, blk, count)
         balanced += n_bal
         unknown += n_unk
         if stopped >= 0:
             if n_unk:
-                print(f"  block {blk} bit {stopped}: solver gave up at "
-                      f"{timeout_s:.0f} s -- INCONCLUSIVE, neither a "
+                print(f"  INCONCLUSIVE at block {blk} bit {stopped}, which "
+                      f"timed out at {timeout_s:.0f} s: neither a "
                       f"distinguisher nor a refutation (raise -t, or "
                       f"--count to keep going)")
             else:
-                print(f"  block {blk} bit {stopped} is NOT provably balanced "
-                      f"-- no full zero-sum distinguisher over {rounds} "
-                      f"round(s) (stopping; --count to continue)")
+                print(f"  no full zero-sum distinguisher over {rounds} "
+                      f"round(s), since block {blk} bit {stopped} is not "
+                      f"provably balanced (stopping; --count to continue)")
             return False
         print(f"  block {blk:>2}: {balanced} balanced so far "
               f"[{time.time() - t0:.0f} s]", flush=True)
@@ -754,19 +769,14 @@ def sponge_scan(capacity_blocks: int, rounds: int, timeout_s: float,
                   flush=True)
             reported = True
         for off in offsets:
-            assumptions = [out[i] if i == off else z3.Not(out[i])
-                           for i in range(BLOCK_BITS)]
-            res = m.s.check(*assumptions)
+            res = check_bit(m, out, blk, off)
             if res == z3.unsat:
                 balanced += 1
-                print(f"  block {blk} bit {off} is balanced", flush=True)
                 if not count:
                     return report_sponge_scan(balanced, unbalanced, unknown,
                                               rounds)
             elif res == z3.unknown:
                 unknown += 1
-                print(f"  block {blk} bit {off}: solver gave up at "
-                      f"{timeout_s:.0f} s", flush=True)
             else:
                 unbalanced += 1
         print(f"  block {blk:>2}: {balanced} balanced, {unbalanced} not, "

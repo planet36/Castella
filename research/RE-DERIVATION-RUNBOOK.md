@@ -464,7 +464,7 @@ python3 permute-division-property.py --validate            # ~17 min; AES Square
 python3 permute-division-property.py --validate --inverse  # ~13 min; gates P^-1 AT 2 ROUNDS
 python3 permute-division-property.py -r 1 -c byte --count  # ~7 min; all 2048 bits balanced
 python3 permute-division-property.py -r 2 -c block --count # ~50 min; the 2^128 distinguisher
-python3 permute-division-property.py --inside-out 0 1 -c block   # ~48 s; MUST say no zero-sum
+python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST report a zero-sum
 
 # The margin anchor.  Part A checks the premises on the real state.  Part B
 # brute-forces the reach at reduced width, and its table must be IDENTICAL at
@@ -481,10 +481,9 @@ python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 ./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from 3 AES rounds; instant
 ```
 
-[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) § 11 describes four traps in that set that have
-each cost time once already.  They are the inverse gate at 2 rounds, `--inside-out 2 1`
-reporting no zero-sum where one exists, the slow per-block cost of `-r 2 -c block --count`,
-and `--reduced 3` as a control that should change nothing.
+[VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) § 11 describes three traps in that set that have
+each cost time once already.  They are the inverse gate at 2 rounds, the slow per-block cost
+of `-r 2 -c block --count`, and `--reduced 3` as a control that should change nothing.
 
 ## 8. Where a refreshed figure has to land
 

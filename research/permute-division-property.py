@@ -62,6 +62,13 @@ solved for.  For a cube inside one block the live block count is 1 at r = 1,
 **2** at r = 2, 18 at r = 3, and 34 at r = 4, which is linear growth rather
 than exponential.
 
+A cube bit in an omitted block is the one exception, since that block cannot
+be zero.  No trail exists then, so the target is balanced with nothing to
+solve.  In counting terms, the m cube bits that cannot reach the target make
+each of its input values repeat 2^m times, which is even.
+`trivially_balanced` reports this case, which arises only at r = 1, where the
+target's block is the only live one.
+
 Validation
 ----------
 Run on AES itself, with the same S-box and MixColumns, the model must
@@ -92,15 +99,11 @@ forward and a column backward, two different sets of states whose round
 counts cannot be added.  A revision before 2026-08-04 did exactly that and
 reported a 4-round zero-sum that does not exist.
 
-Expect a negative even where a zero-sum is known.  A `block` cube's
-backward half spreads over all 16 blocks, so the pruning keeps only the
-target's and the cube collapses to the one byte reaching it.  Balance over
-2^8 is far harder to prove than over 2^128, so the known 3-round
-construction comes back "not provably balanced".  That is the ordinary SAT
-direction, which bounds the technique and never `P`, but it means this flag
-cannot confirm the known reach.  permute-multiplicity-verify.py does, by
-checking the counting argument directly and brute-forcing the reach at a
-width where the cube is enumerable.
+A 1-round half decides the `block` cube without solving.  Its backward half
+puts one byte of the cube in every block, so 120 cube bits cannot reach any
+one target block, and `trivially_balanced` reports all 16 balanced.
+`--inside-out 2 1 -c block` therefore certifies the 3-round zero-sum at the
+cost of its forward half, the `-r 2 -c block` scan.
 
 Usage
 -----
@@ -376,6 +379,26 @@ def live_blocks(cube_blocks: set[int], target_block: int,
     return [r & n for r, n in zip(reach, need)]
 
 
+def trivially_balanced(cube_bits: set[int], target_block: int,
+                       rounds: int) -> str | None:
+    """Why every output bit of `target_block` is balanced unsolved, or None.
+
+    A block the cube cannot reach is constant over the cube.  A cube bit
+    outside the live round-1 blocks cannot reach the target, so no division
+    trail can carry it there, and the target's inputs repeat each value an
+    even number of times.  The second case arises only at r = 1, since every
+    block is live in round 1 otherwise.
+    """
+    cube_blocks = {b // BLOCK_BITS for b in cube_bits}
+    live = live_blocks(cube_blocks, target_block, rounds)
+    if not live[rounds - 1]:
+        return "unreachable from the cube"
+    stranded = sum(1 for b in cube_bits if b // BLOCK_BITS not in live[0])
+    if stranded:
+        return f"{stranded} cube bits cannot reach it"
+    return None
+
+
 def build_trail(m: Model, cube_bits: set[int], target_block: int,
                 rounds: int, inverse: bool = False
                 ) -> list[z3.BoolRef] | None:
@@ -383,9 +406,9 @@ def build_trail(m: Model, cube_bits: set[int], target_block: int,
 
     Returns that block's 128 output bits, so one build serves all 128 target
     offsets.  The model's shape depends on which block the target sits in,
-    never on which bit within it.  Returns None when the block is unreachable
-    from the cube, in which case every one of its output bits is a constant
-    and so balanced, with nothing to solve.
+    never on which bit within it.  Returns None when `trivially_balanced`
+    finds every one of the block's output bits balanced with nothing to
+    solve.
 
     With `inverse`, the same wiring models `P^-1` instead of `P`, for the
     backward half of an inside-out zero-sum.  Each round applies three
@@ -405,11 +428,10 @@ def build_trail(m: Model, cube_bits: set[int], target_block: int,
     pre-transpose coordinates is a different cube, not the same one written
     differently.
     """
+    if trivially_balanced(cube_bits, target_block, rounds) is not None:
+        return None
     cube_blocks = {b // BLOCK_BITS for b in cube_bits}
     live = live_blocks(cube_blocks, target_block, rounds)
-
-    if not live[rounds - 1]:
-        return None
 
     # Round 1 input: the cube's indicator vector, on the live blocks only.
     state: dict[int, list[z3.BoolRef]] = {}
@@ -498,7 +520,8 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
         out = build_trail(m, cube_bits, blk, rounds, inverse)
         if out is None:
             balanced += BLOCK_BITS
-            print(f"  block {blk:>2}: unreachable from the cube, all "
+            print(f"  block {blk:>2}: "
+                  f"{trivially_balanced(cube_bits, blk, rounds)}, all "
                   f"{BLOCK_BITS} bits balanced [{time.time() - t0:.0f} s]",
                   flush=True)
             continue
@@ -606,10 +629,8 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     zero-sum *partition* is a statement about the whole state at both
     ends, so a partial result on either half establishes nothing here.
 
-    Read a negative here as weak, and expect one even where a zero-sum is
-    known, for the reason the module docstring gives.  The counting argument
-    and the brute force in permute-multiplicity-verify.py establish the reach
-    instead.
+    Read a negative here as weak, because a SAT bounds the technique and never
+    `P`.  A positive is a proof, given the model.
     """
     print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "
           f"= {r_fwd + r_bwd} round(s)", flush=True)
@@ -743,7 +764,32 @@ def self_test() -> None:
                 f"{rounds} round(s): {got} live blocks, expected {blocks}")
     self_test_inverse()
     self_test_cube_transpose()
+    self_test_trivially_balanced()
     print("self-test: OK")
+
+
+def self_test_trivially_balanced() -> None:
+    """Check each way a target block is decided without solving.
+
+    The column cube at 1 round is the backward half of the 3-round inside-out
+    zero-sum.  Each target block is reached by its own byte only, so the other
+    120 cube bits are stranded.
+    """
+    block = CUBES["block"]()
+    column = transpose_cube_bits(block)
+    cases = (
+        (block, 0, 1, None),
+        (block, 5, 1, "unreachable from the cube"),
+        (column, 0, 1, "120 cube bits cannot reach it"),
+        (column, 7, 1, "120 cube bits cannot reach it"),
+        (column, 0, 2, None),
+    )
+    for cube, target, rounds, want in cases:
+        got = trivially_balanced(cube, target, rounds)
+        if got != want:
+            raise SelfTestError(
+                f"trivially_balanced({len(cube)}-bit cube, block {target}, "
+                f"{rounds} round(s)) is {got!r}, expected {want!r}")
 
 
 def self_test_cube_transpose() -> None:

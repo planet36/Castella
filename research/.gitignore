@@ -16,6 +16,7 @@ permute-num_rounds
 permute-num_rounds-avalanche_matrix
 permute-num_rounds-benchmark
 permute-structural-probes
+permute-zero_sum-analog-verify
 permute-zero_sum-probes
 permute_folded-benchmark
 permute_inv-verify

@@ -111,6 +111,36 @@ cube bit, so `--inside-out 2 2 -c rowcol` decides it by solving.  Budget many
 hours, since round 1 has all 16 blocks live.  One output bit took 1199 s
 forward and 599 s backward.
 
+Through the sponge interface
+----------------------------
+`--sponge C` asks what a caller of the duplex at capacity C can reach.  The
+caller XORs a final block into the rate, and a squeeze reads the rate after
+one call of P.  The cube is every message bit of that block, the first
+16R - 2 bytes of the rate, since its last two bytes hold the suffix and the
+pad.  The targets are the rate output bits, and one balanced bit is already
+a distinguisher, so this scan stops at the first balanced bit rather than
+the first unbalanced one.
+
+The capacity is constant over the cube, and the division property holds for
+every value of the non-cube bits.  So the answer is the same whether the
+capacity is known, as in unkeyed hashing, or secret, as in the MAC.
+
+C = 2 decides every capacity.  A cube that sums to zero on a bit makes every
+cube containing it sum to zero there too, and C = 2's cube and targets
+contain those of every larger C.  So if no rate bit is balanced at C = 2,
+none is at any C, from any cube a caller can choose.
+
+Two round counts need no solving.  At r = 1 the cube strands bits outside
+every target block, so `trivially_balanced` decides it.  At r = 2 the `block`
+cube is balanced on all 2048 bits and lies inside every sponge cube, so the
+sponge cube is balanced too.  The open question starts at r = 3.
+
+Two attacks are outside the model.  A conditional cube fixes some non-cube
+bits to slow the first round, but the division property quantifies over
+every constant, so it cannot express that choice.  A cube whose sum depends
+on the key without vanishing needs a flagged division property, which this
+program does not implement.
+
 Usage
 -----
   python3 permute-division-property.py --self-test
@@ -121,6 +151,7 @@ Usage
   python3 permute-division-property.py --rounds 2 --cube block --inverse
   python3 permute-division-property.py --inside-out 2 1 --cube block
   python3 permute-division-property.py --inside-out 2 2 --cube rowcol
+  python3 permute-division-property.py --sponge 2 --rounds 3
 
 It needs z3 and otherwise only the standard library.
 """
@@ -664,6 +695,101 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     return ok
 
 
+# ------------------------------------------- through the sponge interface
+
+
+def sponge_cube(capacity_blocks: int) -> set[int]:
+    """The largest cube a duplex caller controls at capacity C.
+
+    It is every message bit of a final absorbed block, the first 16R - 2
+    bytes of the rate, since the suffix and the pad fill the last two.  A
+    bit's index is 8 times its state byte index plus its bit, so the cube is
+    a prefix of the state.
+    """
+    rate_bytes = BLOCK_BYTES * (N_BLOCKS - capacity_blocks)
+    return set(range(8 * (rate_bytes - 2)))
+
+
+def sponge_target_offsets(capacity_blocks: int) -> range:
+    """The offsets within every target block that a squeeze reveals.
+
+    A squeeze reveals output blocks 0..R-1.  The forward build drops P's
+    trailing transpose, which sends block i byte b to block b byte i.  So in
+    the build's coordinates the rate is bytes 0..R-1 of every block, not
+    blocks 0..R-1.
+    """
+    return range(8 * (N_BLOCKS - capacity_blocks))
+
+
+def sponge_scan(capacity_blocks: int, rounds: int, timeout_s: float,
+                count: bool) -> bool:
+    """Look for a balanced rate output bit over the sponge cube.
+
+    Unlike `scan`, this stops at the first balanced bit unless `count`,
+    since one output bit that sums to zero is a distinguisher.  Returns True
+    when one is found.  A timeout neither stops the scan nor counts as
+    unbalanced.
+    """
+    cube = sponge_cube(capacity_blocks)
+    offsets = sponge_target_offsets(capacity_blocks)
+    balanced = unbalanced = unknown = 0
+    reported = False
+    for blk in range(N_BLOCKS):
+        t0 = time.time()
+        m = Model()
+        out = build_trail(m, cube, blk, rounds)
+        if out is None:
+            balanced += len(offsets)
+            print(f"  block {blk:>2}: "
+                  f"{trivially_balanced(cube, blk, rounds)}, all "
+                  f"{len(offsets)} rate bits balanced", flush=True)
+            if not count:
+                return report_sponge_scan(balanced, unbalanced, unknown,
+                                          rounds)
+            continue
+        m.s.set("timeout", int(timeout_s * 1000))
+        if not reported:
+            print(f"  model per target block: {m.n_vars} vars, "
+                  f"{m.n_sboxes} S-boxes, built in {time.time() - t0:.1f} s",
+                  flush=True)
+            reported = True
+        for off in offsets:
+            assumptions = [out[i] if i == off else z3.Not(out[i])
+                           for i in range(BLOCK_BITS)]
+            res = m.s.check(*assumptions)
+            if res == z3.unsat:
+                balanced += 1
+                print(f"  block {blk} bit {off} is balanced", flush=True)
+                if not count:
+                    return report_sponge_scan(balanced, unbalanced, unknown,
+                                              rounds)
+            elif res == z3.unknown:
+                unknown += 1
+                print(f"  block {blk} bit {off}: solver gave up at "
+                      f"{timeout_s:.0f} s", flush=True)
+            else:
+                unbalanced += 1
+        print(f"  block {blk:>2}: {balanced} balanced, {unbalanced} not, "
+              f"{unknown} unknown so far [{time.time() - t0:.0f} s]",
+              flush=True)
+    return report_sponge_scan(balanced, unbalanced, unknown, rounds)
+
+
+def report_sponge_scan(balanced: int, unbalanced: int, unknown: int,
+                       rounds: int) -> bool:
+    """Print a sponge scan's verdict; True when a rate bit is balanced."""
+    if balanced:
+        print(f"  {balanced} rate output bit(s) balanced -- a zero-sum "
+              f"through the sponge interface over {rounds} round(s)")
+    elif unknown:
+        print(f"  none balanced, {unbalanced} not, {unknown} unknown "
+              f"(timeout) -- INCONCLUSIVE")
+    else:
+        print(f"  none of {unbalanced} rate output bits provably balanced "
+              f"over {rounds} round(s), at this capacity or any larger one")
+    return balanced > 0
+
+
 # ------------------------------------------------------------ validation
 
 
@@ -772,7 +898,50 @@ def self_test() -> None:
     self_test_inverse()
     self_test_cube_transpose()
     self_test_trivially_balanced()
+    self_test_sponge()
     print("self-test: OK")
+
+
+def self_test_sponge() -> None:
+    """Check the sponge cube and targets against the duplex's geometry.
+
+    The targets are re-derived here from PM.transpose_map, so a target set
+    read as blocks 0..R-1, the likely mistake, fails.  The nesting and the
+    `block` containment are what let C = 2 decide every capacity and r = 2
+    follow from the `block` scan.
+    """
+    block = CUBES["block"]()
+    tmap = PM.transpose_map(N_BLOCKS)
+    smaller: set[int] = set()
+    for c in (8, 6, 4, 2):
+        rate = N_BLOCKS - c
+        cube = sponge_cube(c)
+        if len(cube) != 8 * (BLOCK_BYTES * rate - 2):
+            raise SelfTestError(
+                f"C = {c}: the sponge cube has {len(cube)} bits, expected "
+                f"the {8 * (BLOCK_BYTES * rate - 2)} of 16R - 2 bytes")
+        if not smaller < cube:
+            raise SelfTestError(
+                f"C = {c}: the sponge cube must strictly contain every "
+                f"larger capacity's")
+        if not block <= cube:
+            raise SelfTestError(
+                f"C = {c}: the sponge cube must contain the block cube")
+        for blk in range(N_BLOCKS):
+            want = {8 * byte + k for byte in range(BLOCK_BYTES)
+                    if tmap[(blk, byte)][0] < rate for k in range(8)}
+            if set(sponge_target_offsets(c)) != want:
+                raise SelfTestError(
+                    f"C = {c}: block {blk}'s rate offsets disagree with "
+                    f"the transpose")
+            if trivially_balanced(cube, blk, 1) is None:
+                raise SelfTestError(
+                    f"C = {c}: block {blk} at 1 round must be decided "
+                    f"without solving")
+            if trivially_balanced(cube, blk, 2) is not None:
+                raise SelfTestError(
+                    f"C = {c}: block {blk} at 2 rounds must need solving")
+        smaller = cube
 
 
 def self_test_trivially_balanced() -> None:
@@ -945,6 +1114,12 @@ def main() -> None:
                          "is taken in the coordinates that feed the first "
                          "inverse AES round (see build_trail on the dropped "
                          "transpose)")
+    ap.add_argument("--sponge", type=int, metavar="C", default=None,
+                    help="look for a balanced rate output bit over the "
+                         "largest cube a duplex caller controls at capacity "
+                         "C (2, 4, 6, or 8), with the capacity known or "
+                         "secret.  C = 2 decides every capacity.  Forward "
+                         "only, and it overrides --cube and --bits")
     ap.add_argument("--validate", action="store_true",
                     help="reproduce AES's Square distinguisher and exit.  "
                          "It honors --inverse, which gates the inverse "
@@ -971,6 +1146,23 @@ def main() -> None:
     elif not 1 <= args.rounds <= 16:
         print("--rounds must be in 1..16", file=sys.stderr)
         sys.exit(2)
+
+    if args.sponge is not None:
+        if args.sponge not in (2, 4, 6, 8):
+            print("--sponge must be 2, 4, 6, or 8", file=sys.stderr)
+            sys.exit(2)
+        if args.inverse or args.inside_out is not None:
+            print("--sponge is forward only", file=sys.stderr)
+            sys.exit(2)
+        cube = sponge_cube(args.sponge)
+        print(f"== Castella P, {args.rounds} round(s), sponge cube at "
+              f"C = {args.sponge} ({len(cube)} active bits), rate output "
+              f"bits only", flush=True)
+        live = live_blocks({b // BLOCK_BITS for b in cube}, 0, args.rounds)
+        print(f"  live blocks per round: {[len(s) for s in live]} "
+              f"(total {sum(len(s) for s in live)})", flush=True)
+        sponge_scan(args.sponge, args.rounds, args.time_limit, args.count)
+        return
 
     if args.bits is not None:
         if not 1 <= args.bits <= BLOCK_BITS:

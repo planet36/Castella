@@ -583,6 +583,7 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 | `A(9)` and beyond | 2026-08-08 | Dropped on scope.  The shipped round counts are 6 and 8, so r ≤ 8 covers them; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
 | Differential clustering at r ≥ 2 | 2026-08-07 | The r = 2 cluster enumeration was judged not worth its cost, and the shell enumerations that would supply the figures elsewhere are inside the closed ceiling line.  So first-order clustering is measured at r = 1 only (≈ 2 bits), and the gap is disclosed rather than queued (§5.3). |
 | Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive: 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. |
+| A 7-round inside-out zero-sum | 2026-10-30 | Not pursued.  A second blind re-derivation found none, and it argued that the technique stops at 6 rounds.  Its one unproved step asks whether 3-round AES has a common coarsening, which is a question about AES itself, and a positive answer would be a weakness in AES.  Inside-out zero-sums do not count toward `R*`, so no answer moves a parameter.  SPEC.md keeps 7 rounds open. |
 
 **What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface
 distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3, so 4 rounds obliges 7 at `C` = 2,

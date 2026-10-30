@@ -481,6 +481,12 @@ python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
 ./permute-zero_sum-analog-verify                  # 92 s; -q skips the 2^32 cases, 5 s
 
+# Do not run --inside-out 2 2 -c rowcol at full width.  No target block is
+# trivially balanced at 2 rounds, so it is 4096 solves, and the per-bit cost was
+# flat over block 0 (2026-10-29).  Forward took 1269 s a bit at 2.7 GiB, backward
+# 564 s and 660 s at 3.5 GiB, each after a 125-129 s build.  That is at least
+# 1070 h serial.
+
 # Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 s per
 # stream.
 ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB

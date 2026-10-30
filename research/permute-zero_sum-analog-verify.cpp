@@ -35,6 +35,25 @@
 * runs under two seeds, which draw different round constants and base
 * states, since a structural zero-sum must not depend on either.  The program
 * exits nonzero on any case that disagrees with its expectation.
+*
+* The 6-round construction is too large to enumerate even here.  Its middle
+* set fixes one cell and frees the other 15, so it has 2^60 states.  It sits
+* before half-step 6 of a 6-round run, and both halves start the same way.
+*
+* The first AES phase maps block 0 into a set G and leaves the other blocks
+* free, and the transpose turns G into column 0.  For each g in G, block i is
+* then cell 0 fixed at g[i] and three free cells, and the 4 blocks are
+* independent.  So the count of states in which block j holds v after the
+* second phase and its transpose is the sum over g of a product of per-block
+* counts.  \c count_rows evaluates that sum exactly, and the last phase acts
+* on each block alone, so those counts give the end's exact XOR sum.  Nothing
+* in this uses a property of the AES analog, and \c cross_check_counting
+* confirms it by enumeration on sets small enough to enumerate.
+*
+* That construction's controls change the AES phase rather than the round
+* count.  One round more at an end leaves the blocks dependent, which the
+* counting cannot follow.  So each control gives every phase a 4th AES round,
+* past the 3 that the argument's per-cell uniformity is proved for.
 */
 
 #include "parse_int.hpp"
@@ -47,7 +66,9 @@
 #include <cstdlib>
 #include <err.h>
 #include <exception>
+#include <numeric>
 #include <print>
+#include <random>
 #include <string_view>
 #include <thread>
 #include <unistd.h>
@@ -59,7 +80,9 @@ using block_t = uint16_t; ///< 4 cells of 4 bits, cell k at bit 4*k
 inline constexpr int NUM_BLOCKS = 4;
 inline constexpr int CELLS_PER_BLOCK = 4;
 inline constexpr int AES_ROUNDS = 3;
-inline constexpr int MAX_ROUNDS = 5;
+inline constexpr int MAX_AES_ROUNDS = 4;
+inline constexpr int MAX_ROUNDS = 6;
+inline constexpr int CELL_VALUES = 16;
 inline constexpr int BLOCK_VALUES = 1 << 16;
 
 /// Multiply in GF(16) modulo x^4 + x + 1
@@ -203,7 +226,8 @@ struct phase_tables
     std::vector<block_t> fwd; ///< [(round * NUM_BLOCKS + block) * BLOCK_VALUES + v]
     std::vector<block_t> inv; ///< the same layout
 
-    explicit phase_tables(const uint64_t seed)
+    /// Draw every round constant from \a seed, for phases of \a aes_rounds AES rounds
+    explicit phase_tables(const uint64_t seed, const int aes_rounds = AES_ROUNDS)
         : fwd(static_cast<size_t>(MAX_ROUNDS) * NUM_BLOCKS * BLOCK_VALUES)
         , inv(fwd.size())
     {
@@ -222,17 +246,17 @@ struct phase_tables
         {
             for (int i = 0; i < NUM_BLOCKS; ++i)
             {
-                std::array<block_t, AES_ROUNDS> keys{};
-                for (auto& k : keys)
-                    k = static_cast<block_t>(next());
+                std::array<block_t, MAX_AES_ROUNDS> keys{};
+                for (int a = 0; a < aes_rounds; ++a)
+                    keys[a] = static_cast<block_t>(next());
                 const size_t base = static_cast<size_t>((r * NUM_BLOCKS) + i) * BLOCK_VALUES;
                 for (int v = 0; v < BLOCK_VALUES; ++v)
                 {
                     auto b = static_cast<block_t>(v);
-                    for (const auto k : keys)
-                        b = aes_round(b, k);
+                    for (int a = 0; a < aes_rounds; ++a)
+                        b = aes_round(b, keys[a]);
                     fwd[base + v] = b;
-                    for (int a = AES_ROUNDS - 1; a >= 0; --a)
+                    for (int a = aes_rounds - 1; a >= 0; --a)
                         b = inv_aes_round(b, keys[a]);
                     if (b != static_cast<block_t>(v))
                         errx(EXIT_FAILURE, "the inverse AES phase does not undo the forward one");
@@ -258,6 +282,14 @@ struct phase_tables
         if (h % 2 != 0)
             return transpose(s);
         return phase(inv, s, h / 2);
+    }
+
+    /// Block \a i's AES phase in round \a r, or its inverse if \a inverse
+    [[nodiscard]] block_t
+    block(const bool inverse, const int r, const int i, const block_t v) const
+    {
+        const size_t base = static_cast<size_t>((r * NUM_BLOCKS) + i) * BLOCK_VALUES;
+        return (inverse ? inv : fwd)[base + v];
     }
 
 private:
@@ -365,6 +397,236 @@ sum_cube(const phase_tables& tables, const std::vector<int>& offsets, const stat
         total.out ^= p.out;
     }
     return total;
+}
+
+/// The three AES phases one half of the 6-round construction passes through
+struct construction_half
+{
+    bool inverse; ///< the backward half, which runs the inverse phases
+    int absorbed; ///< the round whose phase maps block 0 into G
+    int lemma;    ///< the round whose phase must leave every cell uniform
+    int last;     ///< the round whose phase only permutes each block
+};
+
+inline constexpr construction_half FORWARD_HALF{.inverse = false, .absorbed = 3, .lemma = 4,
+                                                .last = 5}; // NOLINT(readability-trailing-comma)
+inline constexpr construction_half BACKWARD_HALF{.inverse = true, .absorbed = 2, .lemma = 1,
+                                                 .last = 0}; // NOLINT(readability-trailing-comma)
+
+/// The values cell i of block k may take after the absorbed phase, as cell_sets[k][i]
+/**
+* Entry k = 0 is unused, since block 0 is described by G instead.
+*/
+using cell_sets = std::array<std::array<std::vector<int>, CELLS_PER_BLOCK>, NUM_BLOCKS>;
+
+/// Every cell value free in every block but block 0, as in the 2^60-state middle set
+[[nodiscard]] static cell_sets
+all_cells_free()
+{
+    cell_sets sets;
+    for (int k = 1; k < NUM_BLOCKS; ++k)
+        for (auto& s : sets[k])
+            for (int x = 0; x < CELL_VALUES; ++x)
+                s.push_back(x);
+    return sets;
+}
+
+/// How many states hold v in block j after the lemma phase and its transpose, as counts[j][v]
+/**
+* After the absorbed phase, block 0 ranges over \a g_set and cell i of each
+* block k > 0 over \a sets[k][i], all independently.  The transpose makes
+* block i of the next state cell 0 = g[i] and cell k drawn from sets[k][i].
+* For fixed g those blocks are independent, and so are their images under the
+* lemma phase.  Cell j of each image lands in block j, so for each g the
+* count of v in block j is the product over i of how many images of block i
+* hold cell i of v at cell j.  Summing over g gives the exact count.
+*/
+[[nodiscard]] static std::array<std::vector<int64_t>, NUM_BLOCKS>
+count_rows(const phase_tables& tables, const construction_half& half,
+           const std::vector<block_t>& g_set, const cell_sets& sets, const int num_threads)
+{
+    // n[((i * NUM_BLOCKS + j) * CELL_VALUES + a) * CELL_VALUES + x] counts the
+    // images of block i with cell 0 = a that hold x at cell j.
+    std::vector<int64_t> n(static_cast<size_t>(NUM_BLOCKS) * NUM_BLOCKS * CELL_VALUES *
+                           CELL_VALUES);
+    const auto at = [](const int i, const int j, const unsigned a, const unsigned x)
+    {
+        const size_t ij = (static_cast<size_t>(i) * NUM_BLOCKS) + j;
+        return (((ij * CELL_VALUES) + a) * CELL_VALUES) + x;
+    };
+    for (int i = 0; i < NUM_BLOCKS; ++i)
+        for (int a = 0; a < CELL_VALUES; ++a)
+            for (const int x1 : sets[1][i])
+                for (const int x2 : sets[2][i])
+                    for (const int x3 : sets[3][i])
+                    {
+                        const auto y =
+                            static_cast<block_t>(a | (x1 << 4) | (x2 << 8) | (x3 << 12));
+                        const block_t z = tables.block(half.inverse, half.lemma, i, y);
+                        for (int j = 0; j < CELLS_PER_BLOCK; ++j)
+                            ++n[at(i, j, static_cast<unsigned>(a), cell(z, j))];
+                    }
+
+    std::array<std::vector<int64_t>, NUM_BLOCKS> counts;
+    for (auto& c : counts)
+        c.assign(BLOCK_VALUES, 0);
+    std::vector<std::thread> threads;
+    threads.reserve(static_cast<size_t>(num_threads));
+    for (int t = 0; t < num_threads; ++t)
+    {
+        threads.emplace_back([&, t]
+        {
+            const int lo = BLOCK_VALUES * t / num_threads;
+            const int hi = BLOCK_VALUES * (t + 1) / num_threads;
+            for (int v = lo; v < hi; ++v)
+            {
+                const auto vb = static_cast<block_t>(v);
+                for (int j = 0; j < NUM_BLOCKS; ++j)
+                {
+                    int64_t total = 0;
+                    for (const block_t g : g_set)
+                    {
+                        int64_t prod = 1;
+                        for (int i = 0; i < NUM_BLOCKS; ++i)
+                            prod *= n[at(i, j, cell(g, i), cell(vb, i))];
+                        total += prod;
+                    }
+                    counts[j][v] = total;
+                }
+            }
+        });
+    }
+    for (auto& th : threads)
+        th.join();
+    return counts;
+}
+
+/// The exact XOR sum at the end of \a half, from the counts \c count_rows returns
+/**
+* The last phase permutes each block alone, so a value v of block j
+* contributes its image once if its count is odd and not at all if it is
+* even.  The forward half ends on a transpose, and the backward half does not.
+*/
+[[nodiscard]] static state_t
+end_sum(const phase_tables& tables, const construction_half& half,
+        const std::array<std::vector<int64_t>, NUM_BLOCKS>& counts)
+{
+    state_t sum = 0;
+    for (int j = 0; j < NUM_BLOCKS; ++j)
+    {
+        unsigned x = 0;
+        for (int v = 0; v < BLOCK_VALUES; ++v)
+            if ((counts[j][v] & 1) != 0)
+                x ^= tables.block(half.inverse, half.last, j, static_cast<block_t>(v));
+        sum |= static_cast<state_t>(x) << (16 * j);
+    }
+    return half.inverse ? sum : transpose(sum);
+}
+
+/// Confirm \c count_rows and \c end_sum by enumeration on random sets small enough to enumerate
+/**
+* Each trial draws 16 values for block 0 and 1 to 3 values for every other
+* cell, builds the middle states that reach exactly those sets after the
+* absorbed phase, and runs each one through the real half-steps.  The
+* backward half's middle states are built transposed, since its first
+* half-step is a transpose.
+*/
+static void
+cross_check_counting(const phase_tables& tables, const construction_half& half,
+                     const uint64_t seed, const int num_trials)
+{
+    std::mt19937_64 rng(seed);
+    for (int trial = 0; trial < num_trials; ++trial)
+    {
+        std::vector<block_t> r0;
+        while (std::ssize(r0) < 16)
+        {
+            const auto v = static_cast<block_t>(rng());
+            if (std::ranges::find(r0, v) == r0.end())
+                r0.push_back(v);
+        }
+        cell_sets sets;
+        for (int k = 1; k < NUM_BLOCKS; ++k)
+            for (auto& s : sets[k])
+            {
+                std::vector<int> all(CELL_VALUES);
+                std::ranges::iota(all, 0);
+                std::ranges::shuffle(all, rng);
+                s.assign(all.begin(), all.begin() + 1 + static_cast<int>(rng() % 3));
+            }
+
+        std::vector<block_t> g_set;
+        g_set.reserve(r0.size());
+        for (const block_t r : r0)
+            g_set.push_back(tables.block(half.inverse, half.absorbed, 0, r));
+        const auto counts = count_rows(tables, half, g_set, sets, 1);
+        const state_t predicted = end_sum(tables, half, counts);
+
+        // Every block k > 0 value whose cells lie in sets[k], mapped back
+        // through the absorbed phase.
+        std::array<std::vector<block_t>, NUM_BLOCKS> rows;
+        for (int k = 1; k < NUM_BLOCKS; ++k)
+            for (const int x0 : sets[k][0])
+                for (const int x1 : sets[k][1])
+                    for (const int x2 : sets[k][2])
+                        for (const int x3 : sets[k][3])
+                        {
+                            const auto q = static_cast<block_t>(x0 | (x1 << 4) | (x2 << 8) |
+                                                                (x3 << 12));
+                            rows[k].push_back(tables.block(!half.inverse, half.absorbed, k, q));
+                        }
+
+        std::array<std::vector<int64_t>, NUM_BLOCKS> seen;
+        for (auto& c : seen)
+            c.assign(BLOCK_VALUES, 0);
+        state_t enumerated = 0;
+        const int cut = 6;
+        for (const block_t b0 : r0)
+            for (const block_t b1 : rows[1])
+                for (const block_t b2 : rows[2])
+                    for (const block_t b3 : rows[3])
+                    {
+                        state_t s = b0 | (state_t{b1} << 16) | (state_t{b2} << 32) |
+                                    (state_t{b3} << 48);
+                        if (half.inverse)
+                        {
+                            s = transpose(s);
+                            for (int h = cut - 1; h >= 1; --h)
+                                s = tables.unstep(s, h);
+                        }
+                        else
+                        {
+                            for (int h = cut; h < cut + 4; ++h)
+                                s = tables.step(s, h);
+                        }
+                        for (int j = 0; j < NUM_BLOCKS; ++j)
+                            ++seen[j][(s >> (16 * j)) & 0xFFFFU];
+                        if (half.inverse)
+                        {
+                            s = tables.unstep(s, 0);
+                        }
+                        else
+                        {
+                            for (int h = cut + 4; h < cut + 6; ++h)
+                                s = tables.step(s, h);
+                        }
+                        enumerated ^= s;
+                    }
+
+        if (seen != counts || enumerated != predicted)
+            errx(EXIT_FAILURE,
+                 "the exact counting disagrees with enumeration (%s half, trial %d)",
+                 half.inverse ? "backward" : "forward", trial);
+    }
+}
+
+/// Whether every block value occurs equally often
+[[nodiscard]] static bool
+uniform(const std::array<std::vector<int64_t>, NUM_BLOCKS>& counts)
+{
+    return std::ranges::all_of(counts, [](const auto& c)
+                               { return std::ranges::all_of(c, [&](const int64_t x)
+                                                            { return x == c[0]; }); });
 }
 
 /// Check the building blocks against what they must satisfy
@@ -508,6 +770,50 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                          "{:<12}  {:.1f} s{}",
                          c.cube, std::ssize(offsets), c.num_rounds, c.cut, c.cut / 2.0,
                          c.num_rounds - (c.cut / 2.0), s, total.in, total.out,
+                         zero_sum ? "zero-sum" : "not balanced", elapsed.count(),
+                         ok ? "" : "  <-- UNEXPECTED");
+        }
+    }
+
+    std::println("\none fixed cell, 2^60 states, 6 rounds (3 back, 3 fwd), by exact counting");
+    std::println("AES rounds  seed  input sum         output sum        cells uniform  "
+                 "verdict       time");
+    for (const int s : {seed, seed + 1})
+    {
+        for (const int aes_rounds : {AES_ROUNDS, AES_ROUNDS + 1})
+        {
+            const auto t0 = std::chrono::steady_clock::now();
+            const phase_tables tables(static_cast<uint64_t>(s), aes_rounds);
+            for (const auto& half : {BACKWARD_HALF, FORWARD_HALF})
+                cross_check_counting(tables, half, static_cast<uint64_t>(s), 3);
+
+            // Both halves start from block 0 having cell 0 fixed, since the
+            // transpose the backward half begins with leaves cell 0 of block 0
+            // where it is.
+            const auto c = static_cast<unsigned>(s) & 0xFU;
+            std::array<state_t, 2> end{};
+            bool all_uniform = true;
+            for (const auto& half : {BACKWARD_HALF, FORWARD_HALF})
+            {
+                std::vector<block_t> g_set;
+                g_set.reserve(BLOCK_VALUES / CELL_VALUES);
+                for (unsigned x = 0; x < BLOCK_VALUES / CELL_VALUES; ++x)
+                    g_set.push_back(tables.block(half.inverse, half.absorbed, 0,
+                                                 static_cast<block_t>(c | (x << 4U))));
+                const auto counts =
+                    count_rows(tables, half, g_set, all_cells_free(), num_threads);
+                all_uniform = all_uniform && uniform(counts);
+                end[half.inverse ? 0 : 1] = end_sum(tables, half, counts);
+            }
+            const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - t0;
+
+            const bool zero_sum = end[0] == 0 && end[1] == 0;
+            const bool expected = aes_rounds == AES_ROUNDS;
+            const bool ok = zero_sum == expected && all_uniform == expected;
+            ++num_cases;
+            num_failed += static_cast<int>(!ok);
+            std::println("{:>10}  {:>4}  {:016x}  {:016x}  {:<13}  {:<12}  {:.1f} s{}",
+                         aes_rounds, s, end[0], end[1], all_uniform ? "yes" : "no",
                          zero_sum ? "zero-sum" : "not balanced", elapsed.count(),
                          ok ? "" : "  <-- UNEXPECTED");
         }

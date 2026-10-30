@@ -416,11 +416,12 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**, which
    a 2026-10-28 review extended to 4 (row ∪ column, 2^248).  On 2026-10-29 a blind
    re-derivation from a standalone problem statement reached 6, with one byte fixed and the
-   other 255 free (2^2040).  The 2-round distinguisher's cube fits in the rate, so it sets
-   the sponge reach, and that is the input this item gives `R*` (§4.3 step 3).  So this item
-   is not merely evidence beside the claim but an input to the shipped parameters
-   (VERIFYING-CLAIMS § 11 and § 15).  The inside-out zero-sums characterize `P` and move
-   nothing.
+   other 255 free (2^2040).  A second one cut that to 2^896 the next day.  It also argued
+   that the technique stops at 6.  One step of that argument is unproved for AES, so 7 is
+   open.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach,
+   and that is the input this item gives `R*` (§4.3 step 3).  So this item is not merely
+   evidence beside the claim but an input to the shipped parameters (VERIFYING-CLAIMS § 11
+   and § 15).  The inside-out zero-sums characterize `P` and move nothing.
 6. **Duplex-PRNG mode note (new, cheap):** the sponge-PRNG papers require *state
    forgetting* for backtracking resistance; the duplex as implemented does not zero the
    outer state after squeezing.  Document that forward secrecy is **not** claimed for PRNG

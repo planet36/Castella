@@ -336,6 +336,20 @@ cube_offsets(const std::string_view name)
             offsets.push_back((16 * i) + 12);
         }
     }
+    else if (name == "diag-rows") // blocks 0 and 3, whose indices are the AES diagonal
+    {
+        for (const int i : {0, 3})
+            for (int k = 0; k < CELLS_PER_BLOCK; ++k)
+                offsets.push_back((16 * i) + (4 * k));
+    }
+    else if (name == "column-cols") // the AES column, cells 0 and 1, of every block
+    {
+        for (int i = 0; i < NUM_BLOCKS; ++i)
+        {
+            offsets.push_back(16 * i);
+            offsets.push_back((16 * i) + 4);
+        }
+    }
     else
     {
         errx(EXIT_FAILURE, "unknown cube \"%.*s\"", static_cast<int>(name.size()), name.data());
@@ -667,6 +681,13 @@ struct zero_sum_case
 
 // Each construction comes first, then its two controls, one round longer
 // forward (same cut) and one round longer backward (cut + 2).
+//
+// The last two constructions are the halves of the smaller 6-round zero-sum,
+// "diag-rows" forward and "column-cols" backward.  Together they are 12 cells,
+// too many to enumerate, so each runs alone, with the other half's cells
+// fixed.  Each half sums to zero for every value of the cells it fixes, so
+// checking the halves apart checks their union.  A half has one control, a
+// round longer on its own side, since it covers no rounds on the other.
 inline constexpr std::array CASES{
     zero_sum_case{.cube = "row", .num_rounds = 3, .cut = 2, .expect_zero_sum = true},
     zero_sum_case{.cube = "row", .num_rounds = 4, .cut = 2, .expect_zero_sum = false},
@@ -680,6 +701,10 @@ inline constexpr std::array CASES{
     zero_sum_case{.cube = "diag", .num_rounds = 4, .cut = 1, .expect_zero_sum = true},
     zero_sum_case{.cube = "diag", .num_rounds = 5, .cut = 1, .expect_zero_sum = false},
     zero_sum_case{.cube = "diag", .num_rounds = 5, .cut = 3, .expect_zero_sum = false},
+    zero_sum_case{.cube = "diag-rows", .num_rounds = 3, .cut = 0, .expect_zero_sum = true},
+    zero_sum_case{.cube = "diag-rows", .num_rounds = 4, .cut = 0, .expect_zero_sum = false},
+    zero_sum_case{.cube = "column-cols", .num_rounds = 3, .cut = 6, .expect_zero_sum = true},
+    zero_sum_case{.cube = "column-cols", .num_rounds = 4, .cut = 8, .expect_zero_sum = false},
 };
 static_assert(std::ranges::all_of(CASES, [](const auto& c)
                                   { return c.num_rounds <= MAX_ROUNDS && 0 <= c.cut &&
@@ -737,7 +762,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     process_options(argc, argv);
     self_test();
 
-    std::println("cube    cells  rounds  cut  (back, fwd)  seed  input sum         "
+    std::println("cube         cells  rounds  cut  (back, fwd)  seed  input sum         "
                  "output sum        verdict       time");
 
     int num_cases = 0;
@@ -766,7 +791,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             ++num_cases;
             num_failed += static_cast<int>(!ok);
 
-            std::println("{:<6}  {:>5}  {:>6}  {:>3}  ({:.1f}, {:.1f})   {:>4}  {:016x}  {:016x}  "
+            std::println("{:<11}  {:>5}  {:>6}  {:>3}  ({:.1f}, {:.1f})   {:>4}  {:016x}  {:016x}  "
                          "{:<12}  {:.1f} s{}",
                          c.cube, std::ssize(offsets), c.num_rounds, c.cut, c.cut / 2.0,
                          c.num_rounds - (c.cut / 2.0), s, total.in, total.out,

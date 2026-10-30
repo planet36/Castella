@@ -12,15 +12,15 @@ echo "# Send bytes to the service."
 echo
 echo "POST /absorb  # base64-encoded gzipped data (Content-Type: application/octet-stream)"
 cat <<'EOT' | curl --fail --data-binary @- --header "Content-Type: application/octet-stream" "$BASE_URL:$PORT/absorb" || exit
-H4sIAAAAAAACA3VSsW7jMAzd9RW8KUuQ7F0O7dAiuBYdEtyNhWLTkRBZNEQqrvv19+Q7oF0KeLD0
-qPceHxnMJr3b7zWOk0rW3eBzL+Ouk3E/x2vcH5nfXpa336zm3FFGppEzhZqNBimkkxRzrxa46Oft
-INK7U2CSnBayEPOFDptxLWj/qHEHJZ9Jqg3RUOKNkshV6YK3O0gxlBa6QXdL+nlwL75nGoqMVNgn
-lJeYkqcuNPCROTU9JZ3ZG5ctNWu8UcpCZzZcOYhl8hUA3HR0KFEDJBr2X3hlgKUtbWz22rQ7D+mF
-+Ma5dQD2ckc3P06xMJ0Bol1lmkM0Jk1xmloiHqBP55jF3Q8ldhDm3Pt8gaeeCoIRSD6V+PGBoM4g
-pZp7Lo3enWqxxLqhzN1Vt0jwxujXmh0NoHYPoDGSgSaElniLvBuY15M7WCtLCUGpQeZUloauygJP
-pDVaq8KwWfEWjSBTBWMhm+X7GXwBwPscr+sxiR/Q9E+iRykjF3id2l40iZbiOuS2M9e42uyCr8PA
-FRUP1cjTU+ElCAKgocJBfede3B+pqUc0+Fa1o1Biw0CnwlPL19bge7ko0F9YhuZ9XcPRW7fuXpf+
-od829BpoSmgdEc6SN0aL1K8FP9xfIfBYICkDAAA=
+H4sIAAAAAAACA3VSsW7bMBDd+RXXyYth71mKZkhhtEEGG+0Y0NLJJETxBN7RqvL1fVQLJEsADSLf
+8b137y6YzfpwPGqcZpWsh8HnXqZDJ9NxiWM8nplfn9fXX6zm3FkmpokzhZqNBimksxRzLxa46Pvt
+INK7S2CSnFayEPONTrtpK2j/qHEnJZ9Jqg3RUOKNksiodMPbA6QYSivdobsnfT+4Z98zDUUmKuwT
+yktMyVMXGvjEnJqeki7sjcuemjXeKWWhKxuuHMQy+QoAbjo6lagBEg37L7wxwNKedrZ4bdqdh/RK
+fOfcOgB7eaC7n+ZYmK4A0a4yLSEak6Y4zy0RD9Cna8zivg0ldhDm3Pt8g6eeCoIRSH4v8e0NQV1B
+SjX3XBq9u9RiiXVHmbtR90jwzujXmh0NoHaPoDGSgWaElniPvBuYt5M7WStLCUGpQeZS1oZuygJP
+pDVaq8KwWfEWjSBTBWMhW+TzGXwAwPszjtsxiR/Q9FeiJykTF3id2140iZbiNuS2M2PcbHbB12Hg
+iorHauTpVngNggBoqHBQ/3Av7rfU1CMafJvaWSixYaBz4bnla1vwvdwU6A8sQ/O+reHkrdt2r0v/
+0E8begk0J7SOCBfJO6NV6seCL+4vIzQDPSkDAAA=
 EOT
 
 sleep 4

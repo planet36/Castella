@@ -78,7 +78,7 @@ them, and why nothing in this file should run during one.
 | `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §1, §7 |
 | `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …) | §1, §7 |
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
-| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, and the **sponge reach of 2**, an input to every `R*` (`--sponge`) | §1, §7 |
+| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`) | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
 | `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, and the 6-round one by exact counting, on a 4-bit-cell analog | §7 |
 | `research/permute-degree-bound.py` | the degree bound (2043 after 2 rounds), and degree-based zero-sum reach 4 rounds | §1 |
@@ -485,7 +485,13 @@ python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
 # trivially balanced at 2 rounds, so it is 4096 solves, and the per-bit cost was
 # flat over block 0 (2026-10-29).  Forward took 1269 s a bit at 2.7 GiB, backward
 # 564 s and 660 s at 3.5 GiB, each after a 125-129 s build.  That is at least
-# 1070 h serial.
+# 1070 h serial.  --max-bits 1 checks block 0 bit 0 of each half instead, the
+# figure research/README.md quotes.  The first command MUST report both halves
+# balanced, and its control, the column without the row, MUST NOT.
+python3 permute-division-property.py --inside-out 2 2 -c rowcol --max-bits 1 -t 3600
+#   35 min, 3.5 GiB
+python3 permute-division-property.py -r 2 -c matrix-column --max-bits 1 -t 7200
+#   78 min, 4.5 GiB
 
 # Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 s per
 # stream.

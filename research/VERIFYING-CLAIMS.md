@@ -25,7 +25,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy | non-claim | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself) | executable | §10 |
-| 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column | executable | §11 |
+| 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column, and a uniformity construction reaching 6 from one fixed byte | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight, r=2 through r=8 bracketed on solved floors) and first-order differential clustering | executable (solver) | §13 |
 | 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
@@ -198,7 +198,7 @@ This result does not need the model either, because the README's three-step proo
 
 Part B then sets the argument aside and sums actual XORs at reduced width, where a full-block cube is enumerable.  The reach table must come out **identical at `--reduced 2` and `--reduced 3`**, which is the point of paying 35 min for the second.  A row cube gives forward 2 / backward 1, a column 1 / 2, and a diagonal 1 / 1, so the best inside-out reach from one cube is **3**, from a row or a column.
 
-`--rowcol --skip-full-width` (388 s) adds a `rowcol` row, which must read forward 2 / backward 2, an inside-out reach of **4**.  `./permute-zero_sum-analog-verify` (92 s, or 5 s with `-q`) checks row ∪ column and every block's AES diagonal exhaustively on a 4-bit-cell analog that keeps ShiftRows.  It must end `passed:` with every construction a zero-sum and every control not.
+`--rowcol --skip-full-width` (388 s) adds a `rowcol` row, which must read forward 2 / backward 2, an inside-out reach of **4**.  `./permute-zero_sum-analog-verify` (94 s, or 8 s with `-q`) checks row ∪ column and every block's AES diagonal exhaustively on a 4-bit-cell analog that keeps ShiftRows.  Its second table counts the 6-round one-fixed-cell construction exactly.  There the rows at 3 AES rounds must read `zero-sum` with cells uniform `yes`, and the controls at 4 AES rounds must read `not balanced` and `no`.  It must end `passed:` with every construction a zero-sum and every control not.
 
 Four controls must all hold:
 
@@ -284,7 +284,7 @@ The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's va
 
 Two items are pending: trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima, and the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.
 
-The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the 4-round inside-out zero-sums.  Read the reach as **≥ 4 with no upper bound claimed**, because §15's 4 caps only a *degree-based* construction.  The sponge reach, the figure SPEC.md's margin counts, is 2.
+The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the inside-out zero-sums through 6 rounds.  Read the reach as **≥ 6 with no upper bound claimed**, because §15's 4 caps only a *degree-based* construction.  The sponge reach, the figure SPEC.md's margin counts, is 2.
 
 Forward alone, r = 3 is **not refuted**.  Both the single-block cube (~6200 s of solve) and the larger `two-blocks` cube (2^256 data, ~2 h 19 m) return **SAT**, which excludes only a *full* 2048-bit zero-sum for those cubes and, being the weak direction, says nothing about `P`.  Partial balance on output bits past the first stays untried, since the scan stops at the first SAT unless `--count` is passed.  `--sponge 2 -r 3` asks the same of the largest cube a duplex caller controls, and is open.
 

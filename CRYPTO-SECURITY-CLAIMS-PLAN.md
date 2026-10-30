@@ -241,8 +241,9 @@ permutation).  The honest procedure has four steps:
    is a 2^128-data distinguisher, not a break of the sponge.  It cuts both ways, and SPEC.md
    now says so.  There are no practical attacks on Castella at any round count to measure
    from, but the sponge reach counts a distinguisher of any cost.  Zero-sums reach
-   full-round Keccak-`f`, and Keccak's claim declines to count them, as this one now does.
-   Do not present any ratio of `R*` to a reach as comparable to a SHA-3 figure.
+   full-round Keccak-`f`, and at `C` = 2, 4, and 6 they now reach every claimed round of `P`
+   as well.  Keccak's claim declines to count them, as this one now does.  Do not present
+   any ratio of `R*` to a reach as comparable to a SHA-3 figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances*.
    This is **done, and the margin question that hung over this step is CLOSED (2026-08-08).
    The round counts stay at 6/6/6/8 and the rationale was rewritten** under step 3's adopted
@@ -413,11 +414,13 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    cubes (`permute-division-property.py`) giving a 1-round byte-aligned distinguisher and a
    2-round integral distinguisher at 2^128 data, and finally the even-multiplicity argument
    (`permute-multiplicity-verify.py`) giving an **inside-out zero-sum over 3 rounds**, which
-   a 2026-10-28 review extended to 4 (row ∪ column, 2^248).  The 2-round distinguisher's
-   cube fits in the rate, so it sets the sponge reach, and that is the input this item
-   gives `R*` (§4.3 step 3).  So this item is not merely evidence beside the claim but an
-   input to the shipped parameters (VERIFYING-CLAIMS § 11 and § 15).  The inside-out
-   zero-sums characterize `P` and move nothing.
+   a 2026-10-28 review extended to 4 (row ∪ column, 2^248).  On 2026-10-29 a blind
+   re-derivation from a standalone problem statement reached 6, with one byte fixed and the
+   other 255 free (2^2040).  The 2-round distinguisher's cube fits in the rate, so it sets
+   the sponge reach, and that is the input this item gives `R*` (§4.3 step 3).  So this item
+   is not merely evidence beside the claim but an input to the shipped parameters
+   (VERIFYING-CLAIMS § 11 and § 15).  The inside-out zero-sums characterize `P` and move
+   nothing.
 6. **Duplex-PRNG mode note (new, cheap):** the sponge-PRNG papers require *state
    forgetting* for backtracking resistance; the duplex as implemented does not zero the
    outer state after squeezing.  Document that forward secrecy is **not** claimed for PRNG

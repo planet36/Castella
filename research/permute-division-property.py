@@ -535,15 +535,15 @@ def check_bit(m: Model, out: list[z3.BoolRef], blk: int,
 
 
 def scan_block(m: Model, out: list[z3.BoolRef], blk: int,
-               count: bool) -> tuple[int, int, int]:
-    """Check all 128 offsets of target block `blk`.
+               count: bool, limit: int = BLOCK_BITS) -> tuple[int, int, int]:
+    """Check the first `limit` offsets of target block `blk` (all 128).
 
     Returns (balanced, unknown, stopped_at).  stopped_at is the offset that
     ended the scan early, or -1 if it ran to the end.  The caller says why it
     stopped, since only the caller knows the round count.
     """
     balanced = unknown = 0
-    for off in range(BLOCK_BITS):
+    for off in range(limit):
         res = check_bit(m, out, blk, off)
         if res == z3.unsat:
             balanced += 1
@@ -557,25 +557,35 @@ def scan_block(m: Model, out: list[z3.BoolRef], blk: int,
 
 
 def scan(cube_bits: set[int], rounds: int, timeout_s: float,
-         count: bool, inverse: bool = False) -> bool:
-    """Report balancedness over all 2048 output bits.
+         count: bool, inverse: bool = False,
+         max_bits: int | None = None) -> bool:
+    """Report balancedness over all 2048 output bits, or the first `max_bits`.
 
     One model per target block, reused across that block's 128 offsets via
     assumptions.  Building dominates solving here, and the model's shape does
-    not depend on the offset.  Returns True when every bit is balanced.  With
-    `inverse`, propagates through `P^-1`.
+    not depend on the offset.  Returns True when every bit decided is
+    balanced.  With `inverse`, propagates through `P^-1`.
+
+    `max_bits` takes the bits in order, block 0 bit 0 first, so a small value
+    builds only block 0's model.  Its result covers only those bits and is
+    reported as partial, since a distinguisher needs the whole state.
     """
-    balanced = unknown = 0
+    total = N_BLOCKS * BLOCK_BITS if max_bits is None else max_bits
+    balanced = unknown = decided = 0
     reported = False
     for blk in range(N_BLOCKS):
+        if decided >= total:
+            break
+        limit = min(BLOCK_BITS, total - decided)
         t0 = time.time()
         m = Model()
         out = build_trail(m, cube_bits, blk, rounds, inverse)
         if out is None:
-            balanced += BLOCK_BITS
+            balanced += limit
+            decided += limit
             print(f"  block {blk:>2}: "
                   f"{trivially_balanced(cube_bits, blk, rounds)}, all "
-                  f"{BLOCK_BITS} bits balanced [{time.time() - t0:.0f} s]",
+                  f"{limit} bits balanced [{time.time() - t0:.0f} s]",
                   flush=True)
             continue
         m.s.set("timeout", int(timeout_s * 1000))
@@ -584,9 +594,10 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
                   f"{m.n_sboxes} S-boxes, built in {time.time() - t0:.1f} s",
                   flush=True)
             reported = True
-        n_bal, n_unk, stopped = scan_block(m, out, blk, count)
+        n_bal, n_unk, stopped = scan_block(m, out, blk, count, limit)
         balanced += n_bal
         unknown += n_unk
+        decided += limit
         if stopped >= 0:
             if n_unk:
                 print(f"  INCONCLUSIVE at block {blk} bit {stopped}, which "
@@ -600,6 +611,8 @@ def scan(cube_bits: set[int], rounds: int, timeout_s: float,
             return False
         print(f"  block {blk:>2}: {balanced} balanced so far "
               f"[{time.time() - t0:.0f} s]", flush=True)
+    if max_bits is not None:
+        return report_partial(balanced, unknown, decided)
     return report_scan(balanced, unknown, rounds)
 
 
@@ -617,11 +630,21 @@ def report_scan(balanced: int, unknown: int, rounds: int) -> bool:
     return balanced == total
 
 
+def report_partial(balanced: int, unknown: int, decided: int) -> bool:
+    """Print a partial scan's result; True when every decided bit balances."""
+    rest = decided - balanced - unknown
+    print(f"  first {decided} of {N_BLOCKS * BLOCK_BITS} output bits: "
+          f"{balanced} balanced, {unknown} unknown (timeout), {rest} not "
+          f"provably balanced -- a partial check, which establishes no "
+          f"distinguisher")
+    return balanced == decided
+
+
 # ----------------------------------------------------- inside-out zero-sums
 
 
 def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
-         inverse: bool) -> bool:
+         inverse: bool, max_bits: int | None = None) -> bool:
     """One direction of an inside-out zero-sum; True when it is balanced.
 
     `rounds` = 0 is balanced by definition and costs no solving.  Over an
@@ -637,7 +660,7 @@ def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
               f"to zero under the identity)", flush=True)
         return True
     print(f"  {which} {rounds} round(s):", flush=True)
-    return scan(cube_bits, rounds, timeout_s, count, inverse)
+    return scan(cube_bits, rounds, timeout_s, count, inverse, max_bits)
 
 
 def transpose_cube_bits(cube_bits: set[int]) -> set[int]:
@@ -666,7 +689,8 @@ def transpose_cube_bits(cube_bits: set[int]) -> set[int]:
 
 
 def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
-               timeout_s: float, count: bool) -> bool:
+               timeout_s: float, count: bool,
+               max_bits: int | None = None) -> bool:
     """Zero-sum running P forward r_fwd rounds and P^-1 backward r_bwd.
 
     The two halves are *independent* given the cube.  Both consume the same
@@ -690,16 +714,21 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     print("  one shared middle-state cube; the backward half reads it "
           "through the transpose", flush=True)
     t0 = time.time()
-    fwd = half(cube_bits, r_fwd, timeout_s, count, inverse=False)
+    fwd = half(cube_bits, r_fwd, timeout_s, count, inverse=False,
+               max_bits=max_bits)
     if not fwd and not count:
         print(f"  forward half is not balanced -- no zero-sum at "
               f"({r_fwd}, {r_bwd}); the backward half is not attempted "
               f"[{time.time() - t0:.0f} s]")
         return False
     bwd = half(transpose_cube_bits(cube_bits), r_bwd, timeout_s, count,
-               inverse=True)
+               inverse=True, max_bits=max_bits)
     ok = fwd and bwd
-    if ok:
+    if ok and max_bits is not None:
+        print(f"  both halves balanced on their first {max_bits} bit(s) "
+              f"[{time.time() - t0:.0f} s] -- a partial check, which "
+              f"establishes no zero-sum")
+    elif ok:
         print(f"  ZERO-SUM over {r_fwd + r_bwd} round(s): both halves "
               f"balanced on all {N_BLOCKS * BLOCK_BITS} bits "
               f"[{time.time() - t0:.0f} s]")
@@ -1083,6 +1112,10 @@ CUBES = {
     "scattered": lambda: {8 * byte for byte in range(8)},
     "column": lambda: {8 * (4 * 0 + r) + k for r in range(4)
                        for k in range(8)},
+    # Byte 0 of every block, a column of the byte matrix rather than an AES
+    # column.  It is the control for "rowcol", whose row it lacks.
+    "matrix-column": lambda: {blk * BLOCK_BITS + k for blk in range(N_BLOCKS)
+                              for k in range(8)},
     "block": lambda: set(range(BLOCK_BITS)),
     "two-blocks": lambda: set(range(2 * BLOCK_BITS)),
     # Block 0 plus byte 0 of every block, a row and a column of the byte
@@ -1110,6 +1143,11 @@ def main() -> None:
     ap.add_argument("--count", action="store_true",
                     help="count every balanced bit instead of stopping at "
                          "the first that is not")
+    ap.add_argument("--max-bits", type=int, metavar="N", default=None,
+                    help="decide only the first N output bits of each "
+                         "scan, block 0 bit 0 first, and report the result "
+                         "as partial.  An inside-out run applies it to each "
+                         "half.  Not with --sponge")
     ap.add_argument("--inside-out", type=int, nargs=2,
                     metavar=("FWD", "BWD"), default=None,
                     help="zero-sum from a middle state.  Run P forward FWD "
@@ -1157,7 +1195,15 @@ def main() -> None:
         print("--rounds must be in 1..16", file=sys.stderr)
         sys.exit(2)
 
+    n_bits = N_BLOCKS * BLOCK_BITS
+    if args.max_bits is not None and not 1 <= args.max_bits <= n_bits:
+        print(f"--max-bits must be in 1..{n_bits}", file=sys.stderr)
+        sys.exit(2)
+
     if args.sponge is not None:
+        if args.max_bits is not None:
+            print("--max-bits does not apply to --sponge", file=sys.stderr)
+            sys.exit(2)
         if args.sponge not in (2, 4, 6, 8):
             print("--sponge must be 2, 4, 6, or 8", file=sys.stderr)
             sys.exit(2)
@@ -1187,7 +1233,8 @@ def main() -> None:
         r_fwd, r_bwd = args.inside_out
         print(f"== Castella, cube {name} ({len(cube)} active bits) at the "
               f"middle state", flush=True)
-        inside_out(cube, r_fwd, r_bwd, args.time_limit, args.count)
+        inside_out(cube, r_fwd, r_bwd, args.time_limit, args.count,
+                   args.max_bits)
         return
 
     direction = "P^-1" if args.inverse else "P"
@@ -1196,7 +1243,8 @@ def main() -> None:
     live = live_blocks({b // BLOCK_BITS for b in cube}, 0, args.rounds)
     print(f"  live blocks per round: {[len(s) for s in live]} "
           f"(total {sum(len(s) for s in live)})", flush=True)
-    scan(cube, args.rounds, args.time_limit, args.count, args.inverse)
+    scan(cube, args.rounds, args.time_limit, args.count, args.inverse,
+         args.max_bits)
 
 
 if __name__ == "__main__":

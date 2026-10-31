@@ -158,7 +158,7 @@ As in KMAC, the construction sets no minimum key length and leaves it to the app
 
 Compress-Castella is a **non-cryptographic** high-throughput hash that reuses the Castella permutation.  A node is parameterized by the `mix_rate` (`0`, or `1 ≤ mix_rate ≤ 2048`), which defaults to 256.
 
-* **Initial state.**  The state starts as 16 blocks taken from the continuation of the round-constant LFSR stream, one per block, so the lanes start distinct and unequal to every round constant.  They are the 769th and later constants, i.e. generation continues after the 768 blocks consumed by `RC`.  Then every block is XORed with the 16-bit value `mix_rate` repeated 8 times, binding the mix rate into the digest even for inputs too short to trigger a mix.
+* **Initial state.**  The state starts as 16 blocks taken from the continuation of the round-constant LFSR stream, one per block, so the lanes start distinct and unequal to every round constant.  They are the 769th and later constants, i.e., generation continues after the 768 blocks consumed by `RC`.  Then every block is XORed with the 16-bit value `mix_rate` repeated 8 times, binding the mix rate into the digest even for inputs too short to trigger a mix.
 * **Absorption.**  Input is processed in 256-byte blocks `M` (16 sub-blocks `m_i`), buffered when partial.  Each absorption compresses sub-block `i` into state block `i` with a 3-round one-way compression:
   `s[i] = AESENC(AESENC(AESENC(m_i, s[i]), m_i), s[i])`.
   If `mix_rate > 0`, after every `mix_rate` absorptions the state is mixed: `s = P(s, 3)`.
@@ -269,7 +269,7 @@ These follow arithmetically from the claim, because they are the random-sponge g
 | MAC key recovery | min(8·\|K\|, 64·C) |
 | XOF/PRNG output distinguishing | 64·C |
 
-The `castella` program derives the capacity from the digest size as `16·C ≥ 2n` bytes, i.e. `64·C ≥ 8n` bits, so the output-length bounds always dominate and the table collapses to the SHA-3 shape: **collision `4n`, preimage and second preimage `8n` bits** for an `n`-byte digest.
+The `castella` program derives the capacity from the digest size as `16·C ≥ 2n` bytes, i.e., `64·C ≥ 8n` bits, so the output-length bounds always dominate and the table collapses to the SHA-3 shape: **collision `4n`, preimage and second preimage `8n` bits** for an `n`-byte digest.
 
 **Comparison with SHA-3.**  SHA3-`d`'s security levels come from its capacity `2d` bits and output `d` bits, and the claimed instances match them exactly (SHA3-224's 448-bit capacity falls between Castella's `C` = 2 and `C` = 4, so it maps upward):
 

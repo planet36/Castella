@@ -212,7 +212,7 @@ random_equal_blocks()
 static void
 flip_equal_blocks(bytes_t& b)
 {
-    // flip one bit of the shared block value, i.e. the same bit in every block
+    // flip one bit of the shared block value, i.e., the same bit in every block
     const auto j = static_cast<int>(arc4random_uniform(B));
     const uint8_t bit = 1U << arc4random_uniform(8);
     for (int i = 0; i < B; ++i)

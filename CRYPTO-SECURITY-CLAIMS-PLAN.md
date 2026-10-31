@@ -176,7 +176,7 @@ conjectural (24 rounds vs. best practical collision attacks reaching ~6 rounds o
 permutation).  The honest procedure has four steps:
 
 1. **Floor from proven trail bounds.**  A claimed level of `b` bits needs every differential
-   characteristic below ~2^−2b, i.e. 6·A ≥ 2b, with `A` from the MILP table
+   characteristic below ~2^−2b, i.e., 6·A ≥ 2b, with `A` from the MILP table
    (research/README.md, `N=16`, `a=3`).  **Every input is now a solved optimum through
    r = 8.**  A = 9, 45, 129, 165, 234, 270, 354, and 390 at r = 1…8, and superadditivity
    (`A(a+b) ≥ A(a)+A(b)`) composes them beyond.  So 6·A ≥ 2b is reached at **r=2** for

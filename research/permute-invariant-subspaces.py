@@ -249,7 +249,7 @@ def dim1_columns_surviving_mixcolumns() -> list[tuple[int, ...]]:
 
     A column of 1-dimensional local subspaces span{w_c} maps into a column
     of 1-dimensional spaces only if every nonzero MC4[r][c] * w_c hits the
-    same output direction, i.e. MC4[r][c] * w_c is independent of c for each
+    same output direction, i.e., MC4[r][c] * w_c is independent of c for each
     r.  Row 0 determines w_1, w_2, w_3 from w_0, so 255 candidates decide it.
     """
     out = []

@@ -166,7 +166,7 @@ public:
         return node_type::get_max_digest_size_bytes();
     }
 
-    /// Get the mix rate (i.e. the number of absorptions before a node's state is mixed)
+    /// Get the mix rate (i.e., the number of absorptions before a node's state is mixed)
     /**
     * 0 means periodic mixing is disabled.
     */

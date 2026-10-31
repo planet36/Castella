@@ -12,7 +12,7 @@ C++, security, testing, and documentation.  The reviewer plays attacker, so the 
 > **Scope note on portability.**  Per the maintainer, portability to platforms/architectures
 > other than the current ones (x86-64 with AES-NI/VAES/AVX2, AArch64 with Crypto ext.) is
 > **out of scope**.  Do not raise findings that only matter on unsupported targets.  There is
-> one exception.  Where a portability assumption is baked into a *correctness* claim (e.g.
+> one exception.  Where a portability assumption is baked into a *correctness* claim (e.g.,
 > the little-endian `static_assert`s, or the "x86/ARM AESENC are bit-identical" spec claim),
 > verifying that the assumption holds on the *supported* targets is in scope.
 
@@ -58,7 +58,7 @@ Two properties of this project drive the whole plan:
 
 | Severity | Meaning in this project's context |
 |----------|-----------------------------------|
-| **Critical** | Memory-unsafety/UB reachable from untrusted input, a security claim the docs *do* make being broken, or a digest that depends on something the spec says it must not (e.g. thread count). |
+| **Critical** | Memory-unsafety/UB reachable from untrusted input, a security claim the docs *do* make being broken, or a digest that depends on something the spec says it must not (e.g., thread count). |
 | **High** | Spec ⇄ implementation divergence that changes a digest or breaks domain separation, a defect in the keyed-MAC or PRNG-service security posture, or missing constant-time where secrets flow. |
 | **Medium** | Correctness bug not reachable in default configs, performance defect leaving significant measured throughput on the table, or testable claim with no test. |
 | **Low** | Clarity/simplicity, redundant code, minor doc gaps, style. |
@@ -195,7 +195,7 @@ then attack it.
       all select the **same** `last(num_rounds)` constants (they must, or reduced-round
       digests diverge across paths).  `permute_x2` uses `round_constants` while `permute`
       uses `round_constants_folded<N>`, so verify that the folded table is a faithful
-      reordering (it is *derived* consteval, but prove the derivation, e.g. a static test
+      reordering (it is *derived* consteval, but prove the derivation, e.g., a static test
       that unfolds it).
 - [ ] **LFSR generator.**  Re-derive the 768 constants independently (Python), and check
       that all are distinct and nonzero, that none is a bitwise shift of its predecessor,
@@ -368,7 +368,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       no bloat from instantiating all N.  Look for `constexpr`-optimization opportunities
       too, per the repo's checklist.
 - [ ] **Allocation in steady state.**  The streaming pool claims an allocation-free steady
-      state, so verify it (e.g. with an allocation hook) rather than trusting it.
+      state, so verify it (e.g., with an allocation hook) rather than trusting it.
 
 ---
 

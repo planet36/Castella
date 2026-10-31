@@ -540,6 +540,6 @@ public:
         return get_state_size_bytes() / 4;
     }
 
-    /// Get the mix rate (i.e. the number of absorptions before the state is mixed)
+    /// Get the mix rate (i.e., the number of absorptions before the state is mixed)
     [[nodiscard]] constexpr int get_mix_rate() const noexcept { return mix_rate_; }
 };

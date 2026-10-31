@@ -29,7 +29,7 @@ mkdir --verbose --parents -- "$OUTPUT_DIR" || exit
 
 # Optional low-noise mode for the parameter-sweep scripts, which default to all
 # cores.  CPU_LIST pins the run via taskset and NUM_THREADS becomes
-# --num-threads.  Pair them, e.g.:
+# --num-threads.  Pair them, for example:
 #   CPU_LIST=0 NUM_THREADS=1 bash benchmark.castella.rounds.bash
 #
 # CPU_LIST also selects the core for PIN below, which is not opt-in, so setting

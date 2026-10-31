@@ -44,7 +44,7 @@ SPEC.md also states the [security claims and non-claims](SPEC.md#security-claims
 
 The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.
 
-The capacity is the security parameter, and the claimed level is `64·C` bits, half the capacity of `128·C` bits.  Paired with a digest size it reproduces the SHA-3 levels exactly.  The [`castella` program](hash-programs/castella.cpp) picks the capacity from the digest size by the rule that produces this mapping (smallest even `C` with `16·C ≥ 2n` bytes for an `n`-byte digest):
+The capacity is the security parameter, and the claimed level is `64·C` bits, half the capacity of `128·C` bits.  Paired with a digest size, it reproduces the SHA-3 levels exactly.  The [`castella` program](hash-programs/castella.cpp) picks the capacity from the digest size by the rule that produces this mapping (smallest even `C` with `16·C ≥ 2n` bytes for an `n`-byte digest):
 
 | digest size | `C` | capacity | collision / preimage / 2nd-preimage | matches |
 |-------------|-----|----------|--------------------------------------|---------|

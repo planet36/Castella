@@ -176,7 +176,7 @@ No security proof is claimed for the duplex-with-AES-rounds construction, since 
 
 Compress-Castella is explicitly **not** a cryptographic hash, and no collision or preimage resistance is claimed for it.  It is a fast checksum whose statistical behavior has been measured only in its parts: the compression's diffusion of each of its two inputs, about 50% for the three AES rounds used (`research/simd_compress_aes_enc-num_rounds.cpp`), and the avalanche matrix that fixed the full-diffusion floor the finalizing `P(s, 4)` sits one round above (`research/permute-num_rounds-avalanche_matrix.cpp`).  No statistical battery has been run against the composite.
 
-The 16 lanes start pairwise distinct at every legal `mix_rate`.  They are also independent between mixes, because lane `i` absorbs only sub-block `m_i`.  An attacker therefore faces sixteen independent 128-bit chains rather than one 2048-bit state, and can collide them one at a time.  That caps collision resistance at roughly 2^68 whatever the digest length.  A message colliding within the first mix period (65536 bytes at the default `mix_rate`) suffices, since the states stay equal once they meet.  Do not use any of this where security matters.
+The 16 lanes start pairwise distinct at every legal `mix_rate`.  They are also independent between mixes because lane `i` absorbs only sub-block `m_i`.  An attacker therefore faces sixteen independent 128-bit chains rather than one 2048-bit state, and can collide them one at a time.  That caps collision resistance at roughly 2^68 whatever the digest length.  A message colliding within the first mix period (65536 bytes at the default `mix_rate`) suffices, since the states stay equal once they meet.  Do not use any of this where security matters.
 
 **No forward secrecy for PRNG usage.**  Squeezing does not erase the state (there is no state-forgetting operation), and `P` is invertible, so an adversary who captures the state can recompute earlier outputs back to the last absorption of secret input, as well as all future outputs until the next one.  Backtracking resistance in the sense of the sponge-PRNG literature would require deliberate state erasure, which the duplex does not perform.
 
@@ -258,7 +258,7 @@ Three kinds of property do not count.  Generic properties that every concrete pe
 
 ### Security strengths (generic bounds)
 
-These follow arithmetically from the claim, because they are the random-sponge generic bounds, which the claim asserts cannot be beaten.  For an `n`-byte digest at capacity `C` blocks, with MAC key `K` and MAC output length `L` bytes (all strengths in bits):
+These follow arithmetically from the claim because they are the random-sponge generic bounds, which the claim asserts cannot be beaten.  For an `n`-byte digest at capacity `C` blocks, with MAC key `K` and MAC output length `L` bytes (all strengths in bits):
 
 | property | claimed strength |
 |----------|------------------|
@@ -381,7 +381,7 @@ Two MD-style failure modes are structurally absent:
 
   The 6-round construction is checked on the same analog, whose middle set of 2^60 states is too large to enumerate, so the program counts it exactly instead.  Both ends sum to zero and every cell is uniform.  A control that gives each AES phase a 4th AES round fails.  The two halves of the 2^896 version are enumerated there exhaustively, each alone with the other's cells fixed.  Each is a zero-sum over 3 rounds and fails one round longer.  The reduced-width search found nothing past 4.  Its 2-byte blocks cannot satisfy the lemma, so it could not have found this construction.
 
-  The degree bound allows a degree-based construction 4 rounds at a data cost near 2^2044, so the 6-round construction, at 2^896, beats it in reach as well as in data.  **No upper bound on the integral reach is claimed anywhere here.**  No margin moves, because an inside-out zero-sum needs a chosen middle state, so it does not count toward the sponge reach (see the margin rationale).
+  The degree bound allows a degree-based construction 4 rounds at a data cost near 2^2044, so the 6-round construction, at 2^896, beats it in reach as well as in data.  **No upper bound on the integral reach is claimed anywhere here.**  No margin moves.  An inside-out zero-sum needs a chosen middle state, so it does not count toward the sponge reach (see the margin rationale).
 * A PractRand statistical smoke test of the duplex PRNG stream (16 GiB, `C` = 4, at both 6 and 3 rounds) shows no anomalies (`research/duplex-prng-stream.cpp`).  Statistical batteries carry no cryptographic weight when they pass, and only a failure would have been informative.
 
 ## Test vectors
@@ -396,7 +396,7 @@ mac C=4 rounds=6 suffix=1 fn=43617374656c6c612d4d4143 custom=4b4154 chunk=1024 k
 
 (`fn` decodes to `"Castella"`, or `"Castella-MAC"` on a `mac` line, and `custom` to `"KAT"`.)  A `mac` line is the tree of the same parameters over `bytepad(encode_string(K), chunk) || msg || right_encode(out)`, so it needs no vector format of its own beyond the key.  Two of the `mac` lines in `tests/KAT.txt`, with `keylen=1` and `keylen=16`, use keys shorter than the `castella` program's 32-byte minimum, which belongs to the program and not to the MAC.
 
-**The vectors are layered, so a failure localizes.**  An `rc` line is one round constant `RC[r][aes_r][i]`, and a `permute` line is the whole 256-byte state after `P(s, rounds)` from the all-zero state (`init=zero`) or from `s[i] = i mod 256` (`init=counter`).  On both, `digest=` is that raw output rather than a digest.  They exist because every other vector depends on them.  Without them, a wrong LFSR stride or a transposed transpose first shows as a wrong duplex digest, with this whole document in between.  The reduced-round `permute` lines are the sharper ones, because `P` uses the **last** `rounds` constants, so an implementation that takes the first ones reproduces `rounds=16` and fails every shorter vector.
+**The vectors are layered, so a failure localizes.**  An `rc` line is one round constant `RC[r][aes_r][i]`, and a `permute` line is the whole 256-byte state after `P(s, rounds)` from the all-zero state (`init=zero`) or from `s[i] = i mod 256` (`init=counter`).  On both, `digest=` is that raw output rather than a digest.  They exist because every other vector depends on them.  Without them, a wrong LFSR stride or a transposed transpose first shows as a wrong duplex digest, with this whole document in between.  The reduced-round `permute` lines are the sharper ones.  `P` uses the **last** `rounds` constants, so an implementation that takes the first ones reproduces `rounds=16` and fails every shorter vector.
 
 ## Conformance
 

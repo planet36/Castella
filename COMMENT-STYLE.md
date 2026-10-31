@@ -48,13 +48,13 @@ here does, and the text after it is a full sentence.  A term set in bold is such
 a label, even in a list item.
 
 **4. Prefer parentheses to dashes around a parenthetical, and use a lone dash
-sparingly.**  Commas still carry a light aside that reads as part of the sentence.
-A pair of dashes around a parenthetical is acceptable, though parentheses are
-the first choice.  A single dash may set off a trailing clause that contrasts
-with, corrects, or states a consequence of what precedes it, where the pause
-earns its keep.  A clause that only explains what precedes it is the join that
-rule 3 forbids.  A fragment that wanted to be a sentence is not fixed by hanging
-it off a dash.
+sparingly.**  Commas still carry a light aside that reads as part of the
+sentence.  A pair of dashes around a parenthetical is acceptable, though
+parentheses are the first choice.  A single dash may set off a trailing clause
+that contrasts with, corrects, or states a consequence of what precedes it,
+where the pause earns its keep.  A clause that only explains what precedes it
+is the join that rule 3 forbids.  A fragment that wanted to be a sentence is
+not fixed by hanging it off a dash.
 
 In a code comment or a commit message, spell a dash as two hyphens rather than
 as a real em dash.  Documentation files keep their own practice.

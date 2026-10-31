@@ -38,11 +38,12 @@ label, what sits before the colon should be a clause rather than a bare noun
 phrase.  A bold run-in label ends with a period rather than a colon, as each
 rule's title here does, and the text after it is a full sentence.
 
-**4. Dashes set off a parenthetical or land a closing clause.**  A pair of
-dashes around a parenthetical is acceptable, and real parentheses are usually
-better.  A single dash may set off a trailing clause where the pause earns its
-keep, but a fragment that wanted to be a sentence is not fixed by hanging it
-off a dash.
+**4. Dashes set off a parenthetical or a closing clause.**  A pair of dashes
+around a parenthetical is acceptable, and real parentheses are usually better.
+A single dash may set off a trailing clause that contrasts with, corrects, or
+states a consequence of what precedes it, where the pause earns its keep.  A
+clause that only explains what precedes it is the join that rule 3 forbids.  A
+fragment that wanted to be a sentence is not fixed by hanging it off a dash.
 
 In a code comment or a commit message, spell a dash as two hyphens rather than
 as a real em dash.  Documentation files keep their own practice.

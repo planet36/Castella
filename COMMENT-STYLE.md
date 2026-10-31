@@ -14,6 +14,9 @@ the rules below are about where that line falls.
 Write the rules into the first draft.  A comment that needs a rewrite pass to
 satisfy them was written wrong.
 
+Do not bulk-convert a file unless converting it is the task.  Any sentence you
+do modify comes back following these rules.
+
 A letter on a rule number marks a sub-case of the rule with that number.  Rule
 numbers shift when a rule is added, so a citation from outside this file names
 the rule's subject along with its number.
@@ -85,10 +88,7 @@ section holds the rest.
 **7. Put two spaces after a sentence-ending period.**  That holds in code
 comments, doc blocks, commit messages, and documentation files alike, Markdown
 included.  An abbreviation such as "vs." takes one space, since no sentence
-ends there.
-
-Do not bulk-convert a file you are not otherwise editing.  Any line you do
-modify comes back with two spaces.
+ends there.  A line you modify comes back with two spaces throughout.
 
 **8. Put punctuation inside quotation marks only when it belongs to the quoted
 text.**  American spelling does not bring with it the American habit of

@@ -44,7 +44,7 @@ SPEC.md also states the [security claims and non-claims](SPEC.md#security-claims
 
 The duplex state of `B = 16` blocks is partitioned into an _inner_ part (the <q>capacity</q>) of `C` blocks and an _outer_ part (the <q>rate</q>) of `R = B-C` blocks, where `2 ≤ C ≤ B/2` and `C` must be even.
 
-The capacity is the security parameter: the claimed level is `64·C` bits, half the capacity of `128·C` bits.  Paired with a digest size it reproduces the SHA-3 levels exactly.  The [`castella` program](hash-programs/castella.cpp) picks the capacity from the digest size by the rule that produces this mapping (smallest even `C` with `16·C ≥ 2n` bytes for an `n`-byte digest):
+The capacity is the security parameter, and the claimed level is `64·C` bits, half the capacity of `128·C` bits.  Paired with a digest size it reproduces the SHA-3 levels exactly.  The [`castella` program](hash-programs/castella.cpp) picks the capacity from the digest size by the rule that produces this mapping (smallest even `C` with `16·C ≥ 2n` bytes for an `n`-byte digest):
 
 | digest size | `C` | capacity | collision / preimage / 2nd-preimage | matches |
 |-------------|-----|----------|--------------------------------------|---------|
@@ -104,7 +104,7 @@ The `squeeze_bytes` member function performs the following:
 3. Return the first _n_ bytes of the outer state as a `std::vector<std::byte>`, where _n_ is an integer in the interval `[0, get_rate_size_bytes()]`.
     * Typical values of _n_ are 32, 48, or 64.
     * The default value of _n_ is `get_capacity_size_bytes() / 2`.
-    * An _n_ outside that interval is **clamped** into it rather than rejected, so a too-large _n_ yields `get_rate_size_bytes()` bytes and a negative _n_ yields none.  Steps 1 and 2 still happen either way, so any call advances the state.  This leniency is a convenience of the C++ API: the specification defines `squeeze(n)` only for `0 ≤ n ≤ 16R`.
+    * An _n_ outside that interval is **clamped** into it rather than rejected, so a too-large _n_ yields `get_rate_size_bytes()` bytes and a negative _n_ yields none.  Steps 1 and 2 still happen either way, so any call advances the state.  This leniency is a convenience of the C++ API because the specification defines `squeeze(n)` only for `0 ≤ n ≤ 16R`.
 
 The `squeeze_to` member function does the same, but writes into a caller-provided buffer instead of allocating a vector.  The size of the buffer takes the place of _n_ and is clamped the same way, and any bytes past `get_rate_size_bytes()` are left untouched.
 
@@ -122,7 +122,7 @@ On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), tw
 
 * **Register-resident permutation.**  The permutation (every supported state size _N_) runs in a folded representation that stays in _N_/2 ymm registers for all rounds, where element _j_ holds blocks _j_ and _j_+_N_/2, one per 128-bit lane.  The generic path instead bounces the state through memory between the AES rounds' 256-bit accesses and the transpose's 128-bit accesses, a pattern that defeats store-to-load forwarding.
 
-  For the 16-block state used by `Duplex` the folded path measured ~1.7× faster, and a plain duplex absorbs at ~3.2 GiB/s per core instead of ~1.9 before folding.  [research/permute\_folded-benchmark.cpp](research/permute_folded-benchmark.cpp) measured the speedup, with results in [research/README.md](research/README.md).  The ~3.2 absorb rate comes directly from [research/duplex-throughput-benchmark.cpp](research/duplex-throughput-benchmark.cpp).
+  For the 16-block state used by `Duplex`, the folded path measured ~1.7× faster, and a plain duplex absorbs at ~3.2 GiB/s per core instead of ~1.9 before folding.  [research/permute\_folded-benchmark.cpp](research/permute_folded-benchmark.cpp) measured the speedup, with results in [research/README.md](research/README.md).  The ~3.2 absorb rate comes directly from [research/duplex-throughput-benchmark.cpp](research/duplex-throughput-benchmark.cpp).
 * **Leaf batching.**  Both tree hashes process adjacent leaf chunks **two at a time on one thread**.  `DuplexTree` packs two duplex states into the two 128-bit lanes of ymm registers ([`Castella::DuplexX2`](include/castella-duplex-x2.hpp)), where VAES applies an independent AES round per lane and the AVX2 unpack network transposes both 16×16 byte matrices at once without mixing the lanes ([`Castella::permute_x2`](include/castella-permute.hpp)).  One paired permutation measures ~1.7× faster than two sequential (register-resident) permutations ([research/permute\_x2-benchmark.cpp](research/permute_x2-benchmark.cpp)).
 
   The `cch` tree instead interleaves two nodes' compression chains in one loop ([`compress_castella_hash_x2`](include/cch-x2.hpp)).  A single cch node is latency-bound, so the second state's chains fill the idle AES slots, for a modest ~1.1× on pinned runs.  [research/simd\_compress-num\_states-benchmark.cpp](research/simd_compress-num_states-benchmark.cpp) measured it, and [research/README.md](research/README.md) has the findings.
@@ -164,11 +164,11 @@ The top-level Makefile recurses into the subdirectories:
 * `make everything` additionally builds `research/` (needs [google-benchmark](https://github.com/google/benchmark)) and `http-prng-service/` (needs [spdlog](https://github.com/gabime/spdlog)).  `httplib.h` is committed in-tree, and the Makefile re-downloads it only if it is missing.
 * `make BUILD=debug` builds with [ASan](https://github.com/google/sanitizers/wiki/AddressSanitizer) and [UBSan](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html) instead of `-O3 -flto=auto`, and with the internal assertions enabled (see `config.mk`).
 
-  `BUILD` is a variable rather than a target, so it applies to whatever goals are given: `make BUILD=debug test` and `make BUILD=debug everything` are debug builds throughout.  Run `make clean` first when switching between release and debug, because the two use the same binary names.
+  `BUILD` is a variable rather than a target, so it applies to whatever goals are given, and `make BUILD=debug test` and `make BUILD=debug everything` are debug builds throughout.  Run `make clean` first when switching between release and debug, because the two use the same binary names.
   * The assertions check internal invariants and are not input validation.  They are compiled out of a release build, so no release behavior depends on them.  Every user-reachable constraint (the `Duplex` constructor parameters and the hash programs' options) is checked by throwing instead, in every build.
 
     The exception is the deliberately unchecked accessors, where an assertion backs a documented narrow contract and a checked counterpart exists: `fixed_vector::operator[]` versus `at()`, and `unchecked_emplace_back()` and `unchecked_push_back()` versus `emplace_back()` and `push_back()`.
-* `make test-san` runs every test suite under the sanitizers, doing the `make clean` that switching build types requires: it cleans, builds `BUILD=debug`, and runs the suites with UBSan set to fail rather than only report.  The sanitizer binaries are left in place afterward, so `make clean` again before building for release.
+* `make test-san` runs every test suite under the sanitizers, doing the `make clean` that switching build types requires.  It cleans, builds `BUILD=debug`, and runs the suites with UBSan set to fail rather than only report.  The sanitizer binaries are left in place afterward, so `make clean` again before building for release.
 * `make clean` and `make lint` recurse into every subdirectory.
 
 Each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests/`, `examples/`, `hash-programs/`, and `research/`) add `test`, so a single one can be worked on in isolation.  `make -C tests test` builds and runs just that directory's suites.  (`research/`'s `test` runs only its three pure-Python scripts, and so does not build the benchmarks or require google-benchmark.)
@@ -191,17 +191,17 @@ It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.g
 1) **A large state.**  _256 bytes_!  For comparison, the state size of [SHA-3](https://en.wikipedia.org/wiki/SHA-3#Design) is 200 bytes.
 2) **A hardware round function.**  It uses dedicated AES instructions instead of only ARX operations.
 
-<q>Heavyweight</q> describes the design, not the speed: it assumes a CPU with an AES unit and spends it freely, so the [tree hashes are fast](#performance).
+<q>Heavyweight</q> describes the design, not the speed.  It assumes a CPU with an AES unit and spends it freely, so the [tree hashes are fast](#performance).
 
 ### Is this as fast as [b3sum](https://github.com/BLAKE3-team/BLAKE3)?
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing [Castella hash](hash-programs/castella.cpp) roughly matches fully-multithreaded `b3sum` on page-cache-hot files, and [Compress-Castella hash](hash-programs/cch.cpp) beats it!  Don't take my word for it: [Performance](#performance) has the figures and the script that reproduces them.
+But seriously, in my testing [Castella hash](hash-programs/castella.cpp) roughly matches fully-multithreaded `b3sum` on page-cache-hot files, and [Compress-Castella hash](hash-programs/cch.cpp) beats it!  Don't take my word for it.  [Performance](#performance) has the figures and the script that reproduces them.
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 
-Not yet.  It hasn't been scrutinized by others, and until it has been, the honest answer stays no.  What exists now is a precise target for that scrutiny: [SPEC.md states a falsifiable security claim](SPEC.md#security-claims-and-non-claims) with its supporting evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage challenges.  Although I myself can't break it.  [^Schneier]
+Not yet.  It hasn't been scrutinized by others, and until it has been, the honest answer stays no.  What exists now is a precise target for that scrutiny.  [SPEC.md states a falsifiable security claim](SPEC.md#security-claims-and-non-claims) with its supporting evidence, and [CHALLENGES.md](CHALLENGES.md) publishes reduced-round collision and preimage challenges.  Although I myself can't break it.  [^Schneier]
 
 ### Don't roll your own crypto.
 

@@ -21,7 +21,7 @@ here to regenerate the _r_ = 5 to 8 ceilings.
 There are no files for _r_ ≤ 4, because stage A of the trail search finds its
 own patterns there, in under a second at _r_ = 3 and about half a minute at
 _r_ = 4, so `-A 129` and `-A 165` are all that is needed.  At _N_ = 16 and
-_r_ = 5 stage A has never returned a pattern, at any activity target, under
+_r_ = 5, stage A has never returned a pattern, at any activity target, under
 either cardinality encoding, or at any of eight random seeds.  At _r_ = 6, 7,
 and 8 it was skipped rather than retried.  Those two facts are why the import
 exists.

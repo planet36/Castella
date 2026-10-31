@@ -7,7 +7,7 @@ Work from this document alone.  Please do not search for this design, its source
 * A **byte** is 8 bits, and a **block** is 16 bytes.
 * When a block is operated on by an AES instruction, its bytes are interpreted exactly as x86 `AESENC` interprets a 128-bit register.  Byte 0 is the first byte in memory, and the AES state matrix is column-major, with byte index = 4·col + row.
 * `AESENC(d, k)` is **one AES encryption round**: `SubBytes`, `ShiftRows`, `MixColumns`, then XOR with the 16-byte round key `k`.  These are the exact semantics of the x86 `aesenc` instruction.
-* `AESENC_INV(d, k)` is its exact inverse: `k` is XORed off, then `InvMixColumns`, `InvShiftRows`, and `InvSubBytes` are applied.
+* `AESENC_INV(d, k)` is its exact inverse, which XORs off `k` and then applies `InvMixColumns`, `InvShiftRows`, and `InvSubBytes`.
 
 ## The permutation
 
@@ -16,7 +16,7 @@ The permutation `P` operates on a **state of 16 blocks** (256 bytes, 2048 bits),
 One round `r` is two steps:
 
 1. **Three AES rounds.**  For AES round `aes_r` ∈ {0, 1, 2}, every block is encrypted one AES round with its own round constant as the round key: `s[i] = AESENC(s[i], RC[r][aes_r][i])` for `i` ∈ {0, …, 15}.
-2. **Transpose.**  The state is viewed as a 16×16 byte matrix whose row `i` is block `i`, and the matrix is transposed: byte `j` of block `i` and byte `i` of block `j` are exchanged.
+2. **Transpose.**  The state is viewed as a 16×16 byte matrix whose row `i` is block `i`, and the matrix is transposed, which exchanges byte `j` of block `i` and byte `i` of block `j`.
 
 `P(s, n)` performs `n` rounds, `0 ≤ n ≤ 16`, using the **last** `n` rounds' constants, so round `r` runs over `{16 − n, …, 15}`.
 

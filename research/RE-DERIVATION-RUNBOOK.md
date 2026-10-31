@@ -88,7 +88,7 @@ them, and why nothing in this file should run during one.
 [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) maps each *claim* to its commands and holds the
 interpretation rules, which this runbook does not repeat.
 
-## 1. Cheap and deterministic — run these first (< 5 min total)
+## 1. Run these cheap, deterministic checks first (< 5 min total)
 
 Start with this preflight, whose five lines each name the section that stops working
 without it:
@@ -358,7 +358,7 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # six on 2026-08-08, three at double the budget, moved NO ceiling.
 ```
 
-`-A` is the question being asked, not a tuning knob.  At r = 3 the search solves `-A 129`
+`-A` is the question being asked, not a tuning knob.  At r = 3, the search solves `-A 129`
 in 0.7 s but times out on `-A 120` after 900 s, and at r = 4 `-A 165` takes 34 s while
 `-A 150` times out.  These probes establish "≤ X" well and "> X" not at all.  That is why
 the r = 4 target bisection and the five smaller targets at r = 5 (both in README.md's
@@ -398,7 +398,7 @@ documented number depends on it.
 ## 6. Resource notes
 
 * **Memory was not the constraint on the 2026-08-01/02 runs, but it is one on the shell
-  probes in §3.**  Across all 28 runs of the 2026-08 re-derivation the peak was 1.5 GB (the
+  probes in §3.**  Across all 28 runs of the 2026-08 re-derivation, the peak was 1.5 GB (the
   fuzzer), and no solver run exceeded 892 MB, against the 7.7 GiB the machine had then.
   (That 892 MB was an r = 4 `rows` probe on the since-withdrawn 225-box pattern, not a
   command in this file.)  Two things have changed since.

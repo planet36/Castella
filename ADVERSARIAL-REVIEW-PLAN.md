@@ -6,7 +6,7 @@ SPDX-License-Identifier: MPL-2.0
 # Castella Adversarial Code Review — Plan
 
 An adversarial, expert review of Castella covering cryptographic design, high-performance
-C++, security, testing, and documentation.  The reviewer plays attacker: the goal is to
+C++, security, testing, and documentation.  The reviewer plays attacker, so the goal is to
 *break* claims, not to confirm them.
 
 > **Scope note on portability.**  Per the maintainer, portability to platforms/architectures
@@ -41,8 +41,8 @@ meaningful relative to a stated adversary and a stated claim.
 
 Two properties of this project drive the whole plan:
 
-1. **The design's own claims are the yardstick.**  `SPEC.md` is refreshingly candid: no
-   security proof is claimed, the S-box bounds are explicitly "necessary, not sufficient,"
+1. **The design's own claims are the yardstick.**  `SPEC.md` is refreshingly candid.  No
+   security proof is claimed, the S-box bounds are explicitly "necessary, not sufficient",
    and `cch` is declared non-cryptographic.  So "Castella is not IND-CCA / has no proof" is a
    *non-finding*, because the docs already say it.  The valuable findings are:
    - places where the **implementation contradicts the spec** it claims to implement
@@ -211,11 +211,11 @@ then attack it.
       row/column-symmetric state, stay in a low-dimensional subspace under `P`?  The
       transpose maps block↔byte symmetries.  Verify that the round constants break them,
       since that is the spec's stated *reason* for the constants.  Both programs in
-      Section 1a answer this already, at different strengths: the probes sample the three
+      Section 1a answer this already, at different strengths.  The probes sample the three
       classes, and `permute-invariant-subspaces.py` decides them exactly and states the
       condition the constants must satisfy.  Read the exact result first, because a sampled
       re-run that agrees with it adds nothing.
-- [ ] **Slide / self-similarity.**  With distinct per-round constants the rounds should
+- [ ] **Slide / self-similarity.**  With distinct per-round constants, the rounds should
       differ.  Confirm that no two rounds share a constant set, and that `last(n)` selection
       can't create a slid pair for any supported `n`.  The probes' slide screen covers the
       first half exactly (no whole-round shift relates two rounds' constants by a fixed XOR
@@ -265,7 +265,7 @@ then attack it.
 ### 2c.  Tree mode (`castella-hash-tree.hpp`)
 - [ ] **Unambiguous decodability (Sakura/K12 soundness).**  The core claim is that any tree
       collision implies a node collision.  Attack the final-node stream
-      `chunk_0 || CV_1..CV_m || right_encode(m)`: can two different `(chunk_0, CVs, m)`
+      `chunk_0 || CV_1..CV_m || right_encode(m)`.  Can two different `(chunk_0, CVs, m)`
       decodings produce the same byte stream given **fixed** `CV_LEN`?  Check that the role
       byte truly separates the leaf and final domains and that the leaf index pins position.
 - [ ] **The 255/256 leaf-index width fallback.**  `left_encode(i)` changes width at i=256,
@@ -273,20 +273,20 @@ then attack it.
       *digest* is identical regardless of pairing (execution-only), and (b) no index near
       the width boundary breaks decodability.  Adversarial input lengths straddling chunk
       255/256 are the test case.
-- [ ] **Thread/split independence, the invariant every parallel path depends on.**  SPEC.md
-      and CLAUDE.md both insist the digest never depends on `num_threads`, leaf compute
-      order, or `add()` granularity.  This is the highest-value property to *try to break*:
-      race the persistent pool and the batch path, exercise the ring backpressure bound,
-      split `add()` pathologically, and diff digests across 1..N threads and both IO modes.
-      The existing `equivalence-tests.cpp` is the seed, so extend its adversarial length set
-      and run it under TSan.
+- [ ] **Thread/split independence, the invariant every parallel path depends on.**
+      SPEC.md and CLAUDE.md both insist the digest never depends on `num_threads`, leaf
+      compute order, or `add()` granularity.  This is the highest-value property to *try
+      to break*.  Race the persistent pool and the batch path, exercise the ring
+      backpressure bound, split `add()` pathologically, and diff digests across 1..N
+      threads and both IO modes. The existing `equivalence-tests.cpp` is the seed, so
+      extend its adversarial length set and run it under TSan.
 - [ ] **CV length vs security target.**  `CV_LEN = 16·C` is claimed to be twice the `8·C`
       target, so confirm that the tree's internal collision resistance can't undercut the
       node's.
 
-### 2d.  Keyed MAC — cross-check against SP 800-185 §4 (see 1b).
+### 2d.  Keyed MAC (cross-check against SP 800-185 §4, see 1b).
 
-### 2e.  `cch` (non-cryptographic — bound the review).
+### 2e.  `cch` (non-cryptographic, so bound the review).
 - [ ] Do **not** file "cch has no collision resistance," which is disclosed.  **Do** check the
       following:
       - the compression `AESENC(AESENC(AESENC(m,s),m),s)` matches the spec exactly
@@ -388,8 +388,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
       (do they throw or UB?), preconditions expressed as `assert` (only under `-DDEBUG`) vs
       enforced.  A precondition that's only an assert is an undocumented gotcha if it is
       reachable from user input.
-- [ ] **Header hygiene / include audit** (repo checklist item): each header includes what it
-      uses, nothing unused, `#pragma once` present.
+- [ ] **Header hygiene / include audit** (repo checklist item).  Each header includes what
+      it uses and nothing unused, with `#pragma once` present.
 - [ ] **Naming / comment accuracy.**  Comments that drift from code, and any prose that
       violates `COMMENT-STYLE.md`.
 
@@ -449,7 +449,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
         maintained alongside the runs that produce them.  Audit against that list rather than
         against a copy here.
       - The **throughput** figures (in `hash-programs/README.md`, which owns them, and in
-        `README.md`, `CLAUDE.md`, and `research/README.md`) are this bullet's own: the
+        `README.md`, `CLAUDE.md`, and `research/README.md`) are this bullet's own.  The
         runbook's § 0 puts performance findings out of its scope, so no list but this one
         covers them.
 - [ ] **Gotchas to hunt for, and to demand documentation of.**
@@ -507,8 +507,8 @@ assert perf claims from reading code (per the repo's own accuracy rule).
    params) by construction *and* by differential test across threads, IO modes, and split
    granularity.
 8. **A "claims ledger," but audit the one that exists before building another.**
-   `research/VERIFYING-CLAIMS.md` is already a ledger for the *security* claims, and it
-   carries a ground rule: no security-relevant claim may appear in the repository's
+   `research/VERIFYING-CLAIMS.md` is already a ledger for the *security* claims, and it carries
+   a ground rule that no security-relevant claim may appear in the repository's
    documentation without a row there, or an explicit *conjecture* / *evidence pending*
    label.  The adversarial job is to test that rule, not restate it.  Find a security claim in
    `SPEC.md`, `README.md`, or `CHALLENGES.md` with no row, or a row whose commands no longer
@@ -529,7 +529,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
    what's *not* wired into CI.  **A TSan run is not part of this step.**  ASan and TSan
    cannot share a build, so TSan coverage of the tree pool needs its own, and writing it is
    a *deliverable* of this review (Section 6), not a prerequisite for starting it.
-2. **Claims ledger** (Section 8.8): audit `research/VERIFYING-CLAIMS.md` against its own
+2. **Claims ledger** (Section 8.8).  Audit `research/VERIFYING-CLAIMS.md` against its own
    ground rule, then build the missing ledger for the non-security claims.
 3. Consistency audits (Sections 7.1 and 1e), which give the cheapest high-signal findings.
 4. Encoding/padding/tree-decodability attacks with the Python model as differential oracle.
@@ -555,7 +555,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
 - Make no branches, commits, or pushes without explicit approval.
 - Keep any added comments concise and accurate.
 
-## 10. Closed by decision — do not re-propose
+## 10. Closed by decision and not to be re-proposed
 
 These are review findings the maintainer considered and declined, recorded here so they
 are not raised again.  Each entry is a decision about the current code, not a defect left

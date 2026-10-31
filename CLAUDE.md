@@ -177,7 +177,9 @@ Before asserting a technical claim, confirm it from the source, a compile, or a 
 
 ## Code Style / Comments
 
-`COMMENT-STYLE.md` holds the prose rules for code comments, doc blocks, and commit messages.  Read it before writing any of the three.
+`COMMENT-STYLE.md` holds the prose rules.  They govern all prose, including chat replies.
+
+@COMMENT-STYLE.md
 
 The code follows three conventions that a reviewer could otherwise mistake for inconsistency:
 

@@ -67,8 +67,8 @@ docstring summary follows its language's convention.
 ## Paragraphs
 
 **6. Keep a paragraph to one topic.**  A wall of text is not thorough — it is
-unread.  Settle the sentences under rule 1 first, because splitting a paragraph
-of run-on sentences only spreads them out.
+unread.  Settle the sentences under rule 1 first.  Splitting a paragraph of
+run-on sentences only spreads them out.
 
 Look closer at a paragraph past about 100 words or 5 sentences, counting
 rendered words rather than source lines, since wrapping varies from file to
@@ -122,7 +122,7 @@ Comment prose is usually wrapped narrower, and a paragraph you edit keeps the
 width it already had rather than being reflowed to the ceiling.  A Markdown
 file that puts each paragraph on one long line stays that way.
 
-Four more things are exempt, because wrapping them costs more than it returns.
+Four more things are exempt because wrapping them costs more than it returns.
 A URL wraps into something the reader cannot click.  A run of column-aligned
 declarations or table rows loses the alignment that made it readable.  A string
 literal wraps only by splitting it, which puts the text further from what the
@@ -179,10 +179,9 @@ copy that survives the move, so never thin one into a pointer, and never let a
 gotcha live only in a file the copy leaves behind.
 
 One case earns a second copy.  An argument written to head off a suggestion has
-to sit where the reader forms the suggestion, because a reader who never follows
-the pointer is exactly the one it was written for.  Such a copy carries the
-argument alone.  Do not append a line saying the real rationale lives
-elsewhere.
+to sit where the reader forms the suggestion.  A reader who never follows the
+pointer is exactly the one it was written for.  Such a copy carries the argument
+alone.  Do not append a line saying the real rationale lives elsewhere.
 
 ## Wording
 
@@ -246,7 +245,7 @@ ends the same way.  A `///<` trailing brief follows the same rule.  Detail
 paragraphs inside the block punctuate normally.
 
 Another language keeps its own convention.  A Python docstring ends its summary
-line with a period, because PEP 257 says so.  What carries across is that a
+line with a period because PEP 257 says so.  What carries across is that a
 file settles on one ending, not which ending it is.
 
 **23b. Set `MULTILINE_CPP_IS_BRIEF = YES`.**  Under the default of `NO`, only a
@@ -302,8 +301,8 @@ it.  Where the contracts differ, the whole block does not transfer, and rule
 
 **28a. Use `\copybrief` plus one specific paragraph when it does not.**  Two
 overloads that spell the same parameter differently are the usual case.  One
-taking `data` and `len` cannot `\copydoc` from one taking `src`, because the
-imported `\param` names would not match the signature.
+taking `data` and `len` cannot `\copydoc` from one taking `src`.  The imported
+`\param` names would not match the signature.
 
 **29. Verify that a reference resolves.**  Doxygen cannot tell two overloads
 apart by a `requires` clause alone.  A reference that silently resolves to the

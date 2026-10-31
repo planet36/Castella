@@ -258,23 +258,25 @@ A repo that generates no documentation still sets it, in whatever scratch
 configuration is used to check a file.  The wrapped briefs rule 23 allows are
 correct only under this setting.
 
-**24. Use `\a` for a parameter and `\c` for a code token, never `\p`.**  `\a`
-and `\p` both mark a word as a parameter in running text.  `\a` renders it
-italic and `\p` renders it monospace.  The italic sets a parameter apart, where
-monospace blends it into the identifiers the prose already writes that way.
+**24. Use `\a` for a parameter, never `\p`.**  `\a` and `\p` both mark a word as
+a parameter in running text.  `\a` renders it italic and `\p` renders it
+monospace.  The italic sets a parameter apart, where monospace blends it into
+the identifiers the prose already writes that way.
 
 Neither one checks that the word names a real parameter, so a typo in either is
 silent.  Only `\param` checks.  `\p` is another name for the `\c` of rule 25,
-so for code it would only add a second spelling to search for.
+so for code it would only add another spelling to search for.
 
-**25. Monospace one token with `\c`, and a phrase with `<code>`.**  `\c` marks
-only the word that follows it, so `\c operator new` sets `operator` in
-monospace and leaves `new` in the running text.  Doxygen reports nothing when
+**25. Monospace code with backticks, `\c`, or `<code>`.**  Backticks work for
+one token or a phrase, and what they enclose is literal.  They need
+`MARKDOWN_SUPPORT = YES`, which is the default.
+
+`\c` marks only the word that follows it, so `\c operator new` sets `operator`
+in monospace and leaves `new` in the running text.  Doxygen reports nothing when
 that happens, the same way it says nothing about a misspelled `\a` parameter.
 
-Reach for `<code>...</code>` when the span runs to more than one token, and for
-nothing else.  Two spellings with a rule between them keep a search for either
-exhaustive, so do not add Markdown backticks as a third.
+`<code>...</code>` also works for a phrase, but it still runs any command
+inside it.
 
 **26. Line the block's stars up with its `/**`.**  A continuation line inside
 a `/** ... */` block starts its `*` in the same column as the opening `/**`,

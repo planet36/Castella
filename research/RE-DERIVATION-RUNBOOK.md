@@ -45,7 +45,7 @@ budget matters.  `permute-trail-search.py` has no
 **Two standing rules apply to anything here that solves.**  Launch it under `nice -n 19`
 (the benchmarks are the exception, never the solvers), and keep at most 8 solver processes
 running at once, trail search and MILP sharing that one budget.  `nice` does not substitute
-for the cap.  Shed load by killing, never by `SIGSTOP`, because z3's `-t` is wall-clock and
+for the cap.  Shed load by killing, never by `SIGSTOP`.  z3's `-t` is wall-clock, and
 a stopped process keeps burning it.
 
 `research/permute-trail-ceilings.bash` follows both rules and also caps concurrency by
@@ -429,7 +429,7 @@ documented number depends on it.
 
 ## 7. Diffusion, structural, algebraic and statistical evidence
 
-§1–§6 cover the trail line (the MILP floors and the bit-level ceilings), because that is
+§1–§6 cover the trail line (the MILP floors and the bit-level ceilings) because that is
 what the 2026-08-01/02 re-derivation was about.  The rest of the evidence base is not
 optional to re-derive.  **The diffusion floor and the sponge reach are inputs to every
 `R*`, and full diffusion also sizes the `+ 3` margin term**

@@ -44,7 +44,7 @@ Two properties of this project drive the whole plan:
 1. **The design's own claims are the yardstick.**  `SPEC.md` is refreshingly candid.  No
    security proof is claimed, the S-box bounds are explicitly "necessary, not sufficient",
    and `cch` is declared non-cryptographic.  So "Castella is not IND-CCA / has no proof" is a
-   *non-finding*, because the docs already say it.  The valuable findings are:
+   *non-finding* because the docs already say it.  The valuable findings are:
    - places where the **implementation contradicts the spec** it claims to implement
    - places where a claim the docs **do** make is false, overstated, or unverifiable
    - **undocumented gotchas**, meaning behavior a careful user would be surprised by
@@ -213,7 +213,7 @@ then attack it.
       since that is the spec's stated *reason* for the constants.  Both programs in
       Section 1a answer this already, at different strengths.  The probes sample the three
       classes, and `permute-invariant-subspaces.py` decides them exactly and states the
-      condition the constants must satisfy.  Read the exact result first, because a sampled
+      condition the constants must satisfy.  Read the exact result first.  A sampled
       re-run that agrees with it adds nothing.
 - [ ] **Slide / self-similarity.**  With distinct per-round constants, the rounds should
       differ.  Confirm that no two rounds share a constant set, and that `last(n)` selection
@@ -232,7 +232,7 @@ then attack it.
       `AES_NUM_ROUNDS = 3` matches the spec and the constants table shape.
 - [ ] **Inverse permutation.**  Round-trip `permute_inv ∘ permute == id` across all N and
       all `num_rounds`, and specifically that the folded forward path inverts under the
-      *generic* inverse, because that round trip is the argument that the folded path
+      *generic* inverse.  That round trip is the argument that the folded path
       computes the same function as the one it replaced.  Establish what it does and does not
       cover before judging where it belongs.
 

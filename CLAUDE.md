@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Castella is a collection of header-only C++ libraries and programs built around a duplex/sponge construction using AES-NI CPU instructions.  The core algorithm is in `castella-permute.hpp`, and the primary class is `Castella::Duplex` in `castella-duplex.hpp`.  `SPEC.md` at the repo root is the standalone specification (permutation, round-constant LFSR, duplex, tree mode, MAC, and cch).  `research/spec-conformance.py` is an independent pure-Python implementation written from the spec that verifies all of `tests/KAT.txt`.
 
-Keep the spec, the KAT file, and the conformance script in agreement whenever the digests change.  A digest change also means regenerating the published challenge digests and targets in `CHALLENGES.md`, because each is a digest of a specific instance and becomes unreachable otherwise.
+Keep the spec, the KAT file, and the conformance script in agreement whenever the digests change.  A digest change also means regenerating the published challenge digests and targets in `CHALLENGES.md`.  Each is a digest of a specific instance and becomes unreachable otherwise.
 
 ## Build Commands
 
@@ -144,14 +144,14 @@ Put a new command in the runbook, not beside the result it produced.
 
 **A measured or solved figure is published in more than one document, so correcting one copy is not correcting the figure.**  Grep the value across every document above before calling it fixed, and sweep the prose around each hit, since it states the conclusion the figure was supporting and so moves with the number.  A figure whose status label changes (`optimal` ⇄ incumbent) must change label everywhere, because only `optimal` is a security bound.
 
-`research/RE-DERIVATION-RUNBOOK.md` § 8 is the *only* target list for the cryptanalysis figures.  `ADVERSARIAL-REVIEW-PLAN.md` § 7 keeps the requirement as a standing audit item but defers to that table, so a new carrier gets added there and nowhere else.  § 7 does own the throughput figures, and names *this* file as a carrier of them.  This file is on § 8's list too, because Key Constraints below states `R*` = 6/6/6/8 and the `floor + 3` policy, so those move with the figure.
+`research/RE-DERIVATION-RUNBOOK.md` § 8 is the *only* target list for the cryptanalysis figures.  `ADVERSARIAL-REVIEW-PLAN.md` § 7 keeps the requirement as a standing audit item but defers to that table, so a new carrier gets added there and nowhere else.  § 7 does own the throughput figures, and names *this* file as a carrier of them.  This file is on § 8's list too.  Key Constraints below states `R*` = 6/6/6/8 and the `floor + 3` policy, so those move with the figure.
 
 ## Running the solver-backed research tools
 
 `research/`'s MILP and z3 programs run for minutes to hours and are memory-hungry, since one trail search can want several GiB against 15 GiB and no swap here.  So the opening of `research/RE-DERIVATION-RUNBOOK.md` sets two standing rules for anything that solves, and they apply to runs started from here:
 
 - Launch it under `nice -n 19`.  The benchmarks are the exception, never the solvers.  They measure speed, so what they need is an otherwise idle machine, and nothing that solves should be running during one.
-- Keep at most 8 solver processes going at once, trail search and MILP sharing that one budget.  `nice` does not substitute for the cap.  Shed load by killing, never `SIGSTOP`, because z3's `-t` is wall-clock, so a stopped process keeps burning it.
+- Keep at most 8 solver processes going at once, trail search and MILP sharing that one budget.  `nice` does not substitute for the cap.  Shed load by killing, never `SIGSTOP`.  z3's `-t` is wall-clock, so a stopped process keeps burning it.
 
 The 8 is a ceiling, not a target.  Memory usually binds first, since z3's `-M` is **per process** and a batch needs N × M inside RAM.  Check `free -h` before starting a long or parallel run.  Per-command budgets, recorded timings, and peak memory live in the runbook.
 

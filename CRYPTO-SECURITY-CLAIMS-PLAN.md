@@ -92,8 +92,8 @@ Notes on the form of the claim:
   committed suffix/N/S framing, and nothing else.  Reduced-round instances are explicitly
   *not* covered, because they exist to be attacked (§5.7).
 * **Breaking the claim is a result, not a catastrophe.**  Following Keccak, if an attack
-  beats the claimed bound, the claim was false and the parameters get revised.  Say this in
-  the spec, because it is what makes the claim credible rather than boastful.
+  beats the claimed bound, the claim was false and the parameters get revised.  Say this
+  in the spec.  It is what makes the claim credible rather than boastful.
 
 ### 2.2 Where it lives
 
@@ -286,7 +286,7 @@ permutation).  The honest procedure has four steps:
    `A(3)` = 127, this row's trail floor would be r=4 and its `R*` 7 rather than the
    shipped 6.
 
-   This is safe, because `A(3) = 129` is now proven by two independent solvers, but it is
+   This is safe because `A(3) = 129` is now proven by two independent solvers, but it is
    the tightest quantity in the whole analysis, and it is *derived* rather than
    chosen.  **It is now stated in SPEC.md's margin rationale too**, which is where a reader
    of the claim will meet it.

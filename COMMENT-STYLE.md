@@ -109,9 +109,9 @@ marks where the main clause starts.  Requiring it at every length leaves no
 threshold to argue over.  Write "By default, the parser skips blank lines", not
 "By default the parser skips blank lines".  An opening clause takes one too, and
 so does a lone adverb that modifies the whole sentence, as in "Here, the cache
-is cold".  A phrase that is the sentence's subject takes none, as in "Running
-the tests takes a minute", and neither does one that inverts the sentence, as
-in "Below the table sits a note".
+is cold".  A phrase or clause that is the sentence's subject takes none, as in
+"Running the tests takes a minute", and neither does one that inverts the
+sentence, as in "Below the table sits a note".
 
 ## Layout
 

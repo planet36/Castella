@@ -55,7 +55,7 @@ struct DuplexTreeNodePolicy final
     /**
     * The capacity is twice the default digest size, so a CV this long gives
     * the tree at least the collision resistance of its nodes.  It also fits in
-    * one squeeze, because C <= B/2 makes the capacity no larger than the rate.
+    * one squeeze because C <= B/2 makes the capacity no larger than the rate.
     */
     [[nodiscard]] static int cv_len(const node_type& node) noexcept
     {

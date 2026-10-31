@@ -302,7 +302,7 @@ class CompressCastella:
 class TreeNode(Protocol):
     """All the tree needs of a node, which is to absorb bytes.
 
-    Extraction is not here, because Duplex squeezes where CompressCastella
+    Extraction is not here.  Duplex squeezes where CompressCastella
     digests, so tree_digest takes it as a separate callable.
     """
 

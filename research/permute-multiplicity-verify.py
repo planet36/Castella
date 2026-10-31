@@ -12,7 +12,7 @@ Over a full-block cube round 1 is a bijection on that block, the transpose
 hands every block one active byte, each of whose 256 values therefore repeats
 2^120 times, and 2^120 is even, so the XOR-sum vanishes.  That argument never
 mentions AES, which is why it was also applied to `P^-1`.  Composing the two
-halves once gave a 4-round figure that had to be retracted, because they had
+halves once gave a 4-round figure that had to be retracted because they had
 been run on different cubes.
 
 This program checks the argument itself, two ways that fail independently.

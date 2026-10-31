@@ -559,7 +559,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         {
             // Test that successive squeezes are distinct.  The first squeeze
-            // finalizes the tree, so a later add() throws.  Duplex allows it,
+            // finalizes the tree, so a later add() throws.  Duplex allows it
             // because absorbing after a squeeze is what a duplex is for.
             Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                       function_name, customization_str, chunk_size);

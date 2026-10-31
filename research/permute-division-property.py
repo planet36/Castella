@@ -351,8 +351,8 @@ class Model:
     def aes_round(self, bits: list[z3.BoolRef]) -> list[z3.BoolRef]:
         """SubBytes, ShiftRows, MixColumns on one 128-bit block.
 
-        Castella's aesenc order is ShiftRows then SubBytes, but the two
-        commute, because ShiftRows permutes bytes and SubBytes acts bytewise,
+        Castella's aesenc order is ShiftRows then SubBytes, but the
+        two commute.  ShiftRows permutes bytes and SubBytes acts bytewise,
         so this is the same layer sequence.
         """
         b = self.sbox_layer(bits)
@@ -706,7 +706,7 @@ def inside_out(cube_bits: set[int], r_fwd: int, r_bwd: int,
     zero-sum *partition* is a statement about the whole state at both
     ends, so a partial result on either half establishes nothing here.
 
-    Read a negative here as weak, because a SAT bounds the technique and never
+    Read a negative here as weak because a SAT bounds the technique and never
     `P`.  A positive is a proof, given the model.
     """
     print(f"== inside-out zero-sum: {r_fwd} forward + {r_bwd} backward "

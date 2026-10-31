@@ -64,7 +64,7 @@ TIME_LIMIT="${TIME_LIMIT:-14400}"
 
 # -M is PER PROCESS and these probes grow to ~2 GB over a few hours, so a
 # parallel batch needs N * MEM within RAM.  Eight at 2500 left 1.8 GiB of 15
-# GiB free.  r = 5 overrides this below, because at 2500 it ends `unknown: max.
+# GiB free.  r = 5 overrides this below because at 2500 it ends `unknown: max.
 # memory exceeded` after ONE trail, memory-bound rather than time-bound.
 MEM="${MEM:-2500}"
 

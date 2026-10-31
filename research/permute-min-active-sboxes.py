@@ -73,7 +73,7 @@ only route to a trail at N=16 above r=4, where the trail search's own pattern
 stage has never returned one while this model solves the cell in minutes.
 
 It needs the PuLP package (pip install pulp), which bundles the CBC solver,
-and highspy for --solver highs.  Install both, because --solver defaults to cbc
+and highspy for --solver highs.  Install both.  --solver defaults to cbc
 when highspy is absent, and CBC has never proved N=16 above r=3 at any time
 limit tried, where HiGHS closes r=4 through 8 (RE-DERIVATION-RUNBOOK.md).
 """
@@ -283,7 +283,7 @@ class SelfTestError(Exception):
 
 
 # The AES bounds this model must reproduce at one Castella round, as
-# (AES rounds, minimum active S-boxes).  N is irrelevant here, because blocks
+# (AES rounds, minimum active S-boxes).  N is irrelevant here.  Blocks
 # are independent within one round, so the self-test solves them at N=2.
 AES_VALIDATION_BOUNDS = ((1, 1), (2, 5), (3, 9), (4, 25))
 

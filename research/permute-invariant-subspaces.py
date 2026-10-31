@@ -76,7 +76,7 @@ Do not analyze the S-box-deleted round
 --------------------------------------
 It is tempting to delete the S-boxes and study the resulting 256x256 matrix
 over GF(2^8).  That map is strictly weaker than Castella.  Composed over one
-round its rows have weight 12 rather than 16, because (MC.SR)^3 cancels over
+round, its rows have weight 12 rather than 16, because (MC.SR)^3 cancels over
 GF(2^8), while real support propagation reaches all 16 bytes of a block after
 two AES rounds.  Conclusions drawn from the skeleton would understate
 diffusion.  Every section here keeps the S-box layers where they are.

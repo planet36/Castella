@@ -418,7 +418,7 @@ assert_eq_cmd_cmd \
 
 # Verify that an absent FILE reads standard input, exactly as an explicit '-'
 # does.  These assertions compare whole output lines instead of piping through
-# first_field.  That is safe here, because both forms print the same name for
+# first_field.  That is safe here because both forms print the same name for
 # standard input, which is '-'.
 
 assert_eq_cmd_cmd \
@@ -648,7 +648,7 @@ assert_eq_cmd_str \
     "'${CASTELLA_TMP}/test-100KB.txt': OK"
 
 # Verify an untagged round trip with non-default digest-relevant options,
-# which must be repeated at check time.  --size is the exception, because it
+# which must be repeated at check time.  --size is the exception because it
 # is inferred from the digest length.
 
 CUSTOM='¡Ay, caramba!'

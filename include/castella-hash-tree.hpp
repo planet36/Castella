@@ -662,7 +662,7 @@ private:
     * can therefore never affect the digest.
     *
     * Lockstep requires every absorbed piece to have the same length in both
-    * nodes.  Both chunks are full, because only the trailing chunk of a
+    * nodes.  Both chunks are full because only the trailing chunk of a
     * stream may be short and it is never paired.  The role prefix is
     * identical in both nodes, so only the left-encoded chunk index can
     * differ, and only in WIDTH, at a byte-width boundary such as indices 255
@@ -1185,7 +1185,7 @@ private:
     * Chunk 0 is absorbed directly by the final node.  Every later chunk is
     * hashed by a leaf, through the pipeline once the pool is running and
     * inline on the calling thread otherwise.  The pipeline swaps an owned
-    * buffer into the ring slot, and copies a bare span into it, because that
+    * buffer into the ring slot, and copies a bare span into it because that
     * span points into memory the caller may reuse.
     *
     * The inline branch absorbs its CV into the final node immediately, which

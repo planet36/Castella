@@ -17,7 +17,7 @@
 # Re-asking the satisfied cap for MANY trails reaches them.
 #
 # Running the enumeration is not optional polish.  It lowered every ceiling
-# from r = 3 up, six for six.  At r = 3 it produced a weight-823
+# from r = 3 up, six for six.  At r = 3, it produced a weight-823
 # characteristic in a shell whose cap 823 the descent had asked for directly
 # and been refused twice, once with the full 14400 s.  An `unknown` is never
 # evidence of absence.
@@ -43,7 +43,7 @@
 # Three of the six, at r = 3, 5, and 8, returned their best trail LAST, which
 # looked budget-limited.  Re-running all six on 2026-08-08, three of them at
 # TIME_LIMIT=28800, moved NO ceiling.  Do not expect a longer budget to.  At
-# the default 14400 this script reproduces the table above trail for trail, so
+# the default 14400, this script reproduces the table above trail for trail, so
 # it regenerates the recorded ceilings rather than searching for new ones.
 
 set -u
@@ -103,9 +103,9 @@ shift $((OPTIND - 1))
 #   7  --pattern-file patterns/pat-r7.json    8  -25    2473 - 25 = 2448
 #   8  --pattern-file patterns/pat-r8.json    1  -20    2725 - 20 = 2705
 #
-# At r = 3 and r = 4 --patterns N means "stop at the Nth pattern stage A
+# At r = 3 and r = 4, --patterns N means "stop at the Nth pattern stage A
 # enumerates", so the number selects the winning pattern and is not a request
-# for more of them.  From r = 5 up --patterns is inert, because a file holds
+# for more of them.  From r = 5 up, --patterns is inert, because a file holds
 # one pattern.
 recipe() {
     case "$1" in
@@ -121,7 +121,7 @@ recipe() {
 }
 
 # --weight-encoding totalizer is required rather than a tuning choice.  Under
-# the pb default the shell returns nothing at all, failing to find even trails
+# the pb default, the shell returns nothing at all, failing to find even trails
 # that provably satisfy its constraints.  --encoding rows is the default, but
 # it is spelled out here because it is what makes the instance tractable at
 # this width.  --no-minimize is spelled out because minimization has never once
@@ -156,7 +156,7 @@ for R in "$@"; do
         continue
     fi
 
-    # Hold at MAX_JOBS: wait for one to finish before starting another.
+    # Hold at MAX_JOBS by waiting for one to finish before starting another.
     while (( $(jobs -rp | wc -l) >= MAX_JOBS )); do
         wait -n
     done

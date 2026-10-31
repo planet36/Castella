@@ -34,7 +34,7 @@
 * The benchmark itself is portable to any AES-capable target (the absorb
 * loop and permutation have non-VAES and ARM fallbacks), so the question can
 * be measured on hardware without VAES, where the answer differs.  With
-* 128-bit aesenc codegen one state already runs 16 independent chains, where
+* 128-bit aesenc codegen, one state already runs 16 independent chains, where
 * VAES halves that to 8 and so leaves latency to fill, and measured
 * compute-regime ratios drop to ~1.0.  That is why the cch tree policy's
 * pairing opt-in stays behind the VAES flags.
@@ -366,7 +366,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // The name reports the total each row actually covers, not the one
     // requested.  A buffer is a whole number of 256-byte chunks, so N = 3
     // lands on 75% of the 2 KiB total and about 94% of the 4 and 8 KiB ones,
-    // where the footprints are no longer equal.  From 16 KiB up every row is
+    // where the footprints are no longer equal.  From 16 KiB up, every row is
     // within 2%.
     for (const auto total_size : total_sizes)
     {

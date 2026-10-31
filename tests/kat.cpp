@@ -34,10 +34,10 @@
 * "duplex" is \c Castella::Duplex, "tree" is \c Castella::DuplexTree, "cch"
 * is a plain \c compress_castella_hash node, and "cchtree" is
 * \c compress_castella_tree.  "mac" is the keyed construction SPEC.md
-* specifies for <code>castella --key-file</code>: the same
+* specifies for <code>castella --key-file</code>, which is the same
 * \c Castella::DuplexTree over
 * <code>bytepad(encode_string(K), chunk) || msg || right_encode(out)</code>,
-* which is why it needs no separate class here.  Tree digests never depend
+* so it needs no separate class here.  Tree digests never depend
 * on the thread count, so no thread count appears in the format.
 *
 * The first two types pin the primitives directly rather than through a
@@ -125,7 +125,7 @@ make_msg(const int len)
     return msg;
 }
 
-/// Get one round constant, as bytes: <code>RC[r][aes_r][i]</code>
+/// Get one round constant, <code>RC[r][aes_r][i]</code>, as bytes
 /**
 * This pins the constant schedule on its own, so a wrong LFSR seed, stride, or
 * emission order is caught here rather than as a wrong digest 200 lines

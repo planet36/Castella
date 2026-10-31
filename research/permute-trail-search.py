@@ -16,7 +16,7 @@ the byte-level bound is ("trail tightness").
 That reading requires A to be a *proven* MILP optimum.  Where the MILP only
 reached an incumbent (the cells in UNPROVEN_MIN_ACTIVE below), 6*A is not a
 lower bound on anything, and a trail found against it is a ceiling with no
-floor beneath it.  On startup the program reads those tables and says which
+floor beneath it.  On startup, the program reads those tables and says which
 case applies.
 
 Model (two stages, both in z3)
@@ -27,7 +27,7 @@ preserves activity, ShiftRows and the transpose re-index, and MixColumns has
 branch number 5 and is invertible.  Here it is expressed as SAT with a
 cardinality constraint fixing the total number of active S-boxes to a target
 A.  A defaults to the best known MILP figure for -N/-r, which is a proven
-optimum where one exists and otherwise an incumbent.  Against an incumbent 6*A
+optimum where one exists and otherwise an incumbent.  Against an incumbent, 6*A
 is a target rather than a floor (see PROVEN_MIN_ACTIVE below).
 
 Stage B instantiates one pattern at the bit level, where each active byte
@@ -48,9 +48,9 @@ S-box count to A, and stage B bounds the trail weight (equivalently,
 lower-bounds the number of weight-6 S-box transitions).  "pb" states each as
 one compact z3 pseudo-Boolean, which propagates poorly at this width.
 "totalizer" instead builds a sorted-unary counter out of clauses, which
-propagates, and makes weight minimization incremental: the counter is built
-once and each tighter bound is a single unit literal, so the solver keeps
-what it learned under the previous bound.
+propagates.  It also makes weight minimization incremental.  The counter is
+built once and each tighter bound is a single unit literal, so the solver
+keeps what it learned under the previous bound.
 
 The two are separate flags because the two stages stall for unrelated
 reasons (stage A on the width of the activity count, stage B on refuting a
@@ -660,9 +660,10 @@ class Instantiation:
                                     z3.Or([dout == z3.BitVecVal(b_out, 8)
                                            for b_out
                                            in DDT_ALLOWED[a_in]])))
-                        # One-sided: w6 may only be set on a DDT=4 pair, so
-                        # #w6 <= (number of weight-6 transitions), and any
-                        # trail admits an assignment reaching equality.
+                        # The constraint is one-sided.  w6 may only be set on
+                        # a DDT=4 pair, so #w6 <= (number of weight-6
+                        # transitions), and any trail admits an assignment
+                        # reaching equality.
                         w6 = z3.Bool(f"w6_{t}_{a}_{i}_{b}")
                         self.solver.add(z3.Implies(w6, z3.Or(
                             [z3.And(din == z3.BitVecVal(a_in, 8),
@@ -849,7 +850,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
 
     timeout_ms bounds each solver call, and total_timeout_ms bounds the
     enumeration as a whole.  They are separate because tying them together
-    caps the enumeration at ONE call's worth of work.  Under a single budget a
+    caps the enumeration at ONE call's worth of work.  Under a single budget, a
     request for many trails is unsatisfiable by construction as soon as calls
     are slow, which is exactly the regime above r = 1.  max_memory_mb, if
     given, stops a call the same way.  Stopping early only reports fewer
@@ -857,7 +858,7 @@ def cluster_estimate(num_blocks: int, num_rounds: int, pattern: Pattern,
     for.
 
     fresh_instances rebuilds the solver for every trail instead of adding each
-    blocking clause to one persistent solver.  Above r = 1 the persistent
+    blocking clause to one persistent solver.  Above r = 1, the persistent
     solver is what stalls.  Measured at r = 2, both shapes find trail 1 in
     about 32 s, after which the persistent solver returns 'unknown: canceled'
     at 300 s on trail 2 while rebuilding solves the same query in 35 s.

@@ -136,8 +136,8 @@ def random_state(rng: random.Random) -> list[bytes]:
 def aes_phase(state: list[bytes], rnd: int = LAST_ROUND) -> list[bytes]:
     """The three AES rounds of one Castella round, before the transpose.
 
-    Written block by block on purpose: that this reproduces `permute` is
-    premise 1, and it is checked rather than assumed.
+    This is written block by block on purpose.  That it reproduces `permute`
+    is premise 1, and it is checked rather than assumed.
     """
     out = []
     for i in range(N_BLOCKS):
@@ -200,7 +200,7 @@ def check_cube_reaches_one_byte_per_block(rng: random.Random,
                                           trials: int = 64) -> None:
     """Premise 2: a cube filling block 0 reaches exactly bytes (b, 0).
 
-    Given premise 1 the upper bound is exact, since output byte (b, j) is
+    Given premise 1, the upper bound is exact, since output byte (b, j) is
     aes_phase(state[j])[b], so only j = 0 can move.  What sampling adds is the
     lower bound, that every one of the 16 positions really does move.
     """
@@ -524,7 +524,7 @@ class Reduced:
         return st
 
     def backward(self, st: list[int], rounds: int) -> list[int]:
-        """Its inverse: undo round r-1 first, transpose before the block map."""
+        """Invert `forward`, undoing round r-1 first and transposing before the block map."""
         for r in reversed(range(rounds)):
             st = self.transpose(st)
             st = [self.inv_block_map(st[i], r, i) for i in range(self.n)]

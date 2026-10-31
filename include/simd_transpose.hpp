@@ -448,7 +448,7 @@ simd_transpose_folded(std::array<__m256i, 8>& x) noexcept
     const __m256i ABCDEFGH_cd = _mm256_unpacklo_epi32(ABCD_cf, EFGH_cf);
     const __m256i ABCDEFGH_ef = _mm256_unpackhi_epi32(ABCD_cf, EFGH_cf);
 
-    // Pair column c with column c+8 within each lane: per lane, COL_c8 =
+    // Pair column c with column c+8 within each lane.  Per lane, COL_c8 =
     // [col c (8 bytes) | col c+8 (8 bytes)] of that lane's submatrix.
     const __m256i COL_08 = _mm256_unpacklo_epi64(ABCDEFGH_01, ABCDEFGH_89);
     const __m256i COL_19 = _mm256_unpackhi_epi64(ABCDEFGH_01, ABCDEFGH_89);

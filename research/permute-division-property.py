@@ -58,7 +58,7 @@ forces all-zero input through a whole block.
 
 Asking for the output to be exactly e_j thus forces every block other than
 the target's to be entirely zero, and those blocks are omitted rather than
-solved for.  For a cube inside one block the live block count is 1 at r = 1,
+solved for.  For a cube inside one block, the live block count is 1 at r = 1,
 **2** at r = 2, 18 at r = 3, and 34 at r = 4, which is linear growth rather
 than exponential.
 
@@ -94,7 +94,7 @@ Inside-out, and the coordinate trap in it
 directions and adds the round counts.  The two directions read a bit-set
 differently (forward it is the middle state, and backward it is one
 transpose past it), so `inside_out` transposes the cube for the backward
-half.  Without that the same bit-set names a row of the byte matrix
+half.  Without that, the same bit-set names a row of the byte matrix
 forward and a column backward, two different sets of states whose round
 counts cannot be added.  A revision before 2026-08-04 did exactly that and
 reported a 4-round zero-sum for the `block` cube, which has none.
@@ -130,8 +130,8 @@ cube containing it sum to zero there too, and C = 2's cube and targets
 contain those of every larger C.  So if no rate bit is balanced at C = 2,
 none is at any C, from any cube a caller can choose.
 
-Two round counts need no solving.  At r = 1 the cube strands bits outside
-every target block, so `trivially_balanced` decides it.  At r = 2 the `block`
+Two round counts need no solving.  At r = 1, the cube strands bits outside
+every target block, so `trivially_balanced` decides it.  At r = 2, the `block`
 cube is balanced on all 2048 bits and lies inside every sponge cube, so the
 sponge cube is balanced too.  The open question starts at r = 3.
 
@@ -648,7 +648,7 @@ def half(cube_bits: set[int], rounds: int, timeout_s: float, count: bool,
     """One direction of an inside-out zero-sum; True when it is balanced.
 
     `rounds` = 0 is balanced by definition and costs no solving.  Over an
-    affine cube of dimension d >= 1 every coordinate sums to zero, since each
+    affine cube of dimension d >= 1, every coordinate sums to zero, since each
     free coordinate takes both values 2^(d-1) times and each fixed one is
     added 2^d times, so the identity map already zero-sums.  Allowing it is
     what makes `--inside-out 2 0` reproduce the one-directional result and act
@@ -759,7 +759,7 @@ def sponge_target_offsets(capacity_blocks: int) -> range:
 
     A squeeze reveals output blocks 0..R-1.  The forward build drops P's
     trailing transpose, which sends block i byte b to block b byte i.  So in
-    the build's coordinates the rate is bytes 0..R-1 of every block, not
+    the build's coordinates, the rate is bytes 0..R-1 of every block, not
     blocks 0..R-1.
     """
     return range(8 * (N_BLOCKS - capacity_blocks))

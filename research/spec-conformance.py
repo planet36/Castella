@@ -442,8 +442,8 @@ def kat_digest(typ: str, f: KatFields) -> bytes:
 def verify_kat_file(path: str, expect_count: int | None = None) -> int:
     """Verify every KAT in the file, returning 0 on full success and 1 otherwise.
 
-    If expect_count is given, the file must hold exactly that many
-    vectors: verifying fewer is a failure, not a success on a short file.
+    If expect_count is given, the file must hold exactly that many vectors.
+    Verifying fewer is a failure, not a success on a short file.
     """
     num_verified = 0
     num_failed = 0

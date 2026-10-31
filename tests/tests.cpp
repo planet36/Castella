@@ -234,7 +234,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     {
         // The same five constraints on Castella::DuplexX2, which enforces them
         // separately in check_constraints_.  This is guarded because the class
-        // exists only where the lane-paired path does.  On every other target
+        // exists only where the lane-paired path does.  On every other target,
         // these constraints are Duplex's alone, tested above.
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";

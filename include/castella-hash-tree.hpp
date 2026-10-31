@@ -199,7 +199,7 @@ concept tree_node_policy = requires (const P p,
 *
 * ## Using this class
 *
-* \c HashTree is a CRTP base: a concrete tree derives as
+* \c HashTree is a CRTP base, so a concrete tree derives as
 * <code>struct MyTree final : HashTree<MyPolicy, MyTree></code>, forwards
 * its constructor parameters through a policy instance, and adds its own
 * digest-extraction method(s) on top of the protected \c finalize_() /
@@ -359,7 +359,7 @@ protected:
 private:
     // ---- Streaming-pipeline state (see "Parallelism" in the class doc) ----
 
-    /// One slot of the pipeline ring: one chunk, hashed in place to its CV
+    /// One slot of the pipeline ring, holding one chunk hashed in place to its CV
     /**
     * The slot *owns* its chunk bytes, swapped with \c chunk_buf_ when
     * possible and copied from the caller's buffer otherwise.  The caller's
@@ -744,7 +744,7 @@ private:
     * [0, size()), inside the vector's object model, because writing past
     * size() trips AddressSanitizer's container-overflow check.  A resize()
     * within the current capacity never reallocates, and it value-initializes
-    * the tail.  For a full chunk the resize is a no-op.
+    * the tail.  For a full chunk, the resize is a no-op.
     *
     * A caller that has written the whole allocation passes capacity().  A
     * caller that may not have passes its high-water mark instead, so an
@@ -827,7 +827,7 @@ private:
     /// Start the pool once the stream has proven long enough to benefit
     /**
     * See \c MIN_CHUNKS_BEFORE_POOL_START for the rationale.  With
-    * NUM_THREADS == 1 the pool never starts, and every leaf is hashed inline.
+    * NUM_THREADS == 1, the pool never starts, and every leaf is hashed inline.
     */
     void maybe_start_pool_()
     {
@@ -898,7 +898,7 @@ private:
     * \c hash_leaf_pair_into_().
     *
     * The pair claim is opportunistic and never waits for a second chunk to
-    * arrive.  At the end of a stream no second chunk may ever come, and the
+    * arrive.  At the end of a stream, no second chunk may ever come, and the
     * claimed one must not be held hostage.  Pipelined chunks are always full
     * and are dispatched in index order, so a claimed pair always satisfies
     * the paired hash's lockstep precondition.  Only the trailing chunk of a
@@ -981,7 +981,7 @@ private:
             {
                 // Park the exception, realistically only std::bad_alloc,
                 // for the calling thread to rethrow when it drains the
-                // slots.  On a pair claim neither CV can be trusted, so both
+                // slots.  On a pair claim, neither CV can be trusted, so both
                 // slots park it.
                 const std::exception_ptr error = std::current_exception();
 
@@ -1097,7 +1097,7 @@ private:
 
     /// Dispatch one chunk into the next ring slot for a pool worker
     /**
-    * The pipeline in one method:
+    * This one method is the whole pipeline:
     *
     *   - Backpressure.  If every slot is in flight, block on the *oldest*
     *     slot's CV until it frees up.  The fixed ring size bounds memory no

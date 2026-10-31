@@ -266,7 +266,7 @@ struct phase_tables
         }
     }
 
-    /// Half-step \a h forward: round h/2's AES phase if \a h is even, else its transpose
+    /// Half-step \a h forward, which is round h/2's AES phase for even \a h, else its transpose
     [[nodiscard]] state_t
     step(const state_t s, const int h) const
     {

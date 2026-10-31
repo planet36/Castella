@@ -11,7 +11,7 @@
 * SIGBUS.  \c file_input.hpp takes an OFD read lock first, but that lock is
 * advisory and \c ftruncate() does not ask for one.
 *
-* Without a handler the process dies on the signal, naming neither the file
+* Without a handler, the process dies on the signal, naming neither the file
 * nor the cause.  A truncated file has no meaningful digest, so the handler
 * reports the path and \c _exit()s async-signal-safely.  An unrelated SIGBUS
 * is re-raised with the default disposition.

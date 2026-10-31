@@ -17,12 +17,12 @@
 * It tries two cube placements:
 *
 * * single-block puts all k bits inside one random block, the placement that
-*   minimizes mixing.  At 1 round this MUST find structure, which is the
+*   minimizes mixing.  At 1 round, this MUST find structure, which is the
 *   positive control.  One round cannot spread a block beyond one byte per
 *   output block, so the 15 unvaried input blocks leave 1920 output bits
 *   constant.
 * * spread puts k bits at random positions across the whole state.  At 1
-*   round every spread cube spanning 2+ blocks also sums to zero in ALL bits,
+*   round, every spread cube spanning 2+ blocks also sums to zero in ALL bits,
 *   because one round is nonlinear only block-locally and each block sees its
 *   sub-cube's values an even number of times.  That is gone by 2 rounds.
 *

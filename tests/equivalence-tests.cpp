@@ -13,7 +13,7 @@
 *
 * The fixed tests in tests.cpp exercise that contract at hand-picked points.
 * This program hammers it with randomized inputs at adversarial sizes.  For
-* each size the single-threaded one-shot digest is the reference, and every
+* each size, the single-threaded one-shot digest is the reference, and every
 * combination of {one-shot, randomly split adds} x {thread counts} must
 * reproduce it.  That covers the batch path with its different static leaf
 * partitions, the streaming pipeline, the inline path, and the paired-leaf

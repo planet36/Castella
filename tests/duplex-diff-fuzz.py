@@ -60,7 +60,7 @@ def positive_int(s: str) -> int:
 
 
 def seed_arg(s: str) -> int:
-    """Parse a seed: decimal or 0x-prefixed, within [0, 2**64)."""
+    """Parse a decimal or 0x-prefixed seed within [0, 2**64)."""
     try:
         value = int(s, 0)
     except ValueError:
@@ -222,7 +222,7 @@ def run_model(program: Program) -> list[str]:
                 # The C++ apply_padding_rule() is public, but the model keeps
                 # its pad10*1 step internal (it is called by __init__ and
                 # squeeze), so there is no public counterpart to drive.
-                # Reaching in is the point of the op: explicit padding is
+                # Reaching in is the point of the op because explicit padding is
                 # otherwise untested.
                 duplex._pad_and_permute()  # pylint: disable=protected-access
             case ("squeeze", int() as value):

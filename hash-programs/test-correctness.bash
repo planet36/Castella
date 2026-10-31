@@ -529,7 +529,7 @@ assert_neq_cmd_cmd \
     './cch --untagged --chunk-size=32768 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
 # Verify that a non-default "--chunk-size" is also independent of the thread
-# count and the I/O mode.  At 4096 the 100 KB file spans 24 full chunks and a
+# count and the I/O mode.  At 4096, the 100 KB file spans 24 full chunks and a
 # partial one.
 
 assert_eq_cmd_cmd \
@@ -952,7 +952,7 @@ assert_eq_cmd_exit_status \
     './cch --mix-rate=2049 ${CASTELLA_TMP}/test-100B.txt 2>/dev/null' \
     1
 
-# --quiet is only meaningful with --check.  Without --check it is an error,
+# --quiet is only meaningful with --check.  Without --check, it is an error,
 # not a flag that is silently ignored.
 
 assert_eq_cmd_exit_status \

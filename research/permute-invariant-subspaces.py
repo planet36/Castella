@@ -17,7 +17,7 @@ The transpose swaps block and byte indices, which is precisely the symmetry
 an invariant-subspace attack looks for.  The design intent is that the round
 constants disrupt it (castella-permute.hpp, quoting Keccak's "Making of",
 8.7).  Sections 4 and 5 below turn that intent into a decided statement.  For
-two of the three classes every layer except the constant addition preserves
+two of the three classes, every layer except the constant addition preserves
 the class, so the constants are the *only* thing standing in the way, and the
 condition they must satisfy is stated exactly.
 
@@ -220,7 +220,7 @@ def sbox_affine_census() -> dict[str, int]:
         if frozenset(img[0] ^ y for y in img) == frozenset(W):
             same_dir += 1
 
-    # Lift to dimension 3: extend each good 2-dim coset by one direction.
+    # Lift to dimension 3 by extending each good 2-dim coset by one direction.
     seen3: set[tuple[int, ...]] = set()
     good3 = 0
     for W, A in good2:
@@ -341,7 +341,7 @@ def one_round(state: list[bytes], rnd: int,
               zero_rc: bool = False) -> list[bytes]:
     """Apply Castella round `rnd` (its own constants) to a 16-block state.
 
-    With zero_rc the round constants are replaced by zero, which is the
+    With zero_rc, the round constants are replaced by zero, which is the
     control for section 5.  It is the permutation the design would be if the
     constants did no symmetry-breaking at all.
     """
@@ -634,7 +634,7 @@ def report_classes(bases: dict[str, list[int]],
     """Section 4: which layer preserves which symmetry class, decided."""
     failures: list[str] = []
     print("== 4. transpose symmetry classes, layer by layer")
-    # The S-box layer is omitted deliberately: every class here is a
+    # The S-box layer is omitted deliberately because every class here is a
     # partition class, and a bytewise map preserves each one exactly, so
     # there is nothing to measure (see class_partitions).
     layers = (("ShiftRows", apply_shift_rows),
@@ -744,7 +744,7 @@ def main() -> None:
                     lambda: report_classes(bases, echelons)):
         failures += section()
         print()
-    # Section 5 is kept apart: it yields undecided checks, not findings.
+    # Section 5 is kept apart because it yields undecided checks, not findings.
     inconclusive = report_closure(bases, args)
     print()
     print_conclusion()

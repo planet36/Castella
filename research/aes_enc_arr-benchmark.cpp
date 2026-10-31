@@ -28,7 +28,7 @@
 *     (element j = blocks j and j+8) and takes its round keys from
 *     \c Castella::round_constants_folded.
 *
-* The inverse overloads are deliberately not measured: \c permute_inv is the
+* The inverse overloads are deliberately not measured.  \c permute_inv is the
 * only caller of \c aes_enc_inv_arr, nothing in the hash programs calls
 * \c permute_inv, and permute_inv-verify.cpp already checks its accuracy.
 *

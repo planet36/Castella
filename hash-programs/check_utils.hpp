@@ -152,7 +152,7 @@ struct verification_totals final
 
     /// Whether every listed file was read and matched
     /**
-    * Improperly formatted lines only warn.  On their own they do not fail the
+    * Improperly formatted lines only warn.  On their own, they do not fail the
     * run, which is the cksum convention these programs follow deliberately.
     * The exception is a checkfile with no valid line at all, which the
     * checkfile loop reports separately.

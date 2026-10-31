@@ -371,8 +371,8 @@ public:
     *
     * \param src_a the input data for duplex A
     * \param src_b the input data for duplex B
-    * \pre \c std::size(src_a) == \c std::size(src_b) (lockstep: the
-    *      lanes may absorb different bytes, never different lengths)
+    * \pre \c std::size(src_a) == \c std::size(src_b) (in lockstep, the
+    *      lanes may absorb different bytes but never different lengths)
     */
     void add(const contiguous_byte_range auto& src_a,
              const contiguous_byte_range auto& src_b) noexcept

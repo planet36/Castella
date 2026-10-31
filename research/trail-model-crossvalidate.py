@@ -13,7 +13,7 @@ published AES bounds validate it only at r=1, where Castella is pure AES and
 the transpose has not yet acted.
 
 This drives random state PAIRS through spec-conformance.py's `permute`, the
-from-the-spec implementation that reproduces all 91 KATs.  In lockstep it
+from-the-spec implementation that reproduces all 91 KATs.  In lockstep, it
 propagates their difference through the shared model's own layers, feeding
 them the S-box output differences the concrete pair actually produces.  The
 two must agree byte for byte at every round count.

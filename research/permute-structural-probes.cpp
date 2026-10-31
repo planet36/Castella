@@ -17,8 +17,8 @@
 * 3. Round-constant properties asserted in SPEC.md.  The first constant is
 *    the seed string, all 768 are distinct and nonzero, and no constant is a
 *    bitwise shift of its predecessor in generation order.  A
-*    slide-resistance screen follows: no whole-round shift relates two
-*    rounds' constants by a fixed XOR difference.  Such an affine
+*    slide-resistance screen follows, checking that no whole-round shift
+*    relates two rounds' constants by a fixed XOR difference.  Such an affine
 *    self-similar schedule is what a slide would need, with or without a
 *    twist, and distinctness alone only rules out the zero difference.
 *

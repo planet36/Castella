@@ -248,8 +248,8 @@ def highs_available() -> bool:
 def highs_dual_bound(prob: pulp.LpProblem) -> float | None:
     """HiGHS's best dual bound, read from the live solver object.
 
-    PuLP's HiGHS backend is the in-process highspy API, not a command line:
-    it ignores logPath and never sets LpProblem.bestBound, but it does leave
+    PuLP's HiGHS backend is the in-process highspy API, not a command line.
+    It ignores logPath and never sets LpProblem.bestBound, but it does leave
     the Highs object on lp.solverModel, and that carries the bound.
     """
     model = getattr(prob, "solverModel", None)

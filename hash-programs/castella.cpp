@@ -469,7 +469,7 @@ catch (const std::exception& ex)
 * (see \c compute_file_digest).  Those prefixes are left_encode(chunk size)
 * and left_encode(key size), at most 5 bytes each.
 *
-* At the minimum chunk size this returns 1014 bytes, far beyond any real key.
+* At the minimum chunk size, this returns 1014 bytes, far beyond any real key.
 */
 [[nodiscard]] constexpr int
 get_max_key_size_bytes(const int chunk_size_bytes) noexcept

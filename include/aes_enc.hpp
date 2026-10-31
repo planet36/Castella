@@ -201,7 +201,7 @@ aes_enc_arr_paircast(simd_arr_t<N>& arr,
 /**
 * The lane-paired counterpart of \c aes_enc_arr.  Element \c i of \a arr holds
 * block \c i of two independent states, one state per 128-bit lane.  In AES
-* round \c aes_r both lanes use the same key, \c aes_round_keys[aes_r][i],
+* round \c aes_r, both lanes use the same key, \c aes_round_keys[aes_r][i],
 * broadcast to both lanes.
 */
 template <size_t N, size_t M, size_t AES_NUM_ROUNDS>

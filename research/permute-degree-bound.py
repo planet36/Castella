@@ -51,7 +51,7 @@ construction.  That is how far this bound carries it, not a proof that no
 distinguisher exists beyond it.  Proving that needs a degree lower bound or a
 division property, which is out of scope here.
 
-For the flat sponge claim this is characterization rather than a claim
+For the flat sponge claim, this is characterization rather than a claim
 requirement.  Castella concedes that P is not a random permutation, as
 Keccak-f does, whose full-round permutation has zero-sums precisely because
 its chi layer has degree 2.  The point of interest is how SHORT the reach is.
@@ -61,7 +61,7 @@ rounds rather than near-full.
 Self-test
 ---------
 --self-test checks the S-box delta_i values and pins the recursion's values
-on AES-128 (n=128, one S-box layer per round) and on Castella.  On AES-128
+on AES-128 (n=128, one S-box layer per round) and on Castella.  On AES-128,
 the bound stays below 127 through 4 rounds and is full at round 5.  The pinned
 values are the two bounds' own arithmetic, so a change to either bound moves
 them.  They are not checked against an external AES result.

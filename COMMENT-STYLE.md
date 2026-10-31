@@ -14,7 +14,9 @@ the rules below are about where that line falls.
 Write the rules into the first draft.  A comment that needs a rewrite pass to
 satisfy them was written wrong.
 
-A letter on a rule number marks a sub-case of the rule with that number.
+A letter on a rule number marks a sub-case of the rule with that number.  Rule
+numbers shift when a rule is added, so a citation from outside this file names
+the rule's subject along with its number.
 
 ## Sentences
 

@@ -31,7 +31,7 @@
 
 /// A resizable array container with in-place storage and a compile-time capacity bound
 /**
-* \a N bounds the capacity but does not fix it, because the capacity is a run-time value that
+* \a N bounds the capacity but does not fix it.  The capacity is a run-time value that
 * \c reserve() moves after construction, in either direction.
 *
 * This is similar to \c std::inplace_vector and \c boost::container::static_vector,

@@ -45,13 +45,13 @@ the honest posture ("do not use where security matters") stays.
 
 | construction | target? | why |
 |---|---|---|
-| `Castella::permute` (`P`) | **yes — the primitive** | All cryptanalysis ultimately lands here.  Public, keyless, invertible. |
-| `Castella::Duplex` | **yes — as a mode over `P`** | Security = generic sponge/duplex bounds (proven) + strength of `P` (claimed).  The duplexing lemma reduces duplex security to sponge security, so one claim covers hash, XOF, and duplex PRNG usage. |
+| `Castella::permute` (`P`) | **yes, the primitive** | All cryptanalysis ultimately lands here.  Public, keyless, invertible. |
+| `Castella::Duplex` | **yes, as a mode over `P`** | Security = generic sponge/duplex bounds (proven) + strength of `P` (claimed).  The duplexing lemma reduces duplex security to sponge security, so one claim covers hash, XOF, and duplex PRNG usage. |
 | `Castella::DuplexTree` | **mode argument only** | Sakura-style soundness: the final-node stream is unambiguously decodable, so any tree collision yields a node collision.  Establish this as a short *proof*, not by cryptanalysis.  The tree inherits the node's claim (with `CV_LEN = 16·C` ≥ twice the security target, the CVs never undercut it). |
 | Keyed MAC (`--key-file`) | **mode argument only** | KMAC-structure argument: PRF security ≈ min(key length, claimed level).  Needs a short written reduction to the duplex claim, plus the domain-separation checks. |
-| `DuplexX2`, `permute_x2`, folded `permute`, `compress_castella_hash_x2` | **no** | Execution-level paths that are bit-identical to the reference path.  The correct claim is *implementation equivalence*, already verified (`research/*-verify.cpp`, `equivalence-tests.cpp`) — there is no separate cryptographic object to analyze. |
-| Compress-Castella (`cch`) | **no — excluded by declaration** | SPEC.md already states it is non-cryptographic and why (the 16 lanes are independent between mixes, so collision resistance is capped at roughly 2^68 whatever the digest length).  No claim is possible; the deliverable is only to keep this disclaimer prominent. |
-| `http-prng-service` | **no new claims** | A *usage* of the duplex PRNG, not a construction.  It inherits the duplex claim.  One genuine mode-level item does surface here — see §5.6 (backtracking resistance). |
+| `DuplexX2`, `permute_x2`, folded `permute`, `compress_castella_hash_x2` | **no** | Execution-level paths that are bit-identical to the reference path.  The correct claim is *implementation equivalence*, already verified (`research/*-verify.cpp`, `equivalence-tests.cpp`).  There is no separate cryptographic object to analyze. |
+| Compress-Castella (`cch`) | **no, excluded by declaration** | SPEC.md already states it is non-cryptographic and why (the 16 lanes are independent between mixes, so collision resistance is capped at roughly 2^68 whatever the digest length).  No claim is possible; the deliverable is only to keep this disclaimer prominent. |
+| `http-prng-service` | **no new claims** | A *usage* of the duplex PRNG, not a construction.  It inherits the duplex claim.  One genuine mode-level item does surface here (see §5.6, backtracking resistance). |
 
 In sum, there is **one primitive claim** (on `P`, expressed through the sponge capacity) and
 there are **three short mode arguments** (duplex/sponge, tree, and MAC).  Everything else is
@@ -580,12 +580,12 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 
 | closed | when | what was decided |
 |---|---|---|
-| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity.  A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled: every row meets `floor + 3` and none is an exception.  Only the published commitment reopens it — see below. |
+| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity.  A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled.  Every row meets `floor + 3` and none is an exception.  Only the published commitment reopens it — see below. |
 | The "margin in bits" metric | 2026-08-08 | Rejected on the merits, not on the answer it gave.  It is the metric that happens to flatter the row under question, and doubling a *differential* bound buys nothing against the rebound, integral and algebraic attacks the margin exists to cover.  The rounds metric stays. |
 | Pushing the trail-search **ceilings** further | 2026-08-08 | The whole line: more seeds, more patterns, deeper shells, enumerating alternate MILP optima above r = 4.  The last batch re-ran all six ceilings, three at double the budget, and moved none.  Every round count through r = 8 is bracketed on a solved floor, so a tighter ceiling buys characterization, not margin. |
 | `A(9)` and beyond | 2026-08-08 | Dropped on scope.  The shipped round counts are 6 and 8, so r ≤ 8 covers them; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
 | Differential clustering at r ≥ 2 | 2026-08-07 | The r = 2 cluster enumeration was judged not worth its cost, and the shell enumerations that would supply the figures elsewhere are inside the closed ceiling line.  So first-order clustering is measured at r = 1 only (≈ 2 bits), and the gap is disclosed rather than queued (§5.3). |
-| Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive: 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. |
+| Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive.  The 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. |
 | A 7-round inside-out zero-sum | 2026-10-30 | Not pursued.  A second blind re-derivation found none, and it argued that the technique stops at 6 rounds.  Its one unproved step asks whether 3-round AES has a common coarsening, which is a question about AES itself, and a positive answer would be a weakness in AES.  Inside-out zero-sums do not count toward `R*`, so no answer moves a parameter.  SPEC.md keeps 7 rounds open. |
 
 **What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface

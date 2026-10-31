@@ -6,7 +6,7 @@
 | kat.cpp | Verify (or regenerate) the machine-readable KAT file |
 | equivalence-tests.cpp | Randomized digest-equivalence tests for the tree hashes |
 | permute-equivalence.cpp | The folded (VAES) permutation must equal the generic one, bit for bit |
-| duplex-diff-fuzz.py | Differential fuzzer: random programs of `Castella::Duplex` calls must agree with the independent spec model |
+| duplex-diff-fuzz.py | Differential fuzzer, in which random programs of `Castella::Duplex` calls must agree with the independent spec model |
 | duplex-diff-driver.cpp | Replays a `duplex-diff-fuzz.py` call script against `Castella::Duplex` (not run directly) |
 
 ### `kat` and KAT.txt

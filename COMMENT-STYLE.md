@@ -150,19 +150,19 @@ something the code does not.
 belongs in a plan document or a decision ledger, never in a comment or a
 commit message.
 
+This is the rule most often overread.  It sends a design alternative that
+was weighed and dropped to the ledger.  It does not send away a hazard the
+reader is likely to walk into, and a warning against a change that would
+silently break something stays next to the code it protects.  Nor does it send
+away an argument that heads off a likely suggestion, which rule 17 keeps where
+the suggestion forms.
+
 **16. Do not state the obvious.**  "Increment the counter" above a line that
 increments the counter is noise.
 
 Cutting has a floor.  Rules 14 and 16 delete what the reader can already see,
 never what the reader could not reconstruct.  A comment trimmed until it is
 merely shorter than the fact it recorded has been broken, not tightened.
-
-Rule 15 is the one most often overread.  It sends a design alternative that
-was weighed and dropped to the ledger.  It does not send away a hazard the
-reader is likely to walk into, and a warning against a change that would
-silently break something stays next to the code it protects.  Nor does it send
-away an argument that heads off a likely suggestion, which rule 17 keeps where
-the suggestion forms.
 
 **17. Write an argument once.**  A second site that needs it states the
 consequence in a sentence and points at where the argument lives.  Copying the

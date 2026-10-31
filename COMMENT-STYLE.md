@@ -36,14 +36,16 @@ those reads as well.
 **3. Colons introduce rather than join.**  A colon before a real list is
 correct, and so is one before a block set off below it, such as a code sample
 or a quotation.  So is one after a conventional label, such as "Usage:", or
-after the term a list item defines.  A term set in bold is a run-in label and
-takes the period below.  Do not use a colon to join a clause to its
-explanation, as in "X must match the word size: the largest power of 2 bits".
-Write "which is", a conjunction, or a second sentence instead, and do not move
-the join to a dash.  Apart from such a label or term, what sits before the
-colon should be a clause rather than a bare noun phrase.  A bold run-in label
-ends with a period rather than a colon, as each rule's title here does, and the
-text after it is a full sentence.
+after the term a list item defines.  Apart from such a label or term, what sits
+before the colon should be a clause rather than a bare noun phrase.
+
+Do not use a colon to join a clause to its explanation, as in "X must match the
+word size: the largest power of 2 bits".  Write "which is", a conjunction, or a
+second sentence instead, and do not move the join to a dash.
+
+A bold run-in label ends with a period rather than a colon, as each rule's title
+here does, and the text after it is a full sentence.  A term set in bold is such
+a label, even in a list item.
 
 **4. Prefer parentheses to dashes around a parenthetical, and use a lone dash
 sparingly.**  Commas still carry a light aside that reads as part of the sentence.

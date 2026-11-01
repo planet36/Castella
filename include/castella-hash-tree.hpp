@@ -237,9 +237,11 @@ struct HashTree
     * padding, and the finalizing permutation.
     *
     * 64 KiB sits at or within a few percent of the plateau for both node
-    * types, and it is also where cch nodes scaled best across threads.  Files
-    * of a few hundred KiB still parallelize there.  A derived tree may shadow
-    * this with a default suited to its node.
+    * types, and it is also where cch nodes scaled best across threads.  With
+    * the streaming pool, files of a few hundred KiB still parallelize there.
+    * Without it, only the batch path parallelizes, which needs a file above
+    * about 1.1 MiB.  A derived tree may shadow this with a default suited to
+    * its node.
     */
     static constexpr int DEFAULT_CHUNK_SIZE = 65'536;
 

@@ -106,6 +106,10 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent, and the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
+These claims were last verified on 2026-11-01, on a 512 MiB input:
+
+* The 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
+
 These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
 
 * `cch` beat multithreaded `b3sum` by about 2.0× (single-thread, pinned: 3.5×).
@@ -117,7 +121,7 @@ These claims were last verified against a full run on 2026-07-18, with the unifi
 * `castella --no-mmap` and piped input were fastest at 2 threads.  More threads made piped input clearly slower and `--no-mmap` slightly slower.
 * Streamed `cch` times were identical across thread counts (within 1%).
 * The default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower).
-* The 64 KiB `cch` chunk size was within 1% of the best value on a 512 MiB input.  For `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned.
+* For `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned.
 
 Create the test input the same way the benchmark scripts do.  The scripts themselves generate theirs in a private `mktemp` directory, which they remove on exit, so a script can neither collide with a concurrent run nor disturb a `/tmp/test.txt` of your own:
 

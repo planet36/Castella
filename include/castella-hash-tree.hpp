@@ -1263,8 +1263,9 @@ private:
     * The no-worker counterpart of the batch path's paired leaf hashing, used
     * when the streaming pool can never run or should not start yet.  It can
     * never run for a single-threaded tree or a policy with
-    * \c USE_STREAMING_POOL false, and a first batch too small for transient
-    * workers may be the whole input.
+    * \c USE_STREAMING_POOL false, and a batch too small for transient workers
+    * that arrives before \c MIN_CHUNKS_BEFORE_POOL_START chunks have gone by
+    * may be the rest of the input.
     *
     * Chunk 0, if present, is absorbed directly by the final node.  Adjacent
     * full leaf chunks are hashed two at a time by one node pair (see
@@ -1391,10 +1392,10 @@ private:
                 // this thread's work anyway, so hash it here with adjacent
                 // leaves paired, roughly halving the work.  The pool cannot
                 // run for a single-threaded tree, or for a policy that opted
-                // out of it.  A first batch this small may also be the whole
+                // out of it.  A batch this early may also be the rest of the
                 // input, which cannot repay the cost of starting the pool.
                 if (!NodePolicy::USE_STREAMING_POOL || (NUM_THREADS < 2) ||
-                    (first_chunk_index == 0))
+                    (first_chunk_index < MIN_CHUNKS_BEFORE_POOL_START))
                 {
                     flush_paired_chunks_inline_(src, num_chunks);
                     return;

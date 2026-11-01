@@ -238,10 +238,10 @@ struct HashTree
     *
     * 64 KiB sits at or within a few percent of the plateau for both node
     * types, and it is also where cch nodes scaled best across threads.  With
-    * the streaming pool, files of a few hundred KiB still parallelize there.
-    * Without it, only the batch path parallelizes, which needs a file above
-    * about 1.1 MiB.  A derived tree may shadow this with a default suited to
-    * its node.
+    * the streaming pool, a file of a few hundred KiB read in pieces still
+    * parallelizes there.  Otherwise, only the batch path parallelizes, which
+    * needs a file above about 1.1 MiB.  A derived tree may shadow this with a
+    * default suited to its node.
     */
     static constexpr int DEFAULT_CHUNK_SIZE = 65'536;
 
@@ -1261,8 +1261,10 @@ private:
     /// Hash a batch's chunks on the calling thread, pairing adjacent leaves
     /**
     * The no-worker counterpart of the batch path's paired leaf hashing, used
-    * when the streaming pool can never run.  That is a single-threaded tree,
-    * or a policy with \c USE_STREAMING_POOL false.
+    * when the streaming pool can never run or should not start yet.  It can
+    * never run for a single-threaded tree or a policy with
+    * \c USE_STREAMING_POOL false, and a first batch too small for transient
+    * workers may be the whole input.
     *
     * Chunk 0, if present, is absorbed directly by the final node.  Adjacent
     * full leaf chunks are hashed two at a time by one node pair (see
@@ -1341,7 +1343,8 @@ private:
     * MIN_LEAF_CHUNKS_PER_WORKER), or a tree with NUM_THREADS == 1, is routed
     * chunk by chunk through flush_chunk_() instead.  That sends the chunks
     * into the streaming pipeline when the pool is running, and hashes them
-    * inline otherwise.
+    * inline otherwise.  With paired leaves, a batch the pool cannot or should
+    * not take goes to flush_paired_chunks_inline_() instead.
     *
     * The worker threads here are spawned per batch rather than taken from the
     * persistent pool the streaming path uses (see "Parallelism" in the class
@@ -1388,8 +1391,10 @@ private:
                 // this thread's work anyway, so hash it here with adjacent
                 // leaves paired, roughly halving the work.  The pool cannot
                 // run for a single-threaded tree, or for a policy that opted
-                // out of it.
-                if (!NodePolicy::USE_STREAMING_POOL || (NUM_THREADS < 2))
+                // out of it.  A first batch this small may also be the whole
+                // input, which cannot repay the cost of starting the pool.
+                if (!NodePolicy::USE_STREAMING_POOL || (NUM_THREADS < 2) ||
+                    (first_chunk_index == 0))
                 {
                     flush_paired_chunks_inline_(src, num_chunks);
                     return;

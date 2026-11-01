@@ -35,9 +35,9 @@
 * contributes 5, so the total depends on the target.
 */
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
-constexpr int EXPECTED_CHECKS = 73;
+constexpr int EXPECTED_CHECKS = 77;
 #else
-constexpr int EXPECTED_CHECKS = 68;
+constexpr int EXPECTED_CHECKS = 72;
 #endif
 
 /// The number of runtime checks made so far
@@ -636,6 +636,37 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                     tree.add(Y_sp.subspan(off, len));
                 }
                 CHECK(tree.squeeze_bytes() == expected);
+            }
+        }
+
+        {
+            // Test the parallel bulk path at chunks above the default size,
+            // which need fewer leaves per worker.  12 leaves are too few for 2
+            // workers at the full MIN_LEAF_CHUNKS_PER_WORKER, but these chunk
+            // sizes need 4 and 1 per worker, so several threads do get workers
+            // here.  The 17-byte tail adds a partial chunk.
+            for (const int large_chunk_size : {128 * 1024, 512 * 1024})
+            {
+                std::vector<std::byte> W(13 * large_chunk_size + 17);
+                for (int i = 0; i < std::ssize(W); ++i)
+                {
+                    W[i] = static_cast<std::byte>((i * 41 + 13) & 0xFF);
+                }
+                const std::span<const std::byte> W_sp{W};
+
+                const auto large_chunk_digest = [&](const int num_threads)
+                {
+                    Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
+                                              function_name, customization_str,
+                                              large_chunk_size, num_threads);
+                    tree.add(W_sp);
+                    return tree.squeeze_bytes();
+                };
+
+                const auto expected = large_chunk_digest(1); // sequential reference
+
+                CHECK(large_chunk_digest(2) == expected);
+                CHECK(large_chunk_digest(4) == expected);
             }
         }
 

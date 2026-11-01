@@ -261,8 +261,21 @@ private:
     * than this would spend a large fraction of its life on dispatch overhead.
     * A batch too small to give at least 2 workers this many chunks each is
     * hashed on the calling thread instead.
+    *
+    * A chunk above the default size lowers this count.  See
+    * \c MIN_LEAF_BYTES_PER_WORKER.
     */
     static constexpr int MIN_LEAF_CHUNKS_PER_WORKER = 8;
+
+    /// The leaf bytes that pay for a worker, however they divide into chunks
+    /**
+    * This only ever lowers \c MIN_LEAF_CHUNKS_PER_WORKER, down to one chunk
+    * per worker.  A chunk of the default size or smaller keeps the full count.
+    * The tests depend on that, since their small inputs reach the batch path
+    * only because their 1 KiB chunks need so few bytes per worker.
+    */
+    static constexpr int MIN_LEAF_BYTES_PER_WORKER =
+        MIN_LEAF_CHUNKS_PER_WORKER * DEFAULT_CHUNK_SIZE;
 
     /// The number of chunks that must be seen before the worker pool starts
     /**
@@ -1358,8 +1371,12 @@ private:
         const auto first_leaf_pos = (first_chunk_index == 0) ? 1 : 0;
         const auto num_leaves = num_chunks - first_leaf_pos;
 
+        // A larger chunk pays for its worker with fewer leaves.
+        const auto min_leaves_per_worker = std::clamp<int64_t>(
+            MIN_LEAF_BYTES_PER_WORKER / CHUNK_SIZE, 1, MIN_LEAF_CHUNKS_PER_WORKER);
+
         const auto num_workers =
-            std::min<int64_t>(NUM_THREADS, num_leaves / MIN_LEAF_CHUNKS_PER_WORKER);
+            std::min<int64_t>(NUM_THREADS, num_leaves / min_leaves_per_worker);
 
         if (num_workers < 2)
         {

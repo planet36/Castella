@@ -14,7 +14,7 @@ source ./benchmark-common.bash
 # To get the openssl digest algorithms, process by hand the output of
 # `openssl list -digest-algorithms` ("Provided").
 
-# Takes about 10:30
+# Takes about 10:40
 CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"
 time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
     --export-csv "$CSV" \
@@ -104,81 +104,81 @@ printf '\nExported results: %q\n' "$CSV"
 :<<EOT
 
 command                                                                               median
-./cch --chunk-size=262144 --mix-rate=0 /tmp/tmp.wn3MDFgaeZ/test.txt                   12.584 ms
-./cch /tmp/tmp.wn3MDFgaeZ/test.txt                                                    12.946 ms
-./castella --chunk-size=262144 --rounds=3 --size=16 /tmp/tmp.wn3MDFgaeZ/test.txt      17.367 ms
-b3sum --tag /tmp/tmp.wn3MDFgaeZ/test.txt                                              25.877 ms
-./castella --size=32 /tmp/tmp.wn3MDFgaeZ/test.txt                                     27.308 ms
-./castella --size=48 /tmp/tmp.wn3MDFgaeZ/test.txt                                     31.338 ms
-taskset -c 0 ./cch --num-threads=1      /tmp/tmp.wn3MDFgaeZ/test.txt                  34.113 ms
-taskset -c 0 xxhsum --tag -H3 /tmp/tmp.wn3MDFgaeZ/test.txt                            40.351 ms
-taskset -c 0 xxhsum --tag -H2 /tmp/tmp.wn3MDFgaeZ/test.txt                            40.836 ms
-taskset -c 0 cksum --algorithm crc32b            /tmp/tmp.wn3MDFgaeZ/test.txt         44.695 ms
-taskset -c 0 uu-cksum --algorithm crc                   /tmp/tmp.wn3MDFgaeZ/test.txt  45.316 ms
-taskset -c 0 uu-cksum --algorithm crc32b                /tmp/tmp.wn3MDFgaeZ/test.txt  45.825 ms
-taskset -c 0 cksum --algorithm crc               /tmp/tmp.wn3MDFgaeZ/test.txt         45.993 ms
-./castella --size=64 /tmp/tmp.wn3MDFgaeZ/test.txt                                     46.795 ms
-taskset -c 0 cksum --algorithm sysv              /tmp/tmp.wn3MDFgaeZ/test.txt         55.401 ms
-taskset -c 0 xxhsum --tag -H1 /tmp/tmp.wn3MDFgaeZ/test.txt                            57.762 ms
-taskset -c 0 uu-cksum --algorithm sysv                  /tmp/tmp.wn3MDFgaeZ/test.txt  59.688 ms
-taskset -c 0 b3sum --tag --num-threads=1 /tmp/tmp.wn3MDFgaeZ/test.txt                 119.996 ms
-taskset -c 0 b3sum --tag --no-mmap       /tmp/tmp.wn3MDFgaeZ/test.txt                 126.171 ms
-taskset -c 0 uu-cksum --algorithm blake3                /tmp/tmp.wn3MDFgaeZ/test.txt  127.892 ms
-taskset -c 0 ./castella --num-threads=1 /tmp/tmp.wn3MDFgaeZ/test.txt                  137.483 ms
-taskset -c 0 xxhsum --tag -H0 /tmp/tmp.wn3MDFgaeZ/test.txt                            143.601 ms
-taskset -c 0 uu-cksum --algorithm sha1                  /tmp/tmp.wn3MDFgaeZ/test.txt  219.378 ms
-taskset -c 0 cksum --algorithm sha1              /tmp/tmp.wn3MDFgaeZ/test.txt         228.765 ms
-taskset -c 0 uu-cksum --algorithm bsd                   /tmp/tmp.wn3MDFgaeZ/test.txt  230.456 ms
-taskset -c 0 openssl dgst -SHA-1                /tmp/tmp.wn3MDFgaeZ/test.txt          231.022 ms
-taskset -c 0 cksum --algorithm sha2 --length 256 /tmp/tmp.wn3MDFgaeZ/test.txt         241.774 ms
-taskset -c 0 uu-cksum --algorithm sha2 --length 224     /tmp/tmp.wn3MDFgaeZ/test.txt  242.292 ms
-taskset -c 0 uu-cksum --algorithm sha2 --length 256     /tmp/tmp.wn3MDFgaeZ/test.txt  243.626 ms
-taskset -c 0 cksum --algorithm sha2 --length 224 /tmp/tmp.wn3MDFgaeZ/test.txt         247.052 ms
-taskset -c 0 openssl dgst -SHA2-224             /tmp/tmp.wn3MDFgaeZ/test.txt          251.178 ms
-taskset -c 0 openssl dgst -SHA2-256             /tmp/tmp.wn3MDFgaeZ/test.txt          253.716 ms
-taskset -c 0 openssl dgst -SHA2-256/192         /tmp/tmp.wn3MDFgaeZ/test.txt          255.312 ms
-taskset -c 0 uu-cksum --algorithm blake2b               /tmp/tmp.wn3MDFgaeZ/test.txt  341.646 ms
-taskset -c 0 cksum --algorithm blake2b           /tmp/tmp.wn3MDFgaeZ/test.txt         432.939 ms
-taskset -c 0 openssl dgst -BLAKE2B-512          /tmp/tmp.wn3MDFgaeZ/test.txt          436.332 ms
-taskset -c 0 cksum --algorithm md5               /tmp/tmp.wn3MDFgaeZ/test.txt         484.410 ms
-taskset -c 0 uu-cksum --algorithm md5                   /tmp/tmp.wn3MDFgaeZ/test.txt  489.228 ms
-taskset -c 0 openssl dgst -MD5                  /tmp/tmp.wn3MDFgaeZ/test.txt          497.003 ms
-taskset -c 0 uu-cksum --algorithm sha2 --length 384     /tmp/tmp.wn3MDFgaeZ/test.txt  518.753 ms
-taskset -c 0 uu-cksum --algorithm sha2 --length 512     /tmp/tmp.wn3MDFgaeZ/test.txt  518.782 ms
-taskset -c 0 cksum --algorithm sha2 --length 384 /tmp/tmp.wn3MDFgaeZ/test.txt         522.270 ms
-taskset -c 0 openssl dgst -SHA2-512/256         /tmp/tmp.wn3MDFgaeZ/test.txt          530.214 ms
-taskset -c 0 cksum --algorithm sha2 --length 512 /tmp/tmp.wn3MDFgaeZ/test.txt         530.609 ms
-taskset -c 0 openssl dgst -SHA2-512             /tmp/tmp.wn3MDFgaeZ/test.txt          531.621 ms
-taskset -c 0 openssl dgst -SHA2-384             /tmp/tmp.wn3MDFgaeZ/test.txt          534.015 ms
-taskset -c 0 openssl dgst -SHA2-512/224         /tmp/tmp.wn3MDFgaeZ/test.txt          537.656 ms
-taskset -c 0 cksum --algorithm bsd               /tmp/tmp.wn3MDFgaeZ/test.txt         552.768 ms
-taskset -c 0 openssl dgst -SHAKE-128 -xoflen 32 /tmp/tmp.wn3MDFgaeZ/test.txt          629.504 ms
-taskset -c 0 openssl dgst -KECCAK-KMAC-128      /tmp/tmp.wn3MDFgaeZ/test.txt          639.067 ms
-taskset -c 0 openssl dgst -BLAKE2S-256          /tmp/tmp.wn3MDFgaeZ/test.txt          666.559 ms
-taskset -c 0 openssl dgst -MD5-SHA1             /tmp/tmp.wn3MDFgaeZ/test.txt          676.666 ms
-taskset -c 0 openssl dgst -SHA3-224             /tmp/tmp.wn3MDFgaeZ/test.txt          721.441 ms
-taskset -c 0 openssl dgst -KECCAK-224           /tmp/tmp.wn3MDFgaeZ/test.txt          735.015 ms
-taskset -c 0 cksum --algorithm sha3 --length 224 /tmp/tmp.wn3MDFgaeZ/test.txt         737.993 ms
-taskset -c 0 uu-cksum --algorithm shake128 --length 256 /tmp/tmp.wn3MDFgaeZ/test.txt  767.796 ms
-taskset -c 0 openssl dgst -KECCAK-KMAC-256      /tmp/tmp.wn3MDFgaeZ/test.txt          769.993 ms
-taskset -c 0 cksum --algorithm sha3 --length 256 /tmp/tmp.wn3MDFgaeZ/test.txt         770.145 ms
-taskset -c 0 openssl dgst -SHA3-256             /tmp/tmp.wn3MDFgaeZ/test.txt          771.210 ms
-taskset -c 0 openssl dgst -SHAKE-256 -xoflen 64 /tmp/tmp.wn3MDFgaeZ/test.txt          772.312 ms
-taskset -c 0 openssl dgst -KECCAK-256           /tmp/tmp.wn3MDFgaeZ/test.txt          778.364 ms
-taskset -c 0 uu-cksum --algorithm sha3 --length 224     /tmp/tmp.wn3MDFgaeZ/test.txt  893.955 ms
-taskset -c 0 uu-cksum --algorithm sha3 --length 256     /tmp/tmp.wn3MDFgaeZ/test.txt  931.454 ms
-taskset -c 0 uu-cksum --algorithm shake256 --length 512 /tmp/tmp.wn3MDFgaeZ/test.txt  935.110 ms
-taskset -c 0 uu-cksum --algorithm sm3                   /tmp/tmp.wn3MDFgaeZ/test.txt  977.853 ms
-taskset -c 0 openssl dgst -KECCAK-384           /tmp/tmp.wn3MDFgaeZ/test.txt          991.087 ms
-taskset -c 0 cksum --algorithm sha3 --length 384 /tmp/tmp.wn3MDFgaeZ/test.txt         999.187 ms
-taskset -c 0 openssl dgst -SHA3-384             /tmp/tmp.wn3MDFgaeZ/test.txt          1002.362 ms
-taskset -c 0 openssl dgst -SM3                  /tmp/tmp.wn3MDFgaeZ/test.txt          1036.400 ms
-taskset -c 0 cksum --algorithm sm3               /tmp/tmp.wn3MDFgaeZ/test.txt         1065.245 ms
-taskset -c 0 openssl dgst -RIPEMD-160           /tmp/tmp.wn3MDFgaeZ/test.txt          1211.667 ms
-taskset -c 0 uu-cksum --algorithm sha3 --length 384     /tmp/tmp.wn3MDFgaeZ/test.txt  1215.228 ms
-taskset -c 0 openssl dgst -SHA3-512             /tmp/tmp.wn3MDFgaeZ/test.txt          1411.046 ms
-taskset -c 0 openssl dgst -KECCAK-512           /tmp/tmp.wn3MDFgaeZ/test.txt          1418.019 ms
-taskset -c 0 cksum --algorithm sha3 --length 512 /tmp/tmp.wn3MDFgaeZ/test.txt         1441.631 ms
-taskset -c 0 uu-cksum --algorithm sha3 --length 512     /tmp/tmp.wn3MDFgaeZ/test.txt  1735.337 ms
+./cch --chunk-size=131072 --mix-rate=0 /tmp/tmp.76Mq0HBNUC/test.txt                   13.263 ms
+./cch /tmp/tmp.76Mq0HBNUC/test.txt                                                    14.363 ms
+./castella --chunk-size=131072 --rounds=3 /tmp/tmp.76Mq0HBNUC/test.txt                19.360 ms
+b3sum --tag /tmp/tmp.76Mq0HBNUC/test.txt                                              26.608 ms
+./castella --size=32 /tmp/tmp.76Mq0HBNUC/test.txt                                     28.041 ms
+./castella --size=48 /tmp/tmp.76Mq0HBNUC/test.txt                                     32.120 ms
+taskset -c 0 ./cch --num-threads=1      /tmp/tmp.76Mq0HBNUC/test.txt                  35.517 ms
+taskset -c 0 xxhsum --tag -H2 /tmp/tmp.76Mq0HBNUC/test.txt                            41.945 ms
+taskset -c 0 xxhsum --tag -H3 /tmp/tmp.76Mq0HBNUC/test.txt                            42.039 ms
+taskset -c 0 cksum --algorithm crc32b            /tmp/tmp.76Mq0HBNUC/test.txt         46.254 ms
+taskset -c 0 uu-cksum --algorithm crc                   /tmp/tmp.76Mq0HBNUC/test.txt  46.916 ms
+taskset -c 0 uu-cksum --algorithm crc32b                /tmp/tmp.76Mq0HBNUC/test.txt  47.055 ms
+./castella --size=64 /tmp/tmp.76Mq0HBNUC/test.txt                                     47.340 ms
+taskset -c 0 cksum --algorithm crc               /tmp/tmp.76Mq0HBNUC/test.txt         47.748 ms
+taskset -c 0 cksum --algorithm sysv              /tmp/tmp.76Mq0HBNUC/test.txt         57.180 ms
+taskset -c 0 xxhsum --tag -H1 /tmp/tmp.76Mq0HBNUC/test.txt                            60.447 ms
+taskset -c 0 uu-cksum --algorithm sysv                  /tmp/tmp.76Mq0HBNUC/test.txt  62.071 ms
+taskset -c 0 b3sum --tag --num-threads=1 /tmp/tmp.76Mq0HBNUC/test.txt                 124.807 ms
+taskset -c 0 b3sum --tag --no-mmap       /tmp/tmp.76Mq0HBNUC/test.txt                 127.792 ms
+taskset -c 0 uu-cksum --algorithm blake3                /tmp/tmp.76Mq0HBNUC/test.txt  129.081 ms
+taskset -c 0 ./castella --num-threads=1 /tmp/tmp.76Mq0HBNUC/test.txt                  138.714 ms
+taskset -c 0 xxhsum --tag -H0 /tmp/tmp.76Mq0HBNUC/test.txt                            145.289 ms
+taskset -c 0 uu-cksum --algorithm sha1                  /tmp/tmp.76Mq0HBNUC/test.txt  223.561 ms
+taskset -c 0 cksum --algorithm sha1              /tmp/tmp.76Mq0HBNUC/test.txt         230.479 ms
+taskset -c 0 uu-cksum --algorithm bsd                   /tmp/tmp.76Mq0HBNUC/test.txt  235.390 ms
+taskset -c 0 openssl dgst -SHA-1                /tmp/tmp.76Mq0HBNUC/test.txt          238.115 ms
+taskset -c 0 uu-cksum --algorithm sha2 --length 224     /tmp/tmp.76Mq0HBNUC/test.txt  244.363 ms
+taskset -c 0 uu-cksum --algorithm sha2 --length 256     /tmp/tmp.76Mq0HBNUC/test.txt  244.397 ms
+taskset -c 0 cksum --algorithm sha2 --length 256 /tmp/tmp.76Mq0HBNUC/test.txt         251.475 ms
+taskset -c 0 cksum --algorithm sha2 --length 224 /tmp/tmp.76Mq0HBNUC/test.txt         253.807 ms
+taskset -c 0 openssl dgst -SHA2-256/192         /tmp/tmp.76Mq0HBNUC/test.txt          258.025 ms
+taskset -c 0 openssl dgst -SHA2-224             /tmp/tmp.76Mq0HBNUC/test.txt          258.588 ms
+taskset -c 0 openssl dgst -SHA2-256             /tmp/tmp.76Mq0HBNUC/test.txt          260.298 ms
+taskset -c 0 uu-cksum --algorithm blake2b               /tmp/tmp.76Mq0HBNUC/test.txt  344.220 ms
+taskset -c 0 cksum --algorithm blake2b           /tmp/tmp.76Mq0HBNUC/test.txt         437.566 ms
+taskset -c 0 openssl dgst -BLAKE2B-512          /tmp/tmp.76Mq0HBNUC/test.txt          443.519 ms
+taskset -c 0 uu-cksum --algorithm md5                   /tmp/tmp.76Mq0HBNUC/test.txt  486.196 ms
+taskset -c 0 cksum --algorithm md5               /tmp/tmp.76Mq0HBNUC/test.txt         496.426 ms
+taskset -c 0 openssl dgst -MD5                  /tmp/tmp.76Mq0HBNUC/test.txt          502.930 ms
+taskset -c 0 uu-cksum --algorithm sha2 --length 512     /tmp/tmp.76Mq0HBNUC/test.txt  529.380 ms
+taskset -c 0 uu-cksum --algorithm sha2 --length 384     /tmp/tmp.76Mq0HBNUC/test.txt  530.342 ms
+taskset -c 0 openssl dgst -SHA2-512             /tmp/tmp.76Mq0HBNUC/test.txt          535.209 ms
+taskset -c 0 openssl dgst -SHA2-512/256         /tmp/tmp.76Mq0HBNUC/test.txt          535.508 ms
+taskset -c 0 openssl dgst -SHA2-512/224         /tmp/tmp.76Mq0HBNUC/test.txt          539.432 ms
+taskset -c 0 openssl dgst -SHA2-384             /tmp/tmp.76Mq0HBNUC/test.txt          539.899 ms
+taskset -c 0 cksum --algorithm sha2 --length 384 /tmp/tmp.76Mq0HBNUC/test.txt         547.075 ms
+taskset -c 0 cksum --algorithm sha2 --length 512 /tmp/tmp.76Mq0HBNUC/test.txt         548.956 ms
+taskset -c 0 cksum --algorithm bsd               /tmp/tmp.76Mq0HBNUC/test.txt         562.640 ms
+taskset -c 0 openssl dgst -SHAKE-128 -xoflen 32 /tmp/tmp.76Mq0HBNUC/test.txt          637.201 ms
+taskset -c 0 openssl dgst -KECCAK-KMAC-128      /tmp/tmp.76Mq0HBNUC/test.txt          645.048 ms
+taskset -c 0 openssl dgst -BLAKE2S-256          /tmp/tmp.76Mq0HBNUC/test.txt          675.038 ms
+taskset -c 0 openssl dgst -MD5-SHA1             /tmp/tmp.76Mq0HBNUC/test.txt          691.248 ms
+taskset -c 0 openssl dgst -KECCAK-224           /tmp/tmp.76Mq0HBNUC/test.txt          734.655 ms
+taskset -c 0 openssl dgst -SHA3-224             /tmp/tmp.76Mq0HBNUC/test.txt          746.105 ms
+taskset -c 0 cksum --algorithm sha3 --length 224 /tmp/tmp.76Mq0HBNUC/test.txt         762.903 ms
+taskset -c 0 uu-cksum --algorithm shake128 --length 256 /tmp/tmp.76Mq0HBNUC/test.txt  770.467 ms
+taskset -c 0 openssl dgst -SHA3-256             /tmp/tmp.76Mq0HBNUC/test.txt          782.572 ms
+taskset -c 0 openssl dgst -SHAKE-256 -xoflen 64 /tmp/tmp.76Mq0HBNUC/test.txt          785.308 ms
+taskset -c 0 openssl dgst -KECCAK-KMAC-256      /tmp/tmp.76Mq0HBNUC/test.txt          789.598 ms
+taskset -c 0 openssl dgst -KECCAK-256           /tmp/tmp.76Mq0HBNUC/test.txt          789.799 ms
+taskset -c 0 cksum --algorithm sha3 --length 256 /tmp/tmp.76Mq0HBNUC/test.txt         804.486 ms
+taskset -c 0 uu-cksum --algorithm sha3 --length 224     /tmp/tmp.76Mq0HBNUC/test.txt  900.025 ms
+taskset -c 0 uu-cksum --algorithm shake256 --length 512 /tmp/tmp.76Mq0HBNUC/test.txt  947.613 ms
+taskset -c 0 uu-cksum --algorithm sha3 --length 256     /tmp/tmp.76Mq0HBNUC/test.txt  954.306 ms
+taskset -c 0 uu-cksum --algorithm sm3                   /tmp/tmp.76Mq0HBNUC/test.txt  995.566 ms
+taskset -c 0 openssl dgst -KECCAK-384           /tmp/tmp.76Mq0HBNUC/test.txt          1019.176 ms
+taskset -c 0 openssl dgst -SHA3-384             /tmp/tmp.76Mq0HBNUC/test.txt          1021.210 ms
+taskset -c 0 cksum --algorithm sha3 --length 384 /tmp/tmp.76Mq0HBNUC/test.txt         1045.876 ms
+taskset -c 0 openssl dgst -SM3                  /tmp/tmp.76Mq0HBNUC/test.txt          1053.294 ms
+taskset -c 0 cksum --algorithm sm3               /tmp/tmp.76Mq0HBNUC/test.txt         1094.641 ms
+taskset -c 0 openssl dgst -RIPEMD-160           /tmp/tmp.76Mq0HBNUC/test.txt          1230.413 ms
+taskset -c 0 uu-cksum --algorithm sha3 --length 384     /tmp/tmp.76Mq0HBNUC/test.txt  1249.042 ms
+taskset -c 0 openssl dgst -KECCAK-512           /tmp/tmp.76Mq0HBNUC/test.txt          1433.044 ms
+taskset -c 0 openssl dgst -SHA3-512             /tmp/tmp.76Mq0HBNUC/test.txt          1442.901 ms
+taskset -c 0 cksum --algorithm sha3 --length 512 /tmp/tmp.76Mq0HBNUC/test.txt         1476.456 ms
+taskset -c 0 uu-cksum --algorithm sha3 --length 512     /tmp/tmp.76Mq0HBNUC/test.txt  1768.462 ms
 
 EOT

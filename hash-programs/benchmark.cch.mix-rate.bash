@@ -8,6 +8,9 @@ test -x cch || exit
 source ./benchmark-common.bash
 
 # Vary --mix-rate
+#
+# At the default 64 KiB chunk, a leaf takes 257 absorptions, so a higher rate
+# never mixes in a leaf, and those rows should match --mix-rate=0.
 CSV="${OUTPUT_DIR}/benchmark.cch.mix-rate.${DATETIME}.csv"
 "${PIN_CMD[@]}" hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
     --export-csv "$CSV" \

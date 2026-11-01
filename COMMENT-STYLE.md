@@ -239,6 +239,9 @@ not a line count, so a brief that still runs past the column limit wraps onto a
 second line.  Rule 23b covers what a wrapped brief needs from the doc
 generator.
 
+A doc comment for a file needs `\file`, inside the `/** ... */` if there is one.
+Without it, Doxygen gives the comment to whatever follows and reports nothing.
+
 **23a. A Doxygen brief takes no terminating period.**  That holds whether the
 brief reads as a noun phrase or as a full sentence, so every brief in a file
 ends the same way.  A `///<` trailing brief follows the same rule.  Detail

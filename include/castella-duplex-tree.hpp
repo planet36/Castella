@@ -131,7 +131,7 @@ public:
     * \param chunk_size_bytes the size (in bytes) of a full chunk, which is
     *        digest-relevant since different chunk sizes give different digests
     * \param num_threads the number of worker threads to use, where 0 means
-    *        one per hardware thread
+    *        one per hardware thread, or fewer in the streaming pool
     * \exception std::invalid_argument if any parameter is invalid
     * \exception std::range_error if \a capacity_blocks, \a num_rounds, or
     *            \a input_suffix does not fit the \c Duplex member it

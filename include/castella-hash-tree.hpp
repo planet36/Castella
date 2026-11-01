@@ -169,11 +169,11 @@ concept tree_node_policy = requires (const P p,
 *
 * 2. **Streaming (pipeline) path.**  When input arrives in pieces too small
 *    for the batch path, such as a 32 KiB read loop feeding 64 KiB chunks, a
-*    persistent pool of NUM_THREADS workers hashes leaves *while the calling
-*    thread goes back for more input*.  Each completed chunk is placed in
-*    the next slot of a fixed ring of preallocated slots, a worker hashes
-*    the slot's chunk to its CV in place, and the calling thread drains the
-*    ring oldest-slot-first, so always in index order, into the final node.
+*    persistent pool of NUM_POOL_THREADS workers hashes leaves *while the
+*    calling thread goes back for more input*.  Each completed chunk is
+*    placed in the next slot of a fixed ring of preallocated slots, a worker
+*    hashes the slot's chunk to its CV in place, and the calling thread drains
+*    the ring oldest-slot-first, so always in index order, into the final node.
 *    The fixed ring size is itself the bound on in-flight chunks, the
 *    backpressure.  See \c dispatch_leaf_().
 *
@@ -281,11 +281,11 @@ private:
 
     /// The number of chunks that must be seen before the worker pool starts
     /**
-    * Spinning up the pool costs NUM_THREADS thread spawns, roughly a hundred
-    * microseconds, which a short stream can never earn back.  A stream's
-    * total size is unknown in advance.  So the first few leaf chunks are
-    * hashed inline on the calling thread, and the pool starts only once this
-    * many chunks have gone by, which is evidence that the stream is long
+    * Spinning up the pool costs NUM_POOL_THREADS thread spawns, roughly a
+    * hundred microseconds, which a short stream can never earn back.  A
+    * stream's total size is unknown in advance.  So the first few leaf chunks
+    * are hashed inline on the calling thread, and the pool starts only once
+    * this many chunks have gone by, which is evidence that the stream is long
     * enough to care about.
     */
     static constexpr int MIN_CHUNKS_BEFORE_POOL_START = 4;
@@ -321,6 +321,15 @@ private:
         pair.add(data, data);
         p.extract_cv_x2(pair, cv_dst, cv_dst);
     };
+
+    /// The most streaming pool workers that an automatic thread count starts
+    /**
+    * The calling thread must copy or buffer every chunk, so the pool plateaus
+    * after a few workers.  Past that, more workers and their ring slots
+    * measured slower, not just no faster.  A paired worker hashes two chunks at
+    * a time, so it plateaus sooner.  An explicit thread count is used as given.
+    */
+    static constexpr int AUTO_POOL_THREADS_MAX = HAS_PAIRED_LEAF ? 2 : 4;
 
     /// The node parameters, kept to construct leaves on demand
     /**
@@ -486,9 +495,17 @@ public:
     /**
     * Resolved at construction, where 0 means one thread per hardware
     * thread.  It controls only how many cores may compute leaf CVs
-    * concurrently.
+    * concurrently.  The streaming pool may use fewer (see
+    * \c NUM_POOL_THREADS).
     */
     const int32_t NUM_THREADS;
+
+    /// The number of workers in the streaming pool
+    /**
+    * This is \c NUM_THREADS, except that an automatic thread count stops at
+    * \c AUTO_POOL_THREADS_MAX.  The ring's size follows it.
+    */
+    const int32_t NUM_POOL_THREADS;
 
 private:
     /// Check and return the chunk size
@@ -794,7 +811,7 @@ private:
     */
     [[nodiscard]] auto ring_capacity_() const noexcept
     {
-        return (HAS_PAIRED_LEAF ? 4 : 2) * NUM_THREADS;
+        return (HAS_PAIRED_LEAF ? 4 : 2) * NUM_POOL_THREADS;
     }
 
     /// The ring slot for monotonic position \a pos
@@ -831,9 +848,9 @@ private:
             slot.cv.resize(CV_LEN);
         }
 
-        pool_workers_.reserve(NUM_THREADS);
+        pool_workers_.reserve(NUM_POOL_THREADS);
 
-        for (int32_t t = 0; t < NUM_THREADS; ++t)
+        for (int32_t t = 0; t < NUM_POOL_THREADS; ++t)
         {
             pool_workers_.emplace_back([this] { pool_worker_loop_(); });
         }
@@ -1676,7 +1693,7 @@ private:
     * \param chunk_size_bytes the size (in bytes) of a full chunk, which is
     *        digest-relevant since different chunk sizes give different digests
     * \param num_threads the number of worker threads to use, where 0 means
-    *        one per hardware thread
+    *        one per hardware thread, or fewer in the streaming pool
     * \exception std::invalid_argument if any parameter is invalid
     * \note The final node is constructed before \a chunk_size_bytes and
     *       \a num_threads are checked, so whatever the node constructor
@@ -1687,7 +1704,9 @@ private:
     final_node_{policy_.make_node()},
     CHUNK_SIZE{check_chunk_size_(chunk_size_bytes)},
     CV_LEN{narrow_cast<decltype(CV_LEN)>(policy_.cv_len(final_node_))},
-    NUM_THREADS{resolve_num_threads_(num_threads)}
+    NUM_THREADS{resolve_num_threads_(num_threads)},
+    NUM_POOL_THREADS((num_threads == 0) ? std::min<int32_t>(NUM_THREADS, AUTO_POOL_THREADS_MAX)
+                                        : NUM_THREADS)
     {
         // Reserve once so absorption never reallocates (and so the
         // destructor has a single stable allocation to zeroize).

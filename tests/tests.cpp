@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 /// The number of runtime checks \c main is expected to make
@@ -35,9 +36,9 @@
 * contributes 5, so the total depends on the target.
 */
 #if defined(__x86_64__) && defined(__VAES__) && defined(__AVX2__)
-constexpr int EXPECTED_CHECKS = 77;
+constexpr int EXPECTED_CHECKS = 85;
 #else
-constexpr int EXPECTED_CHECKS = 72;
+constexpr int EXPECTED_CHECKS = 80;
 #endif
 
 /// The number of runtime checks made so far
@@ -694,7 +695,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             //       buffering
             for (const int piece_size : {512, 1024, 2500})
             {
-                for (const int num_threads : {2, 4})
+                // 0 is the automatic thread count, which caps the pool
+                for (const int num_threads : {0, 2, 4})
                 {
                     Castella::DuplexTree tree(capacity_blocks, num_rounds, input_suffix,
                                               function_name, customization_str, chunk_size,
@@ -707,6 +709,28 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                     }
                     CHECK(tree.squeeze_bytes() == expected);
                 }
+            }
+
+            {
+                // Test that an explicit thread count sizes the pool as given,
+                // while the automatic count caps only the pool.
+                const auto make_tree = [&](const int num_threads)
+                {
+                    return Castella::DuplexTree(capacity_blocks, num_rounds, input_suffix,
+                                                function_name, customization_str, chunk_size,
+                                                num_threads);
+                };
+
+                CHECK(make_tree(8).NUM_THREADS == 8);
+                CHECK(make_tree(8).NUM_POOL_THREADS == 8);
+
+                const int num_hw_threads =
+                    std::clamp(static_cast<int>(std::thread::hardware_concurrency()), 1,
+                               Castella::DuplexTree::NUM_THREADS_MAX);
+
+                CHECK(make_tree(0).NUM_THREADS == num_hw_threads);
+                CHECK(make_tree(0).NUM_POOL_THREADS <= 4);
+                CHECK(make_tree(0).NUM_POOL_THREADS <= num_hw_threads);
             }
 
             {

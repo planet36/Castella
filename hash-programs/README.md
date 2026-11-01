@@ -9,7 +9,7 @@ Both programs read from standard input when FILE is absent or `-`.
 
 Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `compress_castella_tree`, two instantiations of the same `Castella::HashTree` layer), so the work can be spread across CPU cores with `--num-threads=NUM`, where 0, the default, means one thread per hardware thread.  The digest never depends on the thread count or the I/O mode.  It does depend on `--chunk-size`, which both programs default to 64 KiB.
 
-Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but the reading thread limits their throughput.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread, because a CCH node hashes a chunk faster than the chunk could be handed to another core.
+Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but the reading thread limits their throughput, so `--num-threads=0` stops at 2 threads for them, or 4 without VAES.  An explicit count is used as given.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread, because a CCH node hashes a chunk faster than the chunk could be handed to another core.
 
 On x86-64 with VAES, both programs also hash leaf chunks two at a time per thread.  `castella` packs two duplex states into the two 128-bit lanes of ymm registers, and `cch` interleaves two nodes' compression chains in one loop, since a lone cch node is latency-bound.  Every single-state Castella permutation also runs register-resident in a folded ymm representation.  Like the thread count, none of this ever affects the digest.
 
@@ -106,9 +106,10 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent, and the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
-These claims were last verified on 2026-11-01, on a 512 MiB input:
+These claims were last verified on 2026-11-01:
 
-* The 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
+* On a 512 MiB input, the 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
+* On a 500 MiB input, `castella --no-mmap` and piped input were fastest at 2 threads.  The default `--num-threads=0`, which stops at 2 threads for them, was ~9% and ~20% faster than 8 threads.
 
 These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
 
@@ -118,7 +119,6 @@ These claims were last verified against a full run of `benchmark.hash-programs.b
 
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size:
 
-* `castella --no-mmap` and piped input were fastest at 2 threads.  More threads made piped input clearly slower and `--no-mmap` slightly slower.
 * Streamed `cch` times were identical across thread counts (within 1%).
 * The default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower).
 * For `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned.

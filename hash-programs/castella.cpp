@@ -83,7 +83,7 @@ inline constexpr std::string_view default_customization_str = "hash";
 // Different chunk sizes give different digests.
 inline constexpr int default_chunk_size = Castella::DuplexTree::DEFAULT_CHUNK_SIZE;
 
-// 0 means one worker thread per available hardware thread.
+// 0 means one worker thread per available hardware thread, or fewer for streamed input.
 inline constexpr int default_num_threads = 0;
 // }}}
 
@@ -253,8 +253,9 @@ print_usage()
     std::println("  --num-threads=NUM");
     std::println("                        Specify the maximum number of worker threads that hash");
     std::println("                        chunks.  0 means one thread per available hardware");
-    std::println("                        thread.  The digest does not depend on the number of");
-    std::println("                        threads.");
+    std::println("                        thread, or fewer with --no-mmap or piped input, where");
+    std::println("                        more threads are slower.  The digest does not depend");
+    std::println("                        on the number of threads.");
     std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
                  Castella::DuplexTree::NUM_THREADS_MAX);
 

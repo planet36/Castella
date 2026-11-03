@@ -1097,8 +1097,8 @@ private:
     /**
     * Must be called before absorbing anything into the final node by any
     * other route, such as a batch's CVs, the trailing chunk's CV, or the
-    * chunk count.  Otherwise CVs would be absorbed out of index order, and
-    * the digest would depend on timing.
+    * chunk count.  Calling it later would absorb CVs out of index order,
+    * and the digest would depend on timing.
     */
     void drain_pending_cvs_()
     {
@@ -1519,7 +1519,7 @@ private:
             // Overlap the final node's serial work with the workers'
             // parallel leaf hashing.  The two cases are mutually exclusive.
             // If this batch starts at chunk 0, nothing was ever pipelined,
-            // because dispatching requires an earlier chunk.  Otherwise chunk
+            // because dispatching requires an earlier chunk.  Otherwise, chunk
             // 0 is long gone, and the streaming pipeline may hold CVs of
             // earlier chunks, which must enter the final node before this
             // batch's CVs.

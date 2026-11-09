@@ -81,6 +81,7 @@ them, and why nothing in this file should run during one.
 | `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`) | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
 | `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
+| `research/aes_enc-uniformity-verify.cpp` | the two real-AES uniformity facts the 6-round zero-sum's 2^896 form rests on, by exhaustive enumeration | §7 |
 | `research/permute-degree-bound.py` | the degree bound (2043 after 2 rounds), and degree-based zero-sum reach 4 rounds | §1 |
 | `research/duplex-prng-stream.cpp` + PractRand | the statistical smoke test (16 GiB, no anomalies) | §7 |
 | `research/simd_compress_aes_enc-num_rounds.cpp` | cch's per-input diffusion figure (~50% at 3 AES rounds), the evidence for a non-claim | §7 |
@@ -480,6 +481,7 @@ python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
 ./permute-zero_sum-analog-verify                  # 3 m 9 s (~10 s with -q, skipping 2^32 cases)
+./aes_enc-uniformity-verify                       # 2.2 minutes
 
 # Do not run --inside-out 2 2 -c rowcol at full width.  No target block is
 # trivially balanced at 2 rounds, so it is 4096 solves, and the per-bit cost was

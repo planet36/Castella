@@ -54,21 +54,35 @@
 * count.  One round more at an end leaves the blocks dependent, which the
 * counting cannot follow.  So each control gives every phase a 4th AES round,
 * past the 3 that the argument's per-cell uniformity is proved for.
+*
+* The last table checks the obstruction to a 7th round.  A 7th round would
+* need some AES phase E to have a nonconstant function of a block that is a
+* sum of functions of its two AES columns and also a sum of functions of the
+* two AES diagonals of its image under E.  \c coarsening_dimension counts
+* those functions, and the claim is that one AES round leaves some and that 2
+* or more leave none.  Every phase is checked under both seeds.  Two controls
+* have known answers.  With no AES rounds, the count must be 60, since the
+* functions of a single cell give 15 dimensions for each of the 4 cells.  For
+* a random permutation, it must be 0.
 */
 
 #include "parse_int.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <err.h>
 #include <exception>
+#include <format>
 #include <numeric>
 #include <print>
 #include <random>
+#include <span>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <unistd.h>
@@ -643,6 +657,82 @@ uniform(const std::array<std::vector<int64_t>, NUM_BLOCKS>& counts)
                                                             { return x == c[0]; }); });
 }
 
+inline constexpr int CELL_PAIR_VALUES = CELL_VALUES * CELL_VALUES;
+inline constexpr int COARSENING_UNKNOWNS = 4 * CELL_PAIR_VALUES;
+inline constexpr int COARSENING_WORDS = BLOCK_VALUES / 64;
+
+/// The dimension, modulo constants, of the block functions coarse on both sides of \a e
+/**
+* A function phi is coarse on both sides when
+* phi(x) = f0(x0, x1) + f1(x2, x3) over the AES columns of x and also
+* phi(x) = g0(y0, y3) + g1(y1, y2) over the AES diagonals of y = e(x), where
+* x_k is cell k.  Every function takes values in GF(2), so the 1024 values
+* of the four functions are the unknowns of one linear system, with an
+* equation for each of the 65,536 values of x.
+*
+* Three dimensions of the solutions give a constant phi.  Two of them move a
+* constant between f0 and f1 or between g0 and g1, which leaves phi
+* unchanged, and the third is phi = 1.  So the dimension returned is the
+* nullity minus 3.
+*/
+[[nodiscard]] static int
+coarsening_dimension(const std::vector<block_t>& e)
+{
+    // Vector j holds unknown j's coefficient in every equation, one bit per x.
+    std::vector<uint64_t> vecs(static_cast<size_t>(COARSENING_UNKNOWNS) * COARSENING_WORDS);
+    for (int x = 0; x < BLOCK_VALUES; ++x)
+    {
+        const auto bx = static_cast<block_t>(x);
+        const block_t y = e[x];
+        const auto pair = [](const block_t b, const int lo, const int hi)
+        { return static_cast<int>(cell(b, lo) | (cell(b, hi) << 4U)); };
+        const std::array<int, 4> unknowns{
+            pair(bx, 0, 1),
+            CELL_PAIR_VALUES + pair(bx, 2, 3),
+            (2 * CELL_PAIR_VALUES) + pair(y, 0, 3),
+            (3 * CELL_PAIR_VALUES) + pair(y, 1, 2),
+        };
+        for (const int j : unknowns)
+        {
+            const size_t word = (static_cast<size_t>(j) * COARSENING_WORDS) + (x / 64);
+            vecs[word] |= uint64_t{1} << (x % 64);
+        }
+    }
+
+    // Gaussian elimination, keying each basis vector by its highest set bit
+    std::vector<int> pivot(BLOCK_VALUES, -1);
+    int rank = 0;
+    const std::span all(vecs);
+    for (int j = 0; j < COARSENING_UNKNOWNS; ++j)
+    {
+        const auto v = all.subspan(static_cast<size_t>(j) * COARSENING_WORDS, COARSENING_WORDS);
+        int w = COARSENING_WORDS - 1;
+        while (true)
+        {
+            while (w >= 0 && v[w] == 0)
+                --w;
+            if (w < 0)
+                break;
+            const int h = (64 * w) + 63 - std::countl_zero(v[w]);
+            if (pivot[h] < 0)
+            {
+                pivot[h] = j;
+                ++rank;
+                break;
+            }
+            const auto b =
+                all.subspan(static_cast<size_t>(pivot[h]) * COARSENING_WORDS, COARSENING_WORDS);
+            for (int k = 0; k <= w; ++k)
+                v[k] ^= b[k];
+        }
+    }
+
+    const int nullity = COARSENING_UNKNOWNS - rank;
+    if (nullity < 3)
+        errx(EXIT_FAILURE, "the coarsening system lost a constant solution");
+    return nullity - 3;
+}
+
 /// Check the building blocks against what they must satisfy
 static void
 self_test()
@@ -844,6 +934,70 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         }
     }
 
+    std::println("\nfunctions of one block coarse on both sides of an AES phase (the 7-round "
+                 "obstruction), over all {} phases", MAX_ROUNDS * NUM_BLOCKS);
+    std::println("AES rounds  seed  dimension  expected  verdict       time");
+    for (const int s : {seed, seed + 1})
+    {
+        for (int aes_rounds = 0; aes_rounds <= MAX_AES_ROUNDS; ++aes_rounds)
+        {
+            const auto t0 = std::chrono::steady_clock::now();
+            const phase_tables tables(static_cast<uint64_t>(s), aes_rounds);
+            std::vector<int> dims(static_cast<size_t>(MAX_ROUNDS) * NUM_BLOCKS);
+            std::vector<std::thread> threads;
+            threads.reserve(static_cast<size_t>(num_threads));
+            for (int t = 0; t < num_threads; ++t)
+            {
+                threads.emplace_back([&, t]
+                {
+                    std::vector<block_t> e(BLOCK_VALUES);
+                    for (int p = t; p < std::ssize(dims); p += num_threads)
+                    {
+                        for (int v = 0; v < BLOCK_VALUES; ++v)
+                            e[v] = tables.block(false, p / NUM_BLOCKS, p % NUM_BLOCKS,
+                                                static_cast<block_t>(v));
+                        dims[p] = coarsening_dimension(e);
+                    }
+                });
+            }
+            for (auto& th : threads)
+                th.join();
+            const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - t0;
+
+            const auto [lo, hi] = std::ranges::minmax(dims);
+            const std::string range =
+                lo == hi ? std::format("{}", lo) : std::format("{}-{}", lo, hi);
+            std::string_view expected = "0";
+            bool ok = hi == 0;
+            if (aes_rounds == 0)
+            {
+                expected = "60";
+                ok = lo == 60 && hi == 60;
+            }
+            else if (aes_rounds == 1)
+            {
+                expected = "> 0";
+                ok = lo > 0;
+            }
+            ++num_cases;
+            num_failed += static_cast<int>(!ok);
+            std::println("{:>10}  {:>4}  {:>9}  {:>8}  {:<12}  {:.1f} s{}", aes_rounds, s,
+                         range, expected, hi == 0 ? "none" : "some", elapsed.count(),
+                         ok ? "" : "  <-- UNEXPECTED");
+        }
+
+        // A random permutation of the block is the generic case.
+        std::vector<block_t> e(BLOCK_VALUES);
+        std::ranges::iota(e, block_t{0});
+        std::mt19937_64 rng(static_cast<uint64_t>(s));
+        std::ranges::shuffle(e, rng);
+        const int dim = coarsening_dimension(e);
+        ++num_cases;
+        num_failed += static_cast<int>(dim != 0);
+        std::println("{:>10}  {:>4}  {:>9}  {:>8}  {:<12}{}", "random", s, dim, "0",
+                     dim == 0 ? "none" : "some", dim == 0 ? "" : "  <-- UNEXPECTED");
+    }
+
     if (num_failed != 0)
     {
         std::println("FAILED: {} of {} cases disagree with their expectation", num_failed,
@@ -851,6 +1005,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::println("passed: {} cases, every construction a zero-sum and every control not", num_cases);
+    std::println("passed: {} cases, each as expected", num_cases);
     return 0;
 }

@@ -321,8 +321,8 @@ then attack it.
       move/copy, exception safety, and any `reserve`/index path reachable from input length.
 - [ ] **`unique_fd.hpp` / mmap (`hash-programs`).** fd leaks, double-close, mmap of 0-length /
       truncated / concurrently-modified files, `MAP_FAILED` handling, `fd-utils.h`.
-- [ ] **The streaming pool.**  Ring slot lifecycle (2×/4× NUM_POOL_THREADS), backpressure bound as a
-      real limit not a hang, lazy start / shutdown, exceptions crossing thread boundaries,
+- [ ] **The streaming pool.**  Ring slot lifecycle (2×/4× NUM_POOL_THREADS), backpressure bound
+      as a real limit not a hang, lazy start / shutdown, exceptions crossing thread boundaries,
       `add()`-after-finalize throwing, and no data race on the slot ring or CV buffers.
 - [ ] **`http-prng-service` request handling (local pool).**  The `n` parameter parse, no
       unbounded allocation, no reflected input, error paths don't leak state, `getentropy`

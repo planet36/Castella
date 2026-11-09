@@ -152,7 +152,7 @@ A(6) = 290) have since been refuted.  Re-verification is **one-directional**, so
 *below* the recorded value refutes it and one *above* proves nothing.
 
 **Use HiGHS, not CBC.**  It is the largest lever in this runbook.  CBC never proved N=16
-above r=3 at any limit up to 90 minutes.  HiGHS proves r=3 in **16 s** against CBC's 72 min,
+above r=3 at any limit up to 90 minutes.  HiGHS proves r=3 in **16 s** against CBC's 1.2 h,
 single-threaded, with a 0% gap and without the `gapAbs` trick, and then closes r=4, r=5, and
 r=6 outright.  The timings below are HiGHS's.  The script picks HiGHS whenever `highspy` is
 importable, and `--solver cbc` forces CBC.  **Before spending an hour on a larger `-t`,
@@ -171,13 +171,14 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 # Cross-solver check.  It re-proves a cell with the OTHER branch-and-bound on an
 # identical model, so a disagreement means a solver bug rather than a modeling one.
 # (Section 1's AES row checks the model.)  r=3 is the deepest cell CBC can close.  It
-# takes 16 s under HiGHS and ~72 min under CBC, and both must print 129 / optimal.
+# takes 16 s under HiGHS and ~1.2 h under CBC, and both must print 129 / optimal.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 7200 --solver cbc
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 3 -r 3 -t 600  --solver highs
 
 # N=16 under HiGHS: the whole column proves, in ~45 min for the set.
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 1 -r 6 -t 2400
-#   r=1..3 seconds; r=4 PROVEN 165 (262 s); r=5 PROVEN 234 (639 s); r=6 PROVEN 270 (1585 s)
+#   r=1..3 seconds; r=4 PROVEN 165 (4.4 min); r=5 PROVEN 234 (10.7 min);
+#   r=6 PROVEN 270 (26.5 min)
 # Under --solver cbc the same r=3 cell needs -t 7200 (72m) and r>=4 never proves.
 
 # r = 5, one cell at a time
@@ -187,9 +188,9 @@ Output is line-buffered, so a long run redirected to a file can be watched with 
 <pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 5 -r 5 -t 3300 # covered above (PROVEN 234)
 
 # r = 7 and r = 8 close too, but need well over 2 h.  Budget 6 h and walk away.
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 21600 # PROVEN 354 (7257 s)
-<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 21600 # PROVEN 390 (14,050 s)
-# Both were first run at -t 7200 and reported gaps of 9% and 28%.  r=7 needed 7257 s,
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 7 -r 7 -t 21600 # PROVEN 354 (2.1 h)
+<pulp> research/permute-min-active-sboxes.py -N 16 -a 3 --min-rounds 8 -r 8 -t 21600 # PROVEN 390 (4.0 h)
+# Both were first run at -t 7200 and reported gaps of 9% and 28%.  r=7 needed 2.1 h,
 # so it was cut off 57 SECONDS before closing.  A duality gap is not a progress bar, so
 # do not infer remaining time from it.
 
@@ -215,7 +216,7 @@ python3 permute-trail-search.py -r 5 --patterns 1 -t 3300 --no-minimize -M 4000 
 
 # Soundness gate for --fresh-instances, at r = 1, the one round count where the
 # enumeration closes.  It must return the SAME 1048 trails as the r = 1 command above
-# and report complete.  Budget 7576 s, because the flag rebuilds the model per trail.
+# and report complete.  Budget 2.2 h, because the flag rebuilds the model per trail.
 # That rebuild is why the flag is required above r = 1 and costly at r = 1 (README.md's
 # notes compare the two).  Run this when the flag's behavior is in doubt, never as part
 # of a routine refresh.
@@ -235,7 +236,7 @@ python3 permute-trail-search.py -r 2 --patterns 1 -t 900 -M 1500 --no-minimize \
 # The totalizer is required here.  Under the pb default the shells return NOTHING at
 # r = 2, missing even the weight-302 trail that provably satisfies them.  Lower the
 # shell to descend, and raise it to refute.  Caps 292 (-10) and 290 time out, while caps
-# 285, 280, 275, and 270 come back UNSAT and COMPLETE in 87-141 s, so this
+# 285, 280, 275, and 270 come back UNSAT and COMPLETE in 1.5-2.4 min, so this
 # differential's own minimum is in [286, 293].  At r = 2 refutation is the cheap
 # direction and satisfiability the expensive one, the inverse of every other round count.
 
@@ -252,7 +253,7 @@ python3 permute-trail-search.py -r 4 -A 165 --patterns 8 --no-minimize -t 600 -M
 # anything new.
 #
 # Budget by elapsed time, not by the printed per-pattern solve times.  Those cover
-# check() alone, and the untimed model build before each is the larger share (~100 s per
+# check() alone, and the untimed model build before each is the larger share (~1.7 min per
 # pattern at r = 3 against a printed ~8 s).  Keep each batch inside the 8-process cap.
 for K in 0 1 2 3 4 5 6 7; do    # r = 4, ~50 min wall: five trails tie at 1151
     python3 permute-trail-search.py -r 4 -A 165 --patterns 16 --random-seed "$K" \
@@ -283,11 +284,11 @@ python3 permute-trail-search.py -N 4 -r 5 --patterns 1 -t 900 --no-minimize --pr
 #
 # Afterwards check `proven_optimal` in each file.  Only `true` licenses 6*A as a floor,
 # and the 600 s default -t silently yields an incumbent at every one of these cells.
-<pulp> permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 639 s, proven 234
+<pulp> permute-min-active-sboxes.py --min-rounds 5 -r 5 -t 3600 --dump-pattern patterns/pat-r5.json  # 10.7 min, proven 234
 python3 permute-trail-search.py -r 5 --pattern-file patterns/pat-r5.json --no-minimize --random-seed 5 -M 2500  # 3m; trail 1633
 
 # The same two commands at r = 6, 7, and 8 (2026-08-05).  Raise -t past the MILP's own
-# solve times of 1585 s, 7257 s, and 14,050 s, since the 600 s default cuts all three
+# solve times of 26.5 min, 2.1 h, and 4.0 h, since the 600 s default cuts all three
 # off.  The '{r}' in --dump-pattern is required when solving more than one round count,
 # and each round count replaces it.  HiGHS uses one core on this model, so running the
 # three round counts as concurrent processes costs nothing over this sequential form.
@@ -325,10 +326,10 @@ bash permute-trail-ceilings.bash -n -e 6          # print the command instead of
 # differential and asks for a lighter characteristic inside the same pattern.  Every
 # ceiling from r = 3 to r = 8 rests on it.  Run it AFTER the sweep, which supplies the
 # differential to pin.  README.md in this directory has the full detail.
-python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 1387 s
-python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 459 s
+python3 permute-trail-search.py -r 3 -A 129 --patterns 13 --random-seed 11 --no-minimize --encoding rows --weight-encoding totalizer -t 14400 -M 2000 --cluster 1 --cluster-shell -17 --cluster-time-limit 14400  # 841 -> 824, 23.2 min
+python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --random-seed 2 --no-minimize --encoding rows --weight-encoding totalizer -t 3600 -M 2500 --cluster 1 --cluster-shell -30 --cluster-time-limit 3600  # 1887 -> 1857, 7.7 min
 # The other four have exactly this shape, with the seed and K from their row of the
-# table.  r = 4's descent took 2954 s.
+# table.  r = 4's descent took 49.3 min.
 #
 # Those two lines are the runs as they happened, so their budgets differ from the
 # script's defaults (-t and --cluster-time-limit 14400, -M 2500, overridable by
@@ -338,7 +339,7 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 #
 # A negative shell returning UNSAT is COMPLETE for that differential.  A timeout is
 # `unknown` and bounds nothing, and some timeouts are budget artifacts rather than
-# walls: r = 3's cap 824 timed out at 3600 s and solved in 1387 s at 14,400 s.
+# walls: r = 3's cap 824 timed out at 3600 s and solved in 23.2 min at 14,400 s.
 #
 # THEN ENUMERATE THE SHELL THE DESCENT STALLED IN, which produces the recorded
 # ceilings.  Use the same command with --cluster 500 --fresh-instances -t 14400.  A
@@ -352,7 +353,7 @@ python3 permute-trail-search.py -r 6 --pattern-file patterns/pat-r6.json --rando
 # trail, so `unknown` is never evidence of absence.
 #
 # Give r = 5 -M 4000.  At 2500 it ends `unknown: max. memory exceeded` after ONE trail,
-# 8628 s into its 14,400 s, so it is memory-bound rather than time-bound.
+# 2.4 h into its 14,400 s, so it is memory-bound rather than time-bound.
 #
 # All six ended INCOMPLETE, which costs a ceiling nothing but voids their DP sums.
 # Three returned their best trail last, which looked budget-limited, but re-running all
@@ -470,32 +471,32 @@ python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST re
 
 # The sponge reach.  C = 2 decides every capacity.  r = 2 MUST report a balanced
 # rate bit, which the block cube already implies.  Do not run r = 3 as a scan.  One
-# bit builds in 206 s, peaks at 7.6 GiB, and did not resolve within 8 h (2026-10-29),
+# bit builds in 3.5 min, peaks at 7.6 GiB, and did not resolve within 8 h (2026-10-29),
 # and a verdict needs all 1792 rate bits.
-python3 permute-division-property.py --sponge 2 -r 2  # 3 m 17 s, 2.3 GB peak
+python3 permute-division-property.py --sponge 2 -r 2  # 3.3 min, 2.3 GB peak
 
 # The inside-out zero-sums.  Part A checks the premises on the real state.  Part B
 # brute-forces the reach at reduced width, and its table must be IDENTICAL at
 # --reduced 2 and 3.  --rowcol adds the 4-round cube, at --reduced 2 only.
 python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
-python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
-./permute-zero_sum-analog-verify                  # 3 m 9 s (~10 s with -q, skipping 2^32 cases)
-./aes_enc-uniformity-verify                       # 2.2 minutes
+python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 6.5 min
+./permute-zero_sum-analog-verify                  # 3.2 min (~10 s with -q, skipping 2^32 cases)
+./aes_enc-uniformity-verify                       # 2.2 min
 
 # Do not run --inside-out 2 2 -c rowcol at full width.  No target block is
 # trivially balanced at 2 rounds, so it is 4096 solves, and the per-bit cost was
-# flat over block 0 (2026-10-29).  Forward took 1269 s a bit at 2.7 GiB, backward
-# 564 s and 660 s at 3.5 GiB, each after a 125-129 s build.  That is at least
+# flat over block 0 (2026-10-29).  Forward took 21.2 min a bit at 2.7 GiB, backward
+# 9.4 and 11.0 min at 3.5 GiB, each after a 2.1-2.2 min build.  That is at least
 # 1070 h serial.  --max-bits 1 checks block 0 bit 0 of each half instead, the
 # figure research/README.md quotes.  The first command MUST report both halves
 # balanced, and its control, the column without the row, MUST NOT.
 python3 permute-division-property.py --inside-out 2 2 -c rowcol --max-bits 1 -t 3600
 #   35 min, 3.5 GiB
 python3 permute-division-property.py -r 2 -c matrix-column --max-bits 1 -t 7200
-#   78 min, 4.5 GiB
+#   1.3 h, 4.5 GiB
 
-# Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~100 s per
+# Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~1.7 min per
 # stream.
 ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
 ./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB

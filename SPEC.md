@@ -361,7 +361,7 @@ Two MD-style failure modes are structurally absent:
 
   Block 0 lies in the rate at every capacity, so this distinguisher works through the sponge interface, with the capacity known or secret, and it sets the sponge reach at 2.
 
-  Forward, at 3 rounds the model resolves to **SAT** for both the single-block and the `two-blocks` cube (~6,200 s and ~2 h 19 m), which excludes a *full* 2048-bit zero-sum in that direction without proving anything about the permutation, since a SAT bounds only the technique.
+  Forward, at 3 rounds the model resolves to **SAT** for both the single-block and the `two-blocks` cube (~1.8 h and ~2.4 h), which excludes a *full* 2048-bit zero-sum in that direction without proving anything about the permutation, since a SAT bounds only the technique.
 
   **Running the construction in both directions from a middle state does better, and inside-out zero-sums reach 6 rounds.**  A middle-state cube filling one block gives 3, forward 2 and backward 1.  Adding byte 0 of every other block gives 31 bytes, so 2^248 states, and 4 rounds.  With those 15 column bytes fixed, block 0's first round is a bijection in the row bytes, so `P` forward covers 2 rounds by the counting above.  Going backward, the transpose turns the column into block 0, so with the rest of the row fixed, block 0's first inverse round is a bijection, and `P⁻¹` covers 2 rounds the same way.
 

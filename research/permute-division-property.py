@@ -108,8 +108,8 @@ cost of its forward half, the `-r 2 -c block` scan.
 The `rowcol` cube is block 0 plus byte 0 of every other block, the middle
 state of a 4-round zero-sum.  Both of its halves are 2 rounds, which drop no
 cube bit, so `--inside-out 2 2 -c rowcol` decides it by solving.  Budget many
-hours, since round 1 has all 16 blocks live.  One output bit took 1199 s
-forward and 599 s backward.
+hours, since round 1 has all 16 blocks live.  One output bit took 20.0 min
+forward and 10.0 min backward.
 
 Through the sponge interface
 ----------------------------

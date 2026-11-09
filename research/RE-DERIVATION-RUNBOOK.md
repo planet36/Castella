@@ -479,7 +479,7 @@ python3 permute-division-property.py --sponge 2 -r 2  # 3 m 17 s, 2.3 GB peak
 python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 388 s
-./permute-zero_sum-analog-verify                  # 3 m 9 s (8 s with -q, skipping 2^32 cases)
+./permute-zero_sum-analog-verify                  # 3 m 9 s (~10 s with -q, skipping 2^32 cases)
 
 # Do not run --inside-out 2 2 -c rowcol at full width.  No target block is
 # trivially balanced at 2 rounds, so it is 4096 solves, and the per-bit cost was

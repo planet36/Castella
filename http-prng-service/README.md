@@ -12,7 +12,7 @@ The service does not begin accepting requests until it has absorbed entropy from
 
 A release build calls [`disable_core_dumps()`](../include/disable_core_dumps.h) at the top of `main`, before any duplex state exists, so a crash writes no core file containing that state, and reading it out through `ptrace` or `/proc/PID/mem` takes root.  A `BUILD=debug` build skips the call, which keeps the service attachable under a debugger.
 
-**The pool has no forward secrecy between reseeds.**  A squeeze erases nothing, and the permutation is invertible, so whoever captures the duplex state can recompute earlier outputs back to the last reseed (or to a later `/absorb` of data the attacker does not know), and can predict later ones up to the next.  The two reseed triggers bound that window at 60 seconds or 65,535 squeezed bytes.  [SPEC.md](../SPEC.md#non-claims) states the limit for the duplex itself.
+**The pool protects output it has already handed out, but not output to come.**  The service calls `forget()` after every squeeze, which zeroizes the outer state, so whoever captures the duplex state cannot recompute any earlier output from it.  The captured state does predict later outputs, up to the next reseed (or to a later `/absorb` of data the attacker does not know).  The two reseed triggers bound that window at 60 seconds or 65,535 squeezed bytes.  [SPEC.md](../SPEC.md#non-claims) states the limit for the duplex itself.
 
 ## Dependencies
 

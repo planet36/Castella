@@ -448,6 +448,11 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    (squeezing does not erase state, and `P` is invertible) and citing the sponge-PRNG
    paper.  No `forget()` was added, and the non-claim is the deliverable
    (VERIFYING-CLAIMS § 9).
+
+   **The code route followed on 2026-11-11.**  `Duplex::forget()` zeroizes the outer
+   state, and the PRNG service calls it after every squeeze.  The non-claim now reads "No
+   forward secrecy for PRNG usage unless `forget()` is called", and VERIFYING-CLAIMS § 9
+   gives the check.
 7. **Reduced-round challenge instances (new).**  Publish KAT-style collision/preimage
    challenge parameters for r = 1, 2, 3, 4 (small C, small digest), Keccak-crunchy-style.
    It is cheap to produce and the single best way to invite third-party cryptanalysis

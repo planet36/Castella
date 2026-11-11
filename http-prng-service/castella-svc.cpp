@@ -305,6 +305,12 @@ process_req_squeeze(const httplib::Request& req, httplib::Response& res)
 
         const auto digest = duplex_obj->squeeze_bytes(num_bytes_to_squeeze);
 
+        // The digest is a prefix of the outer state, so the state still
+        // holds it, and inverting the permutation on that state gives the
+        // digests before it.  Erase the outer state, so that a state
+        // captured after this call gives back nothing already handed out.
+        duplex_obj->forget();
+
         const auto digest_size = static_cast<decltype(consec_bytes_sqzd)>(std::ssize(digest));
 
 #if defined(__cpp_lib_saturation_arithmetic) && __cpp_lib_saturation_arithmetic >= 202603L

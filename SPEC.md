@@ -296,6 +296,8 @@ Two properties of the encodings make this transfer meaningful.  First, pad10\*1 
 
 Second, the initialization string is uniquely parseable because `left_encode(256)`, `left_encode(16·R)`, `left_encode(num_rounds)`, `encode_string(N)`, and `encode_string(S)` are each self-delimiting and read in a fixed order.  So distinct parameter tuples produce distinct absorbed prefixes, and distinct `suffix` bytes produce distinct absorbed strings at every squeeze.  Distinct parameterizations therefore behave as independent functions (the cSHAKE property).  A random sponge at capacity `c` has the generic bounds of the strengths table (indifferentiable from a random oracle up to ~`2^(c/2)` calls, per Bertoni et al., *Cryptographic sponge functions*).
 
+**Scope caveat.**  A squeeze is marked in the absorbed string only by `suffix` and the padding, and a message can contain both.  So the history `add(X)`, `squeeze`, `add(Y)`, `squeeze` ends on the same output as the one-shot `add(X || suffix || pad || Y)`, `squeeze`, where `pad` is the pad10\*1 completion of `X || suffix` to a rate boundary.  The output after an intermediate squeeze is therefore the plain hash of a longer message, which an adversary who chooses that message can reproduce.  An application needing both usages under the same parameters must separate them via `N` or `S`.
+
 #### Tree collisions reduce to node collisions
 
 **Claim.**  For a fixed parameterization (node parameters, `CHUNK_SIZE`, `CV_LEN`), any two distinct tree inputs `M ≠ M'` with equal tree digests yield a collision of the node hash.  Let `F(M)` be the final node's input string, `role_prefix(0x00) || chunk_0 || CV_1 || … || CV_m || right_encode(m)`.

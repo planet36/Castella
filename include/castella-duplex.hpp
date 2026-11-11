@@ -163,7 +163,7 @@ struct alignas(block_t) Duplex final
     * it.  \c NUM_ROUNDS_MIN is the diffusion floor, which is below this at
     * every capacity.
     *
-    * \pre \a capacity_blocks is even, and in the interval [\c C_MIN, \c C_MAX]
+    * \pre \a capacity_blocks is even, and in the interval <code>[C_MIN, C_MAX]</code>
     */
     [[nodiscard]] static constexpr int
     get_num_rounds_claimed(const int capacity_blocks) noexcept

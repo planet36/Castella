@@ -511,13 +511,18 @@ public:
     * caller-provided buffer instead of allocating a vector.
     *
     * \param dst the destination buffer
+    * \pre \c std::size(dst) <= \c get_max_digest_size_bytes()
     * \exception std::system_error if the mutex cannot be locked
-    * \note The size of \a dst is clamped to \c get_max_digest_size_bytes(), as
+    * \note A larger \a dst is clamped to \c get_max_digest_size_bytes(), as
     *       \a n is in \c final_digest_bytes(int).  Anything past that is left
     *       untouched.
     */
     void final_digest_to(std::span<std::byte> dst)
     {
+#if defined(DEBUG)
+        assert(std::cmp_less_equal(std::size(dst), get_max_digest_size_bytes()));
+#endif
+
         std::scoped_lock lock{mtx_};
 
         if (std::cmp_greater(std::size(dst), get_max_digest_size_bytes()))

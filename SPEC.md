@@ -152,6 +152,8 @@ MAC(K, X, L) = DuplexTree(C(L), num_rounds, suffix, "Castella-MAC", S, CHUNK_SIZ
 
 The bytepad width is the tree chunk size (where KMAC uses the rate), so the key block is exactly chunk 0 (absorbed directly by the now-keyed final node), and `X`'s bytes keep their chunk alignment.  The function name `"Castella-MAC"` and the trailing `right_encode(L)` supply the domain and output-length separation that [the MAC argument](#the-keyed-construction-is-a-mac) relies on.
 
+**The key block is absorbed in full on every call.**  It is `CHUNK_SIZE` bytes, which is `CHUNK_SIZE / (16·R)` rate blocks, where a KMAC key block is usually one.  At the `castella` program's defaults (`CHUNK_SIZE` = 65536 and `C` = 4), that is 341 permutations, so the MAC of a 1-byte message takes 345 permutations where its unkeyed hash takes 2.  The final node's state after the key block depends only on the key and the parameters, so an implementation may compute it once per key.  The `castella` program does not, and recomputes it for every input.
+
 As in KMAC, the construction sets no minimum key length and leaves it to the application, which should not use a key shorter than its required security strength (SP 800-185 Section 8.4.1).  The `castella` program requires at least 32 bytes, which reaches the 256-bit key-recovery cap at its default size, and caps the key at `min(4096, CHUNK_SIZE − 10)` bytes.
 
 ## Compress-Castella (`cch`)
@@ -314,6 +316,8 @@ The MAC argument chains three injectivity facts onto the reductions above.
 * **Domain.**  The function name `"Castella-MAC"` puts every MAC query in a domain disjoint from all unkeyed digests (by the initialization-string injectivity above), so unkeyed-hash queries give the forger nothing.
 * **Key framing.**  The key constraint (1 byte to one chunk, framing included) makes `bytepad(encode_string(K), CHUNK_SIZE)` exactly chunk 0, a fixed-length block absorbed first by the final node.  `encode_string` is injective (different lengths change `left_encode(|K|)`, equal lengths differ in the key bytes), so distinct keys produce distinct chunk-0 blocks.  And the fixed block length means the message `X`, which starts at the next chunk boundary, can never shift how the key parses.
 * **PRF.**  Under the claim and the tree reduction, the tree behaves as a random oracle up to `2^(64·C)` work, and a random oracle applied to a secret fixed-length prefix followed by the adversary's input is a PRF until the key is guessed.  Hence distinguishing and key recovery sit at min(`8·|K|`, `64·C`) bits, and forgery is additionally capped by tag guessing at `8·L`, as in the strengths table.
+
+**Only the final node is keyed.**  The key block is chunk 0, so every byte of `X` lies in a leaf chunk, and a leaf's chaining value is a public function of its index, its chunk, and the public parameters.  A pair of distinct chunks with the same index and the same chaining value can therefore be searched for offline, at the birthday cost `2^(64·C)` of a `16·C`-byte chaining value.  One tag query on a message holding the first chunk then gives the tag of the message that holds the second in its place.  That is the `64·C` term of the forgery bound, so the strengths table holds.  It differs from KMAC, where the key enters the one sponge that absorbs the message, the inner state is secret, and a collision in it takes online queries.
 
 Two MD-style failure modes are structurally absent:
 

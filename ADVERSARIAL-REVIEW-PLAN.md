@@ -88,8 +88,8 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
     exit on violation).  Probe 1's tables are informational, so read them against the
     random-model expectations the program prints.  The slide screen is exact over the whole
     16-round schedule, but rules out only the constant-schedule route to a slide.
-  - **Invariant subspaces** → `research/permute-invariant-subspaces.py`, which decides the
-    transpose's three symmetry classes without sampling and is exhaustive over every
+  - **Invariant subspaces** → `research/permute-invariant-subspaces.py`, which decides seven
+    symmetry classes without sampling and is exhaustive over every
     byte-aligned subspace that each layer maps onto a coset of itself, at every coset,
     superseding probe 1's sampling for that question.  What it cannot reach (a subspace
     neither byte-aligned nor in those classes, or a byte-aligned one invariant only across
@@ -423,7 +423,7 @@ assert perf claims from reading code (per the repo's own accuracy rule).
   for every binary but the `*-verify` ones, so the probe binary drags that dependency into
   the root `make test` unless it gets its own rule.  The subspace search would wire in
   cheaply, since `permute-invariant-subspaces.py` needs only the standard library and runs
-  in about 13 s.  Weigh wiring it in against writing a new avalanche test.
+  in about 30 s.  Weigh wiring it in against writing a new avalanche test.
 - [ ] **Boundary KATs.**  Confirm that KAT.txt exercises empty input, single-byte, exactly
       one chunk, chunk+1, the 255/256 leaf boundary, max `squeeze`, `CHUNK_SIZE` extremes,
       and `mix_rate` 0, 1, and 2048.  Add any missing.

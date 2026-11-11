@@ -17,7 +17,7 @@ The transpose swaps block and byte indices, which is precisely the symmetry
 an invariant-subspace attack looks for.  The design intent is that the round
 constants disrupt it (castella-permute.hpp, quoting Keccak's "Making of",
 8.7).  Sections 4 and 5 below turn that intent into a decided statement.  For
-two of the three classes, every layer except the constant addition preserves
+six of the seven classes, every layer except the constant addition preserves
 the class, so the constants are the *only* thing standing in the way, and the
 condition they must satisfy is stated exactly.
 
@@ -64,7 +64,7 @@ Sections
 
 4. Symmetry classes, layer by layer (exact).  Which of ShiftRows, the
    S-box layer, MixColumns, the transpose, and the round-constant addition
-   preserve each of the three classes, decided rather than sampled.
+   preserve each of the seven classes, decided rather than sampled.
 
 5. Forced closure (exact per coset).  For the classes of section 4, which
    are not byte-aligned, grow the smallest subspace that any invariant
@@ -389,7 +389,13 @@ class Echelon:
 
 
 def class_partitions() -> dict[str, list[list[int]]]:
-    """The three symmetry classes, as partitions of the 256 byte positions.
+    """The seven symmetry classes, as partitions of the 256 byte positions.
+
+    The last four are the column-rotation classes.  An AES round with a zero
+    constant commutes with rotating a block's columns, and the transpose turns
+    a column rotation in every block into a rotation of the blocks by 4.  So
+    "equal columns" pairs with "block period 4", and "column period 2" with
+    "block period 8", as "equal blocks" pairs with "constant blocks".
 
     Each class is "the bytes within every part are equal".  Stating them this
     way makes the S-box layer's behavior a theorem rather than a measurement.
@@ -401,14 +407,25 @@ def class_partitions() -> dict[str, list[list[int]]]:
     by_byte: dict[int, list[int]] = {}
     by_block: dict[int, list[int]] = {}
     by_pair: dict[tuple[int, int], list[int]] = {}
+    by_period: dict[str, dict[tuple[int, int], list[int]]] = {
+        "equal columns": {}, "block period 4": {},
+        "column period 2": {}, "block period 8": {}}
     for i in range(N_BLOCKS):
         for b in range(BLOCK_BYTES):
             by_byte.setdefault(b, []).append(pos(i, b))
             by_block.setdefault(i, []).append(pos(i, b))
             by_pair.setdefault((min(i, b), max(i, b)), []).append(pos(i, b))
+            # Byte b of a block is row b % 4 of column b // 4.
+            for name, key in (("equal columns", (i, b % 4)),
+                              ("block period 4", (i % 4, b)),
+                              ("column period 2", (i, b % 8)),
+                              ("block period 8", (i % 8, b))):
+                by_period[name].setdefault(key, []).append(pos(i, b))
     return {"equal blocks": list(by_byte.values()),
             "constant blocks": list(by_block.values()),
-            "symmetric matrix": list(by_pair.values())}
+            "symmetric matrix": list(by_pair.values()),
+            **{name: list(parts.values())
+               for name, parts in by_period.items()}}
 
 
 def partition_basis(parts: list[list[int]]) -> list[int]:
@@ -710,7 +727,10 @@ def print_conclusion() -> None:
     print("  removed the pair is exactly invariant and two constant-free")
     print("  rounds fix each class.  Section 5's control reaches dim 128, the")
     print("  class itself.  The constants are the ONLY layer that breaks it,")
-    print("  and none of the 48 lies in either class.  The symmetric-matrix")
+    print("  and none of the 48 lies in either class.  The same holds for")
+    print("  the two column-rotation pairs, 'equal columns' with 'block")
+    print("  period 4' and 'column period 2' with 'block period 8', whose")
+    print("  controls return to dim 512 and 1024.  The symmetric-matrix")
     print("  class is broken by ShiftRows and MixColumns as well, so it does")
     print("  not rely on them.")
 

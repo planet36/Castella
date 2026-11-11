@@ -112,7 +112,7 @@ free -h                                                       # -M is per proces
 | `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
 | `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out, best over the 3 cubes measured (row, col, diag): 3 round(s)`, 4.4 s |
 | `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
-| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 13 s |
+| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census | `no invariant subspace exists in any class decided here`, 27 s |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time, beside the C++ and spec-conformance.py.  This compares its difference propagation with the KAT-verified one at r = 1..6, and `make -C research test` also runs it | `240 state pairs verified, 0 failed`, 0.8 s |
@@ -459,7 +459,7 @@ cd research && make    # links google-benchmark into every binary here but the *
 # The structural probes, also in section 1 because they are cheap.
 ./permute-structural-probes -n 10000              # 0.3 s
 ./permute-zero_sum-probes -n 1                    # 8 s
-python3 permute-invariant-subspaces.py            # 13 s
+python3 permute-invariant-subspaces.py            # 27 s
 
 # The division-property model.  Budget ~1.5 h for the set.  Only the first two are
 # gates, and a model that proved everything balanced would pass the first alone.

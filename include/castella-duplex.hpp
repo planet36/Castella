@@ -1034,8 +1034,9 @@ public:
     * a vector.
     *
     * \param dst the destination buffer
+    * \pre \c std::size(dst) <= \c get_rate_size_bytes()
     * \exception std::system_error if the mutex cannot be locked
-    * \note The size of \a dst is clamped to \c get_rate_size_bytes(), as \a n
+    * \note A larger \a dst is clamped to \c get_rate_size_bytes(), as \a n
     *       is in \c squeeze_bytes(int), and anything past that is left
     *       untouched.
     * \note Like \c squeeze_bytes, the input suffix and padding are added
@@ -1043,6 +1044,10 @@ public:
     */
     void squeeze_to(std::span<std::byte> dst)
     {
+#if defined(DEBUG)
+        assert(std::cmp_less_equal(std::size(dst), get_rate_size_bytes()));
+#endif
+
         std::scoped_lock lock{mtx_};
 
         if (std::cmp_greater(std::size(dst), get_rate_size_bytes()))

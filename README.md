@@ -106,7 +106,7 @@ The `squeeze_bytes` member function performs the following:
     * The default value of _n_ is `get_capacity_size_bytes() / 2`.
     * An _n_ outside that interval is **clamped** into it rather than rejected, so a too-large _n_ yields `get_rate_size_bytes()` bytes and a negative _n_ yields none.  Steps 1 and 2 still happen either way, so any call advances the state.  This leniency is a convenience of the C++ API because the specification defines `squeeze(n)` only for `0 ≤ n ≤ 16R`.
 
-The `squeeze_to` member function does the same, but writes into a caller-provided buffer instead of allocating a vector.  The size of the buffer takes the place of _n_ and is clamped the same way, and any bytes past `get_rate_size_bytes()` are left untouched.
+The `squeeze_to` member function does the same, but writes into a caller-provided buffer instead of allocating a vector.  The size of the buffer takes the place of _n_, and as a precondition it is no larger than `get_rate_size_bytes()`.  A debug build asserts that.  A release build clamps a larger size the same way, and leaves any bytes past `get_rate_size_bytes()` untouched.
 
 ## Tree Hashing
 

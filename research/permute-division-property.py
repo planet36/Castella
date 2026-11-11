@@ -125,10 +125,10 @@ The capacity is constant over the cube, and the division property holds for
 every value of the non-cube bits.  So the answer is the same whether the
 capacity is known, as in unkeyed hashing, or secret, as in the MAC.
 
-C = 2 decides every capacity.  A cube that sums to zero on a bit makes every
-cube containing it sum to zero there too, and C = 2's cube and targets
-contain those of every larger C.  So if no rate bit is balanced at C = 2,
-none is at any C, from any cube a caller can choose.
+C = 2 decides every capacity when no bit is balanced.  A cube that sums to
+zero on a bit makes every cube containing it sum to zero there too, and
+C = 2's cube and targets contain those of every larger C.  So if no rate bit
+is balanced at C = 2, none is at any C, from any cube a caller can choose.
 
 Two round counts need no solving.  At r = 1, the cube strands bits outside
 every target block, so `trivially_balanced` decides it.  At r = 2, the `block`

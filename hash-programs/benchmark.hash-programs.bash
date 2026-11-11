@@ -11,8 +11,20 @@ source ./benchmark-common.bash
 # The single-threaded rows are prefixed with ${PIN} to reduce scheduler noise.
 # The multithreaded rows stay unpinned.
 
+# To get the cksum algorithms, process by hand the contents of
+# `man cksum` ("DIGEST").
+
+# To get the uu-cksum algorithms, process by hand the contents of
+# `man uu-cksum` ("Possible values:").
+
 # To get the openssl digest algorithms, process by hand the output of
 # `openssl list -digest-algorithms` ("Provided").
+#
+# When choosing between multiple equivalent names, like (KECCAK-KMAC-128 and CSHAKE-KECCAK-128)
+# or (SHA-1 and SHA1), use the one that's shown in the tagged output of the command.
+
+# To get the xxhsum hash types, process by hand the contents of
+# `man xxhsum` ("-HHASHTYPE").
 
 # Takes about 10:40
 CSV="${OUTPUT_DIR}/benchmark.all.${DATETIME}.csv"

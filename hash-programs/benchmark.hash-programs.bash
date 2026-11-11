@@ -47,7 +47,8 @@ time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
 "${PIN}cksum --algorithm sha3 --length 512 ${CASTELLA_TMP}/test.txt" \
 "${PIN}cksum --algorithm sm3               ${CASTELLA_TMP}/test.txt" \
 "${PIN}cksum --algorithm sysv              ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --algorithm sysv                  ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm blake2b               ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm blake3                ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm bsd                   ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm crc                   ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm crc32b                ${CASTELLA_TMP}/test.txt" \
@@ -61,11 +62,10 @@ time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
 "${PIN}uu-cksum --algorithm sha3 --length 256     ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm sha3 --length 384     ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm sha3 --length 512     ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --algorithm blake2b               ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --algorithm sm3                   ${CASTELLA_TMP}/test.txt" \
-"${PIN}uu-cksum --algorithm blake3                ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm shake128 --length 256 ${CASTELLA_TMP}/test.txt" \
 "${PIN}uu-cksum --algorithm shake256 --length 512 ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sm3                   ${CASTELLA_TMP}/test.txt" \
+"${PIN}uu-cksum --algorithm sysv                  ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2B-512          ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2S-256          ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-224           ${CASTELLA_TMP}/test.txt" \

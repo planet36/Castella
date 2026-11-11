@@ -310,8 +310,9 @@ permutation).  The honest procedure has four steps:
    the duplex initialization string, so **changing a shipped `R*` changes every digest at
    that capacity**, which makes it a format decision, not only a margin one.
    `tests/KAT.txt`, the pinned digests in `tests/tests.cpp` and
-   `hash-programs/test-correctness.bash`, `castella.cpp`'s `num_rounds_claimed_*` constants,
-   and the `--help` texts all move with it, as does every document on the [runbook's § 8
+   `hash-programs/test-correctness.bash`, `Duplex::get_num_rounds_claimed` in
+   `include/castella-duplex.hpp`, and the `--help` texts all move with it, as does every
+   document on the [runbook's § 8
    list](research/RE-DERIVATION-RUNBOOK.md#8-where-a-refreshed-figure-has-to-land).
 
    **What would reopen it is evidence, not preference.**  That evidence is the commitment
@@ -514,8 +515,8 @@ capacity mapping is stated in SPEC.md where the strengths are derived, and READM
 research/README.md documents each new tool and links the verification guide.
 ADVERSARIAL-REVIEW-PLAN.md and this file cross-reference each other in both directions.
 
-`castella --help` names the claimed round counts, with `num_rounds_claimed_small`/`_large`
-in hash-programs/castella.cpp deriving the default from them so the out-of-box instances
+`castella --help` names the claimed round counts, with `Duplex::get_num_rounds_claimed`
+in include/castella-duplex.hpp supplying the default so the out-of-box instances
 are claimed at every capacity, while `cch --help` opens by calling itself a
 non-cryptographic checksum.
 

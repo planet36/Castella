@@ -527,7 +527,8 @@ it states the conclusion the figure was supporting.
 | [patterns/README.md](patterns/README.md) | `A(r)`, the solve times, and each pattern's `proven_optimal` |
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
 | [hash-programs/README.md](../hash-programs/README.md) | the default `--rounds=6` in its sample digest line and its benchmark claims |
-| [hash-programs/castella.cpp](../hash-programs/castella.cpp) | `num_rounds_claimed_small` and `num_rounds_claimed_large`, and the `--help` text built on them, which make `R*` = 6/8 and the size-48 split the program's default rounds |
+| [include/castella-duplex.hpp](../include/castella-duplex.hpp) | `Duplex::get_num_rounds_claimed`, which returns `R*` = 6 for `C` ≤ 6 and 8 at `C` = 8 |
+| [hash-programs/castella.cpp](../hash-programs/castella.cpp) | the `--help` text, which states the claim as rounds >= 6, or >= 8 when SIZE > 48, and takes the program's default rounds from the header's function |
 | [permute-division-property.py](permute-division-property.py) | its docstring and `--sponge` help, which say what the sponge scan decides and where the open question starts |
 | [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy as instructions that get acted on, so a stale value there is worse than a stale sentence |
 

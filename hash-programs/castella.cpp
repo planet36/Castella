@@ -62,15 +62,6 @@ inline constexpr int key_size_max = 4096;
 // {{{ default values for options
 inline constexpr int default_input_suffix = 1;
 
-// The minimum claimed round counts (SPEC.md "Margin rationale").  Capacity
-// C <= 6 needs R >= 6.  C = 8, which covers digests of 49 to 64 bytes, needs
-// R >= 8.
-inline constexpr int num_rounds_claimed_small = 6;
-inline constexpr int num_rounds_claimed_large = 8;
-static_assert(num_rounds_claimed_small >= Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>());
-static_assert(num_rounds_claimed_large <= Castella::NUM_ROUNDS_MAX);
-static_assert(num_rounds_claimed_small <= num_rounds_claimed_large);
-
 inline constexpr int min_num_bytes_to_squeeze = 1;
 inline constexpr int max_num_bytes_to_squeeze =
     Castella::Duplex::C_MAX * sizeof(Castella::block_t) / 2;
@@ -164,7 +155,7 @@ num_digest_bytes_to_capacity_blocks(const int D_bytes) noexcept
 get_necessary_num_rounds(const int digest_size_bytes) noexcept
 {
     const int C = num_digest_bytes_to_capacity_blocks(digest_size_bytes);
-    return C <= 6 ? num_rounds_claimed_small : num_rounds_claimed_large;
+    return Castella::Duplex::get_num_rounds_claimed(C);
 }
 
 /// Get the number of rounds for a digest of \a digest_size_bytes bytes
@@ -269,8 +260,9 @@ print_usage()
     std::println("                        rounds >= 6, or >= 8 when SIZE > 48.  Fewer rounds are");
     std::println("                        reduced-round targets (CHALLENGES.md).  When omitted,");
     std::println("                        the default tracks the claim.  It is {} rounds for SIZE",
-                 num_rounds_claimed_small);
-    std::println("                        <= 48, and {} for SIZE > 48.", num_rounds_claimed_large);
+                 get_necessary_num_rounds(48));
+    std::println("                        <= 48, and {} for SIZE > 48.",
+                 get_necessary_num_rounds(max_num_bytes_to_squeeze));
     std::println("                        (minimum={}) (maximum={})",
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 

@@ -156,6 +156,21 @@ struct alignas(block_t) Duplex final
     static_assert(R_MAX < B);
     static_assert(R_MIN <= R_MAX);
 
+    /// Get the fewest rounds that the security claim covers at a capacity of
+    /// \a capacity_blocks blocks
+    /**
+    * An instance with fewer rounds is legal, but no security is claimed for
+    * it.  \c NUM_ROUNDS_MIN is the diffusion floor, which is below this at
+    * every capacity.
+    *
+    * \pre \a capacity_blocks is even, and in the interval [\c C_MIN, \c C_MAX]
+    */
+    [[nodiscard]] static constexpr int
+    get_num_rounds_claimed(const int capacity_blocks) noexcept
+    {
+        return capacity_blocks <= 6 ? 6 : 8;
+    }
+
 private:
     arr_blocks<B> state_{};
 
@@ -1093,5 +1108,8 @@ public:
         return static_cast<int>(sizeof(block_t)) * R;
     }
 };
+
+static_assert(Duplex::get_num_rounds_claimed(Duplex::C_MIN) > NUM_ROUNDS_MIN<Duplex::B>());
+static_assert(Duplex::get_num_rounds_claimed(Duplex::C_MAX) <= NUM_ROUNDS_MAX);
 
 } // namespace Castella

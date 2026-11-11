@@ -28,7 +28,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column, and a uniformity construction reaching 6 from one fixed byte, whose forward half is a 3-round distinguisher through the sponge at `C` = 2 | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight, r=2 through r=8 bracketed on solved floors) and first-order differential clustering | executable (solver) | §13 |
-| 14 | Rebound-attack resistance of the default rounds | argument (margin) | §14 |
+| 14 | Rebound-attack resistance of the default rounds | evidence pending (the margin argument is withdrawn) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | r≥2 trail tightness, and the r≥5 ceilings that each rest on a single imported MILP pattern | evidence pending | §16 |
 
@@ -263,13 +263,9 @@ Dropping `--no-minimize` shows the other side of that because the minimization r
 
 The tightness and clustering results remain conservative for the claim, since where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270.  [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19) has the results, the encoding-choice lesson, and the scope.
 
-## 14. Read the argument for rebound-attack resistance
+## 14. Rebound-attack resistance is not modeled
 
-There is no program to run, because rebound resistance is a **reasoned margin argument**, not machine-checked evidence, and verifying it means checking the reasoning.  The full argument (the two-phase attack, the outbound cost from the MILP active-S-box bounds, the inbound-reach table, and the caveats that keep it a heuristic, not a proof) is in [README.md](README.md#analysis-rebound-attack-resistance-margin-argument-2026-07-20).
-
-In outline, a rebound attack gets a free inbound of ~2 rounds (≈3 with super-inbound), and the outbound over the remaining rounds costs `2^(6·A_out)`, where the transpose's active-S-box growth forces `A_out ≥ 54` for a 3-round outbound.  At the default 6 rounds, even a generous 3-round inbound leaves an outbound ≥ 2^324, above the 2^256 claim for `C` = 4, and the margin erodes only for an inbound of 4 rounds, beyond any known technique.
-
-The quantitative inputs are `A(1) = 9`, `A(2) = 45`, `A(3) = 129`, and `A(4) = 165`, **all four converged MILP optima (§4), so no row of the outbound table rests on a superadditive floor.**  Both safe rows of the margin table use the `1 + 2` and `2 + 2` splits, so they depend only on `A(1)` and `A(2)`.  The `C` = 8 figure needs `A(4)`, since its outbound is 5 rounds, and `A(4) = 165` prices the `1 + 4` split at 174, exactly level with `2 + 3`, for **2^1044**.  Check that the split is *minimized* rather than assumed even, since README.md's table shows the two splits tying here.
+There is nothing to run, and no argument to read.  The margin argument this section pointed to is withdrawn, because it priced a truncated outbound by its active S-boxes, a bound that holds for a characteristic only.  [README.md](README.md#analysis-rebound-attack-resistance-margin-argument-of-2026-07-20-withdrawn-2026-11-11) has the withdrawal, the one-round example that refutes the price, and what a replacement would compute.  The inputs it used, `A(1)` = 9 through `A(4)` = 165, remain converged MILP optima (§4), and they remain bounds on characteristics.
 
 ## 15. Algebraic-degree bound and zero-sum reach
 
@@ -284,7 +280,7 @@ The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's va
 
 ## 16. Evidence pending
 
-Two items are pending: trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima, and the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.
+Three items are pending.  The first is trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima.  The second is the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.  The third is rebound resistance, which has no model since §14's margin argument was withdrawn.
 
 The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the inside-out zero-sums through 6 rounds.  Read the reach as **≥ 6 with no upper bound claimed**, because §15's 4 caps only a *degree-based* construction.  The sponge reach, the figure SPEC.md's margin counts, is 2, or 3 at `C` = 2.
 

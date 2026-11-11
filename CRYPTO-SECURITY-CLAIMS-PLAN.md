@@ -414,7 +414,8 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    search over the byte-aligned subspaces that every layer maps onto a coset of
    themselves, at every coset (VERIFYING-CLAIMS § 10).  The rebound sketch became a
    written margin argument rather than a program (§ 14 there, research/README.md for the
-   derivation).
+   derivation).  It was withdrawn on 2026-11-11, because it priced a truncated outbound
+   by its active S-boxes, and nothing has replaced it.
 5. **Algebraic properties (new).**  Study degree growth of `P` over rounds (the AES S-box
    is degree 7, so estimate rounds until degree saturates 2048 bits) and zero-sum/cube
    distinguishers on reduced rounds, the standard Keccak-style distinguisher families.
@@ -481,8 +482,8 @@ and states the rule below as its ground rule.  The sketch table is kept as writt
 
 The shipped guide covers considerably more than these six rows (structural probes and the
 exact invariant-subspace search, the division property and the multiplicity argument,
-PractRand, the rebound argument, the degree bound, and an explicit *evidence pending*
-section), and it, not this file, is the one to update when a new result lands.
+PractRand, the withdrawn rebound argument, the degree bound, and an explicit *evidence
+pending* section), and it, not this file, is the one to update when a new result lands.
 
 A new section (SPEC.md appendix or `research/VERIFYING-CLAIMS.md`) that lets a skeptical
 user reproduce every piece of evidence behind the claim.  Much of it already exists in
@@ -608,9 +609,10 @@ cost, and if it fires, `C` = 6 is the row to examine first (§4.3, and now SPEC.
 rationale).  Under the 2026-10-29 amendment, an inside-out zero-sum on `P` alone reopens
 nothing (§4.3 step 3).
 
-**One gap is unmodeled rather than closed.**  Rebound attacks are covered by a reasoned
-margin argument, not by a search.  The argument grants the attacker a free maximal-reach
-inbound and compares the outbound against the flat claim.  That is a heuristic, it is
-labeled as one in SPEC.md and VERIFYING-CLAIMS.md § 14, and no rebound *search* is
-queued.  It is the honest weak point of the evidence base, and naming it here is not a
-proposal to fix it.
+**One gap is unmodeled rather than closed.**  Rebound attacks are covered by nothing.  A
+margin argument stood here until 2026-11-11.  A design review had shown that it priced
+the attack's truncated outbound by its active S-boxes, a bound that holds for a
+characteristic only, and it was withdrawn.  No rebound *search* is queued, and SPEC.md
+and VERIFYING-CLAIMS.md § 14 say that none exists.  It is the honest weak point of the
+evidence base, and naming it here is not a proposal to fix it.  What a replacement would
+compute is in research/README.md.

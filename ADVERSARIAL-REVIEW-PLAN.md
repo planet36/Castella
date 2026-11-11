@@ -101,10 +101,10 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
 - **Known-open, and deliberately not pursued here.**  Differential **clustering** above
   `r` = 1 and **rebound** attacks are real gaps rather than oversights.  `SPEC.md` lists
   both among what the trail bounds do not cover, `research/README.md` calls clustering above
-  `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is an
-  explicitly heuristic margin argument, not a proof.  Because they are disclosed,
-  *reporting* them is a non-finding under Section 0, and *pursuing* them belongs to
-  [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).
+  `r` = 1 "the one adverse-direction gap in this evidence," and the rebound answer is that
+  nothing models it, a margin argument having been withdrawn on 2026-11-11.  Because they
+  are disclosed, *reporting* them is a non-finding under Section 0, and *pursuing* them
+  belongs to [CRYPTO-SECURITY-CLAIMS-PLAN.md](CRYPTO-SECURITY-CLAIMS-PLAN.md).
 
   Per the maintainer, two expensive searches in this direction are closed on cost: the
   `r` ≥ 2 clustering enumerations (every non-empty shell has ended `INCOMPLETE`, the longest

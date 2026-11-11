@@ -397,7 +397,7 @@ A run takes ~9 s at `-n 1`, dominated by the k = 16 column (2 placements × 16 r
 
 * **The threshold sits exactly at the full block, which is a prediction the explanation passed.**  2^8, 2^32, 2^64, and 2^96 all fail at 2 rounds, and 2^128 succeeds.  Step 1 above needs round 1 to be a bijection *on the cube*, which nothing short of a whole block provides, so the bracket "2^96 fails, 2^128 works" tests the mechanism rather than being a number the solver happened to emit.
 
-* **No margin moves.**  The one-directional distinguishers sit at **2** rounds from one block and **3** from four blocks on an AES diagonal, and the inside-out one at **6** (below), against `R*` = 6 (8 at `C` = 8).  SPEC.md's margin rule, as amended on 2026-10-29, counts only properties reachable through the sponge interface.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach at 2, while the inside-out zero-sums need a chosen middle state and characterize `P` alone.  The 3-round one is the forward half of the 2^896 construction, and at `C` = 2 message bytes fill its four blocks (1, 6, 11, and 12), so the sponge reach is 3 there.  The binding floor at `C` = 2 was already 3, from the diffusion floor.  The rebound margin argument rests on active-S-box counts that none of this touches.
+* **No margin moves.**  The one-directional distinguishers sit at **2** rounds from one block and **3** from four blocks on an AES diagonal, and the inside-out one at **6** (below), against `R*` = 6 (8 at `C` = 8).  SPEC.md's margin rule, as amended on 2026-10-29, counts only properties reachable through the sponge interface.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach at 2, while the inside-out zero-sums need a chosen middle state and characterize `P` alone.  The 3-round one is the forward half of the 2^896 construction, and at `C` = 2 message bytes fill its four blocks (1, 6, 11, and 12), so the sponge reach is 3 there.  The binding floor at `C` = 2 was already 3, from the diffusion floor.
 
   **What changes is a claim rather than a margin.**  A revision of this section said the reach was "bracketed at [2, 2.67] rounds", pairing the 2-round construction with the degree bound as an upper end.  The inside-out results refute that pairing because 2.67 capped the *degree-based* construction, under a bound since tightened to 4, and was never an upper bound on the true reach.  The lower end is real and has moved to 6, and there is no upper end.
 
@@ -876,58 +876,34 @@ python3 permute-trail-search.py --self-test          # S-box/DDT/aesenc checks, 
 * **Watch the weights the enumeration reports as it runs, not just the histogram at the end.**  Trails come back at the *cap* of the shell rather than at its minimum, so a progress line stuck at the cap means the dominant light terms have not arrived.  Since those come out last, a stopped enumeration is no answer at all, not a partial one.  Only `complete`/`shell COMPLETE` licenses a DP figure.
 * Raw solver logs are not kept, so the tables above are the record, as in the other findings sections.
 
-## Analysis: rebound-attack resistance (margin argument, 2026-07-20)
+## Analysis: rebound-attack resistance (margin argument of 2026-07-20, withdrawn 2026-11-11)
 
-This section is a **reasoned margin argument, not a proof and not executable evidence**.  It bounds how far the rebound attack, the strongest known structural attack on AES-based permutations, reaches into `Castella::permute`, using the proven MILP active-S-box bounds as its only quantitative input.
+This section recorded a margin argument that bounded how far a rebound attack reaches into `Castella::permute`.  **The argument is withdrawn, because it priced the attack's outbound phase with a bound that does not apply to it.**  No margin against rebound attacks is claimed in its place.
 
 ### The attack
 
 A rebound attack (Mendel–Rechberger–Schläffer–Thomsen 2009, against Whirlpool and Grøstl) splits the permutation `P = P_out_bot ∘ P_in ∘ P_out_top` and works in two phases:
 
 * **Inbound.**  Over the middle `P_in`, where the state is fully active and every byte is free, the attacker uses the AES differential distribution table to *match in the middle*, producing conforming pairs ("starting points") for a chosen inbound truncated differential at ≈ 1 unit of amortized work each.  Standard inbounds span **2 rounds** of the underlying AES structure, and the AES super-box / super-inbound techniques stretch this to **≈ 3** in favorable cases.
-* **Outbound.**  Each starting point is propagated outward through `P_out_top` and `P_out_bot`.  The outbound truncated differential holds only probabilistically, so ≈ 1/p starting points are needed, where `p ≤ 2^(−6·A_out)` and `A_out` is the number of active S-boxes on the outbound trails (AES S-box max DP = 2^−6).  The attack distinguishes `P` when its cost is below the generic cost of the target property (a limited-birthday / near-collision).
+* **Outbound.**  Each starting point is propagated outward through `P_out_top` and `P_out_bot` as a truncated differential, which fixes only which bytes are active.  Its probability is set by the byte cancellations it requires in MixColumns.  The attack distinguishes `P` when its total cost is below the generic cost of the property it ends on (a limited-birthday or near-collision bound).
 
-The attacker therefore wants a **long inbound** (free rounds) and a **cheap outbound** (few active S-boxes).
+### What the argument said, and why it fails
 
-### The outbound cost is set by the transpose's steep active-S-box growth
+The argument bounded the outbound probability by `2^(−6·A_out)`, where `A_out` is the number of active S-boxes on the outbound, and minimized `A_out` over the ways of splitting the outbound rounds around the inbound.  From `A(1)` = 9 and `A(2)` = 45, it put a 3-round outbound at 2^324 and a 4-round outbound at 2^540, and concluded that 6 rounds were safe against an inbound of up to 3 rounds.
 
-An outbound spanning `r_out` rounds split as `r_top + r_bot` has `A_out ≥ A(r_top) + A(r_bot)`, and the attacker picks the split minimizing that sum.  The inputs are the solved values `A(1)=9`, `A(2)=45`, `A(3)=129`, and `A(4)=165`, all converged MILP optima, so no row here rests on a superadditive floor.  Minimizing over integer splits gives the attacker-optimal outbound cost `2^(6·A_out)`:
+That bound belongs to a characteristic, which fixes the difference of every byte.  A truncated differential sums over every characteristic with its activity, so its probability is not bounded by its S-box count.  One round of `Castella::permute` shows it.  A difference confined to one block leaves at most one active byte in every block with certainty (step 2 of the 2-round integral above, and Part A of `permute-multiplicity-verify.py`).  It crosses up to 48 active S-boxes, so the withdrawn bound prices it as low as 2^−288, and its probability is 1.
 
-| outbound rounds `r_out` | best split | min `A_out` | outbound cost `2^(6·A_out)` |
-|---|---|---|---|
-| 2 | 1 + 1 | 18 | 2^108 |
-| 3 | 1 + 2 | 54 | 2^324 |
-| 4 | 2 + 2 | 90 | 2^540 |
-| 5 | 1 + 4 or 2 + 3 (tie) | 174 | 2^1044 |
+So the figures 2^108, 2^324, 2^540, and 2^1044 that this section and SPEC.md published were not lower bounds on an outbound, and the margins computed from them are withdrawn.  The argument also called its own model conservative, which it was not.
 
-The `r_out` = 4 row is 2^540, as before the refutation, but now on a sound basis.  It survives because `A(3) = 129` makes the `1 + 3` split cost 138, still above the `2 + 2` cost of 90.  The `r_out` = 5 row read 2^882 while `A(4)` was only the superadditive `A(1)+A(3)` = 138, which made the `1 + 4` split look cheap at 147.  Solving `A(4)` = 165 prices that split at 174, exactly level with `2 + 3`, so the row recovers to **2^1044** and the two splits tie.
+### What stands
 
-It still falls 24 bits short of the 2^1068 once claimed, which came from the refuted `A(3)` = 133 making `2 + 3` cost 178.  Minimize over the splits explicitly rather than assuming the <q>most even split</q> wins.  That rule happens to hold at these values, but it failed at `r_out` = 4 under the intermediate floors, so it is a property of the numbers rather than of the structure.
+* The active-S-box counts are proven, and they bound characteristics (the MILP section above).  They say nothing about a truncated outbound.
+* Rebound resistance is not modeled.  No search has been run, and no margin is claimed.
+* A rebound distinguisher starts from a chosen middle state, which a caller of the duplex does not have.  Under SPEC.md's margin rule, as amended on 2026-10-29, such a result characterizes `P` and moves no round count.
 
-### Margin for the default 6-round permutation
+### What would replace the argument
 
-Giving the attacker a free inbound of `r_in` rounds leaves `r_out = 6 − r_in`:
-
-| inbound `r_in` | reach | outbound rounds | outbound cost | vs. `C`=4 claim 2^256 |
-|---|---|---|---|---|
-| 2 | standard | 4 | 2^540 | safe by 2^284 |
-| 3 | super-inbound (generous) | 3 | 2^324 | safe by 2^68 |
-| 4 | beyond any known technique | 2 | 2^108 | **would break** |
-
-So the default 6 rounds resist rebound with room to spare.  Even a generous **3-round** inbound leaves an outbound costing ≥ 2^324, above the 2^256 claimed level for `C` = 4 (and every smaller-capacity claim).  The margin erodes only if the inbound reaches **4 rounds**, twice the standard reach and beyond any published rebound technique.  Both safe rows draw on the two solved cells alone, the 3-round outbound being the `1 + 2` split (9 + 45) and the 4-round outbound the `2 + 2` split (45 + 45), so neither depends on any bound above `r` = 2.
-
-For `C` = 8 (claim 2^512, run at `R*` = 8 rounds), a 3-round inbound leaves `r_out` = 5 and an outbound of ≥ **2^1044**, safe by 2^532.  A 5-round inbound would leave `r_out` = 3 at 2^324, **below** that instance's 2^512 claim, so the 2^324 that reassures at `C` = 4 does not at `C` = 8.
-
-The underlying reason is the transpose.  In AES itself, the four-round "hourglass" trail re-concentrates a difference to one active byte, keeping active-S-box counts low over many rounds and giving rebound long, cheap outbounds.  Castella's byte transpose scatters every full block across all 16 blocks (see the [`AES_NUM_ROUNDS` = 3 conclusion](#conclusions)), so activity grows superlinearly and outbounds become expensive after very few rounds, which is the effect the numbers above quantify.
-
-### Why this is an argument, not a proof
-
-* The outbound cost uses the MILP *lower* bounds, so the true cost is ≥ what is shown (conservative).  The inbound is assumed entirely free and to reach `r_in` rounds, which is generous to the attacker and not itself proven for this specific permutation.
-* The outbound assumes the attacker can realize a minimum-active trail from the inbound boundary, but a fixed boundary difference constrains the trails, so the real `A_out` is likely larger.
-* It does not model advanced variants (multiple / triple inbound, non-full-active inbounds, biclique-style extensions) that might change the reachable `r_in` by a round.
-* It compares against the flat claim level.  A precise limited-birthday generic bound for a specific truncated differential would refine the comparison but not change the order-of-magnitude margin.
-
-The conclusion that rebound does not threaten the default rounds, with the crossover a full round beyond known inbound reach, is a heuristic margin, disclosed as such in [VERIFYING-CLAIMS.md](VERIFYING-CLAIMS.md) and [SPEC.md](../SPEC.md#security-claims-and-non-claims).
+The byte-activity model of `permute-min-active-sboxes.py` already describes the truncated patterns.  Re-solved with the bytes that must cancel in each MixColumns as the cost, in place of the active S-boxes, and split around an inbound, it would give the outbound's cost.  That cost then has to be compared with the limited-birthday cost of the end patterns, not with the flat claim level.  Neither has been done.
 
 ## Findings: algebraic-degree bound and zero-sum reach (2026-07-20)
 

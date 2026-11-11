@@ -68,6 +68,8 @@ time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
 "${PIN}uu-cksum --algorithm sysv                  ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2B-512          ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -BLAKE2S-256          ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -CSHAKE-128 -xoflen 32        ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -CSHAKE-256 -xoflen 64        ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-224           ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-256           ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-384           ${CASTELLA_TMP}/test.txt" \

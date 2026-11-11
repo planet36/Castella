@@ -280,7 +280,7 @@ The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's va
 
 ## 16. Evidence pending
 
-Three items are pending.  The first is trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima.  The second is the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.  The third is rebound resistance, which has no model since §14's margin argument was withdrawn.
+Three items are pending.  The first is trail tightness at r ≥ 2, where the §13 minimization times out and leaves brackets rather than minima.  The second is the tightness of the r ≥ 5 trail-search **ceilings** for N = 16, each of which rests on a single imported MILP pattern.  The third is rebound resistance, which has no model since §14's margin argument was withdrawn.  SPEC.md's Evidence section also names three analyses that were never made, which are a meet-in-the-middle preimage attack, an estimate of a collision or a preimage through the sponge at reduced rounds, and any analysis of the keyed construction beyond the reduction.  None has a program here, so each is absent rather than pending.
 
 The integral distinguishers are no longer pending, since §11 establishes the 2-round one-directional distinguisher and the inside-out zero-sums through 6 rounds.  Read the reach as **≥ 6 with no upper bound claimed**, because §15's 4 caps only a *degree-based* construction.  The sponge reach, the figure SPEC.md's margin counts, is 2, or 3 at `C` = 2.
 

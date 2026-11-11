@@ -74,8 +74,8 @@ time hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
 "${PIN}openssl dgst -KECCAK-256           ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-384           ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -KECCAK-512           ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -CSHAKE-KECCAK-128    ${CASTELLA_TMP}/test.txt" \
-"${PIN}openssl dgst -CSHAKE-KECCAK-256    ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -CSHAKE-KECCAK-128 -xoflen 32 ${CASTELLA_TMP}/test.txt" \
+"${PIN}openssl dgst -CSHAKE-KECCAK-256 -xoflen 64 ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -MD5                  ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -MD5-SHA1             ${CASTELLA_TMP}/test.txt" \
 "${PIN}openssl dgst -RIPEMD-160           ${CASTELLA_TMP}/test.txt" \

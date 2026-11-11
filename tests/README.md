@@ -35,11 +35,11 @@ A build without the folded path (no VAES, or not x86-64) still runs it, but `per
 
 Every `duplex` line in KAT.txt has the same shape (construct, one `add`, one `squeeze`), so the KAT file pins the algorithm but leaves most of the `Castella::Duplex` API untouched.  This fuzzer covers the rest.
 
-It generates random programs of `add` / `add_left_encoded` / `add_right_encoded` / `apply_padding_rule` / `squeeze_bytes` calls over random constructor parameters, covering both the byte-string and the integer forms of the two encoded adds.  It replays each one against the `Duplex` in [research/spec-conformance.py](../research/spec-conformance.py), imported directly so there is no second copy of the model to drift, and diffs every squeeze against `duplex-diff-driver`, which interprets the same script.  Split and streamed adds, both encoding entry points (no KAT drives either), explicit padding, and successive squeezes are all reachable only this way.
+It generates random programs of `add` / `add_left_encoded` / `add_right_encoded` / `apply_padding_rule` / `forget` / `squeeze_bytes` calls over random constructor parameters, covering both the byte-string and the integer forms of the two encoded adds.  It replays each one against the `Duplex` in [research/spec-conformance.py](../research/spec-conformance.py), imported directly so there is no second copy of the model to drift, and diffs every squeeze against `duplex-diff-driver`, which interprets the same script.  Split and streamed adds, both encoding entry points (no KAT drives either), explicit padding, and successive squeezes are all reachable only this way.
 
 A *program* is one generated unit of work, constructor parameters plus a call sequence ending in at least one squeeze.  It yields as many comparisons as it has squeezes, which is why the summary counts both.  The whole run is batched through one driver process, because the pure-Python model is the slow side.  `make test` runs it at the default seed and program count, and `--seed` explores new programs, as a SEED argument does for `equivalence-tests`.
 
-* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (329 squeezes, ~1.6 s), with a nonzero exit status on any divergence.
+* `python3 duplex-diff-fuzz.py` verifies the default 200 programs (325 squeezes, ~1.6 s), with a nonzero exit status on any divergence.
 * `python3 duplex-diff-fuzz.py -n 5000 --seed 0x1234` runs a longer, different sweep.
 
 The deepest sweep run to date, `-n 400000 --seed 0x1`, verified **639,947 squeezes** in 40 min (2026-08-02) and found no divergence.  Throughput is ~150 programs/s and scales linearly, so size a sweep from that.  Memory grows with the run and reached 1.5 GB at 400,000 programs.

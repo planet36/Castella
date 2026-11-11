@@ -6,8 +6,8 @@
 """Differential fuzzer for Castella::Duplex against the SPEC.md model.
 
 It generates random programs of duplex API calls (interleaved add,
-add_left_encoded, add_right_encoded, apply_padding_rule, and squeeze_bytes)
-over random constructor parameters, and checks that the C++ library and
+add_left_encoded, add_right_encoded, apply_padding_rule, forget, and
+squeeze_bytes) over random constructor parameters, and checks that the C++ library and
 the independent Python model in spec-conformance.py agree on every squeeze.
 
 A program is one generated unit of work, constructor parameters plus a call
@@ -171,6 +171,9 @@ def gen_program(rng: random.Random, prog_id: str) -> Program:
         if rng.random() < 0.15:  # an interleaved squeeze
             ops.append(("squeeze", gen_squeeze_len(rng, C)))
 
+        if rng.random() < 0.15:  # an interleaved forget
+            ops.append(("forget",))
+
     ops.append(("squeeze", gen_squeeze_len(rng, C)))
     return Program(prog_id, C, rounds, suffix, N, S, ops)
 
@@ -189,8 +192,8 @@ def script_lines(program: Program) -> list[str]:
     lines = [f"program {program.prog_id}", new_op]
     for op in program.ops:
         match op:
-            case ("pad",):
-                lines.append("pad")
+            case ("pad",) | ("forget",):
+                lines.append(op[0])
             case (("addlei" | "addrei" | "squeeze") as name, int() as value):
                 lines.append(f"{name} {value}")
             case (("add" | "addle" | "addre") as name, bytes() as data):
@@ -225,6 +228,8 @@ def run_model(program: Program) -> list[str]:
                 # Reaching in is the point of the op because explicit padding is
                 # otherwise untested.
                 duplex._pad_and_permute()  # pylint: disable=protected-access
+            case ("forget",):
+                duplex.forget()
             case ("squeeze", int() as value):
                 digests.append(duplex.squeeze(value).hex())
             case _:

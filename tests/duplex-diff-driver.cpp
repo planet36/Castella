@@ -25,6 +25,7 @@
 *     addlei  <uint>               add_left_encoded(integer)
 *     addrei  <uint>               add_right_encoded(integer)
 *     pad                          apply_padding_rule()
+*     forget                       forget()
 *     squeeze <n>                  squeeze_bytes(n), writes "out <hex>"
 *
 * A field written as <hex> holds an arbitrary byte string, encoded two
@@ -200,6 +201,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
             else if (op == "pad")
             {
                 duplex->apply_padding_rule();
+            }
+            else if (op == "forget")
+            {
+                duplex->forget();
             }
             else if (op == "squeeze")
             {

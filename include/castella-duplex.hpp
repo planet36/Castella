@@ -1087,6 +1087,64 @@ public:
         return squeeze_bytes(get_capacity_size_bytes() / 2);
     }
 
+    /// Erase the outer state, so that a state captured later does not yield
+    /// earlier output
+    /**
+    * This adds the input suffix and applies the padding rule, as a squeeze
+    * does, which absorbs any pending input.  It then zeroizes the outer state
+    * and applies the permutation function again.  That leaves the state that
+    * `add(squeeze_bytes(get_rate_size_bytes()))` leaves, without the copy of
+    * the output.
+    *
+    * Inverting the permutation function on a state captured afterward gives a
+    * zeroized outer state, so neither the erased output nor any state before it
+    * can be rebuilt.  Later output is not protected.  It follows from the
+    * captured state until secret input is added.
+    *
+    * \return a reference to this object (to enable method chaining)
+    * \exception std::system_error if the mutex cannot be locked
+    * \note Each method call is thread-safe, but no mutex is held between chained calls.
+    *
+    *
+    * ## _SpongeDuplex.pdf_
+    *
+    * ### 6.1 A reseedable pseudo-random bit sequence generator
+    * #### Page 14 / 20
+    *
+    * <blockquote>
+    * Still, forward security can be explicitly enforced by means of a
+    * 𝑃.forget() request.  The effect of this request is the resetting to zero
+    * of the first ρ bits of the state, an application of the padding and a
+    * subsequent application of 𝑓.  Under the condition that ρ ≥ 𝑐, guessing
+    * the state before this operation given the state afterwards requires
+    * guessing at least 𝑐 bits and hence is infeasible for reasonable values
+    * of 𝑐.
+    * </blockquote>
+    *
+    * \note Castella zeroizes the whole rate, and the padding falls in the next
+    *       block.
+    */
+    Duplex& forget()
+    {
+        // The erased rate is never smaller than the capacity.
+        static_assert(R_MIN >= C_MAX);
+
+        std::scoped_lock lock{mtx_};
+
+        add_(as_byte_span(INPUT_SUFFIX));
+        apply_padding_rule_();
+
+#if defined(DEBUG)
+        assert(cur_input_byte_idx_ == 0); // input buf is empty
+#endif
+
+        (void)std::memset(std::data(state_), 0, get_rate_size_bytes());
+
+        permute(state_, NUM_ROUNDS);
+
+        return *this;
+    }
+
     /// Get the size (in bytes) of the state
     /**
     * The state size is fixed and does not depend on any user-provided parameters.

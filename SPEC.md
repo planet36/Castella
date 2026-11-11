@@ -103,6 +103,8 @@ return s[0 .. n−1]
 
 Every squeeze, even of 0 bytes, absorbs the suffix and pads, so successive squeezes return fresh output and the duplex may keep alternating `add` and `squeeze` calls (each output depends on all prior inputs).
 
+**Forgetting.**  `forget()` is `squeeze(16R)` followed by `add` of the `16R` bytes it returned.  Those bytes fill `buf`, so they are XORed into the outer state they were read from, which zeroizes it, and `P` is applied at once.  Inverting `P` on a state captured afterward gives a zero outer state.  Recomputing the erased outer state, or any state before it, therefore requires guessing its `16R` bytes, and `16R ≥ 16C` at every capacity.
+
 ## The tree-hashing mode
 
 The tree mode turns any byte-stream **node hash** into a parallelizable hash.  It is a two-level, KangarooTwelve-style "final node growing" tree parameterized by:
@@ -180,7 +182,7 @@ Compress-Castella is explicitly **not** a cryptographic hash, and no collision o
 
 The 16 lanes start pairwise distinct at every legal `mix_rate`.  They are also independent between mixes because lane `i` absorbs only sub-block `m_i`.  An attacker therefore faces sixteen independent 128-bit chains rather than one 2048-bit state, and can collide them one at a time.  That caps collision resistance at roughly 2^68 whatever the digest length.  A message colliding within the first mix period (65536 bytes at the default `mix_rate`) suffices, since the states stay equal once they meet.  Do not use any of this where security matters.
 
-**No forward secrecy for PRNG usage.**  Squeezing does not erase the state (there is no state-forgetting operation), and `P` is invertible, so an adversary who captures the state can recompute earlier outputs back to the last absorption of secret input, as well as all future outputs until the next one.  Backtracking resistance in the sense of the sponge-PRNG literature would require deliberate state erasure, which the duplex does not perform.
+**No forward secrecy for PRNG usage unless `forget()` is called.**  Squeezing does not erase the state, and `P` is invertible, so an adversary who captures the state can recompute earlier outputs back to the last absorption of secret input or the last `forget()`, whichever came later, as well as all future outputs until the next absorption of secret input.  Backtracking resistance in the sense of the sponge-PRNG literature requires deliberate state erasure, which the duplex performs only in `forget()`.
 
 ### The security claim
 

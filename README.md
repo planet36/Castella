@@ -108,6 +108,17 @@ The `squeeze_bytes` member function performs the following:
 
 The `squeeze_to` member function does the same, but writes into a caller-provided buffer instead of allocating a vector.  The size of the buffer takes the place of _n_, and as a precondition it is no larger than `get_rate_size_bytes()`.  A debug build asserts that.  A release build clamps a larger size the same way, and leaves any bytes past `get_rate_size_bytes()` untouched.
 
+### Forgetting
+
+The `forget` member function erases the outer state, so that a state captured later gives back no output already squeezed.  It performs the following:
+
+1. Append the input suffix to the input buffer.
+2. Apply the padding rule.
+3. Zeroize the outer state.
+4. Apply the permutation function.
+
+A squeeze erases nothing, and the permutation function is invertible, so without `forget` a captured state gives back every earlier output, as far as the last secret input.  A pseudorandom generator that must protect what it has already handed out calls `forget` after each squeeze, as the [HTTP PRNG service](http-prng-service) does.  Later output is not protected.  It follows from the captured state until secret input is added.
+
 ## Tree Hashing
 
 A byte-stream hash is inherently sequential, so a single duplex can never use more than one CPU core.  The generic [tree-hash layer](include/castella-hash-tree.hpp) (`Castella::HashTree`) restores parallelism with a [KangarooTwelve](https://keccak.team/files/KangarooTwelve.pdf)-style two-level tree.  The input is split into fixed-size chunks, each chunk after the first is hashed to a fixed-size chaining value by an independent leaf node, and the chaining values are absorbed by a final node in chunk order.  The digest depends only on the tree geometry, the node parameters, and the input bytes, never on the thread count or on how the input was split across `add()` calls.

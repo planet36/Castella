@@ -227,6 +227,10 @@ class Duplex:
         self._pad_and_permute()
         return b"".join(self.state)[:n]
 
+    def forget(self) -> None:
+        """Squeeze the full rate and absorb it back, zeroizing the outer state."""
+        self.add(self.squeeze(16 * self.R))
+
 
 # ---- Compress-Castella (non-cryptographic)
 

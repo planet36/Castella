@@ -23,7 +23,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 6 | `R*`, the strengths table, and the SHA-3 mapping | arithmetic | §6 |
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
 | 8 | Fast paths never change a digest | executable | §8 |
-| 9 | No PRNG forward secrecy | non-claim | §9 |
+| 9 | No PRNG forward secrecy unless `forget()` is called | non-claim, and executable for `forget()` | §9 |
 | 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself) | executable | §10 |
 | 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column, and a uniformity construction reaching 6 from one fixed byte, whose forward half is a 3-round distinguisher through the sponge at `C` = 2 | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
@@ -135,7 +135,15 @@ It must print `passed: 2176 comparisons of permute_folded against permute_generi
 
 ## 9. The PRNG forward-secrecy non-claim
 
-There is nothing to verify, because it is a non-claim, documented so nobody assumes otherwise.  `permute_inv-verify` in §8 demonstrates the fact that makes it necessary, that `P` is invertible.
+There is nothing to verify without `forget()`, because it is a non-claim, documented so nobody assumes otherwise.  `permute_inv-verify` in §8 demonstrates the fact that makes it necessary, that `P` is invertible.
+
+`forget()` is the exception the non-claim names, and its part is executable.  SPEC.md defines it as `squeeze(16R)` followed by `add` of the bytes returned, and the differential fuzzer checks the C++ member against that definition in the Python model:
+
+```bash
+cd ../tests && make duplex-diff-driver && python3 duplex-diff-fuzz.py
+```
+
+It must print `200 programs, 325 squeezes verified, 0 failed`.  The pinned run calls `forget` 136 times across 97 programs.  `make test` also runs it.  The erasure itself needs no run, since absorbing the outer state's own bytes zeroizes it.
 
 ## 10. Structural probes and the exact invariant-subspace search
 

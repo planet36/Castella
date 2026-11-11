@@ -199,7 +199,7 @@ An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.
 
 **Margin rationale.**  `R*` = max(diffusion floor, trail floor, sponge reach) **+ 3**.  The two floors are the fewest rounds that evidence in hand supports, and the sponge reach is the most rounds that any known distinguisher through the duplex covers.  The largest of the three is the binding floor, and the `+ 3` is the margin against everything the three do not model.
 
-The diffusion floor is the fewest rounds after which a one-bit input change flips each output bit with probability 1/2, as measured, which is 3 for the 16-block state (Evidence).  The sponge reach is 2 at present, under the definition below, from the 2-round distinguisher under Evidence.
+The diffusion floor is the fewest rounds after which a one-bit input change flips each output bit with probability 1/2, as measured, which is 3 for the 16-block state (Evidence).  At present, the sponge reach is 2 at `C` = 4, 6, and 8, under the definition below, from the 2-round distinguisher under Evidence.  It is 3 at `C` = 2, from the forward half of the 2^896 zero-sum under Evidence, whose four free blocks fit in the rate only at that capacity.  The binding floor at `C` = 2 was already 3, from the diffusion floor, so no `R*` changes.
 
 The trail floor is the smallest round count whose proven per-characteristic bound `2^(−6A)` is at most `2^(−2b)` for claimed level `b`.  That is twice the exponent of the generic bound, as headroom for the trail clustering the model does not cover.  So `r` rounds support levels `b` ≤ 3·A(r), which from the `A` values under Evidence means 2 rounds cover `b` ≤ 135, 3 rounds `b` ≤ 387, 4 rounds `b` ≤ 495, and 5 rounds `b` ≤ 702.
 
@@ -209,7 +209,7 @@ Full diffusion here is the statistical measure the diffusion floor uses, not the
 
 | `C` | claimed `b` | trail floor | diffusion floor | sponge reach | binding floor | `R*` |
 |-----|-------------|-------------|-----------------|--------------|---------------|------|
-| 2 | 128 | 2 | 3 | 2 | 3 | 6 |
+| 2 | 128 | 2 | 3 | 3 | 3 | 6 |
 | 4 | 256 | 3 | 3 | 2 | 3 | 6 |
 | 6 | 384 | 3 | 3 | 2 | 3 | 6 |
 | 8 | 512 | **5** | 3 | 2 | 5 | 8 |
@@ -232,9 +232,9 @@ The claim above, its two tables, and the `R*` rule are the whole of what is clai
 
 **The tightest quantity in this rationale is not a margin but `C` = 6's trail floor.**  It is the only row where `2b/6` lands exactly on an integer, so it needs `A(3) ≥ 128`.  It gets **129**, clearing by one active S-box (6 bits of characteristic probability), where the other rows round up and clear by 2, 43, and 63.  At `A(3)` = 127, its trail floor would be 4 rounds and its `R*` 7.  Nothing here is unsound, since `A(3)` = 129 is a converged optimum and the deepest cell both MILP solvers close independently.  But it is the figure most exposed to being *derived* rather than chosen, so if the commitment below ever fires, look at `C` = 6 first, not `C` = 8.
 
-**On comparison with SHA-3's margin, which is not like-for-like in either direction.**  Keccak ships 24 rounds against practical attacks reaching roughly 6, a ratio near 4×.  That is wider than the 3× of 6 rounds over a sponge reach of 2, and a young design with no external analysis has no business claiming a thinner margin than a scrutinized one.  Two things make the ratios incomparable as stated, and they point opposite ways.
+**On comparison with SHA-3's margin, which is not like-for-like in either direction.**  Keccak ships 24 rounds against practical attacks reaching roughly 6, a ratio near 4×.  That is wider than the 3× of 6 rounds over a sponge reach of 2, or the 2× over the reach of 3 at `C` = 2, and a young design with no external analysis has no business claiming a thinner margin than a scrutinized one.  Two things make the ratios incomparable as stated, and they point opposite ways.
 
-Against Castella there are no practical attacks at *any* round count to measure from, so the sponge reach of 2 is a distinguisher requiring 2^128 data, not a break of the sponge.  Measured against attacks of the kind Keccak's 6 refers to, the margin here is the whole round count.
+Against Castella there are no practical attacks at *any* round count to measure from, so the sponge reach is a distinguisher requiring 2^128 data, or 2^512 for the 3-round reach at `C` = 2, not a break of the sponge.  Measured against attacks of the kind Keccak's 6 refers to, the margin here is the whole round count.
 
 But a distinguisher of any cost is also the more conservative anchor, since Keccak's 6 counts only attacks of practical cost.  Zero-sums on the permutation alone reach *full-round* Keccak-`f`, and at `C` = 2, 4, and 6 they now reach every claimed round of `P` as well (see Evidence).  Keccak's claim declines to count them, as this one now does.  The ratios should therefore be read as this design's own bookkeeping against its own best result, not as figures comparable with a published SHA-3 number.
 
@@ -252,9 +252,9 @@ Three kinds of property do not count.  Generic properties that every concrete pe
 
 **The sponge reach is counted by reach alone**, meaning how many rounds a property sees through, not what it costs.  A sponge-interface distinguisher needing 2^1776 queries counts in full, as a practical one would.  The amendment narrowed which properties count, not how they are weighed.
 
-**The sponge reach can move, and the margin cannot.**  The sponge reach of 2 is the longest *known*, from the 2-round integral distinguisher under Evidence, whose cube fills one block of the rate.  No upper bound on it is claimed.
+**The sponge reach can move, and the margin cannot.**  The sponge reach is the longest *known* at each capacity.  It is 2 at `C` ≥ 4, from the 2-round integral distinguisher under Evidence, whose cube fills one block of the rate, and 3 at `C` = 2, from the forward half of the 2^896 zero-sum.  No upper bound on it is claimed.
 
-**A sponge-interface distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity.**  The sponge reach enters the binding floor, so a result that lengthens it raises `R*` directly.  At the current floors, 4 rounds obliges 7 at `C` = 2, 4, and 6, and 6 rounds obliges 9 at `C` = 8.  Reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md)).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
+**A sponge-interface distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity where it works.**  A smaller capacity has a larger rate, so a distinguisher that works at one capacity also works at every smaller one.  The sponge reach enters the binding floor, so a result that lengthens it raises `R*` directly.  At the current floors, 4 rounds obliges 7 at each of `C` = 2, 4, and 6 where it works, and 6 rounds obliges 9 at `C` = 8.  Reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md)).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
 
 ### Security strengths (generic bounds)
 
@@ -329,10 +329,10 @@ Two MD-style failure modes are structurally absent:
 
   Beyond 8 rounds, the bounds come from superadditivity, since any (a+b)-round trail restricts to disjoint a- and b-round trails with nonzero input differences (`P` is a bijection), so A(a+b) ≥ A(a) + A(b).
 
-  The same counts bound linear-trail correlations by `2^(−3A)`.  These bounds cover **single characteristics only** (nothing about differential clustering, rebound attacks, invariant subspaces, or other structural distinguishers), so they are necessary, not sufficient.
+  The same counts bound linear-trail correlations by `2^(−3A)`.  The step from a count to a probability multiplies S-box probabilities, which is exact on average over independent round keys.  `P` has fixed constants instead, so the counts are proven and each probability is an estimate under that assumption.  These bounds cover **single characteristics only** (nothing about differential clustering, rebound attacks, invariant subspaces, or other structural distinguishers), so they are necessary, not sufficient.
 * A bit-level SAT/SMT search for *actual* characteristics (`research/permute-trail-search.py`) checks the model from the other side.  For 1 round, the bound is **proven tight** because a real characteristic attains all 9 active S-boxes at the maximum 2^−6, weight exactly 54 = 6·A.  For 2 rounds, a characteristic is realizable near the floor (best found weight 293 vs. the 6·A = 270 floor), but exact minimization is intractable, so the best-trail weight is only bracketed in [270, 293], about 0.5 bits per S-box above the floor.
 
-  3 and 4 rounds are bracketed more loosely, at [774, 823] and [990, 1123].  Both floors are solved.  Both ceilings are the lightest characteristic reached inside one pinned input/output differential, first by descending its weight shell and then by enumerating the shell that descent stalled in, starting from the best of 416 and 35 swept trails respectively.  Each was re-verified transition-by-transition against the AES DDT, and neither is a minimum.
+  3 and 4 rounds are bracketed more loosely, at [774, 823] and [990, 1123].  Both floors are solved.  Both ceilings are the lightest characteristic reached inside one pinned input/output differential, first by descending its weight shell and then by enumerating the shell that descent stalled in, starting from the best of 416 and 38 swept trails respectively.  Each was re-verified transition-by-transition against the AES DDT, and neither is a minimum.
 
   At 5 rounds, the search's own pattern stage finds nothing for the shipped 16-block state, at any activity target, cardinality encoding, or solver seed tried, and from 6 rounds up it was skipped rather than retried.  Supplying it the MILP's already-solved activity pattern brackets those round counts too: [1404, **1602**] at 5 rounds, [1620, **1856**] at 6, [2124, **2447**] at 7, and [2340, **2699**] at 8.  Each started from a characteristic the bit level produced in 7–14 s once it had a pattern to instantiate, and each was then tightened by the same two shell steps.  So every round count through 8, which covers every round count this specification recommends, is bracketed at both ends.
 
@@ -359,9 +359,9 @@ Two MD-style failure modes are structurally absent:
 
   And there is a **2-round** integral distinguisher with 2^128 data, with an exact structural proof.  Over a full-block cube, round 1 is a bijection on that block, the transpose then gives every block one *active* byte, and each block's round 2 is a function of that byte alone.  So summing over the cube repeats each of its 256 values 2^120 times, an even multiplicity, and the XOR-sum vanishes.  (The AES Square property also holds in this configuration, but it is not what makes the sum vanish, since the counting argument never uses the fact that round 2 is AES.)  The threshold is sharp at the full block (2^8, 2^32, 2^64, and 2^96 all fail).
 
-  Block 0 lies in the rate at every capacity, so this distinguisher works through the sponge interface, with the capacity known or secret, and it sets the sponge reach at 2.
+  Block 0 lies in the rate at every capacity, so this distinguisher works through the sponge interface, with the capacity known or secret, and it sets the sponge reach at 2.  At `C` = 2, the forward half of the 2^896 construction below raises it to 3.
 
-  Forward, at 3 rounds the model resolves to **SAT** for both the single-block and the `two-blocks` cube (~1.8 h and ~2.4 h), which excludes a *full* 2048-bit zero-sum in that direction without proving anything about the permutation, since a SAT bounds only the technique.
+  Forward, at 3 rounds the model resolves to **SAT** for both the single-block and the `two-blocks` cube (~1.8 h and ~2.4 h), so it certifies no full 2048-bit zero-sum for either cube.  A SAT bounds only the technique, and a larger cube does give a 3-round forward zero-sum, the forward half of the 2^896 construction below.
 
   **Running the construction in both directions from a middle state does better, and inside-out zero-sums reach 6 rounds.**  A middle-state cube filling one block gives 3, forward 2 and backward 1.  Adding byte 0 of every other block gives 31 bytes, so 2^248 states, and 4 rounds.  With those 15 column bytes fixed, block 0's first round is a bijection in the row bytes, so `P` forward covers 2 rounds by the counting above.  Going backward, the transpose turns the column into block 0, so with the rest of the row fixed, block 0's first inverse round is a bijection, and `P⁻¹` covers 2 rounds the same way.
 
@@ -382,6 +382,8 @@ Two MD-style failure modes are structurally absent:
   The 6-round construction is checked on the same analog, whose middle set of 2^60 states is too large to enumerate, so the program counts it exactly instead.  Both ends sum to zero and every cell is uniform.  A control that gives each AES phase a 4th AES round fails.  The two halves of the 2^896 version are enumerated there exhaustively, each alone with the other's cells fixed.  Each is a zero-sum over 3 rounds and fails one round longer.  The reduced-width search found nothing past 4.  Its 2-byte blocks cannot satisfy the lemma, so it could not have found this construction.
 
   The degree bound allows a degree-based construction 4 rounds at a data cost near 2^2044, so the 6-round construction, at 2^896, beats it in reach as well as in data.  **No upper bound on the integral reach is claimed anywhere here.**  No margin moves.  An inside-out zero-sum needs a chosen middle state, so it does not count toward the sponge reach (see the margin rationale).
+
+  The forward half of the 2^896 construction is the one exception, and only at `C` = 2.  Its four free blocks may be any AES diagonal.  Blocks 1, 6, 11, and 12 form one, and at `C` = 2 message bytes fill all four in the last rate block before a squeeze.  A caller can therefore run the 2^512 cube over those blocks through the duplex, with the capacity known or secret, and every output byte is uniform after 3 rounds, by the forward argument above.  That sets the sponge reach at 3 at `C` = 2.  Every AES diagonal has one block among 12 to 15, which are capacity at `C` ≥ 4, so the reach stays 2 there and 3 rounds through the sponge is open.
 * A PractRand statistical smoke test of the duplex PRNG stream (16 GiB, `C` = 4, at both 6 and 3 rounds) shows no anomalies (`research/duplex-prng-stream.cpp`).  Statistical batteries carry no cryptographic weight when they pass, and only a failure would have been informative.
 
 ## Test vectors

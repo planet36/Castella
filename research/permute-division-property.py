@@ -133,7 +133,12 @@ none is at any C, from any cube a caller can choose.
 Two round counts need no solving.  At r = 1, the cube strands bits outside
 every target block, so `trivially_balanced` decides it.  At r = 2, the `block`
 cube is balanced on all 2048 bits and lies inside every sponge cube, so the
-sponge cube is balanced too.  The open question starts at r = 3.
+sponge cube is balanced too.
+
+At r = 3, the scan has not resolved.  At C = 2, an argument settles it,
+because message bytes fill four whole blocks on an AES diagonal and the cube
+over them balances every output bit.  So the open question starts at r = 4
+for C = 2, and at r = 3 for C >= 4.
 
 Two attacks are outside the model.  A conditional cube fixes some non-cube
 bits to slow the first round, but the division property quantifies over
@@ -1166,8 +1171,9 @@ def main() -> None:
                     help="look for a balanced rate output bit over the "
                          "largest cube a duplex caller controls at capacity "
                          "C (2, 4, 6, or 8), with the capacity known or "
-                         "secret.  C = 2 decides every capacity.  Forward "
-                         "only, and it overrides --cube and --bits")
+                         "secret.  C = 2 decides every capacity when no bit is "
+                         "balanced.  Forward only, and it overrides --cube and "
+                         "--bits")
     ap.add_argument("--validate", action="store_true",
                     help="reproduce AES's Square distinguisher and exit.  "
                          "It honors --inverse, which gates the inverse "

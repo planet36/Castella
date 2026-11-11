@@ -205,13 +205,21 @@ permutation).  The honest procedure has four steps:
 3. **Margin against the unknown.  RESOLVED 2026-08-08 and AMENDED 2026-10-29.  The policy
    is now `R* = max(diffusion floor, trail floor, sponge reach) + 3`**, additive in rounds,
    with the `+ 3` a fixed margin sized by full bit diffusion.  The sponge reach is the
-   longest reach of any known distinguisher through the sponge interface, currently 2.  The
-   policy reproduces all four shipped round counts (6/6/6/8) with no exceptional row, and
-   nothing shipped changed when it was adopted or when it was amended.
+   longest reach of any known distinguisher through the sponge interface, currently 2, and
+   3 at `C` = 2, where the forward half of the 2^896 zero-sum fits in the rate.  That moves
+   no `R*`, since the binding floor at `C` = 2 was already 3.  The policy reproduces all
+   four shipped round counts (6/6/6/8) with no exceptional row, and nothing shipped changed
+   when it was adopted or when it was amended.
 
    It is written up in SPEC.md's margin rationale, including the disclosures below.
    Re-evaluate as results arrive.  A sponge-interface distinguisher reaching `k` rounds
-   obliges `R*` ≥ `k` + 3, so one reaching 4 rounds obliges 7 at `C` = 2, 4, and 6.
+   obliges `R*` ≥ `k` + 3 at every capacity where it works, so one reaching 4 rounds
+   obliges 7 at each of `C` = 2, 4, and 6 where it works.
+
+   *The per-capacity reading was adopted on 2026-11-10.*  SPEC.md's commitment read "at
+   every capacity" until a 3-round result that works at `C` = 2 alone showed that the
+   reach depends on the rate.  A distinguisher that works at one capacity also works at
+   every smaller one.
 
    *What the amendment changed, and why.*  As adopted, the `+ 3` was the longest reach of
    any known distinguisher against `P`, then the 3-round inside-out zero-sum, counted by
@@ -237,13 +245,14 @@ permutation).  The honest procedure has four steps:
    applying `2×` to the *floor* instead.
 
    *The comparison with Keccak that this step used to make is not like-for-like.*  Keccak's
-   ~3–4× is against practical attacks reaching ~6 rounds, while the sponge reach of 2 here
-   is a 2^128-data distinguisher, not a break of the sponge.  It cuts both ways, and SPEC.md
-   now says so.  There are no practical attacks on Castella at any round count to measure
-   from, but the sponge reach counts a distinguisher of any cost.  Zero-sums reach
-   full-round Keccak-`f`, and at `C` = 2, 4, and 6 they now reach every claimed round of `P`
-   as well.  Keccak's claim declines to count them, as this one now does.  Do not present
-   any ratio of `R*` to a reach as comparable to a SHA-3 figure.
+   ~3–4× is against practical attacks reaching ~6 rounds, while the sponge reach of 2 here,
+   or 3 at `C` = 2, is a distinguisher needing 2^128 data, or 2^512, not a break of the
+   sponge.  It cuts both ways, and SPEC.md now says so.  There are no practical attacks on
+   Castella at any round count to measure from, but the sponge reach counts a distinguisher
+   of any cost.  Zero-sums reach full-round Keccak-`f`, and at `C` = 2, 4, and 6 they now
+   reach every claimed round of `P` as well.  Keccak's claim declines to count them, as this
+   one now does.  Do not present any ratio of `R*` to a reach as comparable to a SHA-3
+   figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances*.
    This is **done, and the margin question that hung over this step is CLOSED (2026-08-08).
    The round counts stay at 6/6/6/8 and the rationale was rewritten** under step 3's adopted
@@ -251,7 +260,7 @@ permutation).  The honest procedure has four steps:
 
    | `C` | claimed `b` | needs `A ≥` | trail floor | sponge reach | binding floor | shipped `R*` | `R*` − floor |
    |---|---|---|---|---|---|---|---|
-   | 2 | 128 | 43 | r=2 | r=2 | r=3 (diffusion) | 6 | **+3** |
+   | 2 | 128 | 43 | r=2 | r=3 | r=3 (diffusion) | 6 | **+3** |
    | 4 | 256 | 86 | r=3 | r=2 | r=3 | 6 | **+3** |
    | 6 | 384 | 128 | r=3 | r=2 | r=3 | 6 | **+3** |
    | 8 | 512 | 171 | **r=5** | r=2 | r=5 | 8 | **+3** |
@@ -307,8 +316,9 @@ permutation).  The honest procedure has four steps:
 
    **What would reopen it is evidence, not preference.**  That evidence is the commitment
    published in SPEC.md and CHALLENGES.md, under which a sponge-interface distinguisher
-   reaching 4 rounds obliges `R*` = 7 at `C` = 2, 4, and 6.  At that point, `C` = 6
-   deserves the first look, for the floor reason in the paragraph above, not `C` = 8.
+   reaching 4 rounds obliges `R*` = 7 at each of `C` = 2, 4, and 6 where it works.  At
+   that point, `C` = 6 deserves the first look, for the floor reason in the paragraph
+   above, not `C` = 8.
 
    **One property of the commitment is worth stating rather than discovering later, which
    is that it bounds reach, not data complexity.**  A 4-round sponge-interface
@@ -421,9 +431,10 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    other 255 free (2^2040).  A second one cut that to 2^896 the next day.  It also argued
    that the technique stops at 6.  One step of that argument is unproved for AES, so 7 is
    open.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach,
-   and that is the input this item gives `R*` (§4.3 step 3).  So this item is not merely
-   evidence beside the claim but an input to the shipped parameters (VERIFYING-CLAIMS § 11
-   and § 15).  The inside-out zero-sums characterize `P` and move nothing.
+   which the forward half of the 2^896 zero-sum raises to 3 at `C` = 2, and that is the
+   input this item gives `R*` (§4.3 step 3).  So this item is not merely evidence beside the
+   claim but an input to the shipped parameters (VERIFYING-CLAIMS § 11 and § 15).  The
+   inside-out zero-sums characterize `P` and move nothing.
 6. **Duplex-PRNG mode note (new, cheap).**  The sponge-PRNG papers require *state
    forgetting* for backtracking resistance, and the duplex as implemented does not zero
    the outer state after squeezing.  Document that forward secrecy is **not** claimed for
@@ -547,8 +558,9 @@ non-cryptographic checksum.
 **Steps 1–4 and 6 are complete, and step 5 ran to the end of what is planned.**  All five
 analyses it lists were built (§5), each with its reproduction commands.  One of them, the
 algebraic/integral family, did move the best-known-reach number and did update the margin
-rationale, exactly as the step anticipated.  It supplies the sponge reach of 2 that enters
-`R*`, and its 4-round inside-out zero-sum prompted the 2026-10-29 amendment (§4.3 step 3).
+rationale, exactly as the step anticipated.  It supplies the sponge reach that enters
+`R*`, 2 at `C` ≥ 4 and 3 at `C` = 2, and its 4-round inside-out zero-sum prompted the
+2026-10-29 amendment (§4.3 step 3).
 
 What is left is not a next step in this order but the standing maintenance in
 [research/RE-DERIVATION-RUNBOOK.md](research/RE-DERIVATION-RUNBOOK.md), plus whatever
@@ -589,11 +601,12 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 | A 7-round inside-out zero-sum | 2026-10-30 | Not pursued.  A second blind re-derivation found none, and it argued that the technique stops at 6 rounds.  Its one unproved step asks whether 3-round AES has a common coarsening, which is a question about AES itself, and a positive answer would be a weakness in AES.  Inside-out zero-sums do not count toward `R*`, so no answer moves a parameter.  SPEC.md keeps 7 rounds open. |
 
 **What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface
-distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3, so 4 rounds obliges 7 at `C` = 2,
-4, and 6, and 6 rounds obliges 9 at `C` = 8.  It is stated in SPEC.md and CHALLENGES.md, it
-asks about *reach* rather than cost, and if it fires, `C` = 6 is the row to examine first
-(§4.3, and now SPEC.md's margin rationale).  Under the 2026-10-29 amendment, an inside-out
-zero-sum on `P` alone reopens nothing (§4.3 step 3).
+distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity where it works,
+so 4 rounds obliges 7 at each of `C` = 2, 4, and 6 where it works, and 6 rounds obliges 9
+at `C` = 8.  It is stated in SPEC.md and CHALLENGES.md, it asks about *reach* rather than
+cost, and if it fires, `C` = 6 is the row to examine first (§4.3, and now SPEC.md's margin
+rationale).  Under the 2026-10-29 amendment, an inside-out zero-sum on `P` alone reopens
+nothing (§4.3 step 3).
 
 **One gap is unmodeled rather than closed.**  Rebound attacks are covered by a reasoned
 margin argument, not by a search.  The argument grants the attacker a free maximal-reach

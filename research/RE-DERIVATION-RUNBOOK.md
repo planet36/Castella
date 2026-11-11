@@ -78,7 +78,7 @@ them, and why nothing in this file should run during one.
 | `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §1, §7 |
 | `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …) | §1, §7 |
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
-| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`) | §1, §7 |
+| `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`), which is 3 at `C` = 2 on the strength of `aes_enc-uniformity-verify.cpp` | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
 | `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
 | `research/aes_enc-uniformity-verify.cpp` | the two real-AES uniformity facts the 6-round zero-sum's 2^896 form rests on, by exhaustive enumeration | §7 |
@@ -469,10 +469,12 @@ python3 permute-division-property.py -r 1 -c byte --count  # ~7 min; all 2048 bi
 python3 permute-division-property.py -r 2 -c block --count # ~50 min; the 2^128 distinguisher
 python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST report a zero-sum
 
-# The sponge reach.  C = 2 decides every capacity.  r = 2 MUST report a balanced
-# rate bit, which the block cube already implies.  Do not run r = 3 as a scan.  One
-# bit builds in 3.5 min, peaks at 7.6 GiB, and did not resolve within 8 h (2026-10-29),
-# and a verdict needs all 1792 rate bits.
+# The sponge reach.  C = 2 decides every capacity when it finds nothing.  r = 2 MUST
+# report a balanced rate bit, which the block cube already implies.  Do not run r = 3
+# as a scan.  One bit builds in 3.5 min, peaks at 7.6 GiB, and did not resolve within
+# 8 h (2026-10-29), and a verdict needs all 1792 rate bits.  At C = 2, r = 3 is
+# settled without the scan, by the forward half of the 2^896 zero-sum
+# (VERIFYING-CLAIMS.md § 11), so the reach there is 3.
 python3 permute-division-property.py --sponge 2 -r 2  # 3.3 min, 2.3 GB peak
 
 # The inside-out zero-sums.  Part A checks the premises on the real state.  Part B
@@ -526,6 +528,7 @@ it states the conclusion the figure was supporting.
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
 | [hash-programs/README.md](../hash-programs/README.md) | the default `--rounds=6` in its sample digest line and its benchmark claims |
 | [hash-programs/castella.cpp](../hash-programs/castella.cpp) | `num_rounds_claimed_small` and `num_rounds_claimed_large`, and the `--help` text built on them, which make `R*` = 6/8 and the size-48 split the program's default rounds |
+| [permute-division-property.py](permute-division-property.py) | its docstring and `--sponge` help, which say what the sponge scan decides and where the open question starts |
 | [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy as instructions that get acted on, so a stale value there is worse than a stale sentence |
 
 Two of those bite in particular.  A changed ceiling or floor moves the brackets **and** the

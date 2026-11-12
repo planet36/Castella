@@ -36,6 +36,21 @@
 * states, since a structural zero-sum must not depend on either.  The program
 * exits nonzero on any case that disagrees with its expectation.
 *
+* The second table keeps to what a caller of a sponge can do, which is to
+* choose the rate blocks of the input and read the rate blocks of the output.
+* The capacity is the last c blocks, set to 256 random values per seed.  For
+* each value, the cube is every rate block, with no backward half, and only
+* the rate cells of the output sum are kept.  The rank of those 256 sums over
+* GF(2) tells how many linear combinations of rate output bits are balanced
+* for every capacity value.  Rank 0 is a zero-sum, and full rank means that
+* no combination is balanced.
+*
+* That cube is 2^32 or 2^48 states, so \c count_block_cube sums it by exact
+* counting, for 2 and 3 rounds.  The counting is checked against enumeration
+* on every one-block cube, and at 3 rounds on the 2^32 cube of blocks 0 and 1
+* unless \c -q is given.  A 4th round leaves the blocks dependent, which the
+* counting cannot follow, so the table stops at 3.
+*
 * The 6-round construction is too large to enumerate even here.  Its middle
 * set fixes one cell and frees the other 15, so it has 2^60 states.  It sits
 * before half-step 6 of a 6-round run, and both halves start the same way.
@@ -733,6 +748,130 @@ coarsening_dimension(const std::vector<block_t>& e)
     return nullity - 3;
 }
 
+/// The cell offsets (16*block + 4*cell) of every cell of the blocks in the mask \a free_blocks
+[[nodiscard]] static std::vector<int>
+block_offsets(const unsigned free_blocks)
+{
+    std::vector<int> offsets;
+    for (int m = 0; m < NUM_BLOCKS; ++m)
+        if (((free_blocks >> static_cast<unsigned>(m)) & 1U) != 0)
+            for (int k = 0; k < CELLS_PER_BLOCK; ++k)
+                offsets.push_back((16 * m) + (4 * k));
+    return offsets;
+}
+
+/// How many states of a whole-block cube hold v in block j before the last AES phase
+/**
+* The cube frees every block in the mask \a free_blocks at the input of a run
+* of \a num_rounds rounds, which is 2 or 3, and \a base supplies the other
+* blocks.  The result is counts[j][v].
+*
+* The first AES phase permutes each free block and maps each other block to
+* a constant.  After its transpose, cell m of every block is free when block
+* m was, and is otherwise a constant, so the 4 blocks are independent.  A
+* 2-round run ends with the next phase, so a block's value occurs once for
+* each choice of the other three.  A 3-round run has one more phase and
+* transpose first.  Cell j of block i's image lands in block j, so the count
+* of v in block j is the product over i of how many images of block i hold
+* cell i of v at cell j.
+*/
+[[nodiscard]] static std::array<std::vector<int64_t>, NUM_BLOCKS>
+count_block_cube(const phase_tables& tables, const unsigned free_blocks, const state_t base,
+                 const int num_rounds)
+{
+    const int num_free = std::popcount(free_blocks);
+    std::array<std::vector<block_t>, NUM_BLOCKS> sets;
+    for (int i = 0; i < NUM_BLOCKS; ++i)
+    {
+        for (unsigned x = 0; x < (1U << static_cast<unsigned>(4 * num_free)); ++x)
+        {
+            unsigned y = 0;
+            unsigned rest = x;
+            for (int m = 0; m < NUM_BLOCKS; ++m)
+            {
+                unsigned c = 0;
+                if (((free_blocks >> static_cast<unsigned>(m)) & 1U) != 0)
+                {
+                    c = rest & 0xFU;
+                    rest >>= 4U;
+                }
+                else
+                {
+                    const auto b = static_cast<block_t>(base >> (16 * m));
+                    c = cell(tables.block(false, 0, m, b), i);
+                }
+                y |= c << static_cast<unsigned>(4 * m);
+            }
+            sets[i].push_back(static_cast<block_t>(y));
+        }
+    }
+
+    std::array<std::vector<int64_t>, NUM_BLOCKS> counts;
+    for (auto& c : counts)
+        c.assign(BLOCK_VALUES, 0);
+
+    if (num_rounds == 2)
+    {
+        const int64_t others = int64_t{1} << (4 * num_free * (NUM_BLOCKS - 1));
+        for (int i = 0; i < NUM_BLOCKS; ++i)
+            for (const block_t y : sets[i])
+                counts[i][y] = others;
+        return counts;
+    }
+
+    // n[i][j][x] counts the images of block i that hold x at cell j.
+    std::array<std::array<std::array<int64_t, CELL_VALUES>, CELLS_PER_BLOCK>, NUM_BLOCKS> n{};
+    for (int i = 0; i < NUM_BLOCKS; ++i)
+        for (const block_t y : sets[i])
+        {
+            const block_t z = tables.block(false, 1, i, y);
+            for (int j = 0; j < CELLS_PER_BLOCK; ++j)
+                ++n[i][j][cell(z, j)];
+        }
+    for (int j = 0; j < NUM_BLOCKS; ++j)
+        for (int v = 0; v < BLOCK_VALUES; ++v)
+        {
+            int64_t prod = 1;
+            for (int i = 0; i < NUM_BLOCKS; ++i)
+                prod *= n[i][j][cell(static_cast<block_t>(v), i)];
+            counts[j][v] = prod;
+        }
+    return counts;
+}
+
+/// The exact XOR of the outputs of a whole-block cube, from \c count_block_cube
+[[nodiscard]] static state_t
+block_cube_output_sum(const phase_tables& tables, const unsigned free_blocks,
+                      const state_t base, const int num_rounds)
+{
+    const construction_half end{.inverse = false, .absorbed = 0, .lemma = 0,
+                                .last = num_rounds - 1}; // NOLINT(readability-trailing-comma)
+    return end_sum(tables, end, count_block_cube(tables, free_blocks, base, num_rounds));
+}
+
+/// The rank over GF(2) of \a vectors
+[[nodiscard]] static int
+rank_gf2(const std::vector<uint64_t>& vectors)
+{
+    std::array<uint64_t, 64> basis{};
+    int rank = 0;
+    for (uint64_t v : vectors)
+    {
+        while (v != 0)
+        {
+            const int h = 63 - std::countl_zero(v);
+            if (basis[h] == 0)
+            {
+                basis[h] = v;
+                ++rank;
+                break;
+            }
+            v ^= basis[h];
+        }
+    }
+    return rank;
+}
+
 /// Check the building blocks against what they must satisfy
 static void
 self_test()
@@ -799,6 +938,23 @@ inline constexpr std::array CASES{
 static_assert(std::ranges::all_of(CASES, [](const auto& c)
                                   { return c.num_rounds <= MAX_ROUNDS && 0 <= c.cut &&
                                            c.cut <= 2 * c.num_rounds; }));
+
+struct sponge_case
+{
+    int capacity_blocks; ///< the last blocks of the state, which the cube leaves alone
+    int num_rounds;
+    int expect_rank; ///< of the rate halves of the output sums
+};
+
+// The cube is every rate block, which contains every cube a caller could
+// run, so a sum that is not zero here rules out each smaller cube as well.
+inline constexpr std::array SPONGE_CASES{
+    sponge_case{.capacity_blocks = 1, .num_rounds = 2, .expect_rank = 0},
+    sponge_case{.capacity_blocks = 1, .num_rounds = 3, .expect_rank = 0},
+    sponge_case{.capacity_blocks = 2, .num_rounds = 2, .expect_rank = 0},
+    sponge_case{.capacity_blocks = 2, .num_rounds = 3, .expect_rank = 32},
+};
+inline constexpr int SPONGE_INSTANCES = 256; ///< capacity values drawn per case and seed
 
 // {{{ options
 int seed = 1;                                                 // the first of the two seeds
@@ -887,6 +1043,62 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                          c.num_rounds - (c.cut / 2.0), s, total.in, total.out,
                          zero_sum ? "zero-sum" : "not balanced", elapsed.count(),
                          ok ? "" : "  <-- UNEXPECTED");
+        }
+    }
+
+    std::println("\nevery rate block free, rate outputs only (the sponge interface), by exact "
+                 "counting over {} capacity values", SPONGE_INSTANCES);
+    std::println("capacity blocks  cube cells  rounds  seed  rank  balanced combinations  "
+                 "verdict       time");
+    for (const int s : {seed, seed + 1})
+    {
+        const phase_tables tables(static_cast<uint64_t>(s));
+        std::mt19937_64 rng(static_cast<uint64_t>(s));
+
+        // The counting is checked against enumeration on every one-block
+        // cube, and on the largest cube small enough to enumerate.
+        for (const int r : {2, 3})
+        {
+            std::vector<unsigned> masks{1U, 2U, 4U, 8U};
+            if (r == 3 && max_cells >= 8)
+                masks.push_back(3U);
+            for (const unsigned mask : masks)
+            {
+                const auto offsets = block_offsets(mask);
+                state_t base = rng();
+                for (const int off : offsets)
+                    base &= ~(state_t{0xF} << off);
+                const state_t counted = block_cube_output_sum(tables, mask, base, r);
+                if (sum_cube(tables, offsets, base, r, 0, num_threads).out != counted)
+                    errx(EXIT_FAILURE,
+                         "the block-cube counting disagrees with enumeration (blocks %#x, "
+                         "%d rounds)", mask, r);
+            }
+        }
+
+        for (const auto& c : SPONGE_CASES)
+        {
+            const auto t0 = std::chrono::steady_clock::now();
+            const int rate_blocks = NUM_BLOCKS - c.capacity_blocks;
+            const unsigned mask = (1U << static_cast<unsigned>(rate_blocks)) - 1U;
+            const state_t rate_mask = (state_t{1} << (16 * rate_blocks)) - 1;
+            std::vector<uint64_t> rate_sums;
+            rate_sums.reserve(SPONGE_INSTANCES);
+            for (int k = 0; k < SPONGE_INSTANCES; ++k)
+                rate_sums.push_back(
+                    block_cube_output_sum(tables, mask, rng() & ~rate_mask, c.num_rounds) &
+                    rate_mask);
+            const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - t0;
+
+            const int rank = rank_gf2(rate_sums);
+            const int balanced = (16 * rate_blocks) - rank;
+            const bool ok = rank == c.expect_rank;
+            ++num_cases;
+            num_failed += static_cast<int>(!ok);
+            std::println("{:>15}  {:>10}  {:>6}  {:>4}  {:>4}  {:>21}  {:<12}  {:.1f} s{}",
+                         c.capacity_blocks, rate_blocks * CELLS_PER_BLOCK, c.num_rounds, s,
+                         rank, balanced, rank == 0 ? "zero-sum" : "not balanced",
+                         elapsed.count(), ok ? "" : "  <-- UNEXPECTED");
         }
     }
 

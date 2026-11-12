@@ -89,6 +89,18 @@ Sections
    not a superset of sections 1-3, which let the coset move from layer to
    layer where this test needs each layer to preserve the set itself.
 
+7. The criterion's second stage (exact).  Where W falls short, the same
+   paper examines the S-box layer on the cosets of a subspace of W whose
+   elements all leave g unchanged.  Which elements of W do that depends on
+   g, so this section keeps the sign of each as an unknown instead.  For
+   w in W, g(x + w) = g(x) + f(w) with f linear on W.  So g is fixed by one
+   value for each coset of W, by f, and by the sign e of the S-box layer.
+   Every state x gives one linear equation in those unknowns, from
+   g(S(x)) = g(x) + e.  If the equations of sampled states leave only the
+   constant functions, no other g exists.  The unknowns number 2^(2048 - dim
+   W) + dim W + 1, so the section runs where W has at most 2^20 cosets,
+   which is 8 and 9 rounds.
+
 Do not analyze the S-box-deleted round
 --------------------------------------
 It is tempting to delete the S-boxes and study the resulting 256x256 matrix
@@ -124,6 +136,12 @@ falls short and the section decides nothing.  No choice of constants would
 change that, because the two linear layers need 23 sums to get there, and
 those round counts supply 16 and 22.
 
+Section 7 is exact where it runs, and it decides 8 and 9 rounds.  The class
+of section 6 is therefore open at 7 rounds and below, which includes the
+claimed 6 rounds, where W has 2^72 cosets.  Section 7's samples are random,
+but a decision does not rest on them, since every equation holds for every g
+in the class.
+
 A general subspace of F_2^2048 that is neither byte-aligned nor one of the
 named classes is therefore not covered at the claimed round counts.  The empty
 support, a fixed point, is likewise out of reach exhaustively and stays the
@@ -135,8 +153,9 @@ Usage
   python3 permute-invariant-subspaces.py --offsets 4 --seed 1
   python3 permute-invariant-subspaces.py --self-test
 
-It exits 1 if any decided check finds an invariant subspace or section 6's
-dimensions differ from the recorded ones, so it can gate regressions, and 2
+It exits 1 if any decided check finds an invariant subspace, section 6's
+dimensions differ from the recorded ones, or section 7 leaves undecided a
+round count it has decided before, so it can gate regressions, and 2
 if a check could not be decided (section 5's closure stalling, which is not a
 finding).  Nothing here solves anything.  It imports
 permute_model for the cross-validated layer machinery (shift_rows_src,
@@ -150,6 +169,7 @@ import os
 import random
 import sys
 import types
+from collections.abc import Callable, Iterator
 from itertools import batched, combinations
 
 import permute_model as PM
@@ -165,6 +185,8 @@ MC4 = ((2, 3, 1, 1), (1, 2, 3, 1), (1, 1, 2, 3), (3, 1, 1, 2))
 # The fewest rounds of any instance, and the round counts SPEC.md claims.
 NUM_ROUNDS_MIN = 3
 CLAIMED_ROUNDS = (6, 8)
+# Section 7 visits every coset of W, so it runs where they number at most this.
+MAX_COSET_BITS = 20
 
 # Section 6's dim W at each round count, which the section must reproduce.
 CLOSURE_DIMS = {3: 896, 4: 1264, 5: 1624, 6: 1976, 7: 2008, 8: 2031, 9: 2045,
@@ -189,6 +211,7 @@ def load(name: str, filename: str) -> types.ModuleType:
 SC = load("spec_model", "spec-conformance.py")
 
 SBOX = PM.SBOX
+SBOX_TABLE = bytes(SBOX)
 DDT = PM.DDT
 
 
@@ -584,15 +607,15 @@ def coinvariant_dim() -> int:
     return STATE_BITS - ech.dim
 
 
-def constant_sum_closures() -> dict[int, tuple[int, int]]:
-    """For each round count, the number of constant sums and dim W.
+def grow_constant_sums() -> Iterator[tuple[int, int, Echelon]]:
+    """Yield (round count, number of constant sums, W) for 1 to 16 rounds.
 
     W is the smallest subspace that contains the sum of every two constants
     added after the same linear layer and that both layers map into itself.
     An r-round permutation uses the last r rounds, so its sums contain those
     of every smaller r, and one closure is grown round by round.  The constant
     of the last AES round is added before the transpose, so it enters as its
-    transpose.
+    transpose.  Every round count yields the same Echelon, grown further.
     """
     last_rnd = N_BLOCKS - 1
     last_aes = PM.AES_NUM_ROUNDS - 1
@@ -602,7 +625,6 @@ def constant_sum_closures() -> dict[int, tuple[int, int]]:
     queue: list[int] = []
     head = 0
     num_sums = 0
-    out: dict[int, tuple[int, int]] = {}
     for rnd in range(last_rnd, -1, -1):
         sums = [round_constant(rnd, a) ^ base_1 for a in range(last_aes)]
         sums.append(transpose_int(round_constant(rnd, last_aes)) ^ base_2)
@@ -619,8 +641,164 @@ def constant_sum_closures() -> dict[int, tuple[int, int]]:
                 w = layer(v)
                 if ech.add(w):
                     queue.append(w)
-        out[N_BLOCKS - rnd] = (num_sums, ech.dim)
-    return out
+        yield N_BLOCKS - rnd, num_sums, ech
+
+
+def constant_sum_closures() -> dict[int, tuple[int, int]]:
+    """For each round count, the number of constant sums and dim W."""
+    return {r: (num_sums, ech.dim)
+            for r, num_sums, ech in grow_constant_sums()}
+
+
+# -------------------------------------------- 7. the criterion's second stage
+
+
+def sbox_layer_int(v: int) -> int:
+    """The S-box layer, on a state held as an integer."""
+    return int.from_bytes(v.to_bytes(N_POS, "little").translate(SBOX_TABLE),
+                          "little")
+
+
+def coset_system(rows: dict[int, int], nbits: int,
+                 step: Callable[[int], int],
+                 rng: random.Random) -> tuple[int, int, int]:
+    """Decide whether g must be constant, as (components, rank, samples).
+
+    `rows` is an echelon basis of a subspace W of F_2^nbits, and g is any
+    Boolean function with W among its linear structures and with
+    g(step(x)) = g(x) + e for one unknown bit e.  Then g(x + w) = g(x) + f(w)
+    for a linear f on W, so g is fixed by its value on one representative of
+    each coset of W, by f on the basis, and by e.  A state x = r + w with
+    step(x) = r' + w' gives g(r') + f(w') = g(r) + f(w) + e, which is linear
+    in those unknowns.
+
+    Each sampled state is one such equation, an edge from the coset of r to
+    that of r' labeled with the coordinates of w + w' and a bit for e.  The
+    edges are merged in a union-find that keeps each coset's label sum to its
+    root, and an edge inside a component leaves an equation on f and e alone.
+    One component, and equations of rank dim W + 1, force f = 0, e = 0, and
+    one value of g on every coset, so g is constant.  Anything less decides
+    nothing, since more samples might still get there.
+
+    Every coset is a source in every pass, with w moved by a random walk over
+    the basis so that it is dense.  Sampling stops once g is decided, or
+    after 4 equations for each unknown.
+    """
+    dim = len(rows)
+    order = [(1 << p, row, 1 << k)
+             for k, (p, row) in enumerate(sorted(rows.items(), reverse=True))]
+    free = [1 << p for p in range(nbits) if p not in rows]
+    num_cosets = 1 << len(free)
+    sign = 1 << dim
+
+    def reduce(v: int) -> tuple[int, int]:
+        """The index of v's coset, and the coordinates of v minus its
+        representative.  A representative is zero at every pivot."""
+        coords = 0
+        for pivot, row, bit in order:
+            if v & pivot:
+                v ^= row
+                coords |= bit
+        index = 0
+        for k, m in enumerate(free):
+            if v & m:
+                index |= 1 << k
+        return index, coords
+
+    parent = list(range(num_cosets))
+    label = [0] * num_cosets    # the sum of the edge labels up to the parent
+
+    def find(a: int) -> tuple[int, int]:
+        """The root of a's component, and a's label sum to it."""
+        path = []
+        while parent[a] != a:
+            path.append(a)
+            a = parent[a]
+        acc = 0
+        for b in reversed(path):
+            acc ^= label[b]
+            label[b] = acc
+            parent[b] = a
+        return a, acc
+
+    equations = Echelon()
+    components = num_cosets
+    samples = 0
+    walk = 0
+    walk_coords = 0
+    limit = 4 * (num_cosets + dim + 1)
+    while samples < limit:
+        for i in range(num_cosets):
+            for _ in range(8 if dim else 0):
+                _, row, bit = order[rng.randrange(dim)]
+                walk ^= row
+                walk_coords ^= bit
+            source = walk
+            for k, m in enumerate(free):
+                if (i >> k) & 1:
+                    source ^= m
+            j, coords = reduce(step(source))
+            edge = walk_coords ^ coords ^ sign
+            samples += 1
+            (root_i, sum_i), (root_j, sum_j) = find(i), find(j)
+            if root_i != root_j:
+                parent[root_j] = root_i
+                label[root_j] = sum_i ^ sum_j ^ edge
+                components -= 1
+            else:
+                equations.add(sum_i ^ sum_j ^ edge)
+        if components == 1 and equations.dim == dim + 1:
+            break
+    return components, equations.dim, samples
+
+
+def check_coset_system() -> None:
+    """Check coset_system on a 10-bit toy with a planted invariant.
+
+    The planted g has a random 6-dimensional W among its linear structures,
+    and the first step maps g's zeros onto its ones and back, so g is
+    preserved up to complement and must never be decided constant.  The
+    second step is a random permutation, which preserves nothing, and must
+    be decided.
+    """
+    nbits = 10
+    rng = random.Random(0x7C)
+    ech = Echelon()
+    while ech.dim < 6:
+        ech.add(rng.randrange(1, 1 << nbits))
+    order = sorted(ech.rows.items(), reverse=True)
+    f = [rng.randrange(2) for _ in order]
+    f[0] = 1
+    on_coset: dict[int, int] = {}
+
+    def g(v: int) -> int:
+        bit = 0
+        for (p, row), fk in zip(order, f):
+            if (v >> p) & 1:
+                v ^= row
+                bit ^= fk
+        return bit ^ on_coset.setdefault(v, rng.randrange(2))
+
+    zeros = [v for v in range(1 << nbits) if g(v) == 0]
+    ones = [v for v in range(1 << nbits) if g(v) == 1]
+    if len(zeros) != len(ones):
+        raise SelfTestError("the planted invariant is not balanced")
+    rng.shuffle(ones)
+    swap = dict(zip(zeros, ones))
+    rng.shuffle(zeros)
+    swap.update(zip(ones, zeros))
+    components, rank, _ = coset_system(ech.rows, nbits, swap.__getitem__, rng)
+    if components == 1 and rank == ech.dim + 1:
+        raise SelfTestError("coset_system decided a planted invariant "
+                            "constant")
+
+    perm = list(range(1 << nbits))
+    rng.shuffle(perm)
+    components, rank, _ = coset_system(ech.rows, nbits, perm.__getitem__, rng)
+    if components != 1 or rank != ech.dim + 1:
+        raise SelfTestError("coset_system left a random permutation "
+                            f"undecided ({components} components, rank "
+                            f"{rank})")
 
 
 # ------------------------------------------------------------------ report
@@ -668,6 +846,12 @@ def self_test() -> None:
     if ech.add(0b1100) or ech.dim != 2:
         raise SelfTestError("Echelon accepted a dependent vector")
 
+    # Section 7's S-box layer on integers must be the one on states.
+    v = state_to_int(list(st))
+    if sbox_layer_int(v) != state_to_int(apply_sbox(list(st))):
+        raise SelfTestError("sbox_layer_int disagrees with apply_sbox")
+
+    check_coset_system()
     check_skeleton_cancels()
     print("self-test: OK")
 
@@ -878,8 +1062,33 @@ def report_constants() -> list[str]:
     return failures
 
 
+def report_cosets(seed: int) -> list[str]:
+    """Section 7: the criterion's second stage, where W has few cosets."""
+    failures: list[str] = []
+    print("== 7. round-constant criterion, second stage (the S-box layer on "
+          "the cosets of W)")
+    print("  rounds  dim W  cosets  samples  components  equation rank")
+    for r, _, ech in grow_constant_sums():
+        coset_bits = STATE_BITS - ech.dim
+        if r < NUM_ROUNDS_MIN or ech.dim >= STATE_BITS - 1:
+            continue
+        if coset_bits > MAX_COSET_BITS:
+            print(f"  {r:>6}  {ech.dim:>5}  2^{coset_bits:<4}  not run")
+            continue
+        components, rank, samples = coset_system(
+            ech.rows, STATE_BITS, sbox_layer_int, random.Random(seed))
+        decided = components == 1 and rank == ech.dim + 1
+        print(f"  {r:>6}  {ech.dim:>5}  {1 << coset_bits:>6}  {samples:>7}  "
+              f"{components:>10}  {rank} of {ech.dim + 1}   "
+              f"{'no common invariant' if decided else 'undecided'}")
+        if not decided:
+            failures.append(f"section 7: {r} rounds is undecided, and it is "
+                            "recorded as decided")
+    return failures
+
+
 def print_conclusion() -> None:
-    """The synthesis of the six sections."""
+    """The synthesis of the seven sections."""
     print("== conclusion")
     print("  Sections 1-3 are exhaustive over the layer-wise invariant")
     print("  byte-aligned class.  Castella::permute has NO direct sum of")
@@ -903,8 +1112,9 @@ def print_conclusion() -> None:
     print("  not rely on them.")
     print("  Section 6 asks for any function, of any shape, that the S-box")
     print("  layer and every affine layer each preserve.  It rules one out")
-    print("  from 10 rounds on.  At the claimed 6 and 8 rounds, the constant")
-    print("  sums are too few for the criterion, so that class is open there.")
+    print("  from 10 rounds on, and section 7 does at 8 and 9.  At the")
+    print("  claimed 6 rounds, the constant sums are too few for either, so")
+    print("  that class is open there.")
 
 
 def main() -> None:
@@ -940,6 +1150,8 @@ def main() -> None:
     inconclusive = report_closure(bases, args)
     print()
     failures += report_constants()
+    print()
+    failures += report_cosets(args.seed)
     print()
     print_conclusion()
 

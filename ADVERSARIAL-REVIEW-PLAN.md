@@ -111,8 +111,8 @@ them in the code (1a–1d) and the fifth in the published evidence (1e).
   returning 133 trails in six hours) and the trail-ceiling descent and enumeration
   campaign.  Do not propose more of either.  What *is* in scope is any place where a claim
   about clustering or rebound is stated more strongly than that evidence supports.
-- **Out of scope (non-findings).**  "No proof exists" and "3 rounds is thin" are both
-  disclosed.
+- **Out of scope (non-findings).**  "No proof exists" and "the 3-round margin is thin" are
+  both disclosed.
 
 ### 1b.  The keyed construction (`--key-file` MAC)
 - **Adversary.**  The adversary can query the MAC on chosen messages and observe **timing**,

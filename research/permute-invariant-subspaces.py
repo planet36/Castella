@@ -72,6 +72,23 @@ Sections
    the full 2048 dimensions is a proof that no such invariant subspace
    exists, while falling short is inconclusive and is reported as such.
 
+6. Round-constant criterion (exact).  Beierle, Canteaut, Leander, and
+   Rotella, "Proving Resistance against Invariant Attacks: How to Choose the
+   Round Constants" (CRYPTO 2017), take a Boolean function g that the S-box
+   layer and every affine layer each preserve up to complement.  The sum of
+   two constants added after the same linear layer is then a linear
+   structure of g, and the linear structures of g form a subspace that the
+   linear layer maps into itself.  Let W be the smallest such subspace that
+   contains those sums.  If W has dimension 2047 or more, g has degree at
+   most 1, which the S-box layer rules out unless some a.S(x) + a.x is
+   constant.  The paper has one linear layer and Castella has two, MixColumns
+   after ShiftRows inside a round and the same followed by the transpose at
+   its end, so W is closed under both.
+
+   The class is every invariant common to the layers, of any shape.  It is
+   not a superset of sections 1-3, which let the coset move from layer to
+   layer where this test needs each layer to preserve the set itself.
+
 Do not analyze the S-box-deleted round
 --------------------------------------
 It is tempting to delete the S-boxes and study the resulting 256x256 matrix
@@ -101,9 +118,14 @@ Sections 4-5 cover named non-byte-aligned classes.  They are exact for each
 coset tested, but the offsets are sampled, so they are a screen over offsets
 rather than a proof for all of them.
 
+Section 6 is exact, but it decides only the round counts where W reaches
+2047 dimensions, which are 10 and above.  At the claimed 6 and 8 rounds, W
+falls short and the section decides nothing.  No choice of constants would
+change that, because the two linear layers need 23 sums to get there, and
+those round counts supply 16 and 22.
+
 A general subspace of F_2^2048 that is neither byte-aligned nor one of the
-named classes is not covered by anything here.  No feasible computation covers
-it, which is why the attack literature restricts the same way.  The empty
+named classes is therefore not covered at the claimed round counts.  The empty
 support, a fixed point, is likewise out of reach exhaustively and stays the
 screen it already is in permute-structural-probes.cpp.
 
@@ -113,9 +135,10 @@ Usage
   python3 permute-invariant-subspaces.py --offsets 4 --seed 1
   python3 permute-invariant-subspaces.py --self-test
 
-It exits 1 if any decided check finds an invariant subspace, so it can gate
-regressions, and 2 if a check could not be decided (section 5's closure
-stalling, which is not a finding).  Nothing here solves anything.  It imports
+It exits 1 if any decided check finds an invariant subspace or section 6's
+dimensions differ from the recorded ones, so it can gate regressions, and 2
+if a check could not be decided (section 5's closure stalling, which is not a
+finding).  Nothing here solves anything.  It imports
 permute_model for the cross-validated layer machinery (shift_rows_src,
 mix_column, transpose_map) and spec-conformance.py for the round function and
 constant schedule, so no layer is modeled twice.
@@ -138,6 +161,14 @@ STATE_BITS = N_POS * 8              # 2048
 
 # The AES MixColumns matrix over GF(2^8); mix_column() is checked against it.
 MC4 = ((2, 3, 1, 1), (1, 2, 3, 1), (1, 1, 2, 3), (3, 1, 1, 2))
+
+# The fewest rounds of any instance, and the round counts SPEC.md claims.
+NUM_ROUNDS_MIN = 3
+CLAIMED_ROUNDS = (6, 8)
+
+# Section 6's dim W at each round count, which the section must reproduce.
+CLOSURE_DIMS = {3: 896, 4: 1264, 5: 1624, 6: 1976, 7: 2008, 8: 2031, 9: 2045,
+                **{r: STATE_BITS for r in range(10, N_BLOCKS + 1)}}
 
 
 class SelfTestError(Exception):
@@ -499,6 +530,99 @@ def forced_closure(basis: list[int], offset: int, rf,
     return ech.dim
 
 
+# ------------------------------------------------ 6. round-constant criterion
+
+
+def transpose_int(v: int) -> int:
+    """The transpose, on a state held as an integer."""
+    return state_to_int(apply_transpose(int_to_state(v)))
+
+
+def linear_layer_1(v: int) -> int:
+    """MixColumns after ShiftRows on every block, the linear part of aesenc."""
+    return state_to_int(apply_mix_columns(apply_shift_rows(int_to_state(v))))
+
+
+def linear_layer_2(v: int) -> int:
+    """The linear part that ends a round, linear_layer_1 then the transpose."""
+    return transpose_int(linear_layer_1(v))
+
+
+LINEAR_LAYERS = (linear_layer_1, linear_layer_2)
+
+
+def round_constant(rnd: int, aes_r: int) -> int:
+    """The 16 constants of AES round `aes_r` of round `rnd`, as one vector."""
+    return state_to_int(list(SC.RC[rnd][aes_r]))
+
+
+def sbox_constant_components() -> list[int]:
+    """Every nonzero a for which a.S(x) + a.x is constant in x.
+
+    A function of degree at most 1 is invariant under the S-box layer only if
+    such an a exists, so an empty list is the condition section 6 needs.
+    """
+    return [a for a in range(1, 256)
+            if len({(a & (SBOX[x] ^ x)).bit_count() & 1
+                    for x in range(256)}) == 1]
+
+
+def coinvariant_dim() -> int:
+    """Dimension of F_2^2048 modulo the images of L1 + I and L2 + I.
+
+    Both linear layers act as the identity on that quotient, so a subspace
+    closed under them and generated by t vectors has an image of dimension at
+    most t there.  A subspace of codimension at most 1 has an image of
+    codimension at most 1, so it needs at least this dimension minus one
+    generators, whatever they are.
+    """
+    ech = Echelon()
+    for k in range(STATE_BITS):
+        e = 1 << k
+        for layer in LINEAR_LAYERS:
+            ech.add(layer(e) ^ e)
+    return STATE_BITS - ech.dim
+
+
+def constant_sum_closures() -> dict[int, tuple[int, int]]:
+    """For each round count, the number of constant sums and dim W.
+
+    W is the smallest subspace that contains the sum of every two constants
+    added after the same linear layer and that both layers map into itself.
+    An r-round permutation uses the last r rounds, so its sums contain those
+    of every smaller r, and one closure is grown round by round.  The constant
+    of the last AES round is added before the transpose, so it enters as its
+    transpose.
+    """
+    last_rnd = N_BLOCKS - 1
+    last_aes = PM.AES_NUM_ROUNDS - 1
+    base_1 = round_constant(last_rnd, 0)
+    base_2 = transpose_int(round_constant(last_rnd, last_aes))
+    ech = Echelon()
+    queue: list[int] = []
+    head = 0
+    num_sums = 0
+    out: dict[int, tuple[int, int]] = {}
+    for rnd in range(last_rnd, -1, -1):
+        sums = [round_constant(rnd, a) ^ base_1 for a in range(last_aes)]
+        sums.append(transpose_int(round_constant(rnd, last_aes)) ^ base_2)
+        for d in sums:
+            # A base summed with itself is zero and is not a sum of two.
+            if d:
+                num_sums += 1
+                if ech.add(d):
+                    queue.append(d)
+        while head < len(queue) and ech.dim < STATE_BITS:
+            v = queue[head]
+            head += 1
+            for layer in LINEAR_LAYERS:
+                w = layer(v)
+                if ech.add(w):
+                    queue.append(w)
+        out[N_BLOCKS - rnd] = (num_sums, ech.dim)
+    return out
+
+
 # ------------------------------------------------------------------ report
 
 
@@ -524,6 +648,18 @@ def self_test() -> None:
     # The state <-> integer packing must round-trip.
     if int_to_state(state_to_int(list(st))) != list(st):
         raise SelfTestError("state_to_int / int_to_state do not round-trip")
+
+    # Section 6's layers must compose to one_round.  That checks both linear
+    # layers, and that the last constant enters as its transpose.
+    v = state_to_int(list(st))
+    last_aes = PM.AES_NUM_ROUNDS - 1
+    for aes_r in range(last_aes):
+        v = state_to_int(apply_sbox(int_to_state(v)))
+        v = linear_layer_1(v) ^ round_constant(15, aes_r)
+    v = state_to_int(apply_sbox(int_to_state(v)))
+    v = linear_layer_2(v) ^ transpose_int(round_constant(15, last_aes))
+    if int_to_state(v) != one_round(list(st), 15):
+        raise SelfTestError("section 6's layers do not compose to one_round")
 
     # An echelon form must reject a dependent vector.
     ech = Echelon()
@@ -710,8 +846,40 @@ def report_closure(bases: dict[str, list[int]], args) -> list[str]:
     return inconclusive
 
 
+def report_constants() -> list[str]:
+    """Section 6: the round-constant criterion at every round count."""
+    failures: list[str] = []
+    print("== 6. round-constant criterion (invariants common to the layers)")
+    comps = sbox_constant_components()
+    print(f"  S-box components a.S(x) + a.x that are constant: "
+          f"{len(comps)} of 255")
+    if comps:
+        failures.append("section 6: the S-box layer has an invariant of "
+                        "degree 1")
+    need = coinvariant_dim() - 1
+    print(f"  sums the linear layers need for dim W >= {STATE_BITS - 1}, "
+          f"whatever the constants: {need}")
+    print("  rounds  sums  dim W")
+    undecided = []
+    for r, (num_sums, dim) in sorted(constant_sum_closures().items()):
+        if r < NUM_ROUNDS_MIN:
+            continue
+        decided = dim >= STATE_BITS - 1 and not comps
+        print(f"  {r:>6}  {num_sums:>4}  {dim:>5}   "
+              f"{'no common invariant' if decided else 'undecided'}")
+        if dim != CLOSURE_DIMS[r]:
+            failures.append(f"section 6: dim W at {r} rounds is {dim}, "
+                            f"and {CLOSURE_DIMS[r]} is recorded")
+        if r in CLAIMED_ROUNDS and not decided:
+            undecided.append(r)
+    if undecided:
+        print(f"  => undecided at the claimed "
+              f"{' and '.join(str(r) for r in undecided)} rounds")
+    return failures
+
+
 def print_conclusion() -> None:
-    """The synthesis of the five sections."""
+    """The synthesis of the six sections."""
     print("== conclusion")
     print("  Sections 1-3 are exhaustive over the layer-wise invariant")
     print("  byte-aligned class.  Castella::permute has NO direct sum of")
@@ -733,6 +901,10 @@ def print_conclusion() -> None:
     print("  controls return to dim 512 and 1024.  The symmetric-matrix")
     print("  class is broken by ShiftRows and MixColumns as well, so it does")
     print("  not rely on them.")
+    print("  Section 6 asks for any function, of any shape, that the S-box")
+    print("  layer and every affine layer each preserve.  It rules one out")
+    print("  from 10 rounds on.  At the claimed 6 and 8 rounds, the constant")
+    print("  sums are too few for the criterion, so that class is open there.")
 
 
 def main() -> None:
@@ -766,6 +938,8 @@ def main() -> None:
         print()
     # Section 5 is kept apart because it yields undecided checks, not findings.
     inconclusive = report_closure(bases, args)
+    print()
+    failures += report_constants()
     print()
     print_conclusion()
 

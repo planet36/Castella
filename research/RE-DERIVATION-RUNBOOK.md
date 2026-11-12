@@ -76,7 +76,7 @@ them, and why nothing in this file should run during one.
 | `tests/duplex-diff-fuzz.py` | no figure (it fuzzes the Duplex API differentially against the spec model) | §1, §4 |
 | `research/permute-num_rounds.cpp`, `research/permute-num_rounds-avalanche_matrix.cpp` | the **diffusion floor of 3 rounds**, one of the three inputs to every `R*` | §7 |
 | `research/permute-structural-probes.cpp` | symmetry-class escape, fixed-point screen, round-constant and slide-resistance screens | §1, §7 |
-| `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …), and the round-constant criterion's dimensions (1976 at 6 rounds and 2031 at 8, of 2048) | §1, §7 |
+| `research/permute-invariant-subspaces.py` | the exhaustive census of layer-wise invariant byte-aligned subspaces (690,880 / 85 / 0 …), and the round-constant criterion's dimensions (1976 at 6 rounds and 2031 at 8, of 2048), and its second stage, which decides 8 rounds | §1, §7 |
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
 | `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`), which is 3 at `C` = 2 on the strength of `aes_enc-uniformity-verify.cpp` | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
@@ -113,7 +113,7 @@ free -h                                                       # -M is per proces
 | `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
 | `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out, best over the 3 cubes measured (row, col, diag): 3 round(s)`, 4.4 s |
 | `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
-| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census, and the round-constant criterion | `no invariant subspace exists in any class decided here`, after `undecided at the claimed 6 and 8 rounds` in section 6, 28 s |
+| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census, and the round-constant criterion | `no invariant subspace exists in any class decided here`, after `undecided at the claimed 6 and 8 rounds` in section 6 and `no common invariant` at 8 rounds in section 7, 1.4 min |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time, beside the C++ and spec-conformance.py.  This compares its difference propagation with the KAT-verified one at r = 1..6, and `make -C research test` also runs it | `240 state pairs verified, 0 failed`, 0.8 s |
@@ -460,7 +460,7 @@ cd research && make    # links google-benchmark into every binary here but the *
 # The structural probes, also in section 1 because they are cheap.
 ./permute-structural-probes -n 10000              # 0.3 s
 ./permute-zero_sum-probes -n 1                    # 8 s
-python3 permute-invariant-subspaces.py            # 28 s
+python3 permute-invariant-subspaces.py            # 1.4 min
 
 # The division-property model.  Budget ~1.5 h for the set.  Only the first two are
 # gates, and a model that proved everything balanced would pass the first alone.

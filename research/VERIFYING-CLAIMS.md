@@ -24,7 +24,7 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 7 | Mode reductions (duplex→sponge, tree→node, MAC) | proof | §7 |
 | 8 | Fast paths never change a digest | executable | §8 |
 | 9 | No PRNG forward secrecy unless `forget()` is called | non-claim, and executable for `forget()` | §9 |
-| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself) | executable | §10 |
+| 10 | Structural probes: subspace escape, fixed-point screen, round-constant properties, slide-resistance screen, and the exact invariant-subspace search (exhaustive over every byte-aligned subspace that each layer maps onto a coset of itself, with a round-constant criterion that decides nothing at 6 or 8 rounds) | executable | §10 |
 | 11 | Zero-sum (cube) probes (random cubes), and the bit-based division property for chosen cubes: a 1-round distinguisher needing exactly one byte, and a 2-round one at 2^128, plus the independently verified even-multiplicity argument behind them, which gives inside-out zero-sums of 3 rounds from one block and 4 from a row and a column, and a uniformity construction reaching 6 from one fixed byte, whose forward half is a 3-round distinguisher through the sponge at `C` = 2 | executable | §11 |
 | 12 | PractRand statistical smoke test of the PRNG stream | executable (external tool) | §12 |
 | 13 | Trail tightness (r=1 bound proven tight, r=2 through r=8 bracketed on solved floors) and first-order differential clustering | executable (solver) | §13 |

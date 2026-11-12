@@ -93,6 +93,8 @@ pad_and_permute()
 
 **Absorbing input.**  `add(X)` = `absorb_bytes(X)`.  The duplex also offers `add_left_encoded(X)` = `absorb_bytes(encode_string(X))` and `add_right_encoded(X)` = `absorb_bytes(X || right_encode(|X|))`, and their integer forms `add_left_encoded(x)` = `absorb_bytes(left_encode(x))` and `add_right_encoded(x)` = `absorb_bytes(right_encode(x))`.
 
+**Explicit padding.**  `apply_padding_rule()` = `pad_and_permute()`.  It absorbs no `suffix` and returns no output, and it ends what has been added so far on a rate boundary, where KMAC uses `bytepad`.
+
 **Squeezing.**  `squeeze(n)`, with `0 ≤ n ≤ 16R`, is:
 
 ```
@@ -304,7 +306,7 @@ Two properties of the encodings make this transfer meaningful.  First, pad10\*1 
 
 Second, the initialization string is uniquely parseable because `left_encode(256)`, `left_encode(16·R)`, `left_encode(num_rounds)`, `encode_string(N)`, and `encode_string(S)` are each self-delimiting and read in a fixed order.  So distinct parameter tuples produce distinct absorbed prefixes, and distinct `suffix` bytes produce distinct absorbed strings at every squeeze.  Distinct parameterizations therefore behave as independent functions (the cSHAKE property).  A random sponge at capacity `c` has the generic bounds of the strengths table (indifferentiable from a random oracle up to ~`2^(c/2)` calls, per Bertoni et al., *Cryptographic sponge functions*).
 
-**Scope caveat.**  A squeeze is marked in the absorbed string only by `suffix` and the padding, and a message can contain both.  So the history `add(X)`, `squeeze`, `add(Y)`, `squeeze` ends on the same output as the one-shot `add(X || suffix || pad || Y)`, `squeeze`, where `pad` is the pad10\*1 completion of `X || suffix` to a rate boundary.  The output after an intermediate squeeze is therefore the plain hash of a longer message, which an adversary who chooses that message can reproduce.  An application needing both usages under the same parameters must separate them via `N` or `S`.
+**Scope caveat.**  A squeeze is marked in the absorbed string only by `suffix` and the padding, and a message can contain both.  So the history `add(X)`, `squeeze`, `add(Y)`, `squeeze` ends on the same output as the one-shot `add(X || suffix || pad || Y)`, `squeeze`, where `pad` is the pad10\*1 completion of `X || suffix` to a rate boundary.  The output after an intermediate squeeze is therefore the plain hash of a longer message, which an adversary who chooses that message can reproduce.  An application needing both usages under the same parameters must separate them via `N` or `S`.  Explicit padding is marked by the padding alone.  So `add(X)`, `apply_padding_rule()`, `add(Y)` absorbs the same string as `add(X || pad || Y)`, where `pad` is the pad10\*1 completion of `X` to a rate boundary, and it separates two fields only when the first has a fixed length or is self-delimiting, as `encode_string(K)` is.
 
 #### Tree collisions reduce to node collisions
 

@@ -201,15 +201,15 @@ It covers **only** the instances listed here.  Reduced-round instances are expli
 
 An instance `(C, num_rounds)` is claimed iff `num_rounds ≥ R*` for its row.
 
-**Margin rationale.**  `R*` = max(diffusion floor, trail floor, sponge reach) **+ 3**.  The two floors are the fewest rounds that evidence in hand supports, and the sponge reach is the most rounds that any known distinguisher through the duplex covers.  The largest of the three is the binding floor, and the `+ 3` is the margin against everything the three do not model.
+**Margin rationale.**  `R*` = max(diffusion floor, trail floor, sponge reach, attack reach) **+ 3**.  The two floors are the fewest rounds that evidence in hand supports.  The sponge reach is the most rounds that any known distinguisher through the duplex covers, and the attack reach is the most rounds of any instance on which a known attack beats the generic bound.  The largest of the four is the binding floor, and the `+ 3` is the margin against everything the four do not model.
 
-The diffusion floor is the fewest rounds after which a one-bit input change flips each output bit with probability 1/2, as measured, which is 3 for the 16-block state (Evidence).  At present, the sponge reach is 2 at `C` = 4, 6, and 8, under the definition below, from the 2-round distinguisher under Evidence.  It is 3 at `C` = 2, from the forward half of the 2^896 zero-sum under Evidence, whose four free blocks fit in the rate only at that capacity.  The binding floor at `C` = 2 was already 3, from the diffusion floor, so no `R*` changes.
+The diffusion floor is the fewest rounds after which a one-bit input change flips each output bit with probability 1/2, as measured, which is 3 for the 16-block state (Evidence).  At present, the sponge reach is 2 at `C` = 4, 6, and 8, under the definition below, from the 2-round distinguisher under Evidence.  It is 3 at `C` = 2, from the forward half of the 2^896 zero-sum under Evidence, whose four free blocks fit in the rate only at that capacity.  The binding floor at `C` = 2 was already 3, from the diffusion floor, so no `R*` changes.  No attack that counts toward the attack reach is known on any instance, so it binds no row and has no column in the table below.
 
 The trail floor is the smallest round count whose proven per-characteristic bound `2^(−6A)` is at most `2^(−2b)` for claimed level `b`.  That is twice the exponent of the generic bound, as headroom for the trail clustering the model does not cover.  So `r` rounds support levels `b` ≤ 3·A(r), which from the `A` values under Evidence means 2 rounds cover `b` ≤ 135, 3 rounds `b` ≤ 387, 4 rounds `b` ≤ 495, and 5 rounds `b` ≤ 702.
 
 **The margin term is 3 rounds, the number full bit diffusion takes.**  Every claimed instance therefore carries a full diffusion's worth of rounds beyond its binding floor, which an attack reaching that floor must still be carried through.  That is a rationale, not a bound, since nothing proves an attack gains less than 3 rounds there.
 
-Full diffusion here is the statistical measure the diffusion floor uses, not the structural one, under which every output bit already depends on every input bit after 2 rounds.  The margin is fixed, so a new result can move a floor or the sponge reach but never the margin.
+Full diffusion here is the statistical measure the diffusion floor uses, not the structural one, under which every output bit already depends on every input bit after 2 rounds.  The margin is fixed, so a new result can move a floor or a reach but never the margin.
 
 | `C` | claimed `b` | trail floor | diffusion floor | sponge reach | binding floor | `R*` |
 |-----|-------------|-------------|-----------------|--------------|---------------|------|
@@ -250,15 +250,21 @@ The policy was amended instead, for the reason that keeps Keccak-`f`'s full-roun
 
 Two other things changed with it.  The margin is now sized by full diffusion rather than by the known reach, which was also 3 when the rule was set, so no round count moved.  And `C` = 8 now moves only once the sponge reach passes its trail floor of 5, where the old trigger raised it to 9 at any 4-round distinguisher.
 
+**The attack reach was added on 2026-11-11.**  Until then, a probabilistic attack counted only through the trail floor, so a collision below the generic cost on a 5-round instance would have obliged nothing, with the claimed 6 rounds one round above it.  No such attack was known when the input was added, so no round count moved.
+
 **What counts as a distinguisher.**  A distinguisher counts toward the sponge reach when it is a structural property that holds with certainty for every choice of the round constants, such as an integral or zero-sum property, and is reachable through the sponge interface.  Reachable means that its inputs enter only by XOR into the rate of a state the duplex itself reached, so the capacity is never chosen, and that it reads only the rate.  The capacity may be known, as in unkeyed hashing, or secret, as in the MAC.
 
-Three kinds of property do not count.  Generic properties that every concrete permutation has, such as efficient invertibility, say nothing about this one.  Probabilistic differential and linear properties are bounded against each claimed level by the trail floor instead.  And properties of `P` alone, the inside-out zero-sums included, stay in the Evidence section as characterization.
+Three kinds of property do not count.  Generic properties that every concrete permutation has, such as efficient invertibility, say nothing about this one.  Probabilistic differential and linear properties are bounded against each claimed level by the trail floor instead, and one that yields an attack counts toward the attack reach.  And properties of `P` alone, the inside-out zero-sums included, stay in the Evidence section as characterization.
 
 **The sponge reach is counted by reach alone**, meaning how many rounds a property sees through, not what it costs.  A sponge-interface distinguisher needing 2^1776 queries counts in full, as a practical one would.  The amendment narrowed which properties count, not how they are weighed.
 
 **The sponge reach can move, and the margin cannot.**  The sponge reach is the longest *known* at each capacity.  It is 2 at `C` ≥ 4, from the 2-round integral distinguisher under Evidence, whose cube fills one block of the rate, and 3 at `C` = 2, from the forward half of the 2^896 zero-sum.  No upper bound on it is claimed.
 
 **A sponge-interface distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity where it works.**  A smaller capacity has a larger rate, so a distinguisher that works at one capacity also works at every smaller one.  The sponge reach enters the binding floor, so a result that lengthens it raises `R*` directly.  At the current floors, 4 rounds obliges 7 at each of `C` = 2, 4, and 6 where it works, and 6 rounds obliges 9 at `C` = 8.  Reduced-round targets are published so that such a result is found rather than assumed ([CHALLENGES.md](CHALLENGES.md)).  Raising `R*` changes every digest at that capacity, so it is a format decision as well as a margin one.
+
+**What counts as an attack.**  An attack counts toward the attack reach when it would falsify the flat sponge claim if the instance it is run against were claimed, meaning that it succeeds more often than the same attack against a random sponge with the same rate and capacity.  It may end in a collision, a preimage or second preimage, a MAC forgery, a recovered key, or a distinguisher.  It is counted by reach alone, as the sponge reach is, so a collision costing 2^250 where the generic cost is 2^256 counts as a practical one would.
+
+**An attack on a `k`-round instance obliges `R*` ≥ `k` + 3 at that instance's capacity.**  It obliges the same at another capacity only if it beats the generic bound there too.  At the current floors, an attack at 4 rounds obliges 7 at `C` = 2, 4, or 6, and one at 6 rounds obliges 9 at `C` = 8.  A challenge in [CHALLENGES.md](CHALLENGES.md) solved below its generic cost is such an attack.
 
 ### Security strengths (generic bounds)
 

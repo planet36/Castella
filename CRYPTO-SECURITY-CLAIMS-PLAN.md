@@ -202,14 +202,15 @@ permutation).  The honest procedure has four steps:
    fixed the floor there permanently.
 2. **Floor from diffusion.**  Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
-3. **Margin against the unknown.  RESOLVED 2026-08-08 and AMENDED 2026-10-29.  The policy
-   is now `R* = max(diffusion floor, trail floor, sponge reach) + 3`**, additive in rounds,
-   with the `+ 3` a fixed margin sized by full bit diffusion.  The sponge reach is the
-   longest reach of any known distinguisher through the sponge interface, currently 2, and
-   3 at `C` = 2, where the forward half of the 2^896 zero-sum fits in the rate.  That moves
-   no `R*`, since the binding floor at `C` = 2 was already 3.  The policy reproduces all
-   four shipped round counts (6/6/6/8) with no exceptional row, and nothing shipped changed
-   when it was adopted or when it was amended.
+3. **Margin against the unknown.  RESOLVED 2026-08-08, AMENDED 2026-10-29, and EXTENDED
+   2026-11-11.  The policy is now
+   `R* = max(diffusion floor, trail floor, sponge reach, attack reach) + 3`**, additive in
+   rounds, with the `+ 3` a fixed margin sized by full bit diffusion.  The sponge reach is
+   the longest reach of any known distinguisher through the sponge interface, currently 2,
+   and 3 at `C` = 2, where the forward half of the 2^896 zero-sum fits in the rate.  That
+   moves no `R*`, since the binding floor at `C` = 2 was already 3.  The policy reproduces
+   all four shipped round counts (6/6/6/8) with no exceptional row, and nothing shipped
+   changed when it was adopted or when it was amended.
 
    It is written up in SPEC.md's margin rationale, including the disclosures below.
    Re-evaluate as results arrive.  A sponge-interface distinguisher reaching `k` rounds
@@ -220,6 +221,13 @@ permutation).  The honest procedure has four steps:
    every capacity" until a 3-round result that works at `C` = 2 alone showed that the
    reach depends on the rate.  A distinguisher that works at one capacity also works at
    every smaller one.
+
+   *The attack reach was added on 2026-11-11.*  It is the most rounds of any instance on
+   which a known attack beats the generic bound, and an attack on a `k`-round instance
+   obliges `R*` ≥ `k` + 3 at that instance's capacity.  A design review had pointed out
+   that a probabilistic attack counted only through the trail floor, so a collision below
+   the generic cost on a 5-round instance would have obliged nothing.  None is known, so
+   the input binds no row, and nothing shipped changed.
 
    *What the amendment changed, and why.*  As adopted, the `+ 3` was the longest reach of
    any known distinguisher against `P`, then the 3-round inside-out zero-sum, counted by
@@ -287,6 +295,7 @@ permutation).  The honest procedure has four steps:
    * that the sponge reach is a *known* reach with no upper bound claimed on the true one
    * the commitment, `R*` ≥ `k` + 3 for a `k`-round sponge-interface distinguisher
    * the 2026-10-29 amendment, and the result that prompted it
+   * the attack reach, added on 2026-11-11
 
    **The thinnest margin in this table is not `C` = 8 but `C` = 6's floor.**  That row
    needs `A(3) ≥ 128` and gets **129**, so it clears by one S-box, 6 bits out of the 768
@@ -317,9 +326,10 @@ permutation).  The honest procedure has four steps:
 
    **What would reopen it is evidence, not preference.**  That evidence is the commitment
    published in SPEC.md and CHALLENGES.md, under which a sponge-interface distinguisher
-   reaching 4 rounds obliges `R*` = 7 at each of `C` = 2, 4, and 6 where it works.  At
-   that point, `C` = 6 deserves the first look, for the floor reason in the paragraph
-   above, not `C` = 8.
+   reaching 4 rounds obliges `R*` = 7 at each of `C` = 2, 4, and 6 where it works, as does
+   an attack that beats the generic bound on a 4-round instance, at that instance's
+   capacity.  At that point, `C` = 6 deserves the first look, for the floor reason in the
+   paragraph above, not `C` = 8.
 
    **One property of the commitment is worth stating rather than discovering later, which
    is that it bounds reach, not data complexity.**  A 4-round sponge-interface
@@ -610,10 +620,11 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 **What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface
 distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity where it works,
 so 4 rounds obliges 7 at each of `C` = 2, 4, and 6 where it works, and 6 rounds obliges 9
-at `C` = 8.  It is stated in SPEC.md and CHALLENGES.md, it asks about *reach* rather than
-cost, and if it fires, `C` = 6 is the row to examine first (§4.3, and now SPEC.md's margin
-rationale).  Under the 2026-10-29 amendment, an inside-out zero-sum on `P` alone reopens
-nothing (§4.3 step 3).
+at `C` = 8.  Since 2026-11-11, an attack that beats the generic bound on a `k`-round
+instance obliges the same at that instance's capacity.  It is stated in SPEC.md and
+CHALLENGES.md, it asks about *reach* rather than cost, and if it fires, `C` = 6 is the row
+to examine first (§4.3, and now SPEC.md's margin rationale).  Under the 2026-10-29
+amendment, an inside-out zero-sum on `P` alone reopens nothing (§4.3 step 3).
 
 **One gap is unmodeled rather than closed.**  Rebound attacks are covered by nothing.  A
 margin argument stood here until 2026-11-11.  A design review had shown that it priced

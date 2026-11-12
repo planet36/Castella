@@ -16,6 +16,7 @@ nested-for-loop-order-aes_enc_0-benchmark
 permute-num_rounds
 permute-num_rounds-avalanche_matrix
 permute-num_rounds-benchmark
+permute-sponge_reach-analog-verify
 permute-structural-probes
 permute-zero_sum-analog-verify
 permute-zero_sum-probes

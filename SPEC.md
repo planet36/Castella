@@ -207,7 +207,7 @@ The diffusion floor is the fewest rounds after which a one-bit input change flip
 
 The trail floor is the smallest round count whose proven per-characteristic bound `2^(−6A)` is at most `2^(−2b)` for claimed level `b`.  That is twice the exponent of the generic bound, as headroom for the trail clustering the model does not cover.  So `r` rounds support levels `b` ≤ 3·A(r), which from the `A` values under Evidence means 2 rounds cover `b` ≤ 135, 3 rounds `b` ≤ 387, 4 rounds `b` ≤ 495, and 5 rounds `b` ≤ 702.
 
-**The margin term is 3 rounds, the number full bit diffusion takes.**  Every claimed instance therefore carries a full diffusion's worth of rounds beyond its binding floor, which an attack reaching that floor must still be carried through.  That is a rationale, not a bound, since nothing proves an attack gains less than 3 rounds there.
+**The margin term is 3 rounds, the number full bit diffusion takes.**  Every claimed instance therefore carries a full diffusion's worth of rounds beyond its binding floor, which an attack reaching that floor must still be carried through.  That is a rationale, not a bound, since nothing proves an attack gains less than 3 rounds there.  It also assumes that the gain lies at one end of the rounds.  A gain in the middle leaves a shorter run on each side, and nothing here gives a figure for that case.
 
 Full diffusion here is the statistical measure the diffusion floor uses, not the structural one, under which every output bit already depends on every input bit after 2 rounds.  The margin is fixed, so a new result can move a floor or a reach but never the margin.
 
@@ -218,7 +218,7 @@ Full diffusion here is the statistical measure the diffusion floor uses, not the
 | 6 | 384 | 3 | 3 | 2 | 3 | 6 |
 | 8 | 512 | **5** | 3 | 2 | 5 | 8 |
 
-The rule applies uniformly.  No row is an exception, and every row carries the same 3-round margin, `C` = 8 included.
+The rule applies uniformly.  No row is an exception, and every row carries the same 3-round margin, `C` = 8 included.  That margin is over the binding floor.  Over the sponge reach, the only input set by a known distinguisher, it is 3, 4, 4, and 6 rounds at `C` = 2, 4, 6, and 8, so it is thinnest at `C` = 2, where a caller controls the most state.
 
 When `--rounds` is not given, the `castella` program derives it from the digest size via the same capacity rule the digest itself uses, giving 6 rounds for digests up to 48 bytes (`C` ≤ 6) and 8 for 49..64 bytes (`C` = 8).  So **its out-of-box instances are claimed at every capacity**, including a 512-bit-level digest.  An explicit `--rounds` overrides the derivation and can select an unclaimed instance.
 

@@ -80,7 +80,8 @@ them, and why nothing in this file should run during one.
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
 | `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`), which is 3 at `C` = 2 on the strength of `aes_enc-uniformity-verify.cpp` | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
-| `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
+| `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, the cube of every rate block at 2 and 3 rounds by exact counting, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
+| `research/permute-sponge_reach-analog-verify.cpp` | the cube of every rate block by enumeration, through 4 rounds on a 3-bit-cell analog and through 3 on the 4-bit-cell one, which is the analog evidence on whether the sponge reach extends a round | §7 |
 | `research/aes_enc-uniformity-verify.cpp` | the two real-AES uniformity facts the 6-round zero-sum's 2^896 form rests on, by exhaustive enumeration | §7 |
 | `research/permute-degree-bound.py` | the degree bound (2043 after 2 rounds), and degree-based zero-sum reach 4 rounds | §1 |
 | `research/duplex-prng-stream.cpp` + PractRand | the statistical smoke test (16 GiB, no anomalies) | §7 |
@@ -477,13 +478,20 @@ python3 permute-division-property.py --inside-out 0 1 -c block   # <1 s; MUST re
 # (VERIFYING-CLAIMS.md § 11), so the reach there is 3.
 python3 permute-division-property.py --sponge 2 -r 2  # 3.3 min, 2.3 GB peak
 
+# The sponge reach on the analogs, by enumeration.  The last case is the one that
+# asks for a 4th round, 96 cubes of 2^36 at 44 s each.  The program uses every
+# core for 2.4 h, so run it alone and under nice.  -o saves each cube as it
+# finishes, and the same command resumes from that file.  -q keeps to the 2^24
+# cubes and takes 4 s.
+nice -n 19 ./permute-sponge_reach-analog-verify -o sponge-reach-analog.jsonl   # 2.4 h
+
 # The inside-out zero-sums.  Part A checks the premises on the real state.  Part B
 # brute-forces the reach at reduced width, and its table must be IDENTICAL at
 # --reduced 2 and 3.  --rowcol adds the 4-round cube, at --reduced 2 only.
 python3 permute-multiplicity-verify.py            # 4.4 s
 python3 permute-multiplicity-verify.py --reduced 3 # ~35 min
 python3 permute-multiplicity-verify.py --rowcol --skip-full-width   # 6.5 min
-./permute-zero_sum-analog-verify                  # 3.0 min (~10 s with -q, skipping 2^32 cases)
+./permute-zero_sum-analog-verify                  # 3.3 min (~10 s with -q, skipping 2^32 cases)
 ./aes_enc-uniformity-verify                       # 2.2 min
 
 # Do not run --inside-out 2 2 -c rowcol at full width.  No target block is

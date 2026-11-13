@@ -257,12 +257,10 @@ print_usage()
     std::println("  --rounds=NUM_ROUNDS");
     std::println("                        Specify the number of rounds in the Castella permutation");
     std::println("                        function.  The security claim (SPEC.md) covers only");
-    std::println("                        rounds >= 6, or >= 8 when SIZE > 48.  Fewer rounds are");
-    std::println("                        reduced-round targets (CHALLENGES.md).  When omitted,");
-    std::println("                        the default tracks the claim.  It is {} rounds for SIZE",
-                 get_necessary_num_rounds(48));
-    std::println("                        <= 48, and {} for SIZE > 48.",
+    std::println("                        rounds >= {} at every SIZE.  Fewer rounds are",
                  get_necessary_num_rounds(max_num_bytes_to_squeeze));
+    std::println("                        reduced-round targets (CHALLENGES.md).  When omitted,");
+    std::println("                        the default is the fewest rounds the claim covers.");
     std::println("                        (minimum={}) (maximum={})",
                  Castella::NUM_ROUNDS_MIN<Castella::Duplex::B>(), Castella::NUM_ROUNDS_MAX);
 

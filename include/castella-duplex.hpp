@@ -160,15 +160,15 @@ struct alignas(block_t) Duplex final
     /// \a capacity_blocks blocks
     /**
     * An instance with fewer rounds is legal, but no security is claimed for
-    * it.  \c NUM_ROUNDS_MIN is the diffusion floor, which is below this at
-    * every capacity.
+    * it.  The claim starts at the same round count at every capacity.
+    * \c NUM_ROUNDS_MIN is the diffusion floor, which is below this.
     *
     * \pre \a capacity_blocks is even, and in the interval <code>[C_MIN, C_MAX]</code>
     */
     [[nodiscard]] static constexpr int
-    get_num_rounds_claimed(const int capacity_blocks) noexcept
+    get_num_rounds_claimed([[maybe_unused]] const int capacity_blocks) noexcept
     {
-        return capacity_blocks <= 6 ? 6 : 8;
+        return 8;
     }
 
 private:

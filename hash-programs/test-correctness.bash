@@ -332,19 +332,19 @@ assert_neq_cmd_cmd \
     './castella --untagged --size=16 ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
     './castella --untagged --size=32 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
-# Verify that the default ROUNDS is 6 when SIZE <= 48.  See SPEC.md "Margin
+# Verify that the default ROUNDS is 8 when SIZE <= 48.  See SPEC.md "Margin
 # rationale".
 
 assert_eq_cmd_cmd \
     './castella --untagged --size=48            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
-    './castella --untagged --size=48 --rounds=6 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
+    './castella --untagged --size=48 --rounds=8 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
 assert_neq_cmd_cmd \
     './castella --untagged --size=48            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
-    './castella --untagged --size=48 --rounds=8 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
+    './castella --untagged --size=48 --rounds=6 ${CASTELLA_TMP}/test-1MiB.txt | first_field'
 
-# Verify that the default ROUNDS is 8 when SIZE > 48.  See SPEC.md "Margin
-# rationale".
+# Verify that the default ROUNDS is 8 when SIZE > 48 as well.  See SPEC.md
+# "Margin rationale".
 
 assert_eq_cmd_cmd \
     './castella --untagged --size=49            ${CASTELLA_TMP}/test-1MiB.txt | first_field' \
@@ -589,11 +589,11 @@ assert_eq_cmd_str \
 
 assert_eq_cmd_str \
     './castella ${CASTELLA_TMP}/test-100B.txt' \
-    "castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) '${CASTELLA_TMP}/test-100B.txt' = 3d763f563332170d7c7a908e18111b694a189182d1ed5dc501a200ca31eec132"
+    "castella (chunk-size=65536,custom='hash',rounds=8,suffix=1) '${CASTELLA_TMP}/test-100B.txt' = 3d7866d77263f32cabd96f7aff695e8878479505dd313b66b9389bc0b45ab0c4"
 
 assert_eq_cmd_str \
     './castella --untagged ${CASTELLA_TMP}/test-100B.txt' \
-    "3d763f563332170d7c7a908e18111b694a189182d1ed5dc501a200ca31eec132  '${CASTELLA_TMP}/test-100B.txt'"
+    "3d7866d77263f32cabd96f7aff695e8878479505dd313b66b9389bc0b45ab0c4  '${CASTELLA_TMP}/test-100B.txt'"
 
 assert_eq_cmd_str \
     './cch ${CASTELLA_TMP}/test-100B.txt' \
@@ -851,7 +851,7 @@ printf 'I love you, Dr. Zaius!'                               > "${CASTELLA_TMP}
 
 assert_eq_cmd_str \
     './castella --untagged --key-file=${CASTELLA_TMP}/test-key1.bin --size=32 ${CASTELLA_TMP}/test-100KB.txt | first_field' \
-    2b7df407383354e3cdc81291cc40a81cee5d8e9b72ec2b2aa0fc857cbc5e4f05
+    d61f6da571f385cc567e5dcf01acb93200ad5f8c63bb695c2285eb48e6c842c1
 
 # A keyed digest differs from the unkeyed digest.  Two different keys give two
 # different digests.

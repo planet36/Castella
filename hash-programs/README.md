@@ -15,7 +15,7 @@ On x86-64 with VAES, both programs also hash leaf chunks two at a time per threa
 
 The default output format (`--tag`) is a line for each FILE that embeds the digest-relevant options, in the BSD style of `cksum`.  The line carries no `--size`, which is inferred from the digest length.  The two programs' lines look like this:
 
-    castella (chunk-size=65536,custom='hash',rounds=6,suffix=1) 'FILE' = digest
+    castella (chunk-size=65536,custom='hash',rounds=8,suffix=1) 'FILE' = digest
     cch (chunk-size=65536,mix-rate=256) 'FILE' = digest
 
 With `--untagged`, each line is instead the reversed style, without the digest type:
@@ -38,7 +38,7 @@ Run `--help` for full option descriptions.  `make man`, run in this directory be
 
 * `--no-mmap` produces output identical to the default mmap mode,
 * `--num-threads` never changes a digest, in any I/O mode,
-* the default `--rounds` is 6 up to `--size=48` and 8 above it,
+* the default `--rounds` is 8 at every `--size`,
 * distinct `--custom`, `--rounds`, `--size`, `--suffix`, `--mix-rate`, and `--chunk-size` values produce distinct digests,
 * several FILE arguments, `-` among them, are hashed independently in argument order, and an unreadable one does not stop the rest,
 * the last of `--tag` and `--untagged` wins,
@@ -114,8 +114,8 @@ These claims were last verified on 2026-11-01:
 These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
 
 * `cch` beat multithreaded `b3sum` by about 2.0× (single-thread, pinned: 3.5×).
-* `castella --rounds=3` beat multithreaded `b3sum`, while the default `--rounds=6` roughly matched it.
-* Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` at its default rounds beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
+* `castella --rounds=3` beat multithreaded `b3sum`, while `--rounds=6`, the default at the time, roughly matched it.
+* Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` at `--rounds=6`, its default at the time, beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
 
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size:
 

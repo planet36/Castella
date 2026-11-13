@@ -512,8 +512,8 @@ python3 permute-division-property.py -r 2 -c matrix-column --max-bits 1 -t 7200
 # real state, and Part B counts the whole event at widths 2 and 3.  It needs numpy.
 # Every run MUST end "0 did not".  Each unit is checkpointed under results/, so a
 # rerun reprints from there in seconds.
-python3 permute-truncated-differential-verify.py --quick    # 5 s
-python3 permute-truncated-differential-verify.py            # 6.6 min, 1.8 GiB
+python3 permute-truncated-differential-verify.py --quick    # 7 s
+python3 permute-truncated-differential-verify.py            # 8.4 min, 1.8 GiB
 # The deeper draw behind README.md's full-width table.
 python3 permute-truncated-differential-verify.py --full-width-seed 2 --samples 268435456 --widths
 #   1.3 h, 0.3 GiB

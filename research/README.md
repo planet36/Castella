@@ -512,17 +512,31 @@ The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is chea
 
 A column of `D` is never all zero, because four active bytes enter the last MixColumns, so the factor at 4 rounds is 15^4 where 16 free bytes would give 2^16.  With the exact rates, the factor is 2^15.58 at 4 rounds and 2^15.95 at 3.
 
+**Choosing preimages moves every figure one round later.**  The table gives the probability that two inputs agree at byte `w` of all 16 blocks, where a random permutation gives 2^-128.  The inputs of its second column differ in one block, and those of its third are also chosen as preimages.
+
+| rounds | differing in one block | chosen as preimages |
+| --- | --- | --- |
+| 1 | 1 | 1 |
+| 2 | 2^-8 | 1 |
+| 3 | 2^-112.05 | 2^-8 |
+| 4 | 2^-128 × (1 + 2^-100) | 2^-112.42 |
+| 5 | 2^-128 | 2^-128 × (1 + 2^-100) |
+
+An entry of 1 holds at 15 of the 16 positions `w`, the exception being the block or the byte that differs.  The 2^-8 is step 1 alone.  The 1 + 2^-100 is the same argument after one more round has spread the difference over every block, and it is worked by hand, because the program's arithmetic cannot resolve an excess that small.  The last entry of the second column has a smaller excess still, which was not worked out.
+
 **At reduced width, the whole event is counted and matches.**  The model is the reduced one of `permute-multiplicity-verify.py`, which has _N_ blocks of _N_ bytes where the real state has 16 of 16, with the same round shape and the real S-box.  Its rate is _N_ − 1 of the _N_ blocks.  Each entry is the count over a random permutation's, as a range over three seeds, beside what the argument predicts.
 
 | _N_ | count | every block seen | predicted | rate blocks seen | predicted |
 | --- | --- | --- | --- | --- | --- |
 | 2 | one-block cube, 3 rounds | 2.93 to 3.11 | 2.969 | 1.0068 to 1.0075 | 1.0077 |
+| 2 | structures of 256 chosen inputs, 3 rounds | 254.3 to 255.0 | 255.0 | 1.9823 to 1.9859 | 1.9883 |
 | 2 | structures of 256 chosen inputs, 4 rounds | 2.958 to 2.975 | 2.969 | 1.0074 to 1.0080 | 1.0077 |
 | 2 | the same with random phases | 2.966 to 2.985 | 2.969 | 1.0070 to 1.0077 | 1.0077 |
 | 2 | control: cube, 4 rounds | 1.015 to 1.021 | 1.023 | 0.9999 to 1.0002 | 1.0001 |
 | 2 | control: structures, 5 rounds | 1.010 to 1.025 | 1.023 | 1.0000 to 1.0001 | 1.0001 |
 | 2 | control: 256 random inputs, 4 rounds | 1.010 to 1.025 | 1.023 | 1.0003 to 1.0004 | 1.0001 |
 | 3 | one-block cube, 3 rounds | 6.75 to 7.45 | 6.953 | 1.0224 to 1.0253 | 1.0233 |
+| 3 | structures of 256 chosen inputs, 3 rounds | 65,501 to 65,535 | 65,535 | 256.86 to 256.99 | 256.99 |
 | 3 | structures of 256 chosen inputs, 4 rounds | 6.81 to 6.97 | 6.953 | 1.0230 to 1.0234 | 1.0233 |
 | 3 | the same with random phases | 6.90 to 7.01 | 6.953 | 1.0217 to 1.0263 | 1.0233 |
 | 3 | control: cube, 4 rounds | 1.0002 to 1.0009 | 1.0005 | 1.0000 | 1.0000 |
@@ -557,6 +571,8 @@ The sets overlap, so the program tests separate events instead.  Pairs whose `D`
 | 4 | 2^-16.05 | 2^64.1 | 2^-16.42 | 2^128.0 | 2^121.0 | 2^256 |
 | 6 | 2^-32.05 | 2^72.1 | 2^-32.42 | 2^144.0 | 2^137.0 | 2^384 |
 | 8 | 2^-48.05 | 2^80.1 | 2^-48.42 | 2^160.0 | 2^153.0 | 2^512 |
+
+**At 3 rounds, one structure is enough at every capacity.**  The 3-round columns above are for inputs that only differ in one block.  Chosen as preimages, a structure of 256 inputs holds 32,640 pairs and 16 positions, so about 2040 agreeing pairs.  Each shows a caller 16 − `C` zero bytes, where chance expects less than 2^-44 of one such pair even at `C` = 8.  That is 256 queries, and the excess is large enough to be firm at every capacity.
 
 **Only the `C` = 2 row is firm.**  There the excess is 75% at 4 rounds, which survives a small error in the probability taken for an active block.  At `C` = 4, 6, and 8, the excess is 2^-16 or less, so those rows hold only if the last phase matches a random permutation that closely on dense differences, and nothing measured can confirm that.  The reduced-width counts through the rate test the same step at an excess of 0.8% and 2.3%.
 

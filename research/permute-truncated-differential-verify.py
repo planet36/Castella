@@ -14,6 +14,9 @@ chosen in one block as preimages, under the first round's phase, of two values
 that differ in one byte.  A sponge caller can choose such inputs, because the
 phase is public and one rate block is enough.
 
+At 3 rounds, the same chosen inputs agree there with probability near 2^-8.
+Only step 1 is left, and block w is inactive when byte w of D is zero.
+
 The argument
 ------------
 One round is a phase, which is a bijection on each block separately, then the
@@ -49,10 +52,10 @@ the C++.
 Part B, at reduced width.  On the N x N model of
 permute-multiplicity-verify.py (real S-box, N = 2 and 3), the whole event is
 countable.  Part B counts the pairs of a one-block cube at 3 rounds and the
-pairs inside one-block structures of 256 chosen inputs at 4 rounds, with every
-block seen and with the N - 1 rate blocks seen.  The controls are the same
-counts one round later, structures of 256 random inputs, and phases replaced by
-random permutations of the block.
+pairs inside one-block structures of 256 chosen inputs at 3 and at 4 rounds,
+with every block seen and with the N - 1 rate blocks seen.  The controls are
+the same counts one round later, structures of 256 random inputs, and phases
+replaced by random permutations of the block.
 
 Part C, the figures.  The factor over chance at full width, and the pairs and
 queries a caller needs at each capacity.  Part C measures nothing.
@@ -463,13 +466,15 @@ def pairs_equal(v: np.ndarray) -> int:
     return int((c * (c - 1) // 2).sum())
 
 
-def predict(n: int, s: int, spread: bool) -> float:
+def predict(n: int, s: int, spread: bool, short: bool = False) -> float:
     """The count over chance that the argument gives, with s of the n blocks seen.
 
     Without spread, every block holds one active byte, inactive with probability c,
     before the two phases that decide the event.  With spread, one more round precedes
     that, so k of the n blocks are active first and every block then holds k active
-    bytes.  That is the case of every control.
+    bytes.  That is the case of every control.  With short, one phase fewer follows
+    the one active byte, so the event is that its block's output difference is zero at
+    byte w.
     """
     big = Q ** n
     p1 = (big // Q - 1) / (big - 1)     # a nonzero block difference is zero at one byte
@@ -477,7 +482,9 @@ def predict(n: int, s: int, spread: bool) -> float:
     def g(k: int) -> float:
         return (C ** k + (1 - C ** k) * p1) ** n
 
-    if spread:
+    if short:
+        full = p1
+    elif spread:
         full = sum(math.comb(n, k) * C ** (n - k) * (1 - C) ** k * g(k)
                    for k in range(1, n + 1))
     else:
@@ -542,13 +549,13 @@ def count_lines(model: Model, rounds: int, lines: int, structured: bool) -> dict
 
 
 def report_count(tally: Tally, label: str, rec: dict, n: int, spread: bool,
-                 rel: float | None) -> None:
+                 rel: float | None, short: bool = False) -> None:
     """Print one unit's two counts and test them.  A control passes rel as None."""
     control = rel is None
     for seen, s in (("all", n), ("rate", n - 1)):
         got = rec[seen]
         chance = n * rec["npairs"] / float(Q) ** s
-        pred = predict(n, s, spread)
+        pred = predict(n, s, spread, short)
         sigma = math.sqrt(chance * pred)
         z = (got - chance) / math.sqrt(chance)
         if control:
@@ -575,14 +582,15 @@ def part_b(ck: Checkpoint, tally: Tally, n: int, seeds: list[int], lines: int) -
                 rec = ck.unit(key, lambda r=rounds, k=key, mo=model: count_cube(mo, r, k))
                 report_count(tally, f"seed {seed}, {name} phases, cube, {rounds} rounds",
                              rec, n, spread, None if spread else REL_CUBE)
-            for rounds, structured, spread in ((4, True, False), (5, True, True),
-                                               (4, False, True)):
+            for rounds, structured, spread in ((3, True, False), (4, True, False),
+                                               (5, True, True), (4, False, True)):
                 kind = "lines" if structured else "random sets"
                 key = f"B/N{n}/seed{seed}/{name} {kind} r{rounds} x{lines}"
                 rec = ck.unit(key, lambda r=rounds, s=structured, mo=model:
                               count_lines(mo, r, lines, s))
                 report_count(tally, f"seed {seed}, {name} phases, {kind}, {rounds} rounds",
-                             rec, n, spread, None if spread else REL_LINES)
+                             rec, n, spread, None if spread else REL_LINES,
+                             short=rounds == 3)
             model.drop()
         print(f"   [seed {seed}: {time.time() - t0:.0f} s]", flush=True)
 
@@ -607,6 +615,10 @@ def part_c(sampled: float | None) -> None:
     print(f"  factor over chance: 2^{math.log2(f3):.2f} at 3 rounds, "
           f"2^{math.log2(f4):.2f} at 4 rounds (no all-zero column)"
           + (f", 2^{math.log2(sampled):.2f} with Part A's rates" if sampled else ""),
+          flush=True)
+    one = 32640 * 16 * C
+    print(f"  3 rounds with chosen inputs: probability 2^-8, 2^120 times chance, so one "
+          f"structure of 256 inputs holds about {one:.0f} agreeing pairs at every capacity",
           flush=True)
     k = 3
     print(f"  pairs and queries for an excess of {k} standard deviations:", flush=True)

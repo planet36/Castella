@@ -80,6 +80,7 @@ them, and why nothing in this file should run during one.
 | `research/permute-zero_sum-probes.cpp` | random-cube zero-sum reach (structural at 1 round, nothing from 2) | §1, §7 |
 | `research/permute-division-property.py` | the 1-round byte-aligned and 2-round 2^128 integral distinguishers, the full-width one-bit check of the row ∪ column cube (`--max-bits`), and the **sponge reach of 2**, an input to every `R*` (`--sponge`), which is 3 at `C` = 2 on the strength of `aes_enc-uniformity-verify.cpp` | §1, §7 |
 | `research/permute-multiplicity-verify.py` | the inside-out zero-sums, 3 rounds from one block and 4 from a row and a column (`--rowcol`) | §1, §7 |
+| `research/permute-truncated-differential-verify.py` | the 4-round truncated differential through the sponge: its two sampled rates, the reduced-width counts, and the pairs and queries at each capacity | §7 |
 | `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, the cube of every rate block at 2 and 3 rounds by exact counting, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
 | `research/permute-sponge_reach-analog-verify.cpp` | the cube of every rate block by enumeration, through 4 rounds on a 3-bit-cell analog and through 3 on the 4-bit-cell one, which is the analog evidence on whether the sponge reach extends a round | §7 |
 | `research/aes_enc-uniformity-verify.cpp` | the two real-AES uniformity facts the 6-round zero-sum's 2^896 form rests on, by exhaustive enumeration | §7 |
@@ -125,7 +126,8 @@ Everything above except the last row and the two compiled ones runs on the syste
 `python-z3-solver`).  `trail-model-crossvalidate.py` and `permute-invariant-subspaces.py`
 do not, because they take the layer machinery from `permute_model.py`, which is pure
 standard library.  `permute-multiplicity-verify.py` needs only the standard library and
-`spec-conformance.py`.
+`spec-conformance.py`.  `permute-truncated-differential-verify.py` needs numpy (Arch
+`python-numpy`) as well.
 
 The two `./`-prefixed rows need `make -C research` first.  It links google-benchmark into
 every binary in that directory except the `*-verify` programs, so the probes need it
@@ -505,6 +507,16 @@ python3 permute-division-property.py --inside-out 2 2 -c rowcol --max-bits 1 -t 
 #   35 min, 3.5 GiB
 python3 permute-division-property.py -r 2 -c matrix-column --max-bits 1 -t 7200
 #   1.3 h, 4.5 GiB
+
+# The 4-round truncated differential.  Part A samples the argument's two rates on the
+# real state, and Part B counts the whole event at widths 2 and 3.  It needs numpy.
+# Every run MUST end "0 did not".  Each unit is checkpointed under results/, so a
+# rerun reprints from there in seconds.
+python3 permute-truncated-differential-verify.py --quick    # 5 s
+python3 permute-truncated-differential-verify.py            # 6.6 min, 1.8 GiB
+# The deeper draw behind README.md's full-width table.
+python3 permute-truncated-differential-verify.py --full-width-seed 2 --samples 268435456 --widths
+#   1.3 h, 0.3 GiB
 
 # Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~1.7 min per
 # stream.

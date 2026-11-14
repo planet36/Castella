@@ -343,7 +343,7 @@ These probes are necessary sanity checks, not distinguisher proofs.  They test t
 
   At 8 rounds, `W` has 2^17 cosets.  The equations of **262,144** sampled states join every coset into one component and reach rank **2032 of 2032** on `f` and `e`, which leaves only the constant functions.  So no nonconstant function of this class exists at 8 rounds.  9 rounds is decided the same way, from 2056 states over 8 cosets.  The samples are random, but the conclusion does not rest on them, since every equation holds for every function in the class.
 
-  This form of the second stage is the program's adaptation and not the paper's algorithm.  Its self-test plants an invariant on a 10-bit toy, which must stay undecided, beside a random permutation, which must be decided.  At 6 rounds, `W` has 2^72 cosets, and at 7 rounds 2^40, so both are out of reach and the class stays open at the claimed 6 rounds.
+  This form of the second stage is the program's adaptation and not the paper's algorithm.  Its self-test plants an invariant on a 10-bit toy, which must stay undecided, beside a random permutation, which must be decided.  At 6 rounds, `W` has 2^72 cosets, and at 7 rounds 2^40, so both are out of reach and the class stays open there, below the claimed 8 rounds.
 
 The first three findings are exhaustive over the layer-wise invariant byte-aligned class and over every coset of one, since the S-box census quantifies over all 256 offsets per byte.  The symmetry-class results are exact per coset tested, but the offsets are sampled, so they screen over offsets rather than prove for all of them.  A subspace that is neither byte-aligned nor one of the named classes is not covered by these findings.  The round-constant criterion tests a different class, every invariant that each layer preserves, and it is decided at 8 rounds and open at 6.
 
@@ -409,7 +409,7 @@ A run takes ~9 s at `-n 1`, dominated by the k = 16 column (2 placements × 16 r
 
 * **The threshold sits exactly at the full block, which is a prediction the explanation passed.**  2^8, 2^32, 2^64, and 2^96 all fail at 2 rounds, and 2^128 succeeds.  Step 1 above needs round 1 to be a bijection *on the cube*, which nothing short of a whole block provides, so the bracket "2^96 fails, 2^128 works" tests the mechanism rather than being a number the solver happened to emit.
 
-* **No margin moves.**  The one-directional distinguishers sit at **2** rounds from one block and **3** from four blocks on an AES diagonal, and the inside-out one at **6** (below), against `R*` = 6 (8 at `C` = 8).  SPEC.md's margin rule, as amended on 2026-10-29, counts only properties reachable through the sponge interface.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach at 2, while the inside-out zero-sums need a chosen middle state and characterize `P` alone.  The 3-round one is the forward half of the 2^896 construction, and at `C` = 2 message bytes fill its four blocks (1, 6, 11, and 12), so the sponge reach is 3 there.  The binding floor at `C` = 2 was already 3, from the diffusion floor.
+* **No margin moves.**  The one-directional distinguishers sit at **2** rounds from one block and **3** from four blocks on an AES diagonal, and the inside-out one at **6** (below), against `R*` = 8.  SPEC.md's margin rule, as amended on 2026-10-29, counts only properties reachable through the sponge interface.  The 2-round distinguisher's cube fits in the rate, so it sets the sponge reach at 2, while the inside-out zero-sums need a chosen middle state and characterize `P` alone.  The 3-round one is the forward half of the 2^896 construction, and at `C` = 2 message bytes fill its four blocks (1, 6, 11, and 12), so the sponge reach is 3 there.  The binding floor at `C` = 2 was already 3, from the diffusion floor.
 
   **What changes is a claim rather than a margin.**  A revision of this section said the reach was "bracketed at [2, 2.67] rounds", pairing the 2-round construction with the degree bound as an upper end.  The inside-out results refute that pairing because 2.67 capped the *degree-based* construction, under a bound since tightened to 4, and was never an upper bound on the true reach.  The lower end is real and has moved to 6, and there is no upper end.
 
@@ -465,7 +465,7 @@ A run takes ~9 s at `-n 1`, dominated by the k = 16 column (2 placements × 16 r
 
   The full-block cube rescues the backward direction through the even multiplicity rather than through any Square-style property, which is why backward 1 returns in **1.4 min**.  The backward half reaches one S-box layer less than its round count suggests, and it costs ~2.5× the variables per round, since InvMixColumns has 472 nonzero bit-matrix entries against MixColumns's 184.  Do not budget the halves symmetrically.
 
-  **This distinguisher is genuine but weak.**  A random permutation XORs to zero over a 2^128 set with probability 2^−2048, but this one is *structurally* simple, provable by hand from an even multiplicity, and needs 2^128 data against `R*` = 6.  It is the same counting that makes the C++ probes vanish at 1 round.  It reaches one round further than the forward-only construction because the middle-state split spends the cube in both directions.
+  **This distinguisher is genuine but weak.**  A random permutation XORs to zero over a 2^128 set with probability 2^−2048, but this one is *structurally* simple, provable by hand from an even multiplicity, and needs 2^128 data against `R*` = 8.  It is the same counting that makes the C++ probes vanish at 1 round.  It reaches one round further than the forward-only construction because the middle-state split spends the cube in both directions.
 
   **The mechanism is the parity of the multiplicity, not bijectivity**, and the controls in `permute-multiplicity-verify.py` separate the two.  Replacing the S-box with a deliberately 2-to-1 map destroys bijectivity but doubles every preimage count, leaving it even, and the zero-sum survives.  Replacing it with a map having one collision and one unreachable value gives 254 values an *odd* count, and the zero-sum dies at a single round.  Bijectivity is one way to obtain even multiplicity but is not what the argument uses, so step 1 above is stronger than it needs to be.
 
@@ -502,27 +502,27 @@ The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is chea
 
 ## Findings: a truncated differential reaches 4 rounds through the sponge (2026-11-12)
 
-`permute-truncated-differential-verify.py` measures a probabilistic property that needs no access to the capacity.  Two inputs that differ in one block agree, 3 rounds later, at byte `w` of all 16 blocks about 2^16 times as often as a random permutation's 2^-128 allows.  The same holds at 4 rounds for two inputs chosen in one block as preimages, under the first round's phase, of two values that differ in one byte.  The phase is public and one rate block is enough, so a sponge caller can choose them.
+`permute-truncated-differential-verify.py` measures a probabilistic property that needs no access to the capacity.  Two inputs that differ in one block agree, 3 rounds later, at byte `w` of all 16 blocks about 2^16 times as often as a random permutation's 2^−128 allows.  The same holds at 4 rounds for two inputs chosen in one block as preimages, under the first round's phase, of two values that differ in one byte.  The phase is public and one rate block is enough, so a sponge caller can choose them.
 
 **The argument uses the round's shape and two rates.**  One round is a phase, which is a bijection on each block separately, then the transpose, which sends byte `j` of block `i` to byte `i` of block `j`.
 
-1. A difference in one byte of one block becomes, after one phase, a difference `D` in that block.  The transpose hands byte `j` of `D` to block `j`, so block `j` is inactive when that byte is zero, with probability near 2^-8.
-2. The next phase gives an active block `j` an output difference that is zero at byte `w` with probability near 2^-8.  So block `j` contributes a zero at byte `w` in two ways, and the transpose gathers those 16 bytes into block `w`.
-3. Block `w` is therefore inactive with probability near (2 × 2^-8)^16.  The last phase keeps it inactive, and the last transpose makes it byte `w` of every block.
+1. A difference in one byte of one block becomes, after one phase, a difference `D` in that block.  The transpose hands byte `j` of `D` to block `j`, so block `j` is inactive when that byte is zero, with probability near 2^−8.
+2. The next phase gives an active block `j` an output difference that is zero at byte `w` with probability near 2^−8.  So block `j` contributes a zero at byte `w` in two ways, and the transpose gathers those 16 bytes into block `w`.
+3. Block `w` is therefore inactive with probability near (2 × 2^−8)^16.  The last phase keeps it inactive, and the last transpose makes it byte `w` of every block.
 
 A column of `D` is never all zero, because four active bytes enter the last MixColumns, so the factor at 4 rounds is 15^4 where 16 free bytes would give 2^16.  With the exact rates, the factor is 2^15.58 at 4 rounds and 2^15.95 at 3.
 
-**Choosing preimages moves every figure one round later.**  The table gives the probability that two inputs agree at byte `w` of all 16 blocks, where a random permutation gives 2^-128.  The inputs of its second column differ in one block, and those of its third are also chosen as preimages.
+**Choosing preimages moves every figure one round later.**  The table gives the probability that two inputs agree at byte `w` of all 16 blocks, where a random permutation gives 2^−128.  The inputs of its second column differ in one block, and those of its third are also chosen as preimages.
 
 | rounds | differing in one block | chosen as preimages |
 | --- | --- | --- |
 | 1 | 1 | 1 |
-| 2 | 2^-8 | 1 |
-| 3 | 2^-112.05 | 2^-8 |
-| 4 | 2^-128 × (1 + 2^-100) | 2^-112.42 |
-| 5 | 2^-128 | 2^-128 × (1 + 2^-100) |
+| 2 | 2^−8 | 1 |
+| 3 | 2^−112.05 | 2^−8 |
+| 4 | 2^−128 × (1 + 2^−100) | 2^−112.42 |
+| 5 | 2^−128 | 2^−128 × (1 + 2^−100) |
 
-An entry of 1 holds at 15 of the 16 positions `w`, the exception being the block or the byte that differs.  The 2^-8 is step 1 alone.  The 1 + 2^-100 is the same argument after one more round has spread the difference over every block, and it is worked by hand, because the program's arithmetic cannot resolve an excess that small.  The last entry of the second column has a smaller excess still, which was not worked out.
+An entry of 1 holds at 15 of the 16 positions `w`, the exception being the block or the byte that differs.  The 2^−8 is step 1 alone.  The 1 + 2^−100 is the same argument after one more round has spread the difference over every block, and it is worked by hand, because the program's arithmetic cannot resolve an excess that small.  The last entry of the second column has a smaller excess still, which was not worked out.
 
 **At reduced width, the whole event is counted and matches.**  The model is the reduced one of `permute-multiplicity-verify.py`, which has _N_ blocks of _N_ bytes where the real state has 16 of 16, with the same round shape and the real S-box.  Its rate is _N_ − 1 of the _N_ blocks.  Each entry is the count over a random permutation's, as a range over three seeds, beside what the argument predicts.
 
@@ -545,7 +545,7 @@ An entry of 1 holds at 15 of the 16 positions `w`, the exception being the block
 
 Through the rate at _N_ = 3, the 4-round excess is 13.8 to 14.0 standard deviations at each seed, over 240,000 structures.  Replacing every phase with a random permutation of the block leaves the counts where they were, so the property belongs to the round's shape and not to the S-box.  One cube's count depends on its fixed blocks, which is why the cube rows spread wider than the structure rows, and with random phases the _N_ = 3 cubes read 6.20 to 6.65.  At _N_ = 3, the 5-round control through the rate is below 1 at all three seeds, the largest shortfall being 2.7 standard deviations, which is inside the program's tolerance.
 
-**At full width, the two rates and the doubling are sampled on the real permutation.**  The event itself has probability near 2^-112 and cannot be sampled.  The figures are from 2^28 pairs through rounds 14 and 15, the two rounds a 2-round instance runs.
+**At full width, the two rates and the doubling are sampled on the real permutation.**  The event itself has probability near 2^−112 and cannot be sampled.  The figures are from 2^28 pairs through rounds 14 and 15, the two rounds a 2-round instance runs.
 
 | what was counted | count | predicted | over a random permutation |
 | --- | --- | --- | --- |
@@ -561,22 +561,22 @@ Through the rate at _N_ = 3, the 4-round excess is 13.8 to 14.0 standard deviati
 
 The sets overlap, so the program tests separate events instead.  Pairs whose `D` has 0 to 3 zero bytes match the MixColumns weight distribution to 0.2%, and pairs with 4 number 90 against 108.5.  For each such count `k`, the blocks with `m` further zero bytes match a binomial count wherever at least 25 are predicted.  An earlier draw of 2^26 pairs at seed 1 had 83 blocks with exactly 5 zero bytes against 124 predicted, with every tested count in tolerance.  The fresh draw above has 509 against 496.
 
-**The full-width figure is the product formula, an extrapolation.**  With the sampled rates, it gives 2^-112.42 for all 16 bytes of one block.  The doubling per byte is seen through 6 bytes and assumed through 16.
+**The full-width figure is the product formula, an extrapolation.**  With the sampled rates, it gives 2^−112.42 for all 16 bytes of one block.  The doubling per byte is seen through 6 bytes and assumed through 16.
 
 **Through the rate, a caller sees `s` = 16 − `C` of the 16 bytes.**  An inactive block makes them zero, and an active one is taken to make them zero with a random permutation's probability 2^(−8`s`).  So the count is 1 + ε times a random permutation's, with ε the factor above times 2^(−8`C`).  Each pair gives 16 events, one for each `w`.  The pairs are those for an excess of 3 standard deviations.  At 3 rounds, 2^`n` inputs that differ in one block give 2^(2`n` − 1) pairs, and at 4 rounds, a structure of 256 inputs gives 127.5 pairs for each input.
 
 | `C` | ε at 3 rounds | queries at 3 rounds | ε at 4 rounds | pairs at 4 rounds | queries at 4 rounds | generic bound |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2 | 2^-0.05 | 2^56.6 | 2^-0.42 | 2^112.8 | 2^105.8 | 2^128 |
-| 4 | 2^-16.05 | 2^64.1 | 2^-16.42 | 2^128.0 | 2^121.0 | 2^256 |
-| 6 | 2^-32.05 | 2^72.1 | 2^-32.42 | 2^144.0 | 2^137.0 | 2^384 |
-| 8 | 2^-48.05 | 2^80.1 | 2^-48.42 | 2^160.0 | 2^153.0 | 2^512 |
+| 2 | 2^−0.05 | 2^56.6 | 2^−0.42 | 2^112.8 | 2^105.8 | 2^128 |
+| 4 | 2^−16.05 | 2^64.1 | 2^−16.42 | 2^128.0 | 2^121.0 | 2^256 |
+| 6 | 2^−32.05 | 2^72.1 | 2^−32.42 | 2^144.0 | 2^137.0 | 2^384 |
+| 8 | 2^−48.05 | 2^80.1 | 2^−48.42 | 2^160.0 | 2^153.0 | 2^512 |
 
-**At 3 rounds, one structure is enough at every capacity.**  The 3-round columns above are for inputs that only differ in one block.  Chosen as preimages, a structure of 256 inputs holds 32,640 pairs and 16 positions, so about 2040 agreeing pairs.  Each shows a caller 16 − `C` zero bytes, where chance expects less than 2^-44 of one such pair even at `C` = 8.  That is 256 queries, and the excess is large enough to be firm at every capacity.
+**At 3 rounds, one structure is enough at every capacity.**  The 3-round columns above are for inputs that only differ in one block.  Chosen as preimages, a structure of 256 inputs holds 32,640 pairs and 16 positions, so about 2040 agreeing pairs.  Each shows a caller 16 − `C` zero bytes, where chance expects less than 2^−44 of one such pair even at `C` = 8.  That is 256 queries, and the excess is large enough to be firm at every capacity.
 
-**Only the `C` = 2 row is firm.**  There the excess is 75% at 4 rounds, which survives a small error in the probability taken for an active block.  At `C` = 4, 6, and 8, the excess is 2^-16 or less, so those rows hold only if the last phase matches a random permutation that closely on dense differences, and nothing measured can confirm that.  The reduced-width counts through the rate test the same step at an excess of 0.8% and 2.3%.
+**Only the `C` = 2 row is firm.**  There the excess is 75% at 4 rounds, which survives a small error in the probability taken for an active block.  At `C` = 4, 6, and 8, the excess is 2^−16 or less, so those rows hold only if the last phase matches a random permutation that closely on dense differences, and nothing measured can confirm that.  The reduced-width counts through the rate test the same step at an excess of 0.8% and 2.3%.
 
-**What this section does not decide.**  The property is a distinguisher on a 4-round instance at a cost below the generic bound, which is the kind of result [SPEC.md](../SPEC.md)'s attack reach counts.  SPEC.md has not been changed to count it, and still records no such attack.  No extension of this property to 5 rounds is known, and the controls one round later read as a random permutation does, but only this one construction was tried.  The exchange relation of the same family, and the divisibility properties, are not measured here.
+**What follows from it, and what does not.**  The property is a distinguisher on a 3-round instance at every capacity, and on a 4-round instance at `C` = 2, at a cost below the generic bound.  [SPEC.md](../SPEC.md) counts both toward its attack reach, which is 3 at `C` = 4, 6, and 8 and 4 at `C` = 2, and on 2026-11-13 it set `R*` at 8 for every capacity.  The rows for `C` = 4, 6, and 8 at 4 rounds do not count there, being unconfirmed.  No extension of this property to 5 rounds is known, and the controls one round later read as a random permutation does, but only this one construction was tried.  The exchange relation of the same family, and the divisibility properties, are not measured here.
 
 The commands are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7.
 
@@ -947,7 +947,7 @@ These differentials sit far above their floors (236 bits at _r_ = 6 against 23 a
 
 ### Scope
 
-Like the MILP section, this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers.  The reduced-round instances (_r_ = 1, 2, 3, 4, 5) are validation and calibration points, not security statements.  No security is claimed at any of them (`R*` is 6, or 8 at `C` = 8), and at _r_ = 1, 2 full bit diffusion is not even reached (`NUM_ROUNDS_MIN<16>()` = 3).
+Like the MILP section, this covers differential (and, symmetrically, linear) characteristics and their first-order clustering only.  It says nothing about rebound / start-from-the-middle attacks, invariant subspaces, algebraic degree, or other structural distinguishers.  The reduced-round instances (_r_ = 1, 2, 3, 4, 5) are validation and calibration points, not security statements.  No security is claimed at any of them (`R*` is 8), and at _r_ = 1, 2 full bit diffusion is not even reached (`NUM_ROUNDS_MIN<16>()` = 3).
 
 **Every round count from _r_ = 1 to _r_ = 8 is bracketed, and every floor is a solved optimum**, a range that covers every shipped round count.  The _r_ = 3 … _r_ = 8 brackets ([774, 823], [990, 1123], [1404, 1602], [1620, 1856], [2124, 2447], and [2340, 2699]) all rest on solved _A_.
 

@@ -146,7 +146,7 @@ All of these ratios are machine-dependent.  To reproduce them, build `research/`
 
 On a modern x86-64 Linux system, with VAES leaf batching:
 
-* **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and even single-threaded at its default rounds beats BLAKE2b, SHA-1, and MD5 (the algorithms of `b2sum`, `sha1sum`, and `md5sum`).
+* **[`castella`](hash-programs/castella.cpp)**, the cryptographic [`DuplexTree`](include/castella-duplex-tree.hpp), at `--rounds=6` roughly matches fully-multithreaded [`b3sum`](https://github.com/BLAKE3-team/BLAKE3) on page-cache-hot files, and even single-threaded beats BLAKE2b, SHA-1, and MD5 (the algorithms of `b2sum`, `sha1sum`, and `md5sum`).  Its default was 6 rounds when these were measured.  It is now 8, the claimed round count, and no figure here was measured at it.
 * **[`cch`](hash-programs/cch.cpp)**, the same tree over faster non-cryptographic nodes, beats fully-multithreaded `b3sum` by about **2.0×** on the same files, and single-threaded beats [XXH3](https://github.com/cyan4973/xxhash) (`xxhsum -H3`) by about 1.2×.
 
 These comparisons come from [hash-programs/benchmark.hash-programs.bash](hash-programs/benchmark.hash-programs.bash).  It uses [hyperfine](https://github.com/sharkdp/hyperfine) to time `castella` and `cch` against `b3sum`, `xxhsum`, OpenSSL, and coreutils/uutils `cksum` on a 500 MiB file, which hyperfine's warm-up runs make page-cache-hot.  The results are machine-dependent, so run it yourself.
@@ -208,7 +208,7 @@ It's the deliberate opposite of [_lightweight cryptography_](https://csrc.nist.g
 
 _No!_  Nothing is as fast as `b3sum`!
 
-But seriously, in my testing [Castella hash](hash-programs/castella.cpp) roughly matches fully-multithreaded `b3sum` on page-cache-hot files, and [Compress-Castella hash](hash-programs/cch.cpp) beats it!  Don't take my word for it.  [Performance](#performance) has the figures and the script that reproduces them.
+But seriously, in my testing, [Castella hash](hash-programs/castella.cpp) at 6 rounds roughly matches fully-multithreaded `b3sum` on page-cache-hot files, and [Compress-Castella hash](hash-programs/cch.cpp) beats it!  Don't take my word for it.  [Performance](#performance) has the figures and the script that reproduces them.
 
 ### Could Castella be considered a [cryptographic hash function](https://csrc.nist.gov/glossary/term/cryptographic_hash_function) or a [cryptographic primitive](https://csrc.nist.gov/glossary/term/cryptographic_primitive)?
 

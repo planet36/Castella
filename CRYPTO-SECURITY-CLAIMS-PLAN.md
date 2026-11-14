@@ -202,20 +202,21 @@ permutation).  The honest procedure has four steps:
    fixed the floor there permanently.
 2. **Floor from diffusion.**  Full bit diffusion needs r=3 (empirical, corroborated by
    avalanche statistics).
-3. **Margin against the unknown.  RESOLVED 2026-08-08, AMENDED 2026-10-29, and EXTENDED
-   2026-11-11.  The policy is now
-   `R* = max(diffusion floor, trail floor, sponge reach, attack reach) + 3`**, additive in
+3. **Margin against the unknown.  RESOLVED 2026-08-08, AMENDED 2026-10-29, EXTENDED
+   2026-11-11, and MADE A LOWER BOUND 2026-11-13.  The policy is now `R* = 8` at every
+   capacity, bounded below by
+   `max(diffusion floor, trail floor, sponge reach, attack reach) + 3`**, additive in
    rounds, with the `+ 3` a fixed margin sized by full bit diffusion.  The sponge reach is
    the longest reach of any known distinguisher through the sponge interface, currently 2,
-   and 3 at `C` = 2, where the forward half of the 2^896 zero-sum fits in the rate.  That
-   moves no `R*`, since the binding floor at `C` = 2 was already 3.  The policy reproduces
-   all four shipped round counts (6/6/6/8) with no exceptional row, and nothing shipped
-   changed when it was adopted or when it was amended.
+   and 3 at `C` = 2, where the forward half of the 2^896 zero-sum fits in the rate.  The
+   attack reach is 3, and 4 at `C` = 2, from the truncated differential measured on
+   2026-11-12.  The bound is 7/6/6/8.  Until 2026-11-13, the policy was `R*` itself, and it
+   reproduced the four round counts then shipped (6/6/6/8) with no exceptional row.
 
    It is written up in SPEC.md's margin rationale, including the disclosures below.
    Re-evaluate as results arrive.  A sponge-interface distinguisher reaching `k` rounds
-   obliges `R*` ≥ `k` + 3 at every capacity where it works, so one reaching 4 rounds
-   obliges 7 at each of `C` = 2, 4, and 6 where it works.
+   obliges `R*` ≥ `k` + 3 at every capacity where it works, so with `R*` at 8, only one
+   reaching 6 rounds obliges a change, to 9.
 
    *The per-capacity reading was adopted on 2026-11-10.*  SPEC.md's commitment read "at
    every capacity" until a 3-round result that works at `C` = 2 alone showed that the
@@ -226,8 +227,19 @@ permutation).  The honest procedure has four steps:
    which a known attack beats the generic bound, and an attack on a `k`-round instance
    obliges `R*` ≥ `k` + 3 at that instance's capacity.  A design review had pointed out
    that a probabilistic attack counted only through the trail floor, so a collision below
-   the generic cost on a 5-round instance would have obliged nothing.  None is known, so
-   the input binds no row, and nothing shipped changed.
+   the generic cost on a 5-round instance would have obliged nothing.  None was known
+   then, so the input bound no row, and nothing shipped changed.
+
+   *`R*` was set at 8 on 2026-11-13.*  A truncated differential was measured that
+   distinguishes a 3-round instance through the sponge at every capacity and a 4-round
+   instance at `C` = 2, which under the policy as it stood obliged 7 at `C` = 2.  The
+   maintainer set `R*` at 8 at every capacity instead and made the policy a lower bound.  A
+   change of `R*` alters the `castella` program's default digests, and at 8 no result short
+   of 6 rounds obliges another.  The even count is a preference and rests on no evidence.
+   On the same day, the attack reach was restricted to a demonstrated advantage, which
+   excludes the 4-round figures at `C` = 4, 6, and 8.  That restriction was adopted after
+   the figures it excludes, and it moves no round count, since 8 meets the bound even with
+   them counted.
 
    *What the amendment changed, and why.*  As adopted, the `+ 3` was the longest reach of
    any known distinguisher against `P`, then the 3-round inside-out zero-sum, counted by
@@ -255,12 +267,12 @@ permutation).  The honest procedure has four steps:
    *The comparison with Keccak that this step used to make is not like-for-like.*  Keccak's
    ~3–4× is against practical attacks reaching ~6 rounds, while the sponge reach of 2 here,
    or 3 at `C` = 2, is a distinguisher needing 2^128 data, or 2^512, not a break of the
-   sponge.  It cuts both ways, and SPEC.md now says so.  There are no practical attacks on
-   Castella at any round count to measure from, but the sponge reach counts a distinguisher
-   of any cost.  Zero-sums reach full-round Keccak-`f`, and at `C` = 2, 4, and 6 they now
-   reach every claimed round of `P` as well.  Keccak's claim declines to count them, as this
-   one now does.  Do not present any ratio of `R*` to a reach as comparable to a SHA-3
-   figure.
+   sponge.  SPEC.md states both sides.  Practical attacks on Castella reach 3 rounds since
+   2026-11-13, so the ratio against attacks of practical cost is about 2.7×, thinner than
+   Keccak's, while the sponge reach counts a distinguisher of any cost.  Zero-sums reach
+   full-round Keccak-`f`, and here they reach 6 of `P`'s 8 claimed rounds.  Keccak's claim
+   declines to count them, as this one does.  Do not present any ratio of `R*` to a reach as
+   comparable to a SHA-3 figure.
 4. **Publish per-C recommended `(C, R*)` pairs** in SPEC.md as *the claimed instances*.
    This is **done, and the margin question that hung over this step is CLOSED (2026-08-08).
    The round counts stay at 6/6/6/8 and the rationale was rewritten** under step 3's adopted
@@ -272,6 +284,10 @@ permutation).  The honest procedure has four steps:
    | 4 | 256 | 86 | r=3 | r=2 | r=3 | 6 | **+3** |
    | 6 | 384 | 128 | r=3 | r=2 | r=3 | 6 | **+3** |
    | 8 | 512 | 171 | **r=5** | r=2 | r=5 | 8 | **+3** |
+
+   *This table is the state of 2026-08-08.  Since 2026-11-13, `R*` is 8 in every row, the
+   attack reach makes the binding floor 4 at `C` = 2, and `R*` − floor is 4, 5, 5, and 3
+   (step 3).*
 
    *How it was decided, since the reasoning is easy to lose.*  The prior framing here was
    that a margin policy "has to say what it measures, and the two natural answers disagree."
@@ -330,6 +346,13 @@ permutation).  The honest procedure has four steps:
    an attack that beats the generic bound on a 4-round instance, at that instance's
    capacity.  At that point, `C` = 6 deserves the first look, for the floor reason in the
    paragraph above, not `C` = 8.
+
+   **SUPERSEDED 2026-11-13.**  The evidence arrived, as a 4-round attack at `C` = 2, and the
+   decision above no longer stands.  `R*` is 8 at every capacity (step 3).  The change went
+   past the commitment's 7 by preference, so that it need not be repeated, and SPEC.md says
+   so.  Fewer digests moved than the paragraph above expected.  Only default-round runs
+   changed, three of them pinned in `hash-programs/test-correctness.bash`, and nothing in
+   `tests/KAT.txt` or `tests/tests.cpp`, whose vectors name their round counts.
 
    **One property of the commitment is worth stating rather than discovering later, which
    is that it bounds reach, not data complexity.**  A 4-round sponge-interface
@@ -471,8 +494,8 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
 
    **DONE in [CHALLENGES.md](CHALLENGES.md), but at 3, 4, and 5 rounds, not the r = 1, 2,
    3, 4 specified here.**  The round counts were moved up deliberately because r = 1 and r = 2
-   are trivial, and what a challenge is for is probing the rounds just below `R*` = 6,
-   which is where a result would move the margin.
+   are trivial, and what a challenge is for is probing the rounds just below what was then
+   `R*` = 6, which is where a result would move the margin.
 
    It also ships more than this item asked for: a 4-byte warm-up rung, truncated-collision
    and truncated-preimage ladders so a partial result has somewhere to land,
@@ -530,7 +553,7 @@ capacity mapping is stated in SPEC.md where the strengths are derived, and READM
 research/README.md documents each new tool and links the verification guide.
 ADVERSARIAL-REVIEW-PLAN.md and this file cross-reference each other in both directions.
 
-`castella --help` names the claimed round counts, with `Duplex::get_num_rounds_claimed`
+`castella --help` names the claimed round count, with `Duplex::get_num_rounds_claimed`
 in include/castella-duplex.hpp supplying the default so the out-of-box instances
 are claimed at every capacity, while `cch --help` opens by calling itself a
 non-cryptographic checksum.
@@ -609,22 +632,23 @@ in SPEC.md or research/README.md, and none of it is reopened by wanting a better
 
 | closed | when | what was decided |
 |---|---|---|
-| Raising `R*` above 6/6/6/8 | 2026-08-08 | Not at any capacity.  A standing intent to revisit the shipped values upward was resolved against once §4.3's margin policy settled.  Every row meets `floor + 3` and none is an exception.  Only the published commitment reopens it — see below. |
+| `R*` = 8 at every capacity | 2026-11-13 | Set by decision, replacing the 6/6/6/8 that was closed here on 2026-08-08, after a 4-round attack at `C` = 2 obliged 7 there.  It is 8 and not 7 so that it does not move often, and `floor + 3` is now a lower bound on it (7/6/6/8).  Neither lowering nor raising it is to be re-proposed.  Only the published commitment reopens it — see below. |
 | The "margin in bits" metric | 2026-08-08 | Rejected on the merits, not on the answer it gave.  It is the metric that happens to flatter the row under question, and doubling a *differential* bound buys nothing against the rebound, integral and algebraic attacks the margin exists to cover.  The rounds metric stays. |
 | Pushing the trail-search **ceilings** further | 2026-08-08 | The whole line: more seeds, more patterns, deeper shells, enumerating alternate MILP optima above r = 4.  The last batch re-ran all six ceilings, three at double the budget, and moved none.  Every round count through r = 8 is bracketed on a solved floor, so a tighter ceiling buys characterization, not margin. |
-| `A(9)` and beyond | 2026-08-08 | Dropped on scope.  The shipped round counts are 6 and 8, so r ≤ 8 covers them; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
+| `A(9)` and beyond | 2026-08-08 | Dropped on scope.  The shipped round count is 8, so r ≤ 8 covers it; above r = 8 superadditivity is the only source and that is enough for a number nothing depends on. |
 | Differential clustering at r ≥ 2 | 2026-08-07 | The r = 2 cluster enumeration was judged not worth its cost, and the shell enumerations that would supply the figures elsewhere are inside the closed ceiling line.  So first-order clustering is measured at r = 1 only (≈ 2 bits), and the gap is disclosed rather than queued (§5.3). |
 | Minimization as a ceiling lever | empirical, 2026-08-02 onward | Refuted rather than decided, and recorded here because it keeps looking attractive.  The 31 attempts at 600 s produced 0 improvements, and no minimization has ever completed at r ≥ 2. |
 | A 7-round inside-out zero-sum | 2026-10-30 | Not pursued.  A second blind re-derivation found none, and it argued that the technique stops at 6 rounds.  Its one unproved step asks whether 3-round AES has a common coarsening, which is a question about AES itself, and a positive answer would be a weakness in AES.  Inside-out zero-sums do not count toward `R*`, so no answer moves a parameter.  SPEC.md keeps 7 rounds open. |
 
 **What reopens the first entry, and only it, is SPEC.md's commitment.**  A sponge-interface
 distinguisher reaching `k` rounds obliges `R*` ≥ `k` + 3 at every capacity where it works,
-so 4 rounds obliges 7 at each of `C` = 2, 4, and 6 where it works, and 6 rounds obliges 9
-at `C` = 8.  Since 2026-11-11, an attack that beats the generic bound on a `k`-round
-instance obliges the same at that instance's capacity.  It is stated in SPEC.md and
-CHALLENGES.md, it asks about *reach* rather than cost, and if it fires, `C` = 6 is the row
-to examine first (§4.3, and now SPEC.md's margin rationale).  Under the 2026-10-29
-amendment, an inside-out zero-sum on `P` alone reopens nothing (§4.3 step 3).
+so with `R*` at 8, nothing reaching 5 rounds or fewer obliges a change, and 6 rounds
+obliges 9 where it works.  Since 2026-11-11, an attack that beats the generic bound on a
+`k`-round instance obliges the same at that instance's capacity, and since 2026-11-13 its
+advantage must be demonstrated.  It is stated in SPEC.md and CHALLENGES.md, it asks about
+*reach* rather than cost, and if it fires, `C` = 6 is the row to examine first (§4.3, and
+now SPEC.md's margin rationale).  Under the 2026-10-29 amendment, an inside-out zero-sum on
+`P` alone reopens nothing (§4.3 step 3).
 
 **One gap is unmodeled rather than closed.**  Rebound attacks are covered by nothing.  A
 margin argument stood here until 2026-11-11.  A design review had shown that it priced

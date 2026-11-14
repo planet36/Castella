@@ -131,19 +131,19 @@ coset tested, but the offsets are sampled, so they are a screen over offsets
 rather than a proof for all of them.
 
 Section 6 is exact, but it decides only the round counts where W reaches
-2047 dimensions, which are 10 and above.  At the claimed 6 and 8 rounds, W
+2047 dimensions, which are 10 and above.  At the claimed 8 rounds, W
 falls short and the section decides nothing.  No choice of constants would
 change that, because the two linear layers need 23 sums to get there, and
-those round counts supply 16 and 22.
+8 rounds supply 22.
 
 Section 7 is exact where it runs, and it decides 8 and 9 rounds.  The class
-of section 6 is therefore open at 7 rounds and below, which includes the
-claimed 6 rounds, where W has 2^72 cosets.  Section 7's samples are random,
-but a decision does not rest on them, since every equation holds for every g
-in the class.
+of section 6 is therefore decided at the claimed 8 rounds, and open at 7
+rounds and below, where W has 2^40 cosets or more.  Section 7's samples are
+random, but a decision does not rest on them, since every equation holds for
+every g in the class.
 
 A general subspace of F_2^2048 that is neither byte-aligned nor one of the
-named classes is therefore not covered at the claimed round counts.  The empty
+named classes is therefore not covered at the claimed round count.  The empty
 support, a fixed point, is likewise out of reach exhaustively and stays the
 screen it already is in permute-structural-probes.cpp.
 
@@ -182,9 +182,9 @@ STATE_BITS = N_POS * 8              # 2048
 # The AES MixColumns matrix over GF(2^8); mix_column() is checked against it.
 MC4 = ((2, 3, 1, 1), (1, 2, 3, 1), (1, 1, 2, 3), (3, 1, 1, 2))
 
-# The fewest rounds of any instance, and the round counts SPEC.md claims.
+# The fewest rounds of any instance, and the round count SPEC.md claims.
 NUM_ROUNDS_MIN = 3
-CLAIMED_ROUNDS = (6, 8)
+CLAIMED_ROUNDS = (8,)
 # Section 7 visits every coset of W, so it runs where they number at most this.
 MAX_COSET_BITS = 20
 
@@ -1112,9 +1112,9 @@ def print_conclusion() -> None:
     print("  not rely on them.")
     print("  Section 6 asks for any function, of any shape, that the S-box")
     print("  layer and every affine layer each preserve.  It rules one out")
-    print("  from 10 rounds on, and section 7 does at 8 and 9.  At the")
-    print("  claimed 6 rounds, the constant sums are too few for either, so")
-    print("  that class is open there.")
+    print("  from 10 rounds on, and section 7 does at 8 and 9, which covers")
+    print("  the claimed 8 rounds.  At 7 rounds and below, the constant sums")
+    print("  are too few for either, so that class is open there.")
 
 
 def main() -> None:

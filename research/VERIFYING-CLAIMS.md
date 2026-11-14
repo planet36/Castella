@@ -31,8 +31,9 @@ When a figure has to be *re-derived* rather than checked, [RE-DERIVATION-RUNBOOK
 | 14 | Rebound-attack resistance of the default rounds | evidence pending (the margin argument is withdrawn) | §14 |
 | 15 | Algebraic-degree bound and zero-sum / integral distinguisher reach | executable | §15 |
 | 16 | r≥2 trail tightness, and the r≥5 ceilings that each rest on a single imported MILP pattern | evidence pending | §16 |
+| 17 | A truncated differential distinguishes a 3-round instance through the sponge at every capacity, and a 4-round one at `C` = 2, which sets the attack reach | executable | §17 |
 
-The C++ programs need the repository toolchain (GCC 14+ and `make`), and building `research/` also needs [google-benchmark](https://github.com/google/benchmark).  The eight scripts need Python 3 and the following:
+The C++ programs need the repository toolchain (GCC 14+ and `make`), and building `research/` also needs [google-benchmark](https://github.com/google/benchmark).  The nine scripts need Python 3 and the following:
 
 | script | needs |
 |---|---|
@@ -44,6 +45,7 @@ The C++ programs need the repository toolchain (GCC 14+ and `make`), and buildin
 | `trail-model-crossvalidate.py` | nothing beyond Python 3 (its layer machinery comes from `permute_model.py`) |
 | `permute-invariant-subspaces.py` | nothing beyond Python 3, for the same reason (it solves nothing itself) |
 | `permute-division-property.py` | z3 |
+| `permute-truncated-differential-verify.py` | [numpy](https://numpy.org/) (Arch `python-numpy`), and it imports `spec-conformance.py` |
 
 All commands run from `research/` unless noted.
 
@@ -103,9 +105,9 @@ Against **a = 4**, the proven points run the *other* way.  At r = 1 and r = 2, t
 
 ## 6. The arithmetic: `R*`, strengths, SHA-3 mapping
 
-This is pencil and paper from the rows above, with the derivations written out in SPEC.md.  The trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A`, giving r = 2/3/4/5/6/7/8 for b ≤ 135/387/495/702/810/1062/1170.  `R*` = max(diffusion floor, trail floor, sponge reach, attack reach) + 3 then gives **6/6/6/8 for `C` = 2/4/6/8, matching every published `R*` with no exceptional row**.  The diffusion floor is 3 (§3), and the sponge reach is 2, or 3 at `C` = 2 (§11), so the sponge reach raises no row.  No attack counts toward the attack reach (SPEC.md), so it raises no row either.  The `+ 3` is a fixed margin sized by full diffusion, so verifying the rationale means checking §3 and §11 too, not only the floors.  A sponge-interface distinguisher reaching 4 rounds would oblige 7 at each of `C` = 2, 4, and 6 where it works, and one reaching 6 would oblige 9 at `C` = 8.
+This is pencil and paper from the rows above, with the derivations written out in SPEC.md.  The trail floor for claimed level `b` is the smallest `r` with `6·A ≥ 2b`, and every input is now a solved `A`, giving r = 2/3/4/5/6/7/8 for b ≤ 135/387/495/702/810/1062/1170.  The bound max(diffusion floor, trail floor, sponge reach, attack reach) + 3 then gives **7/6/6/8 for `C` = 2/4/6/8, and the published `R*` of 8 meets it in every row**.  The diffusion floor is 3 (§3), and the sponge reach is 2, or 3 at `C` = 2 (§11), so the sponge reach raises no row.  The attack reach is 3, or 4 at `C` = 2 (§17), so it raises the `C` = 2 row's binding floor from 3 to 4.  The `+ 3` is a fixed margin sized by full diffusion, so verifying the rationale means checking §3, §11, and §17 too, not only the floors.  A sponge-interface distinguisher or an attack reaching 6 rounds would oblige 9 at every capacity where it works, and nothing reaching 5 or fewer obliges a change.
 
-One cell of that arithmetic has no slack and is worth checking on its own.  `C` = 6 is the only row where `2b/6` lands on an integer, so it needs `A(3) ≥ 128` and gets **129**, clearing by one active S-box where the other rows round up and clear by 2, 43, and 63.  At `A(3)` = 127, its trail floor would be 4 and its `R*` 7.  Nothing there is unsound, since 129 is a converged optimum and the deepest cell both MILP solvers close independently.  But it is the figure most exposed to being derived rather than chosen, which is why SPEC.md names `C` = 6, not `C` = 8, as the row to re-examine first if the revision trigger fires.
+One cell of that arithmetic has no slack and is worth checking on its own.  `C` = 6 is the only row where `2b/6` lands on an integer, so it needs `A(3) ≥ 128` and gets **129**, clearing by one active S-box where the other rows round up and clear by 2, 43, and 63.  At `A(3)` = 127, its trail floor would be 4 and its bound 7.  Nothing there is unsound, since 129 is a converged optimum and the deepest cell both MILP solvers close independently.  But it is the figure most exposed to being derived rather than chosen, which is why SPEC.md names `C` = 6, not `C` = 8, as the row to re-examine first if the revision trigger fires.
 
 Four rounds support a solved **495** bits, 17 bits short of 512, so the 512-bit floor is r = 5.  No further solving can revisit that, because `A(4) = 165` is exact.
 
@@ -162,7 +164,7 @@ python3 permute-invariant-subspaces.py
 python3 permute-invariant-subspaces.py --self-test
 ```
 
-It must print `no invariant subspace exists in any class decided here` and exit 0 (~1.5 min).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labelings, a single-byte support closure of **256**, **0 of 48** on each class's `round constants lying in the class` line (one 16-block constant layer per round and AES round), and a forced closure of **2048** for all seven classes.  Section 6 must print **0 of 255** constant S-box components, **23** as the sums the linear layers need, and a `dim W` of 896, 1264, 1624, **1976**, 2008, **2031**, and 2045 at 3 to 9 rounds and 2048 from 10 to 16, with `undecided at the claimed 6 and 8 rounds`.  The program pins those dimensions, so a different value exits 1.  Section 7 must print `no common invariant` at 8 and 9 rounds, each with **1** component, at equation ranks of **2032 of 2032** and **2046 of 2046**, and `not run` from 3 to 7 rounds.  An undecided row there exits 1.
+It must print `no invariant subspace exists in any class decided here` and exit 0 (~1.5 min).  The figures that must reproduce exactly are 690,880 two-dimensional affine subspaces of F₂⁸ with **85** having an affine S-image, **0** of those preserving their direction space, **0** at dimension 3, **0** MixColumns-compatible 1-dimensional column labelings, a single-byte support closure of **256**, **0 of 48** on each class's `round constants lying in the class` line (one 16-block constant layer per round and AES round), and a forced closure of **2048** for all seven classes.  Section 6 must print **0 of 255** constant S-box components, **23** as the sums the linear layers need, and a `dim W` of 896, 1264, 1624, **1976**, 2008, **2031**, and 2045 at 3 to 9 rounds and 2048 from 10 to 16, with `undecided at the claimed 8 rounds`.  The program pins those dimensions, so a different value exits 1.  Section 7 must print `no common invariant` at 8 and 9 rounds, each with **1** component, at equation ranks of **2032 of 2032** and **2046 of 2046**, and `not run` from 3 to 7 rounds.  An undecided row there exits 1.
 
 The `[control: … 2 rounds 128]` figures beside the first two classes are the positive control.  With the round constants zeroed, the two block classes *are* invariant, at dimension 128, and a control reading 2048 there would mean the closure test had no power.  The third class deliberately prints `[control: 1 round 2048, 2 rounds 2048]`.  ShiftRows and MixColumns break the symmetric-matrix class rather than the constants, so zeroing them controls nothing.  Read a 2048 as a failure only on the two block classes.
 
@@ -309,3 +311,19 @@ What stays open from r = 5 through r = 8 is that each ceiling rests on a *single
 **This is disclosed, not planned.  Work on the ceilings was closed on 2026-08-08**, after the last batch of shell enumerations, three re-run at double the budget, moved none of the six.
 
 A tighter ceiling would buy characterization rather than margin, since every round count through r = 8 is bracketed and every floor under it is a converged optimum.  [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) § 5 and § 10 record that closure, and [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 3 with [permute-trail-ceilings.bash](permute-trail-ceilings.bash) records how the ceilings regenerate, for anyone reopening this with a new idea rather than a longer clock.  Until a row moves out of this section, SPEC.md's Evidence section discloses the corresponding gap ("necessary, not sufficient").
+
+## 17. The truncated differential and the attack reach
+
+```bash
+python3 permute-truncated-differential-verify.py --quick   # 7 s
+```
+
+It must end `40 expectations held, 0 did not` and exit 0.  The default run takes 8.4 min and must end `163 expectations held, 0 did not` ([RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7).
+
+Part A samples the real permutation.  Its two rates must each be within 2% of 2^−8, and no column of `D` may be all zero.  Part B counts the whole event at reduced widths 2 and 3, and three kinds of row matter.
+
+* The 3-round structures must read near 255 and 65,535 times chance with every block seen.  That is the 3-round distinguisher.
+* The 4-round structures must read near 2.97 and 6.95 with every block seen, and near 1.0077 and 1.0233 through the rate.  That is the 4-round one.
+* Every control, one round later or with random inputs, must read near 1.
+
+Part C prints the full-width figures and measures nothing.  Only its `C` = 2 row counts toward the attack reach at 4 rounds.  The rows for `C` = 4, 6, and 8 are an excess of 2^−16 or less, which holds only if the last round matches a random permutation that closely, and no run here can confirm that.  A passing run therefore supports an attack reach of 3 at every capacity and 4 at `C` = 2.  It says nothing about 5 rounds beyond this one construction.

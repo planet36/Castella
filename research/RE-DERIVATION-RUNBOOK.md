@@ -114,7 +114,7 @@ free -h                                                       # -M is per proces
 | `python3 research/permute-multiplicity-verify.py --self-test` | the controls behind the multiplicity argument | `self-test: OK`, 6 s |
 | `python3 research/permute-multiplicity-verify.py` | premises A1–A7 on the real state, plus the reduced-width reach table | `forward 2-round zero-sum: CONFIRMED`, `inside-out, best over the 3 cubes measured (row, col, diag): 3 round(s)`, 4.4 s |
 | `python3 research/permute-invariant-subspaces.py --self-test` | the census machinery | `self-test: OK`, 0.1 s |
-| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census, and the round-constant criterion | `no invariant subspace exists in any class decided here`, after `undecided at the claimed 6 and 8 rounds` in section 6 and `no common invariant` at 8 rounds in section 7, 1.4 min |
+| `python3 research/permute-invariant-subspaces.py` | the exhaustive layer-wise byte-aligned subspace census, and the round-constant criterion | `no invariant subspace exists in any class decided here`, after `undecided at the claimed 8 rounds` in section 6 and `no common invariant` at 8 rounds in section 7, 1.4 min |
 | `./permute-structural-probes -n 10000` (in `research/`) | symmetry-class escape, fixed points, round constants, slide screen | `all pass/fail checks passed`, 0.3 s |
 | `./permute-zero_sum-probes -n 1` (in `research/`) | random-cube zero-sum reach | `all pass/fail checks passed`, 8 s |
 | `python3 research/trail-model-crossvalidate.py` | `permute_model.py` models `P` a **third** time, beside the C++ and spec-conformance.py.  This compares its difference propagation with the KAT-verified one at r = 1..6, and `make -C research test` also runs it | `240 state pairs verified, 0 failed`, 0.8 s |
@@ -546,11 +546,12 @@ it states the conclusion the figure was supporting.
 | [CHALLENGES.md](../CHALLENGES.md) | the published bracket table and the round counts each challenge is set at |
 | [patterns/README.md](patterns/README.md) | `A(r)`, the solve times, and each pattern's `proven_optimal` |
 | [CRYPTO-SECURITY-CLAIMS-PLAN.md](../CRYPTO-SECURITY-CLAIMS-PLAN.md) | § 4.3's `A(r)` row and the floors derived from it |
-| [hash-programs/README.md](../hash-programs/README.md) | the default `--rounds=6` in its sample digest line and its benchmark claims |
-| [include/castella-duplex.hpp](../include/castella-duplex.hpp) | `Duplex::get_num_rounds_claimed`, which returns `R*` = 6 for `C` ≤ 6 and 8 at `C` = 8 |
-| [hash-programs/castella.cpp](../hash-programs/castella.cpp) | the `--help` text, which states the claim as rounds >= 6, or >= 8 when SIZE > 48, and takes the program's default rounds from the header's function |
+| [hash-programs/README.md](../hash-programs/README.md) | the default `--rounds=8` in its sample digest line and its benchmark claims, which name the round count they were measured at |
+| [include/castella-duplex.hpp](../include/castella-duplex.hpp) | `Duplex::get_num_rounds_claimed`, which returns `R*` = 8 at every capacity |
+| [hash-programs/castella.cpp](../hash-programs/castella.cpp) | the `--help` text, which takes both the claimed round count and the program's default from the header's function |
+| [hash-programs/test-correctness.bash](../hash-programs/test-correctness.bash) | the assertions that pin the default `--rounds`, and three known-answer digests computed at it |
 | [permute-division-property.py](permute-division-property.py) | its docstring and `--sponge` help, which say what the sponge scan decides and where the open question starts |
-| [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 6/6/6/8 and the `floor + 3` policy as instructions that get acted on, so a stale value there is worse than a stale sentence |
+| [CLAUDE.md](../CLAUDE.md) | Key Constraints states `R*` = 8, the `floor + 3` bound on it, and the bound's value at each capacity, as instructions that get acted on, so a stale value there is worse than a stale sentence |
 
 Two of those bite in particular.  A changed ceiling or floor moves the brackets **and** the
 bar a challenge has to clear, so CHALLENGES.md is a correctness target rather than a

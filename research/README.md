@@ -519,6 +519,20 @@ Both reaches match the real permutation's where it is settled, 3 with a diagonal
 
 The 3-bit analog is the weaker of the two.  Inversion in GF(8) has algebraic degree 2, against 3 in GF(16) and 7 for the AES S-box, and a low degree helps a cube.  Its partly balanced row shows that, with 8 and 10 balanced combinations at 3 rounds where the 4-bit analog has none.  Which combinations are balanced depends on the round constants, since over 16 seeds the rank runs from 11 to 20 and no combination is balanced under all of them.  So a round count that is not balanced there is the convincing direction.  All of it bounds this technique on an analog, never the permutation.
 
+**On an analog with the real geometry** (2026-11-14), the cube is again every rate block, summed over 3 rounds.  `permute-sponge-reach-geometry-verify.py` keeps the 16 blocks of 4×4 cells and shrinks the cell to 4, 5, or 6 bits, so 14, 12, 10, and 8 rate blocks are the shapes of `C` = 2, 4, 6, and 8, which the 4-block analogs cannot tell apart.  The cube has up to 2^1344 states, so the sum is computed exactly by counting parities, and each width first checks that counting against enumeration.  Each entry is the number of nonzero rate cells in the sum under seed 1 and under seed 2, out of 16 per rate block.
+
+| cell bits | S-box degree | 14 rate blocks | 12 | 10 | 8 | 1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 4 | 3 | 0 and 0 of 224 | 0 and 0 of 192 | 0 and 0 of 160 | 0 and 0 of 128 | 0 and 0 of 16 |
+| 5 | 4 | 0 and 0 of 224 | 0 and 0 of 192 | 42 and 49 of 160 | 32 and 24 of 128 | 5 and 7 of 16 |
+| 6 | 5 | 0 and 0 of 224 | 189 and 192 of 192 | 160 and 156 of 160 | 125 and 126 of 128 | 16 and 16 of 16 |
+
+With 14 rate blocks, the sum is zero at every width.  The diagonal {1, 6, 11, 12} lies in the rate there, and the argument for the 3-round zero-sum at `C` = 2 does not use the cell width, so these rows check the program more than they test the analog.
+
+The other columns follow the S-box degree.  At 4-bit cells, every shape sums to zero, even a single free block.  At 5-bit cells, only the shape of `C` = 4 still does.  At 6-bit cells, no shape below 14 does, and nearly every rate cell is nonzero.  The zeros go away as the degree rises toward the AES S-box's 7, so this analog shows no 3-round zero-sum at the shapes of `C` = 4, 6, or 8, which is evidence for the open _r_ = 3 question at `C` ≥ 4 and not an answer to it.
+
+Two limits apply.  Each case is one capacity value per seed, which gives no rank, so a linear combination of rate output bits could still be balanced where the sum is nonzero.  And the 4-bit row disagrees with the 4-block analog above, which has no balanced combination at 3 rounds with two capacity blocks, so a zero at a low degree says little in either geometry.  All of it bounds this technique on an analog, never the permutation.
+
 The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is cheap and proving none exists (UNSAT) is what costs, and the UNSAT side carries every positive result above.  The 3-round SAT taking 1.8 h shows how little that asymmetry guarantees at this width.
 
 ## Findings: a truncated differential reaches 4 rounds through the sponge

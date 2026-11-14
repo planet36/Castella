@@ -495,7 +495,8 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    **DONE in [CHALLENGES.md](CHALLENGES.md), but at 3, 4, and 5 rounds, not the r = 1, 2,
    3, 4 specified here.**  The round counts were moved up deliberately because r = 1 and r = 2
    are trivial, and what a challenge is for is probing the rounds just below what was then
-   `R*` = 6, which is where a result would move the margin.
+   `R*` = 6, which is where a result would move the margin.  Rounds 6 and 7 were added on
+   2026-11-13, when `R*` became 8 and left them unclaimed.
 
    It also ships more than this item asked for: a 4-byte warm-up rung, truncated-collision
    and truncated-preimage ladders so a partial result has somewhere to land,

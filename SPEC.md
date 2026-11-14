@@ -192,7 +192,7 @@ The 16 lanes start pairwise distinct at every legal `mix_rate`.  They are also i
 
 The claim is made about the duplex *instances*, not about `P` being an ideal permutation.  Any concrete permutation has trivial distinguishers (`P` is efficiently invertible), and the claim is that none of them translate into an attack on the duplex better than generic.  It covers every `suffix`/`N`/`S`, since those only frame the input.  The tree and MAC constructions inherit it through the mode reductions below.
 
-It covers **only** the instances listed here.  Reduced-round instances are explicitly unclaimed and exist to be attacked ([CHALLENGES.md](CHALLENGES.md) publishes concrete collision and preimage targets at 3–5 rounds).  If an attack beats a claimed bound, the claim was false and these parameters will be revised.  That possibility is what makes the claim meaningful.
+It covers **only** the instances listed here.  Reduced-round instances are explicitly unclaimed and exist to be attacked ([CHALLENGES.md](CHALLENGES.md) publishes concrete collision and preimage targets at 3–7 rounds).  If an attack beats a claimed bound, the claim was false and these parameters will be revised.  That possibility is what makes the claim meaningful.
 
 | `C` | capacity (bits) | claimed level (bits) | minimum claimed rounds `R*` |
 |-----|-----------------|----------------------|------------------------------|

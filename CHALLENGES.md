@@ -104,6 +104,8 @@ These instances have a 20-byte digest (`C` = 4, capacity 512 bits) and a generic
 | collision, 3 rounds | `castella --rounds=3 --size=20 --custom=challenge` | unsolved |
 | collision, 4 rounds | `castella --rounds=4 --size=20 --custom=challenge` | unsolved |
 | collision, 5 rounds | `castella --rounds=5 --size=20 --custom=challenge` | unsolved |
+| collision, 6 rounds | `castella --rounds=6 --size=20 --custom=challenge` | unsolved |
+| collision, 7 rounds | `castella --rounds=7 --size=20 --custom=challenge` | unsolved |
 
 **Setup check.**  The input `abc` (3 bytes, no newline) must hash to
 
@@ -111,6 +113,8 @@ These instances have a 20-byte digest (`C` = 4, capacity 512 bits) and a generic
 rounds=3: da47210e7e8699e490a2e93020692400ae131967
 rounds=4: c6128882f8a4fc5912bad7873df0ed59db4b435d
 rounds=5: 31f358dfe112d42f77e7e3147c406e42d84ce1fd
+rounds=6: 2515cadc726ddff3b1c225707e695ad97964e30b
+rounds=7: 154765cec342589a1fa216ba2df6fff80909c5ff
 ```
 
 To verify a claimed solution, hash both files with the instance's command and compare the digests (and the files).
@@ -122,7 +126,7 @@ cmp M1 M2                                                             # must dif
 
 ### Truncated-collision ladder
 
-2^80 is the only rung the family above has, so there is nothing to submit short of the whole result.  A **truncated collision** is the partial form, which is two distinct byte strings whose 20-byte digests agree in their first `k` bytes, at a generic cost of 2^(4·k).  Every rung is the same three instances above, with no new parameters and no new targets, and the ladder ends on the challenge itself.
+2^80 is the only rung the family above has, so there is nothing to submit short of the whole result.  A **truncated collision** is the partial form, which is two distinct byte strings whose 20-byte digests agree in their first `k` bytes, at a generic cost of 2^(4·k).  Every rung is the same five instances above, with no new parameters and no new targets, and the ladder ends on the challenge itself.
 
 | `k` | rung | generic cost |
 |-----|------|--------------|
@@ -132,7 +136,7 @@ cmp M1 M2                                                             # must dif
 | 16 | first 16 agree | 2^64 |
 | 20 | the whole digest — the challenge above | 2^80 |
 
-Each rung stands at all three round counts, and none is solved at any of them.  A submission names the round count and `k`.  The `k` = 4 rung costs the same 2^16 as the warm-up collision but is not the same task, because this is the `C` = 4 instance with its digest truncated, where the warm-up is a whole digest of a `C` = 2 instance.
+Each rung stands at all five round counts, and none is solved at any of them.  A submission names the round count and `k`.  The `k` = 4 rung costs the same 2^16 as the warm-up collision but is not the same task, because this is the `C` = 4 instance with its digest truncated, where the warm-up is a whole digest of a `C` = 2 instance.
 
 Verify a rung with the family's command above, comparing only the first `k` bytes.  **Do not hash at `--size=k`.**  A smaller size selects a smaller capacity (`C` = 2 for any size of 16 bytes or fewer), which is a different instance answering a different question.  For `abc` at 3 rounds, `--size=8` gives `e9b6d14bd11d6f10`, which is not the first 8 bytes of `da47210e7e8699e4…` and never will be.
 
@@ -147,21 +151,23 @@ These instances have a 10-byte digest (`C` = 2, capacity 256 bits) and a generic
 | preimage, 3 rounds | `castella --rounds=3 --size=10 --custom=challenge` | `a92cb2ea973a312e2622` | unsolved |
 | preimage, 4 rounds | `castella --rounds=4 --size=10 --custom=challenge` | `10f956b9b10797a122b9` | unsolved |
 | preimage, 5 rounds | `castella --rounds=5 --size=10 --custom=challenge` | `5dcfa3154163a0e1aaad` | unsolved |
+| preimage, 6 rounds | `castella --rounds=6 --size=10 --custom=challenge` | `251de15c13f05560e61a` | unsolved |
+| preimage, 7 rounds | `castella --rounds=7 --size=10 --custom=challenge` | `b509481e0244774c958a` | unsolved |
 
 The targets are nothing-up-my-sleeve values, the first 10 bytes of the SHA-256 of a self-describing ASCII string, so nobody, the author included, knows a preimage.  Re-derive them:
 
 ```bash
-for r in 3 4 5; do
+for r in 3 4 5 6 7; do
     printf 'Castella preimage challenge (chunk-size=65536,custom=challenge,rounds=%d,suffix=1,size=10)' "$r" \
     | sha256sum | cut -c1-20
 done
 ```
 
-**Setup check.**  The input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `908ca791534f60426a6f` (4 rounds), and `cb22cd306810fdf91db0` (5 rounds).
+**Setup check.**  The input `abc` must hash to `e9b6d14bd11d6f10f07a` (3 rounds), `908ca791534f60426a6f` (4 rounds), `cb22cd306810fdf91db0` (5 rounds), `3fb8367239611b0a411d` (6 rounds), and `edc84d346b95eaa19b23` (7 rounds).
 
 ### Truncated-preimage ladder
 
-2^80 is the only rung this family has either.  A **truncated preimage** is the partial form, which is a byte string whose 10-byte digest agrees with the target in its first `k` bytes, at a generic cost of 2^(8·k).  Every rung is the same three instances and the same three targets, a rung's target being that target's first `k` bytes, and the ladder ends on the challenge itself.
+2^80 is the only rung this family has either.  A **truncated preimage** is the partial form, which is a byte string whose 10-byte digest agrees with the target in its first `k` bytes, at a generic cost of 2^(8·k).  Every rung is the same five instances and the same five targets, a rung's target being that target's first `k` bytes, and the ladder ends on the challenge itself.
 
 | `k` | rung, against the 3-round target | generic cost |
 |-----|------|--------------|
@@ -171,7 +177,7 @@ done
 | 8 | `a92cb2ea973a312e` | 2^64 |
 | 10 | `a92cb2ea973a312e2622` — the challenge above | 2^80 |
 
-Each rung stands at all three round counts, against that round's own target prefix.  None is solved at any of them, and a submission names the round count and `k`.
+Each rung stands at all five round counts, against that round's own target prefix.  None is solved at any of them, and a submission names the round count and `k`.
 
 Unlike the collision ladder, **hashing at `--size=k` is a valid way to check a rung here**, and gives the identical answer.  This family already sits at the smallest capacity, so every shorter size keeps it and gives exactly the truncation of the 10-byte digest (see [Common parameters](#common-parameters)).  For `abc` at 3 rounds, sizes 2, 4, 6, 8, and 10 give `e9b6`, `e9b6d14b`, `e9b6d14bd11d`, `e9b6d14bd11d6f10`, and `e9b6d14bd11d6f10f07a`.  The collision ladder's warning is about that family being `C` = 4, where truncating the size really does cross into another instance.  Rung `k` is therefore a whole preimage on the `--size=k` instance of this family.  The ladder names targets that existed already rather than creating any.
 

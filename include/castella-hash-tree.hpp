@@ -329,7 +329,7 @@ private:
     * measured slower, not just no faster.  A paired worker hashes two chunks at
     * a time, so it plateaus sooner.  An explicit thread count is used as given.
     */
-    static constexpr int AUTO_POOL_THREADS_MAX = HAS_PAIRED_LEAF ? 2 : 4;
+    static constexpr int AUTO_POOL_THREADS_MAX = HAS_PAIRED_LEAF ? 3 : 4;
 
     /// The node parameters, kept to construct leaves on demand
     /**

@@ -138,7 +138,7 @@ On x86-64 processors with [VAES](https://en.wikipedia.org/wiki/AVX-512#VAES), tw
 
   The `cch` tree instead interleaves two nodes' compression chains in one loop ([`compress_castella_hash_x2`](include/cch-x2.hpp)).  A single cch node is latency-bound, so the second state's chains fill the idle AES slots, for a modest ~1.1× on pinned runs.  [research/simd\_compress-num\_states-benchmark.cpp](research/simd_compress-num_states-benchmark.cpp) measured it, and [research/README.md](research/README.md) has the findings.
 
-  Pairing applies on every parallel path: batch workers, the inline path (in a single-threaded tree, for an early small batch, and in `cch` at any thread count), and the streaming pipeline.  The pipeline's pool workers claim up to two adjacent ring slots per wake-up, so streamed `castella --no-mmap` input reaches the producer-bound floor at 2 threads rather than 4.
+  Pairing applies on every parallel path: batch workers, the inline path (in a single-threaded tree, for an early small batch, and in `cch` at any thread count), and the streaming pipeline.  The pipeline's pool workers claim up to two adjacent ring slots per wake-up, and streamed `castella --no-mmap` input at the default 8 rounds is fastest at 3 threads, which is where an automatic thread count stops.
 
 All of these ratios are machine-dependent.  To reproduce them, build `research/` (see [Building](#building)) and run `bash run-benchmarks.bash` there.  It pins each benchmark to core 0 and saves the raw results to `research/results/`.  Benchmark on an otherwise idle machine.
 

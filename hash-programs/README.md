@@ -9,7 +9,7 @@ Both programs read from standard input when FILE is absent or `-`.
 
 Both programs hash each FILE as a chunked tree (`Castella::DuplexTree` and `compress_castella_tree`, two instantiations of the same `Castella::HashTree` layer), so the work can be spread across CPU cores with `--num-threads=NUM`, where 0, the default, means one thread per hardware thread.  The digest never depends on the thread count or the I/O mode.  It does depend on `--chunk-size`, which both programs default to 64 KiB.
 
-Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but the reading thread limits their throughput, so `--num-threads=0` stops at 2 threads for them, or 4 without VAES.  An explicit count is used as given.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread, because a CCH node hashes a chunk faster than the chunk could be handed to another core.
+Memory-mapped files parallelize best.  For `castella`, `--no-mmap` and piped input are also multithreaded, but the reading thread limits their throughput, so `--num-threads=0` stops at 3 threads for them, or 4 without VAES.  An explicit count is used as given.  For `cch`, `--no-mmap` and piped input are hashed on the calling thread, because a CCH node hashes a chunk faster than the chunk could be handed to another core.
 
 On x86-64 with VAES, both programs also hash leaf chunks two at a time per thread.  `castella` packs two duplex states into the two 128-bit lanes of ymm registers, and `cch` interleaves two nodes' compression chains in one loop, since a lone cch node is latency-bound.  Every single-state Castella permutation also runs register-resident in a folded ymm representation.  Like the thread count, none of this ever affects the digest.
 
@@ -106,10 +106,13 @@ Run these commands:
 
 Every performance number in this repository's documentation is machine-dependent, and the commands below reproduce the *shape* of each claim on your own hardware.  Run them on an otherwise idle machine.
 
+These claims were last verified on 2026-11-13, with `castella` at its default 8 rounds:
+
+* On a 500 MiB input, `castella --no-mmap` and piped input were fastest at 3 threads, with 4 threads inside the noise for `--no-mmap`.  The default `--num-threads=0`, which stops at 3 threads for them, took ~21% and ~19% less time than 8 threads.
+
 These claims were last verified on 2026-11-01:
 
 * On a 512 MiB input, the 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
-* On a 500 MiB input, `castella --no-mmap` and piped input were fastest at 2 threads.  The default `--num-threads=0`, which stops at 2 threads for them, was ~9% and ~20% faster than 8 threads.
 
 These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
 
@@ -143,7 +146,7 @@ yes '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' | head --by
 
   `taskset` pins the run to one core, matching the per-core claim.  `research/simd_compress-num_states-benchmark` measures node-level throughput instead, per hash state and with no tree (see [research/README.md](../research/README.md)).
 
-* **"Memory-mapped files parallelize best" and "the reading thread limits throughput".**  `bash benchmark.threads.bash` sweeps `--num-threads` (overridden by `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads, while the streamed modes behave as the 2026-07-18 list above records.
+* **"Memory-mapped files parallelize best" and "the reading thread limits throughput".**  `bash benchmark.threads.bash` sweeps `--num-threads` (overridden by `THREAD_COUNTS=…`) in each I/O mode for both programs, one CSV per program and mode.  The mmap mode keeps scaling with threads, while the streamed modes behave as the 2026-07-18 list above records.  The claim about 3 threads needs `THREAD_COUNTS=0,1,2,3,4,8`.
 
   Plot any of the CSVs with `python3 plot-results.py --xlog results/benchmark.threads.<PROGRAM>.<MODE>.<TIMESTAMP>.csv`, using `--xlog` because the default thread counts are powers of 2 up to `nproc`.
 

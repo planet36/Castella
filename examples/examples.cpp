@@ -123,7 +123,7 @@ parallel_hash_like(const contiguous_byte_range auto& X,
                    const bool xof)
 {
     // the same parameters as the other SP 800-185 examples
-    constexpr int num_rounds = 6;
+    const int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
     constexpr int input_suffix = 0;
 
     // 5. (the outer function) cSHAKE(z, L, "ParallelHash", S)
@@ -175,7 +175,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // basic example
     {
         constexpr int capacity_blocks = 4;
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella";
         constexpr std::string_view customization_str = "example";
@@ -191,7 +191,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         const auto digest_bytes = hash_obj.squeeze_bytes();
 
         const std::string expected_result =
-            "ef83cf105019f40e3488d7aa27bd1ec169d708110c7203469a2dc2b5798e57d0";
+            "e57be3720dc9d6b812ecd777440d598e4b74be70f30ab13bde14f6fc25a1240c";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -222,7 +222,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"Kwyjibo"};
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE128";
@@ -234,7 +234,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "eb94e5bee0045830ec31e349afde43575144966bfe3165151ca176a1ab3c2f85";
+            "b4f338f1af7a3ee06c756bd2f1901a9de805aa742137c8dae67c21247fc83f64";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -254,7 +254,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"What's a battle?"};
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Hash";
         constexpr std::string_view customization_str = "example like cSHAKE256";
@@ -266,7 +266,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "4c5ab6e88a31c415ca2359aba8c272f585458ec2f87a619947da3a154ca75a27413c0d218783ff6e5a9152858068e4f8d8e0fd3d4c24cfe96613b7894f9fadca";
+            "ebf24043841f10837513d58d69e617106b7f07418782577e023db12f5af84de6c482e9e5c9ff11a4fab5b69da1ff390afab7009391aa8c93fd658a7fc5bf75dd";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -306,7 +306,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"Hi, Super Nintendo Chalmers!"};
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC128";
@@ -321,7 +321,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "baaf868ed40c24973760b76e5c81b82829c00b8dc144ecc883fc1fe480e6e088";
+            "8d6f6ebebc5c14561d5614bad07c55409a2a79a2b0e0333a2d62d56ddcaa41d7";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -342,7 +342,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"I choo-choo-choose you."};
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMAC256";
@@ -357,7 +357,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "4c0bc34babda732c2790f6404ce8c7c8b11a5c2ed67332b62df9d36fe3797830b7c2c3e3d4f4f4f493115affbe2be763bd0fbc0e37efe17bd51d3a35ab4326ec";
+            "8ed1ec4c81c4088b968fec0a2c2b4ca3ce03132b9919df0bb04d80b916a564ee702304399ceaf001d9ad9438f93d50b196777657114896bd263a6d9074d8b599";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -378,7 +378,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"Me fail English?  That's unpossible!"};
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF128";
@@ -393,7 +393,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "d48f7e52253ded617c616ecb9a03da3f2af347136d911267af1aca0728d75982";
+            "f6846127518b94b703dfb57ee01bc562b81e86a7d2f4988474beaeb91d5f4717";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -414,7 +414,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr std::string_view X{"My cat's breath smells like cat food."};
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-MAC";
         constexpr std::string_view customization_str = "example like KMACXOF256";
@@ -429,7 +429,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                       .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "b0a5b58fb2a65f1d81d672acb8a4ea82619b193a22ab7a879110c023a26eec34b807d9b2c219e4d20ed5bea85fe8d1ca06675e1d1819aedd0f998476b41acaab";
+            "e07444089ca7d850f1b472f82762a1da5e6d10af3aea56b74792ba129b945699b1bb8aaa81f2f046ffa0ae545be0c34a6fae909036e4fb719d41124119a3831d";
         const std::string result = encode_bytes_to_hex(digest_bytes);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -475,7 +475,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash128";
@@ -497,10 +497,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "1dbe3fdd2a7c48b0d892c31a6b6a4c3db1d64f52b9c4ab393e09e19291fb7a30";
+            "453ee8c484a4236e82fa8c6222eb3e540391be5dd72c183b1ea49530664d1a71";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "0795e028bfcaa62c4ccbfa9053f8c9254c9ab1ec60f361fa6feb6a54fb839528";
+            "7f50b3aa86d6e15448a21175870e240c696065875d2b9b6991038a926369bbc8";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -530,7 +530,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHash256";
@@ -552,10 +552,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "b58849fc3a9240cf0e06a193625ed938430995f7fa3e93fffc614c475cf5bd7c1c6628f6c738ab07b46d6c90be7dd990cbfb76942ada096f86e1ddbe8f3cc217";
+            "d904a92a6c847b3438d97ca34690aff35df57c836e07bda64b182ebb62fa008a9ac2c9268b2ea47888b8622532342bf5db24bc19579b8bfcee8e11a5d44d9597";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "c9b87f4765e1293b72c9177ea5521bbb22fbea57b6032064f7077dd1526bb82a219ff586b23d4ef4109e88bd117bc630104e15f8fd95b1250f61cad9538a705c";
+            "c5acd12d1afefd48d025b9df25c8dee079235cd4990a2da3feb60b82b625c866e55bb42106f58420f1ac3d7a8962d2a1792e7436ce8cc8fc2ef29b7ef1b8f5dc";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -585,7 +585,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (128 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF128";
@@ -607,10 +607,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "22719907aa44b6f54347eed642b3923379194c1797ca05e36623639ae01f83d0";
+            "6e54d22a5e634bee46df1e69f147f6aba0bb76bd3a870735573866df3b1bf586";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "9ea8ee310d71c52a4c8a4b365e8d26e9a650cb022b52169f7e2bdc5190eb943c";
+            "e00f21918cabb8c13ff09042b8e3f3b25a7e09c847620880ece6008de36e3795";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -640,7 +640,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         constexpr auto Y = tuple_Y;
 
         constexpr int capacity_blocks = 2 * (256 / 8) / sizeof(Castella::block_t);
-        constexpr int num_rounds = 6;
+        constexpr int num_rounds = Castella::Duplex::get_num_rounds_claimed(capacity_blocks);
         constexpr int input_suffix = 0;
         constexpr std::string_view function_name = "Castella-Tuple-Hash";
         constexpr std::string_view customization_str = "example like TupleHashXOF256";
@@ -662,10 +662,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                 .squeeze_bytes(num_bytes_to_squeeze);
 
         const std::string expected_result =
-            "3b2cc2b5094cd48a61bad27c4105c9f409535e2ce20f9e72df37c94ffc6dfffaa4108aca87d2f952f86d742237396395da69d51a5ce245b337d6cf506934b791";
+            "45cc0664c3635f1b0816dd64fff3bb55b93618b60a0187197aa7d74f64ddc53d3afbc9b4b0647c0e856a862bc5f67412961f520483f8c3e48b2061ed8194b5fc";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "4db78d3ca4acc0e84945e39ea5378bb2bb20bd9ab6e01f3910b0434e5835f66461b564fedf5a51b9edeb11f011c3a142c5054c83b622fd18548b71ee7a86e1a5";
+            "9c6dacadfebf07f19c9f9f85ff7a2004afe2cf93250b3d7ab3bfe7df63adb8c3ee13cdc5779cfc32299ca3bb4cb31a5c48e29a5eee1fa13018fdc6275713e3a1";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -723,10 +723,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, false);
 
         const std::string expected_result =
-            "42e7c70ae6486c4d081281f769428bfa6b69abe4d33f9d362c8478edc28e2d06";
+            "79c1dd00000291b85e89e86565560070504f04b01b60c1f05a3a69eea345055c";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "9a0861e8898437b042f3953b60ae5c170e9e62364ce4350ef9224f6d18aaa517";
+            "82f00899f323e37a7ffad4da276c44a9ee958ad109713855dd7ba16485205c09";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -773,10 +773,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, false);
 
         const std::string expected_result =
-            "376ad47dcdf4a3af34853f4273ad4457fc54a5b681dc2e974e599afa41388a3318856b3479d08b75978fa4b6a03ae1296af487eb46c309868835af334299fe83";
+            "9ee7f6a6ecf175bed21984534654f48f8277150dc7e86839e8995d25446dc66996c42238981a7e1889270813bb08b6943504f78978ce064fa337c5006d378f26";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "0ff85c6bddabb064933e4f642190829f0a9a236e882723d3d28f64c1b81950f627413d4217a55af9b8e16a90cec399d48cbd8df7c70f96c16b17b773b6a711fe";
+            "030d43433f43fd1c35a96685c738f7e02dee2b31cef9c747478fba525812e99fc0a1859aa43e9b3348ff07e49682835ea59756bcea2dbb72deaa3deb7909ec53";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -822,10 +822,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, true);
 
         const std::string expected_result =
-            "136cd27d8a09852be1a166966cafeeb6d3aa20475c7264a86bc8d989e1667030";
+            "7a8480044e8f14689b2e48b56363f822c0a5cf4b676dffd3813e8477cda7f502";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "136cd27d8a09852be1a166966cafeeb6";
+            "7a8480044e8f14689b2e48b56363f822";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),
@@ -873,10 +873,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                                                        customization_str, true);
 
         const std::string expected_result =
-            "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082eeecc629c4e2422928d3ed01b825d62989a8a0792d4f0476e9712a7c72039c5341";
+            "cbe8b0a28c5f0f7302c4f72e4ad487646a2553e460082cbe23f638aca2428c17b89e8ac6e16210f38fb359aed0fa0ee8d4935607cabd925e36b6999bb7fe8fc3";
         const std::string result = encode_bytes_to_hex(digest_bytes);
         const std::string expected_result_2 =
-            "b0c2e1fa7a49dc365f94ce81d8d45b085cdc4e4e2408d27ba1e3e626707082ee";
+            "cbe8b0a28c5f0f7302c4f72e4ad487646a2553e460082cbe23f638aca2428c17";
         const std::string result_2 = encode_bytes_to_hex(digest_bytes_2);
 
         std::println("{} {}: {}", quote_shell_always(function_name),

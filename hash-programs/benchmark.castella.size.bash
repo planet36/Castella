@@ -8,12 +8,11 @@ test -x castella || exit
 source ./benchmark-common.bash
 
 # Vary --size.
-# Use a fixed --rounds value because its default used to depend on --size.
 CSV="${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv"
 "${PIN_CMD[@]}" hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
     --export-csv "$CSV" \
     --parameter-scan SIZE 8 64 --parameter-step-size 8 \
-    "./castella --rounds=6 --size={SIZE} --num-threads=${NUM_THREADS} ${CASTELLA_TMP}/test.txt" || exit
+    "./castella --size={SIZE} --num-threads=${NUM_THREADS} ${CASTELLA_TMP}/test.txt" || exit
 
 print_hyperfine_summary_csv "$CSV"
 

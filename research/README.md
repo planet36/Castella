@@ -580,9 +580,9 @@ The sets overlap, so the program tests separate events instead.  Pairs whose `D`
 
 The commands are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7.
 
-## Findings: PractRand statistical smoke test of the duplex PRNG (2026-07-19)
+## Findings: PractRand statistical smoke test of the duplex PRNG (2026-11-14)
 
-`duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  The results below piped it into PractRand's `RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded`, rerun under that command on 2026-11-14.  PractRand is an external tool, and `run-research.sh` does not run it:
+`duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  The results below piped it into PractRand's `RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded`.  PractRand is an external tool, and `run-research.sh` does not run it:
 
 | configuration | result |
 |---------------|--------|

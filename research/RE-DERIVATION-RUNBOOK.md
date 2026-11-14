@@ -83,6 +83,7 @@ them, and why nothing in this file should run during one.
 | `research/permute-truncated-differential-verify.py` | the 4-round truncated differential through the sponge: its two sampled rates, the reduced-width counts, and the pairs and queries at each capacity | §7 |
 | `research/permute-zero_sum-analog-verify.cpp` | both 4-round inside-out zero-sums exhaustively, the 6-round one by exact counting and by enumerating both halves of its 2^896 form, the cube of every rate block at 2 and 3 rounds by exact counting, and the space a 7th round would need, on a 4-bit-cell analog | §7 |
 | `research/permute-sponge_reach-analog-verify.cpp` | the cube of every rate block by enumeration, through 4 rounds on a 3-bit-cell analog and through 3 on the 4-bit-cell one, which is the analog evidence on whether the sponge reach extends a round | §7 |
+| `research/permute-sponge-reach-geometry-verify.py` | the cube of every rate block over 3 rounds by exact counting, on an analog with the real 16-block geometry at 4-bit, 5-bit, and 6-bit cells, which is the analog evidence on the 3-round question at each of `C` = 4, 6, and 8 | §7 |
 | `research/aes_enc-uniformity-verify.cpp` | the two real-AES uniformity facts the 6-round zero-sum's 2^896 form rests on, by exhaustive enumeration | §7 |
 | `research/permute-degree-bound.py` | the degree bound (2043 after 2 rounds), and degree-based zero-sum reach 4 rounds | §1 |
 | `research/duplex-prng-stream.cpp` + PractRand | the statistical smoke test (16 GiB, no anomalies) | §7 |
@@ -486,6 +487,13 @@ python3 permute-division-property.py --sponge 2 -r 2  # 3.3 min, 2.3 GB peak
 # finishes, and the same command resumes from that file.  -q keeps to the 2^24
 # cubes and takes 4 s.
 nice -n 19 ./permute-sponge_reach-analog-verify -o sponge-reach-analog.jsonl   # 2.4 h
+
+# The sponge reach on the analog with the real geometry, by exact counting.
+# --quick keeps to the 4-bit and 5-bit cells and takes 3.7 min.  A 6-bit case
+# takes 6 min, and the whole run 1.2 h on one core, peaking at 2.5 GiB.  Each
+# case is saved as it finishes, to a checkpoint file under results/, and the
+# same command resumes from that file.  It needs numpy.
+nice -n 19 python3 permute-sponge-reach-geometry-verify.py   # 1.2 h
 
 # The inside-out zero-sums.  Part A checks the premises on the real state.  Part B
 # brute-forces the reach at reduced width, and its table must be IDENTICAL at

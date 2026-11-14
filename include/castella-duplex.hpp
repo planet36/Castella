@@ -1092,9 +1092,9 @@ public:
     /**
     * This adds the input suffix and applies the padding rule, as a squeeze
     * does, which absorbs any pending input.  It then zeroizes the outer state
-    * and applies the permutation function again.  That leaves the state that
-    * `add(squeeze_bytes(get_rate_size_bytes()))` leaves, without the copy of
-    * the output.
+    * and applies the permutation function again.  The resulting state is the
+    * one that `add(squeeze_bytes(get_rate_size_bytes()))` produces, but the
+    * output is never copied out of the state.
     *
     * Inverting the permutation function on a state captured afterward gives a
     * zeroized outer state, so neither the erased output nor any state before it
@@ -1121,8 +1121,7 @@ public:
     * of 𝑐.
     * </blockquote>
     *
-    * \note Castella zeroizes the whole rate, and the padding falls in the next
-    *       block.
+    * \note Castella zeroizes the whole outer state and permutes it unpadded.
     */
     Duplex& forget()
     {

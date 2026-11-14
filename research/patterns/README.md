@@ -68,5 +68,5 @@ The two programs are independent models of the same permutation, so the loader
 does not trust the file.  It rechecks shape, S-box count, and geometry, and then
 requires the pattern to be `sat` against stage A's own constraints before
 instantiating it.  The research README's
-[trail-search findings](../README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19)
+[trail-search findings](../README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute)
 say what that check catches and costs.

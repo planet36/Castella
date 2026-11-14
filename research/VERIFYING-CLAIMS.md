@@ -80,7 +80,7 @@ In the `## N=16` table, `μ` is the mean number of output bits flipped by a one-
 
 ## 4. Trail bounds (the `R*` floors)
 
-The MILP model proves lower bounds on differentially active AES S-boxes per characteristic, and `A` active S-boxes bound any characteristic's probability by `2^−6·A` and any linear trail's correlation by `2^−3·A`.  [README.md](README.md#findings-minimum-active-s-boxes-in-castellapermute-2026-07-02) has the model, the assumptions, and the scope caveats (single characteristics only, so necessary but not sufficient).
+The MILP model proves lower bounds on differentially active AES S-boxes per characteristic, and `A` active S-boxes bound any characteristic's probability by `2^−6·A` and any linear trail's correlation by `2^−3·A`.  [README.md](README.md#findings-minimum-active-s-boxes-in-castellapermute) has the model, the assumptions, and the scope caveats (single characteristics only, so necessary but not sufficient).
 
 ```bash
 # validation: r=1 is pure AES, so this must print the published bounds 1, 5, 9, 25
@@ -155,7 +155,7 @@ It must print `200 programs, 325 squeezes verified, 0 failed`.  The pinned run c
 
 It must print `all pass/fail checks passed` and exit 0 (~0.3 s).  Probe 1's tables must show zero subspace re-entries at every round count, residual-structure means near the printed random-model expectations, and in-subspace avalanche ≈ 1024 bits from 3 rounds.  Probes 2 and 3 must print only PASS lines, covering the fixed-point screen, the round constants (seed value, nonzero, distinct, and no shifted predecessors), and the **slide-resistance screen**.
 
-That screen checks that no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist.  [README.md](README.md#findings-structural-probes-of-castellapermute-2026-09-15) has the results and scope caveats.  The probes cover the transpose's natural symmetry classes, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
+That screen checks that no whole-round shift relates two rounds' constants by a fixed XOR difference, ruling out an affine self-similar schedule, the precondition for a slide with or without a twist.  [README.md](README.md#findings-structural-probes-of-castellapermute) has the results and scope caveats.  The probes cover the transpose's natural symmetry classes, and the slide screen closes the constant-schedule route to a slide but not rebound-style attacks.
 
 The sampling in probe 1 is superseded, for invariant subspaces, by an exhaustive computation:
 
@@ -168,7 +168,7 @@ It must print `no invariant subspace exists in any class decided here` and exit 
 
 The `[control: … 2 rounds 128]` figures beside the first two classes are the positive control.  With the round constants zeroed, the two block classes *are* invariant, at dimension 128, and a control reading 2048 there would mean the closure test had no power.  The third class deliberately prints `[control: 1 round 2048, 2 rounds 2048]`.  ShiftRows and MixColumns break the symmetric-matrix class rather than the constants, so zeroing them controls nothing.  Read a 2048 as a failure only on the two block classes.
 
-[README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute-2026-08-03) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over the byte-aligned subspaces that every layer maps onto a coset of themselves, and every coset of one, exact but offset-sampled for the seven symmetry classes, and it does not cover subspaces that are neither.  A byte-aligned subspace invariant under `P` but not layer by layer is not covered either, and trivial 2-point ones exist for any permutation of this width.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
+[README.md](README.md#findings-exact-invariant-subspace-search-over-castellapermute) has the results, the DDT cross-check behind the 85, and the scope.  The search is exhaustive over the byte-aligned subspaces that every layer maps onto a coset of themselves, and every coset of one, exact but offset-sampled for the seven symmetry classes, and it does not cover subspaces that are neither.  A byte-aligned subspace invariant under `P` but not layer by layer is not covered either, and trivial 2-point ones exist for any permutation of this width.  The fixed-point case (the empty support) remains the screen above, since exhausting it is infeasible.
 
 ## 11. Zero-sum (cube) probes
 
@@ -176,7 +176,7 @@ The `[control: … 2 rounds 128]` figures beside the first two classes are the p
 ./permute-zero_sum-probes -n 1
 ```
 
-It must print `all pass/fail checks passed` and exit 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums, exactly 1920 surviving bits for single-block (the positive control) and all 2048 for spread, and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute-2026-07-19) has the results and the scope, which is black-box random cubes up to k = 16 only.
+It must print `all pass/fail checks passed` and exit 0 (~9 s).  The 1-round rows must show the two explained structural zero-sums, exactly 1920 surviving bits for single-block (the positive control) and all 2048 for spread, and every row from 2 rounds on must be 0.  A surviving bit at 3+ rounds is a zero-sum distinguisher of the reduced-round permutation and fails the run.  [README.md](README.md#findings-zero-sum-cube-probes-of-castellapermute) has the results and the scope, which is black-box random cubes up to k = 16 only.
 
 Those rows measure **random** cubes.  A chosen, structured cube does better on both, which the bit-based division property decides rather than samples:
 
@@ -223,7 +223,7 @@ Four controls must all hold:
 
 That last control is what makes the test capable of failing at all, so if it ever passes, the failure is in the test.
 
-[README.md](README.md#findings-bit-based-division-property-of-castellapermute-2026-08-03) has the results, the structural proof behind the 2-round case, and the scope.  The 1-round case is also checkable without the model at all, from 2^8 states, since XORing the permutation over one varying byte zeroes the whole 2048-bit output.
+[README.md](README.md#findings-bit-based-division-property-of-castellapermute) has the results, the structural proof behind the 2-round case, and the scope.  The 1-round case is also checkable without the model at all, from 2^8 states, since XORing the permutation over one varying byte zeroes the whole 2048-bit output.
 
 ## 12. Statistical smoke test (PractRand)
 
@@ -235,7 +235,7 @@ This needs [PractRand](https://pracrand.sourceforge.net/)'s `RNG_test`, an exter
 ./duplex-prng-stream -C 2 -r 3 | RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 256GB -multithreaded
 ```
 
-Each `-C 4` run must report `no anomalies` at every checkpoint (recorded runs: 770 test results through 16 GiB for both, ~2.3 s/GiB).  The `-C 2 -r 3` run must report one `unusual` on `[Low8/64]DC6-9x1Bytes-1` at 8 and 16 GiB, and `no anomalies` at every other checkpoint through 256 GiB (915 test results there).  The streams are deterministic, so any other flag is a change, and one that grows with the data would be a real bias.  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-11-14) has the findings.
+Each `-C 4` run must report `no anomalies` at every checkpoint (recorded runs: 770 test results through 16 GiB for both, ~2.3 s/GiB).  The `-C 2 -r 3` run must report one `unusual` on `[Low8/64]DC6-9x1Bytes-1` at 8 and 16 GiB, and `no anomalies` at every other checkpoint through 256 GiB (915 test results there).  The streams are deterministic, so any other flag is a change, and one that grows with the data would be a real bias.  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng) has the findings.
 
 ## 13. Trail tightness and differential clustering
 
@@ -274,7 +274,7 @@ Which trail a run lands on is otherwise solver luck (r=2 runs have returned 302,
 
 Dropping `--no-minimize` shows the other side of that because the minimization reports `unknown` however long it is given.  At r=2, that was measured three ways (`witness` to 60 min, `rows` to 30 min, and a totalizer weight bound to 30 min), and at r=3 and r=4 it returns `unknown: canceled` after 1200 s each, leaving 903 and 1154 standing.  Across the r=3 seed sweep, 31 further attempts at 600 s each yielded 0 improvements.  That is *why* every ceiling above r=1 is a ceiling rather than a minimum.  Budget several GiB and an hour for that, and pass `-M` (see the README) so an overrun ends the call instead of the process.
 
-The tightness and clustering results remain conservative for the claim, since where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270.  [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute-2026-07-19) has the results, the encoding-choice lesson, and the scope.
+The tightness and clustering results remain conservative for the claim, since where a proven floor exists a real trail never falls below it, and 2 bits of clustering is immaterial against the r=2 floor of 270.  [README.md](README.md#findings-bit-level-trail-search-and-clustering-in-castellapermute) has the results, the encoding-choice lesson, and the scope.
 
 ## 14. Rebound-attack resistance is not modeled
 
@@ -289,7 +289,7 @@ python3 permute-degree-bound.py --self-test   # δ_i, γ=7, and the pinned bound
 python3 permute-degree-bound.py               # the AES echo + the Castella table
 ```
 
-The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's values on AES-128 (< 127 through round 4, full at round 5) and on Castella.  The Castella table shows the degree upper bound at 2043 after 2 rounds and full at 3, so a Boura–Canteaut zero-sum reaches at most 4 of the 6 default rounds, 2 each way.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) has the details and the Keccak contrast.
+The self-test must pass.  It asserts δ_1..7 = 7, γ = 7, and the recursion's values on AES-128 (< 127 through round 4, full at round 5) and on Castella.  The Castella table shows the degree upper bound at 2043 after 2 rounds and full at 3, so a Boura–Canteaut zero-sum reaches at most 4 of the 6 default rounds, 2 each way.  This is an **upper** bound on degree, which bounds the distinguisher's reach and does not prove security beyond it.  As with Keccak's full-round zero-sums, the flat claim concedes permutation zero-sums, so this is characterization, not a claim requirement.  [README.md](README.md#findings-algebraic-degree-bound-and-zero-sum-reach) has the details and the Keccak contrast.
 
 ## 16. Evidence pending
 

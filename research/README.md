@@ -106,7 +106,9 @@ The one open ARM question is the cch leaf pairing.  The tree's pairing opt-in is
 
 To check on ARM hardware, run `simd_compress-num_states-benchmark` and compare the pair rows' interleaved and sequential per-byte throughput.  If interleaving convincingly wins in the cache-resident regimes there, the pairing guard should be widened.
 
-## Findings: Duplex throughput through the public API (2026-09-15)
+## Findings: Duplex throughput through the public API
+
+These findings are from 2026-09-15.
 
 `duplex-throughput-benchmark.cpp` measures `Castella::Duplex` end to end.  Absorb is repeated `add` of a cache-resident 64 KiB buffer, and squeeze is repeated `squeeze_to` of a rate-size buffer (the PRNG usage).  The values are medians of 5 repetitions, pinned to core 0 (`bash run-benchmarks.bash`) and built with `-march=x86-64-v3 -maes -mvaes`, in GiB/s as **absorb / squeeze**:
 
@@ -123,7 +125,9 @@ The results read as follows:
 * The "~3.2 GiB/s per core" absorb figure quoted in the top-level README comes from this run's 3.20 GiB/s at _C_ = 4, rounds = 6 (the castella hash program's defaults).  Absolute figures wander between sessions on this machine (the three 2026 runs of this benchmark put it at 3.25, 3.18, and 3.20), so the figure is quoted rounded and the ratios are the stable part.
 * Squeeze is 70–94% of absorb at the same parameters, converging as rounds grow.  Every `squeeze_to` pads and absorbs the near-empty input buffer, permutes, and copies the rate bytes out.
 
-## Findings: full-suite rerun on the committed flags (2026-09-15)
+## Findings: full-suite rerun on the committed flags
+
+These findings are from 2026-09-15.
 
 A full `bash run-benchmarks.bash` (pinned, default 5 repetitions, on the committed config.mk flags `-march=x86-64-v3 -maes -mvaes`) reproduced every recorded ratio.  The Duplex-throughput, AES-stage, folded-permute, and cch-pair sections all record this run, so their numbers are one dated measurement rather than four:
 
@@ -132,7 +136,9 @@ A full `bash run-benchmarks.bash` (pinned, default 5 repetitions, on the committ
 * AES stage in isolation: vaes\_cast 89.4 GiB/s vs. generic 48.9 = 1.83×, the ratio the dedicated section records.
 * The interleaved cch pair and the wider-group question: see the dedicated section below.
 
-## Findings: the AES stage in isolation (2026-09-15)
+## Findings: the AES stage in isolation
+
+These findings are from 2026-09-15.
 
 `aes_enc_arr-benchmark.cpp` measures the `aes_enc_arr` functions of `aes_enc.hpp` by themselves.  The permute benchmarks only exercise them fused with the transpose, and `aes_enc_arr_cast-benchmark.cpp` measures older single-round, shared-key prototypes.  All variants run the real workload shape: `AES_NUM_ROUNDS` = 3, per-block round constants from `Castella::round_constants`, and each iteration transforming the previous result in place (latency-chained).  The values are medians of 5 repetitions with `-march=x86-64-v3 -maes -mvaes`, to be compared only within this table.  `x2_broadcast` processes two 256-byte states per call, hence the per-byte column:
 
@@ -151,7 +157,9 @@ The results read as follows:
 
 The inverse overloads are not measured.  `permute_inv` is the only caller of `aes_enc_inv_arr`, nothing in the hash programs calls `permute_inv`, and `permute_inv-verify.cpp` (unguarded, so it runs on every target) already round-trips it for every state size and round count.  Its AES stage, `aes_enc_inv_arr`, takes the VAES pair-cast path, although `permute_inv` itself stays unfolded.
 
-## Findings: the folded permute wins at _N_ = 16 (2026-09-15)
+## Findings: the folded permute wins at _N_ = 16
+
+These findings are from 2026-09-15.
 
 `permute_folded-benchmark.cpp` compares the folded (register-resident) `Castella::permute` against the generic path it replaced (`Castella::permute_generic`).  The values are medians of 5 repetitions, pinned to core 0 (`bash run-benchmarks.bash`) and built with `-march=x86-64-v3 -maes -mvaes`.  Ratios are generic ÷ folded, to be compared only within this table.
 
@@ -166,7 +174,9 @@ The speedup **rises from rounds = 3 and then levels off near 1.7×**, because th
 
 Folding is a clear ~1.7× win at the 16-block state, the only size used outside `research/`.  `permute_folded` is instantiated for every supported _N_, and the smaller sizes gained even more when that generalization was measured, but _N_ < 16 is research-only and the benchmark no longer registers it.
 
-## Findings: the cch pair pays ~1.1×, group width is free below L2, and footprint is what costs (2026-09-15)
+## Findings: the cch pair pays ~1.1×, group width is free below L2, and footprint is what costs
+
+These findings are from 2026-09-15.
 
 `simd_compress-num_states-benchmark.cpp` hashes _N_ equal-size buffers with _N_ independent `compress_castella_hash` states, in two modes, either sequentially (buffer after buffer, as _N_ single-leaf hashes do) or interleaved chunk by chunk (as a grouped leaf node would).  The values are medians of 5 repetitions over a power-of-two size ladder, pinned to core 0 with random interleaving on (`bash run-benchmarks.bash`), built with `-march=x86-64-v3 -maes -mvaes`.  Speedup is interleaved ÷ sequential, and "vs. pair" compares per-byte interleaved throughput against the _N_ = 2 pair in the same row group.
 
@@ -286,7 +296,9 @@ The results read as follows:
 
 The conclusion is to keep the pair (`compress_castella_hash_x2` in `include/cch-x2.hpp`, verified by `cch_x2-verify.cpp`), and keep it at two.  At `DEFAULT_CHUNK_SIZE`, a 3- or 4-wide group is 1.00× and 1.02×, both inside the noise, so a second implementation would buy nothing.  Widening trends positive only for a working set already past L2, which for the tree means leaf chunks far larger than the default, and even there the win is 2–11% and mostly inside the noise of individual rows.  The L1d loss at 16 KiB is likewise nowhere near the default.  Absolute figures wander between sessions on this machine, so compare ratios rather than throughputs.
 
-## Findings: the interleaved cch pair does not pay without VAES (2026-07-10)
+## Findings: the interleaved cch pair does not pay without VAES
+
+These findings are from 2026-07-10.
 
 `compress_castella_hash_x2` contains no VAES-specific code, so its VAES guard (the cch tree policy's pairing opt-in in `include/cch-tree.hpp`) looked like it might be an accident of what was measured.  It is not.  The benchmark builds for any AES-capable target, and its pinned pair rows compare across code generation, as interleaved ÷ sequential per byte:
 
@@ -307,7 +319,9 @@ The register-spilling account of the AVX2-no-VAES column's losses (16 ymm regist
 
 The conclusion is that the VAES guard on the cch pairing opt-in is correct and stays, because no cache-resident regime in either non-VAES column shows the ~1.1× the VAES build gets.  Non-VAES x86 (and, untested, ARM) should hash leaves one at a time.  Anyone on such hardware can rerun this benchmark to check their machine, and a re-run on the current ladder in both modes would put the interior rows back on firm ground.
 
-## Findings: structural probes of `Castella::permute` (2026-09-15)
+## Findings: structural probes of `Castella::permute`
+
+These findings are from 2026-09-15.
 
 `permute-structural-probes.cpp` (run at `-n 35000`, the `run-research.sh` setting) probes the _N_ = 16 permutation for the structural weaknesses the MILP trail bounds do not cover.  All pass/fail checks passed:
 
@@ -323,7 +337,9 @@ The conclusion is that the VAES guard on the cch pairing opt-in is correct and s
 
 These probes are necessary sanity checks, not distinguisher proofs.  They test the symmetry classes the transpose makes natural, and absence of evidence in 10^4–10^5 samples is not evidence of absence for subtler invariant subspaces.  **The invariant-subspace half of that caveat has since been discharged for a large, exactly characterized class.**  `permute-invariant-subspaces.py` decides the same three symmetry classes without sampling and rules out every byte-aligned invariant subspace outright (next section).  The fixed-point screen remains a screen.  The slide screen is exact, since it checks the whole 16-round schedule, but it rules out only the constant-schedule route to a slide, not a rebound/start-from-the-middle attack.  The pass/fail checks exit nonzero on violation, so the program can gate regressions.
 
-## Findings: exact invariant-subspace search over `Castella::permute` (2026-08-03)
+## Findings: exact invariant-subspace search over `Castella::permute`
+
+These findings are from 2026-08-03.
 
 `permute-invariant-subspaces.py` (~1.5 min, with no solver and no z3) replaces the sampling above with exhaustive computation wherever the structure permits.  It imports `permute_model.py` for the cross-validated layer machinery and `spec-conformance.py` for the round function and constant schedule, so no layer is modeled a second time.  All decided checks passed.
 
@@ -353,7 +369,9 @@ Fault injection confirms the program has power, and both of these faults exit no
 
 **Do not analyze the S-box-deleted round.**  It is tempting to drop the S-boxes and study the resulting 256×256 matrix over GF(2⁸), which is what makes the linear layer exactly analyzable in the first place.  That map is strictly weaker than Castella.  Composed over one round, its rows have weight **12**, not 16, because `(MC·SR)³` cancels over GF(2⁸).  Real support propagation is full at **16** after two AES rounds, since an S-box on every byte keeps any cancellation from reaching it.  Conclusions drawn from the skeleton would understate diffusion.  Every section of the program keeps the S-box layers where they are, and `--self-test` checks that the two figures still disagree, so the warning cannot go stale.
 
-## Findings: zero-sum (cube) probes of `Castella::permute` (2026-07-19)
+## Findings: zero-sum (cube) probes of `Castella::permute`
+
+These findings are from 2026-07-19.
 
 `permute-zero_sum-probes.cpp` XOR-sums `P` over all 2^k assignments of k chosen input bits and counts the output bits whose sums vanish for every one of 32 random base states (a random bit survives all 32 with probability 2^−32, so surviving bits are structure, not chance).  It runs cube sizes k = 8, 12, and 16, in two placements, at every round count 1–16:
 
@@ -366,11 +384,13 @@ The results read as follows:
 
 * Both 1-round rows are **exact structural zero-sum distinguishers of the 1-round permutation**, and both have complete explanations.  In the single-block case, one round cannot spread a block beyond one byte per output block, so the 15 unvaried input blocks leave exactly 15 × 128 = 1920 output bits constant.  That is the predicted value, so this row doubles as the harness's positive control.  In the spread case, one round is nonlinear only block-locally and the transpose is linear.  So for any cube spanning 2+ blocks, each block sees its own sub-cube of values an even number of times, every block's XOR-sum cancels, and all 2048 bits vanish.
 * From **2 rounds on, nothing survives**, meaning no zero-sum property distinguishable by random black-box cubes up to k = 16.  That is consistent with the diffusion measurements (49.8% avalanche at 2 rounds, full at 3).  Any surviving bit at 3+ rounds is a FAIL (a distinguisher of the reduced-round permutation) and exits nonzero.  **Read that row as "random cubes up to k = 16", which is what it measures, and not as "no 2-round zero-sum".**  Structured cubes do better on both rows.  The next section gives a **2-round** integral distinguisher over all 2048 bits, reachable only with a byte-aligned cube on a whole block, which no sampling at these dimensions could have found.
-* The probe covers black-box **random** cubes only.  It does not cover structured cube choices (such as ones positioned to exploit AES's column structure), higher dimensions (the [degree bound](#findings-algebraic-degree-bound-and-zero-sum-reach-2026-07-20) is 2043 at 2 rounds, so a degree-based cube needs dimension 2044 there), or inside-out zero-sums that run `P` and `P⁻¹` from a middle state.  **All three are now covered** by `permute-division-property.py` in the next section, which decides a chosen cube instead of sampling and also runs `P⁻¹` backward from a middle state.  The inside-out case reaches 3 rounds, further than anything these probes see.  Even the 1-round single-block row moves, because a *byte-aligned* cube of the same dimension 8 zeroes all 2048 bits, not 1920.
+* The probe covers black-box **random** cubes only.  It does not cover structured cube choices (such as ones positioned to exploit AES's column structure), higher dimensions (the [degree bound](#findings-algebraic-degree-bound-and-zero-sum-reach) is 2043 at 2 rounds, so a degree-based cube needs dimension 2044 there), or inside-out zero-sums that run `P` and `P⁻¹` from a middle state.  **All three are now covered** by `permute-division-property.py` in the next section, which decides a chosen cube instead of sampling and also runs `P⁻¹` backward from a middle state.  The inside-out case reaches 3 rounds, further than anything these probes see.  Even the 1-round single-block row moves, because a *byte-aligned* cube of the same dimension 8 zeroes all 2048 bits, not 1920.
 
 A run takes ~9 s at `-n 1`, dominated by the k = 16 column (2 placements × 16 round counts × 32 bases × 2^16 permutations).
 
-## Findings: bit-based division property of `Castella::permute` (2026-08-03)
+## Findings: bit-based division property of `Castella::permute`
+
+These findings are from 2026-08-03.
 
 `permute-division-property.py` decides balancedness for a **chosen** cube rather than sampling random ones, which is what lets it reach the structured cubes the section above lists as outside its own scope.  A cube on eight *random* bits inside a block and a cube on one whole *byte* have the same dimension and behave completely differently, and that difference turns out to be the whole story.
 
@@ -500,7 +520,9 @@ The 3-bit analog is the weaker of the two.  Inversion in GF(8) has algebraic deg
 
 The trail search's asymmetry shows up throughout.  Finding a trail (SAT) is cheap and proving none exists (UNSAT) is what costs, and the UNSAT side carries every positive result above.  The 3-round SAT taking 1.8 h shows how little that asymmetry guarantees at this width.
 
-## Findings: a truncated differential reaches 4 rounds through the sponge (2026-11-12)
+## Findings: a truncated differential reaches 4 rounds through the sponge
+
+These findings are from 2026-11-12.
 
 `permute-truncated-differential-verify.py` measures a probabilistic property that needs no access to the capacity.  Two inputs that differ in one block agree, 3 rounds later, at byte `w` of all 16 blocks about 2^16 times as often as a random permutation's 2^−128 allows.  The same holds at 4 rounds for two inputs chosen in one block as preimages, under the first round's phase, of two values that differ in one byte.  The phase is public and one rate block is enough, so a sponge caller can choose them.
 
@@ -580,7 +602,9 @@ The sets overlap, so the program tests separate events instead.  Pairs whose `D`
 
 The commands are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7.
 
-## Findings: PractRand statistical smoke test of the duplex PRNG (2026-11-14)
+## Findings: PractRand statistical smoke test of the duplex PRNG
+
+These findings are from 2026-11-14.
 
 `duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  The results below piped it into PractRand's `RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded`.  PractRand is an external tool, and `run-research.sh` does not run it:
 
@@ -594,7 +618,9 @@ The `-C 2 -r 3` stream is the weakest one the program can emit, since `C` = 2 sq
 
 This is a **smoke test only**.  Passing means nothing cryptographically (any decent non-cryptographic PRNG also passes PractRand), but a failure at 3+ rounds would have meant everything.  It runs ~2.3 s/GiB on this machine and peaks at 0.6 GiB, and a larger `-tlmax` gives more coverage.
 
-## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
+## Findings: minimum active S-boxes in `Castella::permute`
+
+These findings are from 2026-07-02.
 
 `permute-min-active-sboxes.py` computes the minimum number of differentially active AES S-boxes over _r_ rounds of `Castella::permute`, using PuLP 3.3.2 to drive HiGHS, falling back to the bundled CBC where highspy is not installed (`--solver` overrides both).  _N_ is the number of state blocks, _r_ the number of Castella rounds, and _a_ the number of AES rounds per Castella round (`Castella::AES_NUM_ROUNDS`).
 
@@ -710,7 +736,9 @@ None is needed.  The script prints the finished table directly, and unlike the b
 * _A_ never decreases as _r_ grows (any longer trail contains a shorter one), so a slow row can be bracketed by its neighbors.
 * For a _b_-bit claim against single-characteristic differential attacks, require 6·_A_ comfortably above _b_ (6·_A_ ≥ 256 is reached at _r_ = 2 for _N_ = 16, _a_ = 3).  These bounds do not cover differential clustering, rebound, or other structural attacks, so they are necessary but not sufficient for the round-count choice.
 
-## Findings: bit-level trail search and clustering in `Castella::permute` (2026-07-19)
+## Findings: bit-level trail search and clustering in `Castella::permute`
+
+These findings are from 2026-07-19.
 
 The MILP model above proves a **lower bound** on the number of active S-boxes, and hence an upper bound 2<sup>−6·A</sup> on any single characteristic's differential probability.  That bound is tight only if a real, byte-valued characteristic attains _A_ active boxes at the maximum S-box probability.  `permute-trail-search.py` closes that loop from the other side.  It searches for actual bit-level characteristics with z3, giving an **upper bound** on the best-trail weight, and with `--cluster` it enumerates the characteristics sharing one differential to measure clustering.
 
@@ -1021,7 +1049,9 @@ So the figures 2^108, 2^324, 2^540, and 2^1044 that this section and SPEC.md pub
 
 The byte-activity model of `permute-min-active-sboxes.py` already describes the truncated patterns.  Re-solved with the bytes that must cancel in each MixColumns as the cost, in place of the active S-boxes, and split around an inbound, it would give the outbound's cost.  That cost then has to be compared with the limited-birthday cost of the end patterns, not with the flat claim level.  Neither has been done.
 
-## Findings: algebraic-degree bound and zero-sum reach (2026-07-20)
+## Findings: algebraic-degree bound and zero-sum reach
+
+These findings are from 2026-07-20.
 
 `permute-degree-bound.py` bounds the algebraic degree of `Castella::permute` round by round and reports how far a degree-based higher-order / integral / zero-sum distinguisher can reach.  It needs only the Python standard library.
 

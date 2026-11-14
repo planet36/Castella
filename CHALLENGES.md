@@ -7,7 +7,7 @@ SPDX-License-Identifier: MPL-2.0
 
 The [security claim in SPEC.md](SPEC.md#security-claims-and-non-claims) covers instances with `num_rounds ≥ R*` (8 at every capacity).  The instances below are **deliberately unclaimed** reduced-round targets, published to invite cryptanalysis in the style of the [Keccak crunchy crypto contest](https://keccak.team/crunchy_contest.html), because a claim nobody has tried to break is worth little.  Solving a challenge is a welcome research result, not a break of any claimed instance.  The [grand challenge](#the-grand-challenge) is the one whose solution falsifies the claim itself.
 
-This is a personal research project, so there are no prizes, only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues).  [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-08-09, with solutions to be recorded in this file).
+This is a personal research project, so there are no prizes, only acknowledgment here and the author's gratitude.  To submit a solution or an attack write-up, [open an issue](https://github.com/planet36/Castella/issues).  [Submitting a solution](#submitting-a-solution) says what one has to contain.  **Status: all challenges unsolved** (as of 2026-11-14, with solutions to be recorded in this file).
 
 ## Invitation to external cryptanalysts
 

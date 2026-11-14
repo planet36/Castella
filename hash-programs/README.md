@@ -116,6 +116,10 @@ These claims were last verified against a full run of `benchmark.hash-programs.b
 * `castella --rounds=3` beat multithreaded `b3sum` by about 1.4×, while the default 8 rounds ran at about 0.8× its speed.
 * Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
 
+These claims were last verified on 2026-11-14, with `castella` at its default 8 rounds:
+
+* On a 512 MiB input, single-threaded and pinned, the 64 KiB `castella` chunk size was ~2% slower than the best value in one run and ~7% slower in another, with every size from 64 KiB to 16 MiB inside the noise.  It was ~5% faster than the former 16 KiB default.
+
 These claims were last verified on 2026-11-01:
 
 * On a 512 MiB input, the 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
@@ -124,7 +128,6 @@ These claims were last verified against a full run on 2026-07-18, with the unifi
 
 * Streamed `cch` times were identical across thread counts (within 1%).
 * The default `--mix-rate` (256) was within ~1.5% of the fastest value, and only very small mix rates cost measurably (`--mix-rate=1` was ~33% slower).
-* For `castella`, 64 KiB was within ~3% of the best and ~4% faster than the former 16 KiB default, single-threaded and pinned.
 
 Create the test input the same way the benchmark scripts do.  The scripts themselves generate theirs in a private `mktemp` directory, which they remove on exit, so a script can neither collide with a concurrent run nor disturb a `/tmp/test.txt` of your own:
 

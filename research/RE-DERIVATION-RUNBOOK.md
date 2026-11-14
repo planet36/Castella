@@ -518,10 +518,16 @@ python3 permute-truncated-differential-verify.py            # 8.4 min, 1.8 GiB
 python3 permute-truncated-differential-verify.py --full-width-seed 2 --samples 268435456 --widths
 #   1.3 h, 0.3 GiB
 
-# Statistical smoke test.  PractRand is external and runs ~6 s/GiB, so ~1.7 min per
-# stream.
-./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
-./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
+# Statistical smoke test.  PractRand is external and runs ~2.3 s/GiB multithreaded, so
+# ~36 s per stream, 0.6 GiB.
+./duplex-prng-stream -C 4 -r 8 | \
+    RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded
+./duplex-prng-stream -C 4 -r 3 | \
+    RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded
+# The weakest stream, run longer.  It shows one "unusual" at 8 and 16 GiB that is gone from
+# 32 GiB on.  7.4 min, 0.9 GiB.
+./duplex-prng-stream -C 2 -r 3 | \
+    RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 256GB -multithreaded
 
 # cch's non-claim rests on a measurement too: per-input diffusion at 3 AES rounds.
 ./simd_compress_aes_enc-num_rounds -n 100         # ~50% per input from 3 AES rounds; instant

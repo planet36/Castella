@@ -230,11 +230,12 @@ That last control is what makes the test capable of failing at all, so if it eve
 This needs [PractRand](https://pracrand.sourceforge.net/)'s `RNG_test`, an external tool that no repo script runs:
 
 ```bash
-./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
-./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tlmax 16GB
+./duplex-prng-stream -C 4 -r 8 | RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded
+./duplex-prng-stream -C 4 -r 3 | RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded
+./duplex-prng-stream -C 2 -r 3 | RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 256GB -multithreaded
 ```
 
-Each run must report `no anomalies` at every checkpoint (recorded runs: 311 test results through 16 GiB for both, ~6 s/GiB).  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19) has the findings.
+Each `-C 4` run must report `no anomalies` at every checkpoint (recorded runs: 770 test results through 16 GiB for both, ~2.3 s/GiB).  The `-C 2 -r 3` run must report one `unusual` on `[Low8/64]DC6-9x1Bytes-1` at 8 and 16 GiB, and `no anomalies` at every other checkpoint through 256 GiB (915 test results there).  The streams are deterministic, so any other flag is a change, and one that grows with the data would be a real bias.  Read it as a smoke test only, since passing means nothing cryptographically, while a failure at 3+ rounds would be a real distinguisher.  [README.md](README.md#findings-practrand-statistical-smoke-test-of-the-duplex-prng-2026-07-19) has the findings.
 
 ## 13. Trail tightness and differential clustering
 

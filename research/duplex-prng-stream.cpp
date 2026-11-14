@@ -9,7 +9,8 @@
 * stdout.  It is meant for piping into a statistical test battery such as
 * PractRand:
 *
-*     ./duplex-prng-stream -C 4 -r 6 | RNG_test stdin64 -tlmax 16GB
+*     ./duplex-prng-stream -C 4 -r 8 |
+*         RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded
 *
 * The stream never ends, and the consumer cuts it, since SIGPIPE terminates
 * this program.  Statistical batteries are a smoke test only.  Passing means
@@ -32,7 +33,7 @@
 
 // {{{ options
 int capacity_blocks = 4;
-int num_rounds = 6;
+int num_rounds = 8;
 // }}}
 
 /// Process the command line options

@@ -506,7 +506,7 @@ optimum, so what a tighter ceiling would buy is characterization, not margin.
    at full and reduced rounds.  Only a smoke test — passing means nothing
    cryptographically, failing means everything — so report it as such.
 
-   **DONE.**  PractRand ran over 16 GiB of duplex PRNG stream at `C` = 4, at both 6 and 3
+   **DONE.**  PractRand ran over 16 GiB of duplex PRNG stream at `C` = 4, at both 8 and 3
    rounds, with no anomalies (`research/duplex-prng-stream.cpp`, VERIFYING-CLAIMS § 12).
    Dieharder was not run, because PractRand is the stronger of the two at this sample
    size, and a second battery would carry the same (zero) cryptographic weight on passing.

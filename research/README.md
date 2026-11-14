@@ -582,14 +582,17 @@ The commands are in [RE-DERIVATION-RUNBOOK.md](RE-DERIVATION-RUNBOOK.md) § 7.
 
 ## Findings: PractRand statistical smoke test of the duplex PRNG (2026-07-19)
 
-`duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  The results below piped it into PractRand's `RNG_test stdin64 -tlmax 16GB`.  PractRand is an external tool, and `run-research.sh` does not run it:
+`duplex-prng-stream.cpp` emits the duplex's PRNG usage (fixed seed, repeated full-rate squeeze) to stdout.  The results below piped it into PractRand's `RNG_test stdin64 -tf 2 -te 0 -tlmin 256MB -tlmax 16GB -multithreaded`, rerun under that command on 2026-11-14.  PractRand is an external tool, and `run-research.sh` does not run it:
 
 | configuration | result |
 |---------------|--------|
-| `-C 4 -r 6` (the `castella` defaults, a claimed instance) | no anomalies in 311 test results through 16 GiB |
-| `-C 4 -r 3` (minimum constructible rounds, unclaimed) | no anomalies in 311 test results through 16 GiB |
+| `-C 4 -r 8` (the `castella` defaults, a claimed instance) | no anomalies in 770 test results through 16 GiB |
+| `-C 4 -r 3` (minimum constructible rounds, unclaimed) | no anomalies in 770 test results through 16 GiB |
+| `-C 2 -r 3` (the largest rate at minimum rounds, unclaimed), with `-tlmax 256GB` | no anomalies in 915 test results at 256 GiB, after one "unusual" at 8 and 16 GiB |
 
-This is a **smoke test only**.  Passing means nothing cryptographically (any decent non-cryptographic PRNG also passes PractRand), but a failure at 3+ rounds would have meant everything.  It runs ~6 s/GiB on this machine, and a larger `-tlmax` gives more coverage.
+The `-C 2 -r 3` stream is the weakest one the program can emit, since `C` = 2 squeezes 14 of the 16 blocks per permutation.  It flagged `[Low8/64]DC6-9x1Bytes-1` as "unusual", PractRand's lowest flag, at 8 GiB (p = 1 − 1.5e-3) and at 16 GiB (p = 1 − 1.1e-3), among 732 and 770 results.  The run was extended to 256 GiB to separate a bias from chance, since a bias grows with the data.  The flag was gone at 32 GiB and stayed gone at 64, 128, and 256 GiB, so it reads as chance.  The stream is deterministic, so a rerun shows the same two flags.
+
+This is a **smoke test only**.  Passing means nothing cryptographically (any decent non-cryptographic PRNG also passes PractRand), but a failure at 3+ rounds would have meant everything.  It runs ~2.3 s/GiB on this machine and peaks at 0.6 GiB, and a larger `-tlmax` gives more coverage.
 
 ## Findings: minimum active S-boxes in `Castella::permute` (2026-07-02)
 

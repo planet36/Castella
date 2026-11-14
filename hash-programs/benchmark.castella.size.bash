@@ -7,7 +7,8 @@ test -x castella || exit
 # shellcheck disable=SC1091
 source ./benchmark-common.bash
 
-# Vary --size.  Hold --rounds fixed because by default it follows --size.
+# Vary --size.
+# Use a fixed --rounds value because its default used to depend on --size.
 CSV="${OUTPUT_DIR}/benchmark.castella.size.${DATETIME}.csv"
 "${PIN_CMD[@]}" hyperfine --metrics=time_wall_clock:ms --style=color --warmup=5 \
     --export-csv "$CSV" \

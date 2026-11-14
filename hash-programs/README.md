@@ -110,15 +110,15 @@ These claims were last verified on 2026-11-13, with `castella` at its default 8 
 
 * On a 500 MiB input, `castella --no-mmap` and piped input were fastest at 3 threads, with 4 threads inside the noise for `--no-mmap`.  The default `--num-threads=0`, which stops at 3 threads for them, took ~21% and ~19% less time than 8 threads.
 
+These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-11-13, with `castella` at its default 8 rounds:
+
+* `cch` beat multithreaded `b3sum` by about 2.0× (single-thread, pinned: 3.5×).
+* `castella --rounds=3` beat multithreaded `b3sum` by about 1.4×, while the default 8 rounds ran at about 0.8× its speed.
+* Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
+
 These claims were last verified on 2026-11-01:
 
 * On a 512 MiB input, the 64 KiB `cch` chunk size was ~1% slower than the best value on all cores, and ~5% slower single-threaded and pinned.
-
-These claims were last verified against a full run of `benchmark.hash-programs.bash` on 2026-10-08:
-
-* `cch` beat multithreaded `b3sum` by about 2.0× (single-thread, pinned: 3.5×).
-* `castella --rounds=3` beat multithreaded `b3sum`, while `--rounds=6`, the default at the time, roughly matched it.
-* Single-threaded, `cch` beat XXH3 (`xxhsum -H3`) by about 1.2×, and `castella` at `--rounds=6`, its default at the time, beat `cksum --algorithm` with `sha1`, `blake2b`, and `md5`, the algorithms of `sha1sum`, `b2sum`, and `md5sum`.
 
 These claims were last verified against a full run on 2026-07-18, with the unified 64 KiB default chunk size:
 

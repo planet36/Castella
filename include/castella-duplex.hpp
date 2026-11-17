@@ -68,9 +68,9 @@ namespace Castella
 * #### Page 13 / 93
 *
 * <blockquote>
-* Finally the output is truncated to its first ℓ bits.  The 𝑐-bit inner state is
+* Finally the output is truncated to its first ℓ bits.  The c-bit inner state is
 * never directly affected by the input blocks and never output during the
-* squeezing phase.  The capacity 𝑐 actually determines the attainable security
+* squeezing phase.  The capacity c actually determines the attainable security
 * level of the construction, as proven in Chapters 5 and 6.
 * </blockquote>
 *
@@ -82,7 +82,7 @@ namespace Castella
 * Unlike a sponge function that is stateless in between calls, the duplex
 * construction results in an object that accepts calls that take an input string
 * and return an output string that depends on all inputs received so far.  We
-* call an instance of the duplex construction a duplex object, which we denote 𝐷
+* call an instance of the duplex construction a duplex object, which we denote D
 * in our descriptions.
 * </blockquote>
 *
@@ -194,7 +194,7 @@ public:
     * #### Page 6
     *
     * <blockquote>
-    * The capacity 𝑐 actually determines the attainable security level of the
+    * The capacity c actually determines the attainable security level of the
     * construction.
     * </blockquote>
     */
@@ -236,7 +236,7 @@ public:
     *
     * <blockquote>
     * In the Keccak design philosophy, safety margin comes from the number of
-    * rounds in Keccak-𝑓, whereas the security level comes from the selected
+    * rounds in Keccak-f, whereas the security level comes from the selected
     * capacity.
     * </blockquote>
     */
@@ -266,7 +266,7 @@ public:
     *
     * <blockquote>
     * The suffix supports domain separation; i.e., it distinguishes the inputs to
-    * Keccak[𝑐] arising from the SHA-3 hash functions from the inputs arising
+    * Keccak[c] arising from the SHA-3 hash functions from the inputs arising
     * from the SHA-3 XOFs defined in Sec. 6.2, as well as other domains that may
     * be defined in the future.
     * </blockquote>
@@ -282,7 +282,7 @@ public:
     *
     * <blockquote>
     * For the SHA-3 functions, either a two- or four-bit suffix is appended to
-    * the message M to produce the input string 𝑁 to Keccak[𝑐], and additional
+    * the message M to produce the input string N to Keccak[c], and additional
     * bits are appended as part of the multi-rate padding rule.
     * </blockquote>
     *
@@ -303,7 +303,7 @@ public:
     * #### Page 7 (13)
     *
     * <blockquote>
-    * When 𝑁 and 𝑆 are both empty strings, cSHAKE(𝑋, 𝐿, 𝑁, 𝑆) is equivalent to
+    * When N and S are both empty strings, cSHAKE(x, L, N, S) is equivalent to
     * SHAKE as defined in FIPS 202.
     * </blockquote>
     *
@@ -312,8 +312,8 @@ public:
     * #### Page 8 (14)
     *
     * The cSHAKE input suffix is:
-    *     * `1111` when 𝑁 and 𝑆 are both empty strings
-    *     * `00` when 𝑁 and 𝑆 are both not empty strings
+    *     * `1111` when N and S are both empty strings
+    *     * `00` when N and S are both not empty strings
     *
     *
     * eXtended Keccak Code Package calls this "delimitedSuffix".
@@ -380,8 +380,8 @@ private:
     * <blockquote>
     * Absorbing phase
     *
-    * The 𝑟-bit input message blocks are XORed into the outer part of the state,
-    * interleaved with applications of the function 𝑓.  When all message blocks
+    * The r-bit input message blocks are XORed into the outer part of the state,
+    * interleaved with applications of the function f.  When all message blocks
     * are processed, the sponge construction switches to the squeezing phase.
     * </blockquote>
     */
@@ -562,9 +562,9 @@ private:
     * #### Page 5 (11)
     *
     * <blockquote>
-    * left_encode(𝑥) encodes the integer 𝑥 as a byte string in a way that can be
+    * left_encode(x) encodes the integer x as a byte string in a way that can be
     * unambiguously parsed from the beginning of the string by inserting the
-    * length of the byte string before the byte string representation of 𝑥.
+    * length of the byte string before the byte string representation of x.
     * </blockquote>
     *
     * \pre \a x ≥ 0
@@ -596,9 +596,9 @@ private:
     * #### Page 5 (11)
     *
     * <blockquote>
-    * right_encode(𝑥) encodes the integer 𝑥 as a byte string in a way that can be
+    * right_encode(x) encodes the integer x as a byte string in a way that can be
     * unambiguously parsed from the end of the string by inserting the length of
-    * the byte string after the byte string representation of 𝑥.
+    * the byte string after the byte string representation of x.
     * </blockquote>
     *
     * \pre \a x ≥ 0
@@ -631,10 +631,10 @@ private:
     *
     * <blockquote>
     * The encode_string function is used to encode bit strings in a way that may
-    * be parsed unambiguously from the beginning of the string, 𝑆.
+    * be parsed unambiguously from the beginning of the string, S.
     *
-    * encode_string(𝑆):
-    * 1.  Return left_encode(len(𝑆)) || 𝑆.
+    * encode_string(S):
+    * 1.  Return left_encode(len(S)) || S.
     * </blockquote>
     */
     void left_encode_bytes_(const std::span<const std::byte> src) noexcept
@@ -646,11 +646,11 @@ private:
     /// Unambiguously encode the byte string into the input buffer
     /**
     * The right_encode counterpart of \c left_encode_bytes_().  The byte string
-    * 𝑆 is followed by its right-encoded length, so it may be parsed
+    * S is followed by its right-encoded length, so it may be parsed
     * unambiguously from the end of the string.  This is useful when the length
-    * of 𝑆 is not known until the end of 𝑆 is reached.
+    * of S is not known until the end of S is reached.
     *
-    * Return 𝑆 || right_encode(len(𝑆)).
+    * Return S || right_encode(len(S)).
     */
     void right_encode_bytes_(const std::span<const std::byte> src) noexcept
     {
@@ -670,12 +670,12 @@ private:
     *
     * <blockquote>
     * The cSHAKE function includes an input string that may be used to provide a
-    * function name (𝑁).  This is intended for use by NIST in defining
+    * function name (N).  This is intended for use by NIST in defining
     * SHA-3-derived functions, and should only be set to values defined by NIST.
     * This parameter provides a level of domain separation by function name.
     * Users of cSHAKE should not make up their own names—that kind of
-    * customization is the purpose of the customization string 𝑆, to be discussed
-    * in Sec. 3.5.  Nonstandard values of 𝑁 could cause interoperability problems
+    * customization is the purpose of the customization string S, to be discussed
+    * in Sec. 3.5.  Nonstandard values of N could cause interoperability problems
     * with future NIST-defined functions.
     * </blockquote>
     *
@@ -684,13 +684,13 @@ private:
     * #### Page 9 (15)
     *
     * <blockquote>
-    * The cSHAKE function also includes an input string (𝑆) to allow users to
+    * The cSHAKE function also includes an input string (S) to allow users to
     * customize their use of the function.
     * …
     * The customization string is intended to avoid a collision between these two
     * cSHAKE values—it will be very difficult for an attacker to somehow force
     * one computation (the email signature) to yield the same result as the other
-    * computation (the key fingerprint) if different values of 𝑆 are used.
+    * computation (the key fingerprint) if different values of S are used.
     * </blockquote>
     */
     void init_(const std::span<const std::byte> function_name,
@@ -703,11 +703,11 @@ private:
         * #### Page 6 (12)
         *
         * <blockquote>
-        * The bytepad(𝑋, 𝑤) function prepends an encoding of the integer 𝑤 to an
-        * input string 𝑋, then pads the result with zeros until it is a byte
-        * string whose length in bytes is a multiple of 𝑤.  In general, bytepad
+        * The bytepad(x, w) function prepends an encoding of the integer w to an
+        * input string x, then pads the result with zeros until it is a byte
+        * string whose length in bytes is a multiple of w.  In general, bytepad
         * is intended to be used on encoded strings—the byte string
-        * bytepad(encode_string(𝑆), 𝑤) can be parsed unambiguously from its
+        * bytepad(encode_string(S), w) can be parsed unambiguously from its
         * beginning, whereas bytepad does not provide unambiguous padding for all
         * input strings.
         * </blockquote>
@@ -717,11 +717,11 @@ private:
         * #### Page 8 (14)
         *
         * <blockquote>
-        * cSHAKE128(𝑋, 𝐿, 𝑁, 𝑆):
-        * bytepad(encode_string(𝑁) || encode_string(𝑆), 168)
+        * cSHAKE128(x, L, N, S):
+        * bytepad(encode_string(N) || encode_string(S), 168)
         *
-        * cSHAKE256(𝑋, 𝐿, 𝑁, 𝑆):
-        * bytepad(encode_string(𝑁) || encode_string(𝑆), 136)
+        * cSHAKE256(x, L, N, S):
+        * bytepad(encode_string(N) || encode_string(S), 136)
         * </blockquote>
         */
 
@@ -747,20 +747,20 @@ public:
     * #### Page 7 (13)
     *
     * <blockquote>
-    * - 𝑁 is a function-name bit string, used by NIST to define functions based
-    *   on cSHAKE.  When no function other than cSHAKE is desired, 𝑁 is set to
+    * - N is a function-name bit string, used by NIST to define functions based
+    *   on cSHAKE.  When no function other than cSHAKE is desired, N is set to
     *   the empty string.
-    * - 𝑆 is a customization bit string.  The user selects this string to define
-    *   a variant of the function.  When no customization is desired, 𝑆 is set to
+    * - S is a customization bit string.  The user selects this string to define
+    *   a variant of the function.  When no customization is desired, S is set to
     *   the empty string.
     * </blockquote>
     *
     *
-    * ### 8.2.1 Equivalent Security to SHAKE for Any Legal 𝑁 and 𝑆
+    * ### 8.2.1 Equivalent Security to SHAKE for Any Legal N and S
     * #### Page 19 (25)
     *
     * <blockquote>
-    * There are no "weak" values for 𝑁 or 𝑆.
+    * There are no "weak" values for N or S.
     * </blockquote>
     *
     * \param capacity_blocks the size (in blocks) of the capacity
@@ -983,7 +983,7 @@ public:
     * is 0.
     *
     * In the Keccak _sponge_ construction, ℓ bits are returned.  In the Keccak
-    * _duplex_ construction, at most 𝑟 bits are returned.  Castella follows the
+    * _duplex_ construction, at most r bits are returned.  Castella follows the
     * latter approach.
     *
     *
@@ -996,7 +996,7 @@ public:
     * Squeezing phase
     *
     * The outer part of the state is iteratively returned as output blocks,
-    * interleaved with applications of the function 𝑓.  The number of iterations
+    * interleaved with applications of the function f.  The number of iterations
     * is determined by the requested number of bits ℓ.
     * </blockquote>
     *
@@ -1005,8 +1005,8 @@ public:
     * #### Page 14 / 93
     *
     * <blockquote>
-    * The maximum number of bits ℓ one can request is 𝑟 and the input string σ
-    * shall be short enough such that after padding it results in a single 𝑟-bit
+    * The maximum number of bits ℓ one can request is r and the input string σ
+    * shall be short enough such that after padding it results in a single r-bit
     * block.  We call the maximum length of σ the _maximum duplex rate_ …
     * </blockquote>
     *
@@ -1023,9 +1023,9 @@ public:
     *
     * <blockquote>
     * An auxiliary function that is in some way the dual of the absorbing
-    * function is the squeezing function SQUEEZE[𝑓,𝑟].  For a given state 𝑠,
-    * squeeze(𝑠,ℓ) denotes the output truncated to ℓ bits of the sponge function
-    * with 𝑠 the state at the beginning of the squeezing phase.  The squeezing
+    * function is the squeezing function SQUEEZE[f,r].  For a given state s,
+    * squeeze(s,ℓ) denotes the output truncated to ℓ bits of the sponge function
+    * with s the state at the beginning of the squeezing phase.  The squeezing
     * function is defined in Algorithm 4.
     * </blockquote>
     */
@@ -1113,12 +1113,12 @@ public:
     *
     * <blockquote>
     * Still, forward security can be explicitly enforced by means of a
-    * 𝑃.forget() request.  The effect of this request is the resetting to zero
+    * P.forget() request.  The effect of this request is the resetting to zero
     * of the first ρ bits of the state, an application of the padding and a
-    * subsequent application of 𝑓.  Under the condition that ρ ≥ 𝑐, guessing
+    * subsequent application of f.  Under the condition that ρ ≥ c, guessing
     * the state before this operation given the state afterwards requires
-    * guessing at least 𝑐 bits and hence is infeasible for reasonable values
-    * of 𝑐.
+    * guessing at least c bits and hence is infeasible for reasonable values
+    * of c.
     * </blockquote>
     *
     * \note Castella zeroizes the whole outer state and permutes it unpadded.

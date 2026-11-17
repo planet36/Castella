@@ -37,7 +37,7 @@
 
 inline constexpr std::string_view program_author = "Steven Ward";
 inline constexpr std::string_view program_license = "MPL-2.0";
-inline constexpr std::string_view program_version = "2026-08-29";
+inline constexpr std::string_view program_version = "2026-11-13";
 
 inline constexpr std::string_view function_name = "Castella";
 

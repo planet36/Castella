@@ -303,7 +303,7 @@ public:
     * #### Page 7 (13)
     *
     * <blockquote>
-    * When N and S are both empty strings, cSHAKE(x, L, N, S) is equivalent to
+    * When N and S are both empty strings, cSHAKE(X, L, N, S) is equivalent to
     * SHAKE as defined in FIPS 202.
     * </blockquote>
     *
@@ -703,8 +703,8 @@ private:
         * #### Page 6 (12)
         *
         * <blockquote>
-        * The bytepad(x, w) function prepends an encoding of the integer w to an
-        * input string x, then pads the result with zeros until it is a byte
+        * The bytepad(X, w) function prepends an encoding of the integer w to an
+        * input string X, then pads the result with zeros until it is a byte
         * string whose length in bytes is a multiple of w.  In general, bytepad
         * is intended to be used on encoded strings—the byte string
         * bytepad(encode_string(S), w) can be parsed unambiguously from its
@@ -717,10 +717,10 @@ private:
         * #### Page 8 (14)
         *
         * <blockquote>
-        * cSHAKE128(x, L, N, S):
+        * cSHAKE128(X, L, N, S):
         * bytepad(encode_string(N) || encode_string(S), 168)
         *
-        * cSHAKE256(x, L, N, S):
+        * cSHAKE256(X, L, N, S):
         * bytepad(encode_string(N) || encode_string(S), 136)
         * </blockquote>
         */

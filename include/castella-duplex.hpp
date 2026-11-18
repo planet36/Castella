@@ -717,11 +717,10 @@ private:
         * #### Page 8 (14)
         *
         * <blockquote>
-        * cSHAKE128(X, L, N, S):
-        * bytepad(encode_string(N) || encode_string(S), 168)
-        *
-        * cSHAKE256(X, L, N, S):
-        * bytepad(encode_string(N) || encode_string(S), 136)
+        * cSHAKE is defined in terms of SHAKE or Keccak[c], as follows: it
+        * either returns the result of a call to SHAKE (if N and S are both
+        * empty strings), or returns the result of a call to Keccak(c) with a
+        * padded encoding of N and S concatenated to the input string X.
         * </blockquote>
         */
 

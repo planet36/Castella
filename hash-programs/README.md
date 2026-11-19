@@ -30,7 +30,15 @@ The KMAC structure (SP 800-185 Section 4) is followed at tree scale.  `bytepad(e
 
 The key bytes are held in `mlock`ed memory that is wiped on deallocation ([locked_allocator.hpp](locked_allocator.hpp)), and a release build calls [`disable_core_dumps()`](../include/disable_core_dumps.h) at the top of `main`.  So the key is not swapped out, not written to a core file, and not readable through `ptrace` or `/proc/PID/mem` without root.  A `BUILD=debug` build skips the core-dump call, which keeps the program attachable under a debugger.
 
-Run `--help` for full option descriptions.  `make man`, run in this directory because the top-level `Makefile` does not recurse into that target, generates `castella.1` and `cch.1` from that output with [help2man](https://www.gnu.org/software/help2man/).  The pages are build products, untracked like the binaries, and no other target needs help2man.
+Run `--help` for full option descriptions.  `make man` generates `castella.1` and `cch.1` from that output with [help2man](https://www.gnu.org/software/help2man/).  The pages are build products, untracked like the binaries.
+
+`make install` copies both programs to `BINDIR` and both pages to `MAN1DIR`, first building whichever is out of date, so it needs help2man too.  `make uninstall` removes those four files and leaves the directories in place.  The directories default to `/usr/local/bin` and `/usr/local/share/man/man1`.  `PREFIX`, `BINDIR`, `MANDIR`, and `MAN1DIR` override them from the command line or the environment, and `DESTDIR` prefixes every path for staging a package.
+
+The top-level `Makefile` does not recurse into `man`, `install`, or `uninstall`, so run all three in this directory.  An install under your home directory needs no root:
+
+    make install PREFIX="$HOME/.local"
+
+A system-wide install into `/usr/local` does need root.  Build as yourself first in that case (`make all man`), so that sudo does not leave root-owned build products in the tree.  A `PREFIX` set in the environment does not survive sudo, so give a nondefault one on sudo's command line.
 
 ## Test script
 

@@ -10,7 +10,7 @@ Keep the spec, the KAT file, and the conformance script in agreement whenever th
 
 ## Build Commands
 
-A top-level Makefile recurses into the subdirectories.  Each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests`, `examples`, `hash-programs`, `research`) add `test`, so one directory can be worked on in isolation (`make -C tests test`).  `http-prng-service` has no tests and so no `test` target.  `hash-programs` alone adds `man`, which regenerates `castella.1` and `cch.1` with help2man.  The top-level Makefile does not recurse into it, so run it as `make -C hash-programs man`.
+A top-level Makefile recurses into the subdirectories.  Each subdirectory also has its own Makefile with the same `all`/`clean`/`lint` targets, and the four with tests to run (`tests`, `examples`, `hash-programs`, `research`) add `test`, so one directory can be worked on in isolation (`make -C tests test`).  `http-prng-service` has no tests and so no `test` target.  `hash-programs` alone adds three more.  `man` regenerates `castella.1` and `cch.1` with help2man, and `install` and `uninstall` copy both programs and both pages under `PREFIX` (default `/usr/local`, honoring `DESTDIR`) and remove them.  The top-level Makefile recurses into none of the three, so run them as `make -C hash-programs man` and so on.
 
 ```bash
 # Build examples, hash-programs, and tests (any root *.cpp scratch files too)
@@ -52,7 +52,7 @@ make lint
 make clean
 ```
 
-Compiler flags come from the shared `config.mk`, included by every Makefile.
+Compiler flags and the install paths come from the shared `config.mk`, included by every Makefile.
 
 UBSan recovers by default, printing a diagnostic and still exiting 0.  Set `UBSAN_OPTIONS=halt_on_error=1` when a sanitizer finding should fail the run.
 

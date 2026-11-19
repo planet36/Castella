@@ -158,6 +158,18 @@ get_necessary_num_rounds(const int digest_size_bytes) noexcept
     return Castella::Duplex::get_num_rounds_claimed(C);
 }
 
+// The --rounds help text prints one claimed bound and one default, which hold for every --size
+// only while the claim does not depend on the capacity.
+static_assert([]() consteval {
+    using Castella::Duplex;
+    for (int C = Duplex::C_MIN; C <= Duplex::C_MAX; C += 2)
+    {
+        if (Duplex::get_num_rounds_claimed(C) != Duplex::get_num_rounds_claimed(Duplex::C_MIN))
+            return false;
+    }
+    return true;
+}(), "the claimed round count must not depend on the capacity");
+
 /// Get the number of rounds for a digest of \a digest_size_bytes bytes
 /**
 * If --rounds was not given, return the necessary number of rounds for the

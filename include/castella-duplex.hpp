@@ -156,8 +156,8 @@ struct alignas(block_t) Duplex final
     static_assert(R_MAX < B);
     static_assert(R_MIN <= R_MAX);
 
-    /// Get the fewest rounds that the security claim covers at a capacity of
-    /// \a capacity_blocks blocks
+    /// Get the smallest round count that the security claim covers at a capacity
+    /// of \a capacity_blocks blocks
     /**
     * An instance with fewer rounds is legal, but no security is claimed for
     * it.  The claim starts at the same round count at every capacity.

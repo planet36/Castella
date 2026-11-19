@@ -114,15 +114,15 @@ print_usage()
     std::println("  --chunk-size=BYTES");
     std::println("                        Specify the size of a tree chunk.  Different chunk sizes");
     std::println("                        produce different digests.");
-    std::println("                        (default={}) (minimum={}) (maximum={})", default_chunk_size,
-                 compress_castella_tree::CHUNK_SIZE_MIN,
+    std::println("                        (default={}) (minimum={}) (maximum={})",
+                 default_chunk_size, compress_castella_tree::CHUNK_SIZE_MIN,
                  compress_castella_tree::CHUNK_SIZE_MAX);
 
     std::println("  --mix-rate=RATE");
     std::println("                        Specify the number of absorptions (full-block inputs)");
     std::println("                        per state mix, or 0 to disable periodic mixing.");
-    std::println("                        (default={}) (minimum=0) (maximum={})", default_mix_rate,
-                 compress_castella_hash<>::MIX_RATE_MAX);
+    std::println("                        (default={}) (minimum=0) (maximum={})",
+                 default_mix_rate, compress_castella_hash<>::MIX_RATE_MAX);
 
     std::println("  --no-mmap");
     std::println("                        Do not use memory mapping to read FILE.");
@@ -132,8 +132,8 @@ print_usage()
     std::println("                        chunks.  0 means one thread per available hardware");
     std::println("                        thread.  The digest does not depend on the number of");
     std::println("                        threads.  Only memory-mapped input uses them.");
-    std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
-                 compress_castella_tree::NUM_THREADS_MAX);
+    std::println("                        (default={}) (minimum=0) (maximum={})",
+                 default_num_threads, compress_castella_tree::NUM_THREADS_MAX);
 
     std::println("  --quiet");
     std::println("                        Do not print OK for each successfully verified file.");

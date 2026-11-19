@@ -218,21 +218,25 @@ print_usage()
     std::println("  --chunk-size=BYTES");
     std::println("                        Specify the size of a tree chunk.  Different chunk sizes");
     std::println("                        produce different digests.");
-    std::println("                        (default={}) (minimum={}) (maximum={})", default_chunk_size,
-                 Castella::DuplexTree::CHUNK_SIZE_MIN,
+    std::println("                        (default={}) (minimum={}) (maximum={})",
+                 default_chunk_size, Castella::DuplexTree::CHUNK_SIZE_MIN,
                  Castella::DuplexTree::CHUNK_SIZE_MAX);
 
     std::println("  --custom=STRING");
     std::println("                        Specify the customization string of the Castella");
     std::println("                        DuplexTree object.");
-    std::println("                        (default={})", quote_shell_always(default_customization_str));
+    std::println("                        (default={})",
+                 quote_shell_always(default_customization_str));
 
     std::println("  --key-file=FILE");
     std::println("                        Compute a keyed hash (a MAC).  The key is the exact");
-    std::println("                        bytes of FILE.  It is at least {} bytes, and at most the", key_size_min);
-    std::println("                        smaller of {} bytes and the chunk size minus 10.  The", key_size_max);
+    std::println("                        bytes of FILE.  It is at least {} bytes, and at most the",
+                 key_size_min);
+    std::println("                        smaller of {} bytes and the chunk size minus 10.  The",
+                 key_size_max);
     std::println("                        KMAC structure is followed at tree scale.  The function");
-    std::println("                        name becomes {}, the key is bytepadded to", quote_shell_always(mac_function_name));
+    std::println("                        name becomes {}, the key is bytepadded to",
+                 quote_shell_always(mac_function_name));
     std::println("                        one tree chunk and absorbed ahead of FILE, and the");
     std::println("                        right-encoded output size is absorbed last, so MACs of");
     std::println("                        different sizes are unrelated.  The key never appears in");
@@ -247,8 +251,8 @@ print_usage()
     std::println("                        thread, or fewer with --no-mmap or piped input, where");
     std::println("                        more threads are slower.  The digest does not depend");
     std::println("                        on the number of threads.");
-    std::println("                        (default={}) (minimum=0) (maximum={})", default_num_threads,
-                 Castella::DuplexTree::NUM_THREADS_MAX);
+    std::println("                        (default={}) (minimum=0) (maximum={})",
+                 default_num_threads, Castella::DuplexTree::NUM_THREADS_MAX);
 
     std::println("  --quiet");
     std::println("                        Do not print OK for each successfully verified file.");
@@ -274,7 +278,8 @@ print_usage()
     std::println("  --suffix=BYTE");
     std::println("                        Specify the suffix byte (as an integer) appended to the");
     std::println("                        input buffer before squeezing.");
-    std::println("                        (default={}) (minimum=0) (maximum=255)", default_input_suffix);
+    std::println("                        (default={}) (minimum=0) (maximum=255)",
+                 default_input_suffix);
 
     std::println("  --tag");
     std::println("                        Print each digest in a self-describing format that");

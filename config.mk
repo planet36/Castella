@@ -7,7 +7,6 @@ ARCH := $(shell uname -m)
 
 ROOT := ./$(shell git rev-parse --show-cdup)
 
-# paths
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
